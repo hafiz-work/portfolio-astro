@@ -1,0 +1,108 @@
+---
+// Landing page untuk link email verification MARC (app kelab, backend Go
+// berasingan). Server-side (bukan client fetch) — elak kena ubah CSP
+// connect-src (yang cuma whitelist api.hafizbahtiar.com sekarang).
+//
+// MARC_API_URL sengaja BUKAN prefix PUBLIC_ — cuma dibaca frontmatter
+// (server-side), tak pernah masuk client bundle.
+import CoreLayout from "../layouts/CoreLayout.astro";
+import Background from "../components/layout/Background.astro";
+
+const MARC_API_URL =
+  import.meta.env.MARC_API_URL || "https://marc-go-staging.up.railway.app";
+
+const token = Astro.url.searchParams.get("token");
+
+let success = false;
+let message = "Pautan tidak sah.";
+
+if (token) {
+  try {
+    const res = await fetch(`${MARC_API_URL}/auth/verify-email/confirm`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+
+    if (res.ok) {
+      success = true;
+      message = "Email anda berjaya disahkan. Boleh kembali ke app MARC.";
+    } else {
+      const data = await res.json().catch(() => ({}) as { error?: string });
+      message = data.error || "Token tidak sah atau sudah luput.";
+    }
+  } catch {
+    message = "Gagal hubungi server. Sila cuba lagi sebentar.";
+  }
+}
+---
+
+<CoreLayout
+  title={success ? "Email Disahkan | MARC" : "Pengesahan Email | MARC"}
+>
+  <Background />
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-sm text-center">
+      <a
+        href="/"
+        class="font-mono text-lg font-semibold text-slate-900 dark:text-slate-100 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors"
+      >
+        hafiz<span class="text-cyan-600 dark:text-cyan-400">.dev</span>
+      </a>
+
+      <div
+        class="mt-8 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-black/30"
+      >
+        {
+          success ? (
+            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/10">
+              <svg
+                class="h-6 w-6 text-emerald-600 dark:text-emerald-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+          ) : (
+            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-500/10">
+              <svg
+                class="h-6 w-6 text-red-600 dark:text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </div>
+          )
+        }
+
+        <h1 class="font-display text-xl font-bold text-slate-900 dark:text-slate-100">
+          {success ? "Email disahkan" : "Pengesahan gagal"}
+        </h1>
+        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          {message}
+        </p>
+
+        <a
+          href="/"
+          class="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-slate-900 dark:bg-slate-100 px-4 py-2.5 text-sm font-medium text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-white transition-colors"
+        >
+          Kembali ke laman utama
+        </a>
+      </div>
+    </div>
+  </div>
+</CoreLayout>
