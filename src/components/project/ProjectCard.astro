@@ -32,7 +32,17 @@ const {
 } = Astro.props;
 
 const isStringImage = typeof imageUrl === "string";
-const isRemoteImage = isStringImage && imageUrl.startsWith("http");
+// <Image> types local (ImageMetadata) and remote (string) src as separate
+// prop shapes, so the two branches below narrow `imageUrl` for each.
+const imageProps = {
+  alt: title,
+  width: 640,
+  height: 192,
+  loading: imageLoading,
+  decoding: "async",
+  fetchpriority: imageFetchPriority,
+  class: `w-full h-full group-hover:scale-[1.03] transition-transform duration-500 ${imageVariant === "width-banner" ? "object-contain p-4" : "object-cover"}`,
+} as const;
 const slug = link.split("/").pop() || title.toLowerCase().replace(/\s+/g, "-");
 
 // Logo assets never work as banners - render a composed device-frame
@@ -74,39 +84,10 @@ const eyebrow = [year, projectType ? typeLabel[projectType] : null]
         />
       ) : imageUrl ? (
         <div class="absolute inset-0">
-          {!isStringImage ? (
-            <Image
-              src={imageUrl}
-              alt={title}
-              width={640}
-              height={192}
-              loading={imageLoading}
-              decoding="async"
-              fetchpriority={imageFetchPriority}
-              class={`w-full h-full group-hover:scale-[1.03] transition-transform duration-500 ${imageVariant === "width-banner" ? "object-contain p-4" : "object-cover"}`}
-            />
-          ) : isRemoteImage ? (
-            <Image
-              src={imageUrl}
-              alt={title}
-              width={640}
-              height={192}
-              loading={imageLoading}
-              decoding="async"
-              fetchpriority={imageFetchPriority}
-              class={`w-full h-full group-hover:scale-[1.03] transition-transform duration-500 ${imageVariant === "width-banner" ? "object-contain p-4" : "object-cover"}`}
-            />
+          {isStringImage ? (
+            <Image src={imageUrl} {...imageProps} />
           ) : (
-            <img
-              src={imageUrl}
-              alt={title}
-              width={640}
-              height={192}
-              loading={imageLoading}
-              decoding="async"
-              fetchpriority={imageFetchPriority}
-              class={`w-full h-full group-hover:scale-[1.03] transition-transform duration-500 ${imageVariant === "width-banner" ? "object-contain p-4" : "object-cover"}`}
-            />
+            <Image src={imageUrl} {...imageProps} />
           )}
         </div>
       ) : (
