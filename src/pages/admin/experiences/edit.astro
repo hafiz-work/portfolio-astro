@@ -320,10 +320,7 @@ import AlertToast from "../../../components/ui/AlertToast.astro";
     }
 
     try {
-      const result = await experiencesService.updateExperience(id, {
-        id,
-        ...data,
-      });
+      const result = await experiencesService.updateExperience(id, data);
       if (result) {
         formGuard?.updateInitialState();
         showAlert({

@@ -29,6 +29,4 @@ export interface CreateExperiencePayload {
     displayOrder?: number;
 }
 
-export interface UpdateExperiencePayload extends Partial<CreateExperiencePayload> {
-    id: number;
-}
+export type UpdateExperiencePayload = Partial<CreateExperiencePayload>
