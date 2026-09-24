@@ -168,9 +168,9 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
     try {
       const res = await fn();
       if (res === null) {
-        // null = not found (404) or session expired (401 → redirect to /login),
-        // not a business-rule rejection.
-        showToast({ type: "error", title: `Could not ${label.toLowerCase()}`, message: "Project not found, or your session expired." });
+        // null = session expired (401 → redirect to /login). A missing project
+        // (404) throws like any other API error and lands in the catch below.
+        showToast({ type: "error", title: `Could not ${label.toLowerCase()}`, message: "Your session expired. Please sign in again." });
         return;
       }
       showToast({ type: "success", title: `${label} succeeded` });

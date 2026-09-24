@@ -99,7 +99,12 @@ export class ApiClient {
             }
 
             if (!response.ok) {
-                if (response.status === 404) return null;
+                // A 404 on a read means "this thing does not exist" — callers render
+                // an empty/not-found state, so null is the meaningful answer. On a
+                // write it means the target is gone: returning null would surface a
+                // false "saved" toast, so it throws like any other API error.
+                const method = (options?.method ?? 'GET').toUpperCase();
+                if (response.status === 404 && (method === 'GET' || method === 'HEAD')) return null;
                 const errorData = await response.json().catch(() => ({}));
                 const errorMessage = errorData.error || errorData.message || `API Error: ${response.status} ${response.statusText}`;
                 throw new ApiError(errorMessage, response.status, errorData);

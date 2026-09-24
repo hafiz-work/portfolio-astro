@@ -350,7 +350,7 @@ const cardClass = "admin-card";
   }
 
   // Best-effort "Browser/OS" label from a user-agent string (display only).
-  function shortDevice(ua: string): string {
+  function shortDevice(ua: string | null): string {
     if (!ua) return "Unknown";
     const browser = /Edg/.test(ua)
       ? "Edge"
@@ -406,7 +406,7 @@ const cardClass = "admin-card";
 
       const meta = document.createElement("div");
       meta.className = "text-xs text-slate-500 dark:text-slate-400 truncate";
-      meta.textContent = [countryFlag(d.country), shortDevice(d.userAgent)]
+      meta.textContent = [countryFlag(d.country), shortDevice(d.userAgent), d.source]
         .filter(Boolean)
         .join(" · ");
 
@@ -423,7 +423,7 @@ const cardClass = "admin-card";
     setText("kpi-messages-sub", `${data.contacts.new} new`);
     setText("kpi-blog", data.blog.total);
     setText("kpi-experiences", data.experiences.total);
-    setText("kpi-resume", data.resumeDownloads?.total ?? 0);
+    setText("kpi-resume", data.resumeDownloads.total);
 
     // Contact status breakdown
     const s = data.contacts.stats;
@@ -437,7 +437,7 @@ const cardClass = "admin-card";
 
     renderProjects(data.projects.recent ?? []);
     renderMessages(data.contacts.recent ?? []);
-    renderDownloads(data.resumeDownloads?.recent ?? []);
+    renderDownloads(data.resumeDownloads.recent ?? []);
   }
 
   async function loadDashboard() {

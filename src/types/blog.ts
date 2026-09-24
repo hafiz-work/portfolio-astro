@@ -78,6 +78,4 @@ export interface CreateBlogPostPayload {
   }>
 }
 
-export interface UpdateBlogPostPayload extends Partial<CreateBlogPostPayload> {
-  id: number
-}
+export type UpdateBlogPostPayload = Partial<CreateBlogPostPayload>

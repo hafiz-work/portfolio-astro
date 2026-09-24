@@ -51,17 +51,17 @@ const logs = await systemService.getLogs().catch(() => []);
               <th
                 scope="col"
                 class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
-                >Level</th
+                >Action</th
               >
               <th
                 scope="col"
                 class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
-                >Source</th
+                >Entity</th
               >
               <th
                 scope="col"
                 class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
-                >Message</th
+                >IP</th
               >
             </tr>
           </thead>
@@ -70,26 +70,27 @@ const logs = await systemService.getLogs().catch(() => []);
               logs.map((log) => (
                 <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                   <td class="px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
-                    {new Date(log.timestamp).toLocaleString()}
+                    {new Date(log.createdAt).toLocaleString()}
                   </td>
                   <td class="px-6 py-4">
                     <span
                       class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        log.level === "error"
+                        log.action === "delete" || log.action === "archive" || log.action === "unpublish"
                           ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
-                          : log.level === "warning"
-                            ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
-                            : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                          : log.action === "create" || log.action === "publish" || log.action === "attach"
+                            ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                            : "bg-slate-100 dark:bg-slate-700/40 text-slate-600 dark:text-slate-300"
                       }`}
                     >
-                      {log.level.toUpperCase()}
+                      {log.action.toUpperCase()}
                     </span>
                   </td>
                   <td class="px-6 py-4 text-slate-900 dark:text-slate-100">
-                    {log.source}
+                    {log.entityType}
+                    {log.entityId ? ` #${log.entityId}` : ""}
                   </td>
                   <td class="px-6 py-4 text-slate-500 dark:text-slate-400">
-                    {log.message}
+                    {log.ipAddress ?? "-"}
                   </td>
                 </tr>
               ))

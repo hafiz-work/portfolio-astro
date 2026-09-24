@@ -254,7 +254,7 @@ const statusOptions = [
     }
 
     try {
-      const result = await blogService.updatePost(id, { id, ...data });
+      const result = await blogService.updatePost(id, data);
       if (result) {
         formGuard?.updateInitialState();
         showAlert({
