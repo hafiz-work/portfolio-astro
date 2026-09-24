@@ -492,7 +492,7 @@ export const FamilyManager = () => {
                 setTreeCreateForm((prev) => ({ ...prev, name: e.target.value }))
               }
               required
-              className="w-full rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+              className="w-full rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
             />
             <input
               type="text"
@@ -502,7 +502,7 @@ export const FamilyManager = () => {
                 setTreeCreateForm((prev) => ({ ...prev, slug: e.target.value }))
               }
               required
-              className="w-full rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+              className="w-full rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
             />
             <textarea
               placeholder="Description"
@@ -514,7 +514,7 @@ export const FamilyManager = () => {
                 }))
               }
               rows={2}
-              className="w-full rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+              className="w-full rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
             />
             <label className="inline-flex items-center gap-2 text-sm text-gray-300">
               <input
@@ -526,14 +526,14 @@ export const FamilyManager = () => {
                     isPublic: e.target.checked,
                   }))
                 }
-                className="h-4 w-4 rounded border-gray-600 bg-gray-900"
+                className="h-4 w-4 rounded-lg border-gray-600 bg-gray-900"
               />
               Public
             </label>
             <button
               type="submit"
               disabled={isSaving}
-              className="w-full rounded-md bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-50"
+              className="w-full rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-50"
             >
               Add Tree
             </button>
@@ -628,7 +628,7 @@ export const FamilyManager = () => {
                       setTreeEditForm((prev) => ({ ...prev, name: e.target.value }))
                     }
                     required
-                    className="rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                    className="rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                   />
                   <input
                     type="text"
@@ -637,7 +637,7 @@ export const FamilyManager = () => {
                       setTreeEditForm((prev) => ({ ...prev, slug: e.target.value }))
                     }
                     required
-                    className="rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                    className="rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                   />
                 </div>
                 <textarea
@@ -649,7 +649,7 @@ export const FamilyManager = () => {
                     }))
                   }
                   rows={2}
-                  className="w-full rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                  className="w-full rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                 />
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   <div className="space-y-2">
@@ -666,7 +666,7 @@ export const FamilyManager = () => {
                             : null,
                         }))
                       }
-                      className="w-full rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                      className="w-full rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                     >
                       <option value="">Auto select first person</option>
                       {personOptions.map((person) => (
@@ -676,7 +676,7 @@ export const FamilyManager = () => {
                       ))}
                     </select>
                   </div>
-                  <div className="rounded-md border border-gray-700 bg-gray-900/40 px-3 py-3 text-sm text-gray-400">
+                  <div className="rounded-lg border border-gray-700 bg-gray-900/40 px-3 py-3 text-sm text-gray-400">
                     Saves the person the tree preview and public page should focus
                     on first. This mirrors the builder-style "main person" flow.
                   </div>
@@ -692,7 +692,7 @@ export const FamilyManager = () => {
                           isPublic: e.target.checked,
                         }))
                       }
-                      className="h-4 w-4 rounded border-gray-600 bg-gray-900"
+                      className="h-4 w-4 rounded-lg border-gray-600 bg-gray-900"
                     />
                     Public tree
                   </label>
@@ -701,14 +701,14 @@ export const FamilyManager = () => {
                       type="button"
                       onClick={handleDeleteTree}
                       disabled={isSaving}
-                      className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500/20 disabled:opacity-50"
+                      className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500/20 disabled:opacity-50"
                     >
                       Delete Tree
                     </button>
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="rounded-md bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-50"
+                      className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-50"
                     >
                       Save Tree
                     </button>
@@ -732,7 +732,7 @@ export const FamilyManager = () => {
                           }))
                         }
                         required
-                        className="rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                        className="rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                       />
                       <select
                         value={personForm.gender || "unknown"}
@@ -742,7 +742,7 @@ export const FamilyManager = () => {
                             gender: e.target.value as FamilyGender,
                           }))
                         }
-                        className="rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                        className="rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                       >
                         {genderOptions.map((g) => (
                           <option key={g} value={g}>
@@ -760,7 +760,7 @@ export const FamilyManager = () => {
                             firstName: e.target.value,
                           }))
                         }
-                        className="rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                        className="rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                       />
                       <input
                         type="text"
@@ -772,7 +772,7 @@ export const FamilyManager = () => {
                             lastName: e.target.value,
                           }))
                         }
-                        className="rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                        className="rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                       />
                       <input
                         type="date"
@@ -783,7 +783,7 @@ export const FamilyManager = () => {
                             birthDate: e.target.value || null,
                           }))
                         }
-                        className="rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                        className="rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                       />
                       <input
                         type="date"
@@ -794,7 +794,7 @@ export const FamilyManager = () => {
                             deathDate: e.target.value || null,
                           }))
                         }
-                        className="rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                        className="rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                       />
                     </div>
                     <label className="inline-flex items-center gap-2 text-sm text-gray-300">
@@ -807,7 +807,7 @@ export const FamilyManager = () => {
                             isLiving: e.target.checked,
                           }))
                         }
-                        className="h-4 w-4 rounded border-gray-600 bg-gray-900"
+                        className="h-4 w-4 rounded-lg border-gray-600 bg-gray-900"
                       />
                       Is living
                     </label>
@@ -821,20 +821,20 @@ export const FamilyManager = () => {
                           notes: e.target.value,
                         }))
                       }
-                      className="w-full rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                      className="w-full rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                     />
                     <textarea
                       rows={3}
                       placeholder="Metadata JSON"
                       value={metadataInput}
                       onChange={(e) => setMetadataInput(e.target.value)}
-                      className="w-full rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 font-mono text-xs text-white outline-none focus:border-cyan-500"
+                      className="w-full rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 font-mono text-xs text-white outline-none focus:border-cyan-500"
                     />
                     <div className="flex items-center gap-2">
                       <button
                         type="submit"
                         disabled={isSaving}
-                        className="rounded-md bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-50"
+                        className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-50"
                       >
                         {editingPersonId ? "Update Person" : "Add Person"}
                       </button>
@@ -842,7 +842,7 @@ export const FamilyManager = () => {
                         <button
                           type="button"
                           onClick={resetPersonForm}
-                          className="rounded-md border border-gray-600 px-3 py-2 text-sm text-gray-300 transition hover:bg-gray-700/60"
+                          className="rounded-lg border border-gray-600 px-4 py-2 text-sm text-gray-300 transition hover:bg-gray-700/60"
                         >
                           Cancel
                         </button>
@@ -929,7 +929,7 @@ export const FamilyManager = () => {
                           personId: Number(e.target.value),
                         }))
                       }
-                      className="w-full rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                      className="w-full rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                     >
                       <option value={0}>Select person</option>
                       {detail.people.map((person) => (
@@ -946,7 +946,7 @@ export const FamilyManager = () => {
                           relatedPersonId: Number(e.target.value),
                         }))
                       }
-                      className="w-full rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                      className="w-full rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                     >
                       <option value={0}>Select related person</option>
                       {detail.people.map((person) => (
@@ -963,7 +963,7 @@ export const FamilyManager = () => {
                           relationshipType: e.target.value as FamilyRelationshipType,
                         }))
                       }
-                      className="w-full rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                      className="w-full rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                     >
                       {relationshipTypeOptions.map((type) => (
                         <option key={type} value={type}>
@@ -981,7 +981,7 @@ export const FamilyManager = () => {
                             startDate: e.target.value || null,
                           }))
                         }
-                        className="rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                        className="rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                       />
                       <input
                         type="date"
@@ -992,7 +992,7 @@ export const FamilyManager = () => {
                             endDate: e.target.value || null,
                           }))
                         }
-                        className="rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                        className="rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                       />
                     </div>
                     <label className="inline-flex items-center gap-2 text-sm text-gray-300">
@@ -1005,7 +1005,7 @@ export const FamilyManager = () => {
                             isPrimary: e.target.checked,
                           }))
                         }
-                        className="h-4 w-4 rounded border-gray-600 bg-gray-900"
+                        className="h-4 w-4 rounded-lg border-gray-600 bg-gray-900"
                       />
                       Primary relationship
                     </label>
@@ -1019,13 +1019,13 @@ export const FamilyManager = () => {
                           notes: e.target.value,
                         }))
                       }
-                      className="w-full rounded-md border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                      className="w-full rounded-lg border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                     />
                     <div className="flex items-center gap-2">
                       <button
                         type="submit"
                         disabled={isSaving || !canSubmitRelationship}
-                        className="rounded-md bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-50"
+                        className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-50"
                       >
                         {editingRelationshipId
                           ? "Update Relationship"
@@ -1035,7 +1035,7 @@ export const FamilyManager = () => {
                         <button
                           type="button"
                           onClick={resetRelationshipForm}
-                          className="rounded-md border border-gray-600 px-3 py-2 text-sm text-gray-300 transition hover:bg-gray-700/60"
+                          className="rounded-lg border border-gray-600 px-4 py-2 text-sm text-gray-300 transition hover:bg-gray-700/60"
                         >
                           Cancel
                         </button>

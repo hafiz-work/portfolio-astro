@@ -71,7 +71,7 @@ export function MediaManager({ projectId, onChanged }: { projectId: number; onCh
         return (
           <div key={it.id} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              {it.asset?.url && <img src={it.asset.url} alt="" className="h-10 w-16 rounded object-cover border border-slate-200 dark:border-slate-700" />}
+              {it.asset?.url && <img src={it.asset.url} alt="" className="h-10 w-16 rounded-lg object-cover border border-slate-200 dark:border-slate-700" />}
               <Select
                 className="max-w-[160px]"
                 value={it.mediaType}
@@ -96,7 +96,7 @@ export function MediaManager({ projectId, onChanged }: { projectId: number; onCh
             <div className="flex items-center gap-2">
               <input className={`admin-input flex-1 ${missingAlt ? "border-amber-400 dark:border-amber-500" : ""}`} placeholder="Alt text (required for visible public media)"
                 value={it.asset?.altText ?? ""} onChange={(e) => setAssetField(it.id, { altText: e.target.value })} aria-label="Alt text" />
-              {missingAlt && <span className="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400"><AlertTriangle className="h-3.5 w-3.5" /> needs alt</span>}
+              {missingAlt && <span className="inline-flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400"><AlertTriangle className="h-3.5 w-3.5" /> needs alt</span>}
             </div>
             <div className="flex justify-end"><button type="button" className="admin-btn admin-btn-primary" onClick={() => save(it)}>Save media</button></div>
           </div>
