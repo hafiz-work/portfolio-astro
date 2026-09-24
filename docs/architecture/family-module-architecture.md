@@ -81,7 +81,7 @@ PersonDetailPanel (desktop side panel + mobile bottom sheet)
 
 - **Public** is read-only, props/state-driven, sanitized. Root `FamilyExplorer.tsx`, chart via
   `useFamilyChart`/`FamilyTreeCanvas`.
-- **Admin** is authenticated CRUD. Root `FamilyManager.tsx` / `FamilyTreeBuilder.tsx`, chart via the
+- **Admin** is authenticated CRUD. Root `FamilyTreeBuilder.tsx` (new/edit) / `FamilyTreesTable.tsx` (index), chart via the
   **legacy** `FamilyTreeChart.tsx`, controlled by **window events** and supporting inline add/edit
   through `chart.editTree()`.
 - **Shared** code: `chart-data.ts` (transform), `FamilyTreeChart.tsx` (admin chart), family types.
@@ -110,9 +110,7 @@ PersonDetailPanel (desktop side panel + mobile bottom sheet)
 | `src/lib/family-format.ts` | shared | `displayYear` (timezone-safe year). |
 | `src/data/family.ts` | config | `COMBINED_FAMILY` (slug/name/desc/mainPersonGlobalKey). |
 | `src/styles/family-chart-theme.css` | styling | Light/dark `.f3` theme; imported by `src/styles/index.css`. |
-| `src/components/admin/family/FamilyManager.tsx` | admin-only | Admin manager UI. |
 | `src/components/admin/family/FamilyTreeBuilder.tsx` | admin-only | Builder; passes `enableCrossTreeNavigation={false}` (no-op). |
-| `src/components/admin/family/FamilyTreeDirectory.tsx` | admin-only | Tree directory UI. |
 | `src/components/admin/family/FamilyTreesTable.tsx` | admin-only | Trees table UI. |
 | `src/pages/admin/family/{index,new,edit}.astro` | admin-only | Admin routes. |
 | `docs/brain/*`, `docs/architecture/*` | docs-only | This memory brain. |

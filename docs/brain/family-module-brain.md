@@ -175,7 +175,7 @@ cross-tree person *missing* a `globalKey` appears twice until the key is backfil
 
 | | Public | Admin |
 |---|---|---|
-| Island root | `FamilyExplorer.tsx` | `FamilyManager.tsx` / `FamilyTreeBuilder.tsx` |
+| Island root | `FamilyExplorer.tsx` | `FamilyTreeBuilder.tsx` (new/edit) / `FamilyTreesTable.tsx` (index) |
 | Chart | `useFamilyChart.ts` + `FamilyTreeCanvas.tsx` | `FamilyTreeChart.tsx` (legacy) |
 | Data | sanitized `PublicFamilyTreeDetail` | full `FamilyTreeDetail` (auth) |
 | Controls | props/state (`apiRef`) | **window events** (`family:set-main`, `family:on-main-changed`, `family:on-spouses`, `family:zoom-in/out`, `family:fit`, `family:center-main`, `family:set-orientation`) |
