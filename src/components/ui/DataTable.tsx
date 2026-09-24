@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, type ReactNode } from "react";
 import {
     useReactTable,
     getCoreRowModel,
@@ -26,6 +26,8 @@ interface DataTableProps<TData, TValue> {
     data: TData[];
     isLoading?: boolean;
     enableRowSelection?: boolean;
+    /** Extra controls rendered next to the search field (e.g. column filters). */
+    filters?: ReactNode;
     /** Shown in the empty state, e.g. "No projects yet". */
     emptyTitle?: string;
     emptyDescription?: string;
@@ -45,6 +47,7 @@ export function DataTable<TData, TValue>({
     data,
     isLoading = false,
     enableRowSelection = false,
+    filters,
     emptyTitle = "Nothing here yet",
     emptyDescription = "Records you create will show up in this list.",
 }: DataTableProps<TData, TValue>) {
@@ -146,18 +149,22 @@ export function DataTable<TData, TValue>({
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
             {/* Toolbar — part of the card, not a floating box */}
             <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
-                <div className="relative w-full sm:max-w-xs">
-                    <Search
-                        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                        aria-hidden="true"
-                    />
-                    <input
-                        type="search"
-                        placeholder="Search…"
-                        value={globalFilter ?? ""}
-                        onChange={(event) => setGlobalFilter(event.target.value)}
-                        className="block h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:bg-slate-900"
-                    />
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="relative w-full sm:w-56">
+                        <Search
+                            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                            aria-hidden="true"
+                        />
+                        <input
+                            type="search"
+                            placeholder="Search…"
+                            value={globalFilter ?? ""}
+                            onChange={(event) => setGlobalFilter(event.target.value)}
+                            className="block h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:bg-slate-900"
+                        />
+                    </div>
+
+                    {filters}
                 </div>
 
                 <div className="flex items-center justify-between gap-4 sm:justify-end">

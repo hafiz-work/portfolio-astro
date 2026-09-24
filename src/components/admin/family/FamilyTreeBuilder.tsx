@@ -61,7 +61,7 @@ const sectionCardClass =
 const insetPanelClass =
   "rounded-xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-900/55";
 const inputClass =
-  "w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-100 dark:placeholder:text-slate-500";
+  "w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-100 dark:placeholder:text-slate-500";
 const monoInputClass = `${inputClass} font-mono text-xs`;
 const labelClass =
   "block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400";
@@ -132,6 +132,16 @@ const parseMetadata = (value: string): Record<string, unknown> | null => {
   return null;
 };
 
+const isInvalidJson = (raw: string) => {
+  if (!raw.trim()) return false;
+  try {
+    JSON.parse(raw.trim());
+    return false;
+  } catch {
+    return true;
+  }
+};
+
 const buildRelationshipSummary = (
   relationship: FamilyRelationship,
   peopleById: Map<number, FamilyPerson>,
@@ -159,7 +169,7 @@ const TechDateField = ({
         htmlFor={inputId}
         className={labelClass}
       >
-        {`// ${label}`}
+        {label}
       </label>
       <input
         id={inputId}
@@ -189,7 +199,7 @@ const CheckboxField = ({
         htmlFor={buttonId}
         className={labelClass}
       >
-        {`// ${label}`}
+        {label}
       </label>
       <button
         id={buttonId}
@@ -458,6 +468,11 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
         defaultMainPersonId: treeForm.defaultMainPersonId ?? null,
       });
       await loadDetail(treeId);
+      showToast({
+        type: "success",
+        title: "Tree settings saved",
+        message: `"${treeForm.name?.trim() || detail?.tree.name || "Tree"}" updated.`,
+      });
     } catch (err: any) {
       console.error(err);
       setError(err?.message || "Failed to save family tree.");
@@ -555,6 +570,11 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
       const ok = await familyService.deletePerson(selectedPerson.id);
       if (!ok) throw new Error("Failed to delete person");
       await loadDetail(treeId);
+      showToast({
+        type: "success",
+        title: "Person deleted",
+        message: `${selectedPerson.displayName} and related links removed.`,
+      });
     } catch (err: any) {
       console.error(err);
       setError(err?.message || "Failed to delete person.");
@@ -926,6 +946,11 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                 onChange={(e) => setRootMetadataInput(e.target.value)}
                 className={`mt-3 ${monoInputClass}`}
               />
+              {isInvalidJson(rootMetadataInput) && (
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                  Invalid JSON — check your metadata.
+                </p>
+              )}
             </div>
 
             <div className="admin-form-actions">
@@ -1240,7 +1265,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                 <div className={insetPanelClass}>
                   <h3 className={`text-sm font-semibold ${headingClass}`}>Relationships</h3>
                   {detail.relationships.length === 0 ? (
-                    <div className="mt-3 rounded-lg border border-dashed border-slate-300 bg-white px-3 py-4 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+                    <div className={`mt-3 ${emptyStateClass}`}>
                       No relationships have been added yet.
                     </div>
                   ) : (
@@ -1451,6 +1476,11 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                             onChange={(e) => setPersonMetadataInput(e.target.value)}
                             className={monoInputClass}
                           />
+                          {isInvalidJson(personMetadataInput) && (
+                            <p className="text-xs text-red-600 dark:text-red-400">
+                              Invalid JSON — the value would be saved as null.
+                            </p>
+                          )}
                           <div className="flex flex-wrap items-center gap-2">
                             <button
                               type="submit"
@@ -1467,7 +1497,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                                   defaultMainPersonId: selectedPerson.id,
                                 }))
                               }
-                              className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${relationActionStyles.spouse.compact}`}
+                              className={toolbarButtonClass}
                             >
                               Set As Main
                             </button>
