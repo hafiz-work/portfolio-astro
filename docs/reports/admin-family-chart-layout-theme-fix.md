@@ -1,4 +1,4 @@
-# Admin Family Chart — Layout & Theme Fix
+# Admin Family Chart - Layout & Theme Fix
 
 > Fixes the `/admin/family/new` + `/admin/family/edit` visual builder: the chart now defaults to a
 > readable, person-centered view (instead of an unreadably tiny full-tree fit), responds to container
@@ -12,7 +12,7 @@
 The previous fix only added a fixed-height wrapper (`h-[70vh]`) in `FamilyTreeBuilder.tsx`. That fixed
 the *container collapse* (the box is now large), but two separate problems remained:
 
-### 1. "Tiny nodes" — wrong default zoom strategy (not a height problem)
+### 1. "Tiny nodes" - wrong default zoom strategy (not a height problem)
 
 `FamilyTreeChart.tsx` initialized the chart with `tree_position: "fit"` (and `initial: true`, which
 **forces** a fit). Reading the library source (`family-chart@0.9.0`):
@@ -25,21 +25,21 @@ if (k > 1) k = 1;   // never zooms in past 1:1
 
 `fit` scales the **entire** tree into the viewport. The admin builder renders deep trees
 (`ancestryDepth = 6`, `progenyDepth = 5`, siblings + spouses), so `tree_dim` is large, `k` becomes a
-small fraction, and every card is drawn at that tiny scale — regardless of how big the box is. **More
+small fraction, and every card is drawn at that tiny scale - regardless of how big the box is. **More
 height does not help**: a bigger viewport still divides into a much bigger tree.
 
 The public `/family` page happens to look acceptable with `fit` because of its viewport, but for an
 **editing** tool the correct default is to center on the person being edited at a readable scale.
 
-### 2. Washed-out theme — cards blend into the canvas
+### 2. Washed-out theme - cards blend into the canvas
 
 The admin area is always-dark (`PrivateLayout` locks `.dark`). The shared theme set card background
-`#1e293b` on a canvas of `#1a1f29` — nearly identical — so cards read as low-contrast gray boxes, and
+`#1e293b` on a canvas of `#1a1f29` - nearly identical - so cards read as low-contrast gray boxes, and
 links (`#475569`) were nearly invisible. HTML cards also weren't given any gender/main accent.
 
 ## Why the previous height-only fix was insufficient
 
-Height fixed the *container collapse* (a real, separate bug — `min-height` doesn't give percentage-
+Height fixed the *container collapse* (a real, separate bug - `min-height` doesn't give percentage-
 height children a definite height). But the "tiny" symptom is caused by the **fit zoom math**, not by
 the container size. With `tree_position: "fit"`, a large family always renders tiny no matter how tall
 the box is. The real fix is to change the default view strategy and add resize handling, plus a proper
@@ -82,7 +82,7 @@ dark theme.
 ## Manual verification checklist (requires an authenticated admin session + a tree with people)
 
 - [ ] `/admin/family/edit` (real tree): chart fills the canvas; cards are **readable** (≈100%),
-      centered on the default/selected person — not tiny.
+      centered on the default/selected person - not tiny.
 - [ ] `/admin/family/new`: empty/seed state renders sanely.
 - [ ] Click a card → it re-centers on that person at a readable scale.
 - [ ] **Fit** → zooms out to show the whole tree (intended). **Center Main** → returns to the person.
@@ -96,7 +96,7 @@ dark theme.
 
 - `npm run build` → exit 0, no errors. `git diff --check` → clean.
 - Root cause and fix confirmed against `family-chart@0.9.0` source (`calculateTreeFit`, `cardToMiddle`,
-  `ViewProps`). At `scale: 1` there is **no** code path that yields a tiny render — cards draw at their
+  `ViewProps`). At `scale: 1` there is **no** code path that yields a tiny render - cards draw at their
   natural size.
 - Public no-regression confirmed: dev server vs the prod read-only API → `/family` 200, renders the
   `FamilyExplorer` island, and `family-chart--admin` appears **only** as bundled CSS selectors (0
@@ -105,7 +105,7 @@ dark theme.
 
 ## Remaining limitations / risks
 
-- **Not visually verified in the live admin page** — that route needs an authenticated session and a
+- **Not visually verified in the live admin page** - that route needs an authenticated session and a
   populated tree, which this environment cannot reach. The sizing fix is backed by deterministic
   library-source analysis; the theme is standard scoped CSS. Final visual sign-off is the one manual
   step above. (Per instruction, no synthetic repro was used as proof this time.)

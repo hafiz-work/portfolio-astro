@@ -24,3 +24,6 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 .wrangler/
+
+# brand asset generator (scripts/brand/gen.py)
+.venv-brand/

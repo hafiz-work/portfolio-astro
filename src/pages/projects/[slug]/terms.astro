@@ -42,54 +42,43 @@ const hasTerms = Boolean(policy?.termsAndConditions);
   image={project?.imageUrl || undefined}
   imageAlt={project?.title}
 >
-  <div
-    class="bg-white backdrop-blur-sm border border-slate-200 rounded-3xl overflow-hidden shadow-2xl"
-  >
-    <div class="border-b border-slate-200 bg-white/90 px-8 md:px-12 py-6">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="space-y-2">
-          <div
-            class="flex items-center gap-2 text-xs font-mono uppercase tracking-[0.3em] text-purple-400/80"
-          >
-            <span class="h-1.5 w-1.5 rounded-full bg-purple-400/80"></span>
-            Legal Module
-          </div>
-          <h1 class="text-3xl md:text-4xl font-bold text-slate-900">
-            Terms &amp; Conditions
-          </h1>
-          <p class="text-slate-500 text-sm font-mono">
-            {project ? project.title : slug}
-          </p>
-        </div>
-        <div class="flex flex-wrap gap-3">
-          <a
-            href={`/projects/${slug}`}
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/70 border border-slate-300 text-slate-700 hover:border-purple-400/60 hover:text-purple-100 transition-colors text-sm font-mono"
-          >
-            <span class="h-1.5 w-1.5 rounded-full bg-purple-400/80"></span>
-            back_to_project
-          </a>
-          <a
-            href={`/projects/${slug}/privacy`}
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/70 border border-blue-500/20 text-blue-200 hover:border-blue-400/60 hover:text-blue-100 transition-colors text-sm font-mono"
-          >
-            <span class="h-1.5 w-1.5 rounded-full bg-blue-400/80"></span>
-            privacy_policy.md
-          </a>
-        </div>
-      </div>
+  <div class="h-10 sm:h-16"></div>
+  <div class="line-y">
+    <div class="container-main">
+      <a
+        href={`/projects/${slug}`}
+        class="group inline-flex items-center gap-1.5 font-mono text-xs/6 text-gray-500 transition-colors hover:text-gray-950 dark:hover:text-white"
+      >
+        <span class="transition-transform group-hover:-translate-x-0.5" aria-hidden="true">&larr;</span>
+        cd ../{slug}
+      </a>
     </div>
-    <div class="p-8 md:p-12">
-      {
-        hasTerms ? (
-          <div class="bg-white rounded-2xl p-8 border border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.08)]">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-lg font-bold text-slate-900">
-                terms_and_conditions.md
-              </h2>
-              <span class="px-2 py-1 rounded-full text-xs font-mono text-purple-300 bg-purple-500/10 border border-purple-500/20">
-                read-only
-              </span>
+  </div>
+  <div class="h-8 sm:h-12"></div>
+  <div class="line-y">
+    <p class="eyebrow container-main">Legal · {project ? project.title : slug}</p>
+  </div>
+  <div class="line-y mt-2">
+    <h1 class="container-main text-4xl/[1.1] font-medium tracking-tighter text-gray-950 sm:text-6xl/[1.05] dark:text-white">
+      Terms &amp; Conditions
+    </h1>
+  </div>
+  <div class="h-8"></div>
+  <div class="line-y">
+    <div class="container-main flex flex-wrap gap-3">
+      <a href={`/projects/${slug}`} class="btn-pill btn-pill-ghost">Back to project</a>
+      <a href={`/projects/${slug}/privacy`} class="btn-pill btn-pill-ghost">Privacy Policy</a>
+    </div>
+  </div>
+  <div class="h-12 sm:h-16"></div>
+  <div class="line-y p-2">
+    {
+      hasTerms ? (
+        <div class="frame">
+          <div class="frame-inner p-6 sm:p-10">
+            <div class="mb-6 flex items-center justify-between gap-4">
+              <span class="font-mono text-xs/6 text-gray-500">terms_and_conditions.md</span>
+              <span class="tag">read-only</span>
             </div>
             <TextEditor
               content={policy?.termsAndConditions ?? ""}
@@ -98,20 +87,15 @@ const hasTerms = Boolean(policy?.termsAndConditions);
               client:load
             />
           </div>
-        ) : (
-          <div class="bg-white rounded-2xl p-8 border border-slate-200 text-slate-500">
-            <div class="text-sm font-mono uppercase tracking-[0.3em] text-slate-400 mb-3">
-              status
-            </div>
-            <p class="text-lg text-slate-700">
-              No terms published for this project.
-            </p>
-            <p class="text-sm text-slate-400 mt-2">
-              Check back later or contact the owner for details.
-            </p>
-          </div>
-        )
-      }
-    </div>
+        </div>
+      ) : (
+        <div class="pattern flex h-56 flex-col items-center justify-center gap-2 rounded-xl text-center">
+          <p class="rounded-full bg-canvas px-3 py-1 text-sm/6 font-medium text-gray-950 ring-1 ring-gray-950/10 dark:bg-pub-dark dark:text-white dark:ring-white/10">
+            No terms published for this project.
+          </p>
+          <p class="text-xs text-gray-500">Check back later or contact the owner for details.</p>
+        </div>
+      )
+    }
   </div>
 </ProjectLayout>

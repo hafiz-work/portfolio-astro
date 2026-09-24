@@ -1,5 +1,5 @@
 # Cloudflare static-asset headers (prerendered pages + static files).
-# SSR'd HTML documents are covered by src/middleware.ts — KEEP THE CSP BELOW
+# SSR'd HTML documents are covered by src/middleware.ts - KEEP THE CSP BELOW
 # IN SYNC with SECURITY_HEADERS there.
 #
 # CSP notes:
@@ -11,7 +11,7 @@
 #  - img-src https: is intentionally broad: the portfolio renders remote images
 #    from many hosts (github, licdn, dbkl, qiubbx, R2).
 #  - cloudflareinsights.com (script-src static.*, connect-src apex) is
-#    Cloudflare Web Analytics — its beacon is auto-injected by Cloudflare.
+#    Cloudflare Web Analytics - its beacon is auto-injected by Cloudflare.
 #  - www.google.com + www.gstatic.com are required by Google reCAPTCHA.
 
 /*

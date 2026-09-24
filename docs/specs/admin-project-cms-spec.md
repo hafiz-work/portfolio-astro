@@ -4,7 +4,7 @@
 **Depends on:** `backend-content-api-spec.md` (admin write API), data model in `admin-backend-implementation-plan.md` §Schema.
 **Reuses existing admin primitives:** `PrivateLayout.astro` (always-dark), `AdminSidebar`, `AdminNavbar`, `AdminPageHeader.astro`, `DataTable` (TanStack table + virtual), `ui/Dropdown`, `ui/MultiDropdown`, `ui/Checkbox`, `ui/TextEditor` (TipTap), `lib/upload.ts` (R2), `lib/form-guard.ts`, `window.confirmModal`, `ui/admin/primitives` (`AdminBadge`, `RowActions`, `EditAction`, `DeleteAction`, etc.).
 
-The CMS extends the existing `/admin/projects` screens — it does not replace the admin shell or theming.
+The CMS extends the existing `/admin/projects` screens - it does not replace the admin shell or theming.
 
 ---
 
@@ -12,9 +12,9 @@ The CMS extends the existing `/admin/projects` screens — it does not replace t
 
 | Route | Purpose |
 |---|---|
-| `/admin/projects` | Projects table/list (exists — extended). |
+| `/admin/projects` | Projects table/list (exists - extended). |
 | `/admin/projects/new` | Create project (Basics-first; full editor after first save). |
-| `/admin/projects/edit?id=` | Tabbed editor (exists — extended to tabs). |
+| `/admin/projects/edit?id=` | Tabbed editor (exists - extended to tabs). |
 | `/admin/projects/edit?id=&tab=media` | Deep-link to a specific editor tab. |
 | `/admin/media` (optional v2) | Global media library (`media_assets`). |
 | `/admin/tech-stacks` | Tech stack taxonomy manager. |
@@ -38,31 +38,31 @@ Built on the existing `ProjectsTable.tsx` (TanStack `DataTable`).
 **Badges** (`AdminBadge`): Draft · Published · Featured · Confidential · **Missing media** · **Broken links** (computed from `project_links.status`/validation).
 **Bulk actions** (checkbox column): Publish selected · Archive selected · Set featured · Reorder featured (drag handle on a featured-only view).
 
-## 4. Create / edit form — tabbed
+## 4. Create / edit form - tabbed
 First save (new) only needs **Basics** (title, slug, summary, type) → creates a `draft`, then redirects to the full tabbed editor. Manual save per tab (autosave deferred). Reuse `form-guard` for unsaved-changes protection.
 
-### Tab 1 — Basics
+### Tab 1 - Basics
 title*, slug* (auto-suggested from title, uniqueness-checked live), subtitle, summary* (≤ 280), description (short), `project_type`*, `project_scope`, year, `client_name` (+ "confidential" toggle), role, status, visibility (`is_public`, `is_confidential`).
 
-### Tab 2 — Case Study
+### Tab 2 - Case Study
 Rich-text (TipTap → sanitized HTML): `problem`, `solution`, `contribution`, `architecture_notes`, `result_summary`, plus a repeatable **`project_sections`** editor (type, title, body, sort_order, is_visible) for custom blocks. Drag to reorder.
 
-### Tab 3 — Media Carousel
+### Tab 3 - Media Carousel
 The **media manager** (§5).
 
-### Tab 4 — Tech Stack
+### Tab 4 - Tech Stack
 Attach tech from the `tech_stacks` taxonomy via `MultiDropdown`; mark `is_primary`; drag to set `sort_order`. "Create new tech" inline (writes `tech_stacks`). No free-text comma lists.
 
-### Tab 5 — Links & SEO
+### Tab 5 - Links & SEO
 **Links manager** (§6) + SEO: `og_image_id` (pick from media), meta preview (title/description as they'll render), canonical preview.
 
-### Tab 6 — Publish
+### Tab 6 - Publish
 Pre-publish checklist (§8 validation) with pass/fail; Publish / Unpublish / Schedule (`published_at`); Archive. Shows what's blocking publish.
 
 ## 5. Media manager (`media_assets` + `project_media`)
 - Upload via existing `lib/upload.ts` (R2). On upload, create a `media_assets` row (filename, url, mime, width/height, size, optional blurhash) and a `project_media` link row.
 - Per item: `media_type` (screenshot/video/architecture_diagram/logo/cover/og), `device_frame` (phone/tablet/desktop/browser/none), `title`, `caption`, **`alt_text`** (required for public), `is_featured`, `is_visible`, `sort_order`.
-- **Drag-to-reorder** = carousel order on the public page (single source of truth — no hardcoded order).
+- **Drag-to-reorder** = carousel order on the public page (single source of truth - no hardcoded order).
 - Set cover / OG from here (writes `projects.cover_image_id` / `og_image_id`).
 - Validation: public publish blocked if any visible public media lacks `alt_text`.
 
@@ -72,7 +72,7 @@ Pre-publish checklist (§8 validation) with pass/fail; Publish / Unpublish / Sch
 - This table is the durable replacement for the Phase 0 `PROJECT_LINK_OVERRIDES` stopgap.
 
 ## 7. Tech stack manager (`/admin/tech-stacks`)
-DataTable of `tech_stacks`: name (unique), category, proficiency, icon, color. Create/edit/delete (delete blocked if referenced by a project — show usage count).
+DataTable of `tech_stacks`: name (unique), category, proficiency, icon, color. Create/edit/delete (delete blocked if referenced by a project - show usage count).
 
 ## 8. Validation rules
 **Always:** title required; slug required, unique, `^[a-z0-9-]+$`; summary required.

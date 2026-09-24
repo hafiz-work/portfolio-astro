@@ -1,7 +1,7 @@
-# Family Page Review — Senior Astro/React, Frontend Architecture, QA & Privacy
+# Family Page Review - Senior Astro/React, Frontend Architecture, QA & Privacy
 
 **Branch:** `codex/family-page-phase-0-4`
-**Reviewed commit:** `f72858faa7a0b8160a6578a84d0c886eac3c983c` — _refactor family page explorer and SSR data flow_
+**Reviewed commit:** `f72858faa7a0b8160a6578a84d0c886eac3c983c` - _refactor family page explorer and SSR data flow_
 **Reviewer pass date:** 2026-06-13
 **Backend used for runtime checks:** production read-only API `https://api.hafizbahtiar.com/api/v1` (GET only, no mutation)
 
@@ -9,7 +9,7 @@
 
 ## 1. Overall verdict
 
-**APPROVE — safe to push after applying the small review-fix patch in this pass.**
+**APPROVE - safe to push after applying the small review-fix patch in this pass.**
 
 Codex's Phase 0–4 refactor is solid. The public family pages now load data in Astro frontmatter
 (SSR at request time), pass a single sanitized DTO into one `FamilyExplorer` React island, use real
@@ -43,7 +43,7 @@ and inspecting the actual rendered HTML and the serialized island payload.
 Confirmed structurally:
 - SSR data loaded in Astro frontmatter (`src/pages/family/index.astro`, `[slug]/index.astro`).
 - The old browser-side fetch waterfall is gone (no client `fetch` of family API in the public island).
-- Cache-buster params are gone — `FamilyService.publicGet()` uses a plain `fetch` with no `noCache`
+- Cache-buster params are gone - `FamilyService.publicGet()` uses a plain `fetch` with no `noCache`
   query param and bypasses the no-store `ApiClient` path (keeps backend KV/HTTP cache effective).
 - Empty / error / 404 states all render correctly (page-level and island-level empty states exist).
 - Exactly one `FamilyExplorer` island per page (verified by parsing `<astro-island>` elements).
@@ -62,7 +62,7 @@ Confirmed structurally:
    The SSR privacy reducer `yearOnly()` in `family-privacy.ts` was also `Date`-first, which would
    produce a wrong (but still year-only, so non-leaking) value if SSR ever ran outside UTC.
 
-2. **Dev-only transient — NOT a bug.** A one-time `Invalid hook call` / `Cannot read properties of null
+2. **Dev-only transient - NOT a bug.** A one-time `Invalid hook call` / `Cannot read properties of null
    (reading 'useMemo')` appeared in the Vite dev log during dependency re-optimization (`optimized
    dependencies changed. reloading`). Every request after deps settled returned 200 with a fully
    rendered island and correct props. This is known Vite SSR dep-optimization flakiness, not a code
@@ -76,13 +76,13 @@ No correctness, privacy, merge, admin, or accessibility blockers were found.
 
 Applied a tight, scoped fix for bug #1 only:
 
-- **Added `src/lib/family-format.ts`** — `displayYear(value)`: extracts the leading 4-digit year
+- **Added `src/lib/family-format.ts`** - `displayYear(value)`: extracts the leading 4-digit year
   textually (regex), with no `Date`/timezone interpretation.
-- **`src/lib/chart-data.ts`** — chart `birthday`/`death` now use `displayYear(...)`.
-- **`src/components/family/FamilyListView.tsx`** — list birth-year via `displayYear(...)`.
-- **`src/components/family/PersonSearch.tsx`** — combobox birth-year via `displayYear(...)`.
-- **`src/components/family/PersonDetailPanel.tsx`** — `formatDate(..., yearOnly=true)` via `displayYear(...)`.
-- **`src/lib/family-privacy.ts`** — hardened `yearOnly()` to be regex-first (timezone-safe) with a
+- **`src/lib/chart-data.ts`** - chart `birthday`/`death` now use `displayYear(...)`.
+- **`src/components/family/FamilyListView.tsx`** - list birth-year via `displayYear(...)`.
+- **`src/components/family/PersonSearch.tsx`** - combobox birth-year via `displayYear(...)`.
+- **`src/components/family/PersonDetailPanel.tsx`** - `formatDate(..., yearOnly=true)` via `displayYear(...)`.
+- **`src/lib/family-privacy.ts`** - hardened `yearOnly()` to be regex-first (timezone-safe) with a
   `Date` fallback, so the living-person reduction is correct regardless of SSR runtime timezone.
 
 All changes are pure/string-level and scoped to the family module. `npm run build` passes; `git diff --check` clean.
@@ -120,7 +120,7 @@ M  src/components/family/PersonDetailPanel.tsx
 Backend field shape confirmed the sanitizer is necessary: the raw API returns `treeId`, `firstName`,
 `lastName`, `notes`, `metadata`, `createdAt`, `updatedAt` on people; `id`, `treeId`, `isPrimary`,
 `startDate`, `endDate`, `notes`, timestamps on relationships; `createdByUserId`, `isPublic`, timestamps
-on trees — **none of which appear in the island payload.**
+on trees - **none of which appear in the island payload.**
 
 ---
 
@@ -136,7 +136,7 @@ Verified **statically** (admin routes require auth; no login attempted, no admin
   (`family:set-main`, `family:on-main-changed`, `family:on-spouses`, `family:zoom-in/out`,
   `family:fit`, `family:center-main`, `family:set-orientation`).
 - The removed public cross-tree N+1 fetch storm left **no dangling references** (`family:set-data`,
-  `__combinedFamilyDetail`, deleted components) — grep clean.
+  `__combinedFamilyDetail`, deleted components) - grep clean.
 - Admin zoom was upgraded from fake card-spacing to **real `manualZoom`** (improvement, matches public).
 - Shared `buildChartData` preserves `firstName`/`lastName`/`metadata` for the full (admin) detail, so
   card display and `metadata.birth_order` sorting still work.
@@ -146,12 +146,12 @@ spouse/son/daughter, fit/center/orientation) per the handoff checklist. Low risk
 
 ---
 
-## 8. Privacy review result — PASS
+## 8. Privacy review result - PASS
 
 Audited the actual serialized island payload from real production data (77 people across 5 trees):
 
 - **Person fields present:** exactly `id, displayName, globalKey, gender, birthDate, deathDate,
-  isLiving, photoUrl` — matches the allowed whitelist.
+  isLiving, photoUrl` - matches the allowed whitelist.
 - **Relationship fields present:** exactly `personId, relatedPersonId, relationshipType`.
 - **Tree fields present:** exactly `slug, name, description, defaultMainPersonId`.
 - **Stripped (confirmed absent):** `notes`, `metadata`, raw JSON blobs, `firstName`, `lastName`, tree
@@ -167,14 +167,14 @@ Audited the actual serialized island payload from real production data (77 peopl
 
 ---
 
-## 9. D1 SQL review result — SAFE / not run
+## 9. D1 SQL review result - SAFE / not run
 
 `docs/reports/family-page-phase-0-d1-verification.sql`:
 
 - Clearly labeled "not applied", "run local first, then remote only after reviewing SELECT output."
 - **Separates verification from remediation:** §1, §2, §4 are read-only `SELECT`s; §3, §5 are the
   remediation writes.
-- §5 (parent bridge rows) uses `INSERT OR IGNORE` with JOIN guards scoped to `bahtiar-family` — idempotent.
+- §5 (parent bridge rows) uses `INSERT OR IGNORE` with JOIN guards scoped to `bahtiar-family` - idempotent.
 - §3 backfill is idempotent (only fills `global_key IS NULL/''`).
 - **One caveat to flag before running §3:** it matches by `lower(display_name)` **without tree scoping**,
   so if two genuinely distinct same-named people both lack a `global_key`, they'd be assigned the same
@@ -190,20 +190,20 @@ Audited the actual serialized island payload from real production data (77 peopl
   ordering changes; share links correctly prefer `globalKey` (numeric `id` is fallback only). Acceptable.
 - **People without `globalKey`** are intentionally not merged across trees (kept distinct by `tree:id`),
   so a cross-tree person missing a `global_key` will appear twice until the D1 backfill is applied.
-- **Full deceased dates** use `toLocaleDateString("en-MY", …)` on full ISO strings — could be off by one
+- **Full deceased dates** use `toLocaleDateString("en-MY", …)` on full ISO strings - could be off by one
   day for far-western timezones at midnight boundaries. Cosmetic, deceased-only, not patched (out of the
   year-only privacy path). Note for a future pass if a global audience matters.
 - **Bottom sheet** does not implement full focus-trapping (Esc closes, focus enters/returns correctly).
   Acceptable for now; consider a focus trap if this becomes a primary mobile surface.
 - **`family-chart` theme selectors** in `family-chart-theme.css` are conservative; spot-check in devtools
   for light/dark once the backend is wired locally.
-- **Admin runtime click-through** is still manual (auth required) — see §7.
+- **Admin runtime click-through** is still manual (auth required) - see §7.
 
 ---
 
 ## 11. Recommended next commit / amend instruction
 
-Create a **new review-fix commit** on top of Codex's commit (do **not** amend `f72858f` — keep the
+Create a **new review-fix commit** on top of Codex's commit (do **not** amend `f72858f` - keep the
 handoff hash stable and the review traceable):
 
 ```

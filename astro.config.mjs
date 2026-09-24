@@ -7,10 +7,10 @@ import cloudflare from '@astrojs/cloudflare';
 
 // https://astro.build/config
 export default defineConfig({
-  // Canonical origin — powers Astro.site for <link rel="canonical"> and OG URLs.
+  // Canonical origin - powers Astro.site for <link rel="canonical"> and OG URLs.
   site: 'https://hafizbahtiar.com',
   output: 'server',
-  // Image passthrough — MUST be set explicitly. @astrojs/cloudflare v13's
+  // Image passthrough - MUST be set explicitly. @astrojs/cloudflare v13's
   // default (when `imageService` is unset) is 'cloudflare-binding', which sends
   // every runtime /_image request through the Cloudflare Images binding
   // (env.IMAGES). That binding is not configured here, AND remote <Image> URLs
@@ -39,6 +39,9 @@ export default defineConfig({
       "github.com",
       "avatars.githubusercontent.com",
       "media.licdn.com"
+      // ghchart.rshah.org is deliberately NOT listed: it serves SVG, and the
+      // passthrough /_image endpoint returns it as "image/undefined", which
+      // browsers refuse to render. Unlisted remotes keep their original URL.
     ]
   },
   vite: {

@@ -1,16 +1,18 @@
 ---
 import PublicLayout from "../layouts/PublicLayout.astro";
+import { Image } from "astro:assets";
 import JsonLd from "../components/seo/JsonLd.astro";
 import Hero from "../components/home/Hero.astro";
 import ContactSection from "../components/home/ContactSection.astro";
 import FeaturedProjects from "../components/home/FeaturedProjects.astro";
 import MapSection from "../components/home/MapSection.astro";
+import SectionHeader from "../components/layout/SectionHeader.astro";
 import {
 	getPublicProjects,
 	getPublicExperiences,
 } from "../lib/public-content";
 
-// Server-side data with curated fallback — this page never shows loading
+// Server-side data with curated fallback - this page never shows loading
 // spinners, error banners, or empty states.
 const [projects, experiences] = await Promise.all([
 	getPublicProjects(),
@@ -90,12 +92,18 @@ const skills: { category: string; items: Skill[] }[] = [
 
 const levelStyle: Record<SkillLevel, string> = {
 	advanced:
-		"bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-500/30",
+		"bg-sky-500/10 text-sky-700 ring-sky-500/25 dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/25",
 	proficient:
-		"bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30",
+		"bg-gray-950/[0.03] text-gray-950 ring-gray-950/10 dark:bg-white/5 dark:text-white dark:ring-white/15",
 	familiar:
-		"bg-slate-100 dark:bg-slate-700/70 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600",
+		"text-gray-500 ring-gray-950/5 dark:text-gray-500 dark:ring-white/10",
 };
+
+const legend: { level: SkillLevel; label: string; dot: string }[] = [
+	{ level: "advanced", label: "Advanced", dot: "bg-sky-500 dark:bg-sky-400" },
+	{ level: "proficient", label: "Proficient", dot: "bg-gray-950 dark:bg-white" },
+	{ level: "familiar", label: "Familiar", dot: "bg-gray-300 dark:bg-gray-600" },
+];
 
 const personSchema = {
 	"@context": "https://schema.org",
@@ -128,104 +136,77 @@ const websiteSchema = {
 	<JsonLd schema={websiteSchema} />
 	<Hero projectCount={projects.length} yearsExperience={yearsExperience} />
 
-	<div class="container-main space-y-14 md:space-y-20 pb-10 md:pb-14">
-		<!-- GitHub Activity -->
-		<section id="github-activity" class="scroll-offset" data-reveal>
-			<div class="section-label">
-				<span class="section-index">01 / Activity</span>
-				<span class="section-rule"></span>
-			</div>
-			<div
-				class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-5"
+	<!-- GitHub Activity -->
+	<section id="github-activity" class="scroll-offset">
+		<div class="section-gap"></div>
+		<SectionHeader
+			eyebrow="Activity"
+			title="Shipping, most days."
+			description="Public GitHub contributions over the last year - the boring consistency that production software is built on."
+		>
+			<a
+				slot="action"
+				href="https://github.com/hafizbahtiar"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="btn-pill btn-pill-ghost"
 			>
-				<div>
-					<h2 class="section-heading">GitHub contributions</h2>
-					<p class="section-sub">
-						Public activity and coding consistency.
-					</p>
+				View profile
+			</a>
+		</SectionHeader>
+		<div class="h-10"></div>
+		<div class="line-y p-2" data-reveal>
+			<div class="frame">
+				<div class="frame-inner overflow-x-auto p-3 md:p-5">
+					<Image
+						src="https://ghchart.rshah.org/0ea5e9/hafizbahtiar"
+						alt="GitHub contribution chart for hafizbahtiar"
+						id="github-chart"
+						width="722"
+						height="112"
+						loading="lazy"
+						decoding="async"
+						class="block h-auto w-full min-w-[620px] transition-[filter] duration-300"
+						referrerpolicy="no-referrer"
+					/>
 				</div>
-				<a
-					href="https://github.com/hafizbahtiar"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="inline-flex min-h-10 shrink-0 items-center justify-center self-start rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-100 sm:self-auto"
-				>
-					View profile
-				</a>
 			</div>
-			<div
-				class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-surface-code p-3 md:p-4"
-			>
-				<img
-					src="https://ghchart.rshah.org/hafizbahtiar"
-					alt="GitHub contribution chart for hafizbahtiar"
-					id="github-chart"
-					width="722"
-					height="112"
-					loading="lazy"
-					decoding="async"
-					class="block min-w-[620px] w-full h-auto transition-[filter] duration-300"
-					referrerpolicy="no-referrer"
-				/>
-			</div>
-		</section>
+		</div>
+	</section>
 
-		<!-- Skills Section -->
-		<section id="skills" class="scroll-offset" data-reveal>
-			<div class="section-label">
-				<span class="section-index">02 / Stack</span>
-				<span class="section-rule"></span>
-			</div>
-			<div
-				class="mb-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3"
-			>
-				<div>
-					<h2 class="section-heading">Engineering stack</h2>
-					<p class="section-sub">
-						Backend first, mobile close behind — the tools I ship
-						production software with.
-					</p>
-				</div>
-				<div class="flex items-center gap-3 shrink-0">
-					<div class="flex items-center gap-1.5">
-						<span class="inline-block w-2 h-2 rounded-full bg-cyan-400"
-						></span>
-						<span class="text-xs text-slate-500 dark:text-slate-400"
-							>Advanced</span
-						>
-					</div>
-					<div class="flex items-center gap-1.5">
-						<span class="inline-block w-2 h-2 rounded-full bg-blue-400"
-						></span>
-						<span class="text-xs text-slate-500 dark:text-slate-400"
-							>Proficient</span
-						>
-					</div>
-					<div class="flex items-center gap-1.5">
-						<span
-							class="inline-block w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500"
-						></span>
-						<span class="text-xs text-slate-500 dark:text-slate-400"
-							>Familiar</span
-						>
-					</div>
-				</div>
-			</div>
-			<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+	<!-- Skills Section -->
+	<section id="skills" class="scroll-offset">
+		<div class="section-gap"></div>
+		<SectionHeader
+			eyebrow="Stack"
+			title="Backend first, mobile close behind."
+			description="The tools I ship production software with, grouped by where they live in the system."
+		/>
+		<div class="line-y mt-6" data-reveal>
+			<div class="container-main flex flex-wrap items-center gap-x-5 gap-y-2">
 				{
-					skills.map((skillGroup, index) => (
-						<div
-							class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 p-4 hover:border-cyan-500/40 dark:hover:border-cyan-400/30 transition-colors"
-							data-reveal
-							style={`--reveal-delay: ${(index % 3) * 70}ms`}
-						>
-							<h3 class="font-mono text-[11px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-[0.18em] mb-3">
+					legend.map((item) => (
+						<span class="inline-flex items-center gap-2 font-mono text-xs/6 text-gray-500 dark:text-gray-400">
+							<span class={`h-1.5 w-1.5 rounded-full ${item.dot}`} />
+							{item.label}
+						</span>
+					))
+				}
+			</div>
+		</div>
+		<div class="h-10"></div>
+		<div class="line-t" data-reveal>
+			<div class="row-grid">
+				{
+					skills.map((skillGroup) => (
+						<div class="px-4 py-6 sm:px-6 sm:py-8">
+							<h3 class="text-sm/6 font-semibold text-gray-950 dark:text-white">
 								{skillGroup.category}
 							</h3>
-							<div class="flex flex-wrap gap-1.5">
+							<div class="mt-4 flex flex-wrap gap-1.5">
 								{skillGroup.items.map((item) => (
 									<span
-										class={`text-xs rounded-md px-2 py-0.5 ${levelStyle[item.level]}`}
+										class={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs/5 font-medium ring-1 ring-inset ${levelStyle[item.level]}`}
 									>
 										{item.name}
 									</span>
@@ -235,50 +216,29 @@ const websiteSchema = {
 					))
 				}
 			</div>
-		</section>
+		</div>
+	</section>
 
-		<!-- Projects Section -->
-		<section id="projects" class="scroll-offset">
-			<div data-reveal>
-				<div class="section-label">
-					<span class="section-index">03 / Selected Work</span>
-					<span class="section-rule"></span>
-				</div>
-				<div class="flex flex-wrap items-end justify-between gap-2 mb-5">
-					<div>
-						<h2 class="section-heading">Selected projects</h2>
-						<p class="section-sub">
-							Production systems — marketplaces, government
-							platforms, and offline-first apps.
-						</p>
-					</div>
-					<a
-						href="/projects"
-						class="group inline-flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors shrink-0"
-					>
-						View all {projects.length}
-						<svg
-							class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M9 5l7 7-7 7"></path>
-						</svg>
-					</a>
-				</div>
-			</div>
-			<FeaturedProjects projects={projects} />
-		</section>
+	<!-- Projects Section -->
+	<section id="projects" class="scroll-offset">
+		<div class="section-gap"></div>
+		<SectionHeader
+			eyebrow="Selected work"
+			title="Production systems, not side quests."
+			description="Marketplaces, government platforms, logistics tooling and offline-first apps - shipped and running."
+		>
+			<a slot="action" href="/projects" class="btn-pill btn-pill-ghost">
+				View all {projects.length}
+				<span aria-hidden="true">&rarr;</span>
+			</a>
+		</SectionHeader>
+		<div class="h-10"></div>
+		<FeaturedProjects projects={projects} />
+	</section>
 
-		<MapSection experiences={experiences} />
+	<MapSection experiences={experiences} />
 
-		<ContactSection />
-	</div>
+	<ContactSection />
 </PublicLayout>
 
 <script>

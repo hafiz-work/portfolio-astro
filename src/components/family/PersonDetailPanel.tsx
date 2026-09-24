@@ -66,7 +66,7 @@ export const PersonDetailPanel = ({
 
   if (!person) {
     return (
-      <div className="flex h-full items-center justify-center rounded-xl border border-slate-200 bg-white p-5 text-center text-sm text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500">
+      <div className="flex h-full items-center justify-center pattern rounded-xl p-5 text-center text-sm text-gray-500">
         Select a person in the tree to see their details
       </div>
     );
@@ -82,21 +82,21 @@ export const PersonDetailPanel = ({
             width={56}
             height={56}
             loading="lazy"
-            className="h-14 w-14 rounded-full border border-slate-200 object-cover dark:border-slate-600"
+            className="h-14 w-14 rounded-full border border-gray-200 object-cover dark:border-gray-600"
           />
         ) : (
           <div
             aria-hidden="true"
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-cyan-100 font-semibold text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-sky-500/10 font-semibold text-sky-700 dark:bg-sky-400/10 dark:text-sky-300"
           >
             {initials(person.displayName)}
           </div>
         )}
         <div className="min-w-0">
-          <h3 className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
+          <h3 className="truncate text-base font-semibold text-gray-900 dark:text-gray-100">
             {person.displayName}
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             {person.isLiving ? "Living" : "Deceased"}
           </p>
         </div>
@@ -104,15 +104,15 @@ export const PersonDetailPanel = ({
 
       <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
         <div>
-          <dt className="text-xs text-slate-500 dark:text-slate-400">Born</dt>
-          <dd className="text-slate-800 dark:text-slate-200">
+          <dt className="text-xs text-gray-500 dark:text-gray-400">Born</dt>
+          <dd className="text-gray-800 dark:text-gray-200">
             {formatDate(person.birthDate, person.isLiving)}
           </dd>
         </div>
         {!person.isLiving && (
           <div>
-            <dt className="text-xs text-slate-500 dark:text-slate-400">Died</dt>
-            <dd className="text-slate-800 dark:text-slate-200">
+            <dt className="text-xs text-gray-500 dark:text-gray-400">Died</dt>
+            <dd className="text-gray-800 dark:text-gray-200">
               {formatDate(person.deathDate, false)}
             </dd>
           </div>
@@ -120,8 +120,8 @@ export const PersonDetailPanel = ({
       </dl>
 
       {relationshipGroups.length > 0 && (
-        <div className="space-y-2 border-t border-slate-100 pt-3 dark:border-slate-700">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <div className="space-y-2 border-t border-gray-100 pt-3 dark:border-gray-700">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
             Relationships
           </p>
           <table className="w-full border-collapse text-sm">
@@ -130,7 +130,7 @@ export const PersonDetailPanel = ({
                 <tr key={group.key} className="align-top">
                   <th
                     scope="row"
-                    className="w-24 py-1 pr-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500"
+                    className="w-24 py-1 pr-3 text-left text-xs font-medium text-gray-400 dark:text-gray-500"
                   >
                     {group.label}
                   </th>
@@ -141,7 +141,7 @@ export const PersonDetailPanel = ({
                           key={getRelationKey(related)}
                           type="button"
                           onClick={() => onSelectPerson(related.id)}
-                          className="-mx-1 rounded px-1 text-left text-cyan-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 dark:text-cyan-400 dark:hover:bg-slate-700/50"
+                          className="-mx-1 rounded px-1 text-left text-sky-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-400 dark:hover:bg-white/5"
                         >
                           {related.displayName}
                         </button>
@@ -170,13 +170,13 @@ export const PersonDetailPanel = ({
           className="absolute inset-0 bg-black/40"
           onClick={onClose}
         />
-        <div className="absolute inset-x-0 bottom-0 max-h-[70vh] space-y-4 overflow-y-auto rounded-t-2xl bg-white p-5 motion-safe:transition-transform dark:bg-slate-800">
+        <div className="absolute inset-x-0 bottom-0 max-h-[70vh] space-y-4 overflow-y-auto rounded-t-2xl bg-white p-5 ring-1 ring-gray-950/10 motion-safe:transition-transform dark:bg-gray-900 dark:ring-white/10">
           <button
             ref={closeRef}
             type="button"
             onClick={onClose}
             aria-label="Close details"
-            className="absolute right-4 top-4 rounded-md p-1 text-slate-400 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 dark:hover:text-slate-200"
+            className="absolute right-4 top-4 rounded-md p-1 text-gray-400 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:text-gray-200"
           >
             <svg
               aria-hidden="true"
@@ -200,7 +200,7 @@ export const PersonDetailPanel = ({
   }
 
   return (
-    <div className="h-full space-y-4 overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
+    <div className="h-full space-y-4 overflow-y-auto rounded-xl bg-white p-5 outline outline-gray-950/5 dark:bg-white/[0.03] dark:outline-white/10">
       {body}
     </div>
   );

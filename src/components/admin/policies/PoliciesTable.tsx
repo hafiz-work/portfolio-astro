@@ -79,9 +79,9 @@ export const PoliciesTable = () => {
   }, [loadPolicies]);
 
   const formatDate = (value?: string | null) => {
-    if (!value) return "—";
+    if (!value) return "-";
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "—";
+    if (Number.isNaN(date.getTime())) return "-";
     return date.toLocaleDateString();
   };
 
@@ -157,7 +157,7 @@ export const PoliciesTable = () => {
       data={data}
       isLoading={isLoading}
       emptyTitle="No projects found"
-      emptyDescription="Policies are attached to projects — create a project first."
+      emptyDescription="Policies are attached to projects - create a project first."
     />
   );
 };

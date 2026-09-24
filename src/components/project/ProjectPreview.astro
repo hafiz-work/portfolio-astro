@@ -1,8 +1,10 @@
 ---
+import { Image } from "astro:assets";
+
 /**
  * Composed preview for projects that only have a logo, not a screenshot.
  * Renders an abstract device frame (browser for web, phone for mobile) with
- * the logo as a small contained chip — honest about not being a screenshot,
+ * the logo as a small contained chip - honest about not being a screenshot,
  * but reads as shipped product instead of a stretched logo.
  */
 interface Props {
@@ -58,10 +60,10 @@ const accentStyles: Record<Accent, { glow: string; fill: string; soft: string }>
 const a = accentStyles[accent];
 ---
 
-<div class="absolute inset-0 bg-slate-100 dark:bg-slate-900/70 overflow-hidden">
+<div class="absolute inset-0 bg-gray-50 dark:bg-white/[0.03] overflow-hidden">
   <!-- Dot grid + accent glow backdrop -->
   <div
-    class="absolute inset-0 bg-[radial-gradient(#94a3b833_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff10_1px,transparent_1px)] [background-size:14px_14px]"
+    class="absolute inset-0 pattern"
   >
   </div>
   <div
@@ -71,67 +73,67 @@ const a = accentStyles[accent];
 
   {
     isMobile ? (
-      <div class="relative mx-auto mt-5 sm:mt-7 w-[100px] sm:w-[116px] h-full rounded-t-2xl border border-slate-200 dark:border-slate-600/80 bg-white dark:bg-slate-800 shadow-xl shadow-slate-300/40 dark:shadow-black/40 overflow-hidden group-hover:-translate-y-1 transition-transform duration-300">
-        <div class="mx-auto mt-1.5 h-1 w-8 rounded-full bg-slate-200 dark:bg-slate-600" />
+      <div class="relative mx-auto mt-5 sm:mt-7 w-[100px] sm:w-[116px] h-full rounded-t-2xl border border-gray-200 dark:border-gray-600/80 bg-white dark:bg-gray-900 shadow-xl shadow-gray-300/40 dark:shadow-black/40 overflow-hidden group-hover:-trangray-y-1 transition-transform duration-300">
+        <div class="mx-auto mt-1.5 h-1 w-8 rounded-full bg-gray-200 dark:bg-gray-600" />
         <div class="p-2 space-y-1.5">
           <div class="flex items-center gap-1.5">
             {imageUrl && (
-              <img
+              <Image
                 src={imageUrl}
                 alt={`${title} logo`}
-                width="20"
-                height="20"
+                width={40}
+                height={40}
                 loading="lazy"
                 decoding="async"
                 class="w-5 h-5 rounded bg-white object-contain shrink-0"
               />
             )}
-            <div class="h-1.5 w-10 rounded-full bg-slate-200 dark:bg-slate-600" />
+            <div class="h-1.5 w-10 rounded-full bg-gray-200 dark:bg-gray-600" />
           </div>
           <div class={`h-7 rounded-md ${a.fill}`} />
-          <div class="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-700" />
-          <div class="h-1.5 w-4/5 rounded-full bg-slate-100 dark:bg-slate-700" />
-          <div class="h-1.5 w-3/5 rounded-full bg-slate-100 dark:bg-slate-700" />
+          <div class="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-700" />
+          <div class="h-1.5 w-4/5 rounded-full bg-gray-100 dark:bg-gray-700" />
+          <div class="h-1.5 w-3/5 rounded-full bg-gray-100 dark:bg-gray-700" />
           <div class={`h-4 w-3/4 mx-auto rounded-full ${a.soft}`} />
         </div>
       </div>
     ) : (
-      <div class="relative mx-auto mt-6 sm:mt-8 w-[80%] h-full rounded-t-xl border border-slate-200 dark:border-slate-600/80 bg-white dark:bg-slate-800 shadow-xl shadow-slate-300/40 dark:shadow-black/40 overflow-hidden group-hover:-translate-y-1 transition-transform duration-300">
-        <div class="flex items-center gap-1.5 px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
-          <span class="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
-          <span class="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
-          <span class="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
-          <span class="ml-1 flex-1 max-w-[60%] truncate rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 font-mono text-[8px] leading-none text-slate-400 dark:text-slate-500">
+      <div class="relative mx-auto mt-6 sm:mt-8 w-[80%] h-full rounded-t-xl border border-gray-200 dark:border-gray-600/80 bg-white dark:bg-gray-900 shadow-xl shadow-gray-300/40 dark:shadow-black/40 overflow-hidden group-hover:-trangray-y-1 transition-transform duration-300">
+        <div class="flex items-center gap-1.5 px-2.5 py-1.5 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+          <span class="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
+          <span class="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
+          <span class="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
+          <span class="ml-1 flex-1 max-w-[60%] truncate rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 font-mono text-[8px] leading-none text-gray-400 dark:text-gray-500">
             {slug}
           </span>
         </div>
         <div class="flex h-full">
-          <div class="w-1/4 border-r border-slate-100 dark:border-slate-700 p-1.5 space-y-1.5">
+          <div class="w-1/4 border-r border-gray-100 dark:border-gray-700 p-1.5 space-y-1.5">
             <div class={`h-1.5 w-full rounded-full ${a.soft}`} />
-            <div class="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-700" />
-            <div class="h-1.5 w-3/4 rounded-full bg-slate-100 dark:bg-slate-700" />
+            <div class="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-700" />
+            <div class="h-1.5 w-3/4 rounded-full bg-gray-100 dark:bg-gray-700" />
           </div>
           <div class="flex-1 p-2 space-y-1.5">
             <div class="flex items-center gap-1.5">
               {imageUrl && (
-                <img
+                <Image
                   src={imageUrl}
                   alt={`${title} logo`}
-                  width="20"
-                  height="20"
+                  width={40}
+                  height={40}
                   loading="lazy"
                   decoding="async"
                   class="w-5 h-5 rounded bg-white object-contain shrink-0"
                 />
               )}
-              <div class="h-1.5 w-1/3 rounded-full bg-slate-200 dark:bg-slate-600" />
+              <div class="h-1.5 w-1/3 rounded-full bg-gray-200 dark:bg-gray-600" />
             </div>
             <div class="flex gap-1.5">
               <div class={`h-6 flex-1 rounded-md ${a.fill}`} />
-              <div class="h-6 flex-1 rounded-md bg-slate-100 dark:bg-slate-700" />
+              <div class="h-6 flex-1 rounded-md bg-gray-100 dark:bg-gray-700" />
             </div>
-            <div class="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-700" />
-            <div class="h-1.5 w-2/3 rounded-full bg-slate-100 dark:bg-slate-700" />
+            <div class="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-700" />
+            <div class="h-1.5 w-2/3 rounded-full bg-gray-100 dark:bg-gray-700" />
           </div>
         </div>
       </div>
@@ -140,7 +142,7 @@ const a = accentStyles[accent];
 
   <!-- Honest label: composed preview, not a screenshot -->
   <span
-    class="absolute bottom-2 left-3 font-mono text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500"
+    class="absolute bottom-2 left-3 font-mono text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500"
   >
     {isMobile ? "mobile app" : "web app"}
   </span>

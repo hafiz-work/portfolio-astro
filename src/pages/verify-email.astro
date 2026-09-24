@@ -1,9 +1,10 @@
 ---
+import { Image } from "astro:assets";
 // Landing page untuk link email verification MARC (app kelab, backend Go
-// berasingan). Server-side (bukan client fetch) — elak kena ubah CSP
+// berasingan). Server-side (bukan client fetch) - elak kena ubah CSP
 // connect-src (yang cuma whitelist api.hafizbahtiar.com sekarang).
 //
-// MARC_API_URL sengaja BUKAN prefix PUBLIC_ — cuma dibaca frontmatter
+// MARC_API_URL sengaja BUKAN prefix PUBLIC_ - cuma dibaca frontmatter
 // (server-side), tak pernah masuk client bundle.
 import CoreLayout from "../layouts/CoreLayout.astro";
 import Background from "../components/layout/Background.astro";
@@ -45,10 +46,9 @@ if (token) {
     <div class="w-full max-w-sm text-center">
       <a
         href="/"
-        class="font-mono text-lg font-semibold text-slate-900 dark:text-slate-100 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors"
-      >
-        hafiz<span class="text-cyan-600 dark:text-cyan-400">.dev</span>
-      </a>
+        class="inline-flex" aria-label="Hafiz Bahtiar - home">
+          <Image src="/brand/wordmark.svg" alt="hafizbahtiar" width={383} height={120} loading="eager" class="h-12 w-auto" />
+        </a>
 
       <div
         class="mt-8 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-black/30"

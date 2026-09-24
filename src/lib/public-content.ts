@@ -13,7 +13,7 @@ import {
  * Server-side data loaders for the public site.
  *
  * Contract: these never throw and never return an empty list. If the API is
- * slow, down, or returns nothing, curated fallback content renders instead —
+ * slow, down, or returns nothing, curated fallback content renders instead -
  * visitors must never see loading spinners, error banners, or empty states.
  */
 
@@ -88,7 +88,7 @@ export async function getPublicProjects(): Promise<Project[]> {
  * page still renders (hero + description + flat features/tech). Never throws.
  *
  * CTAs are rendered from the structured `links` array (active+public only), so
- * broken/hidden links are excluded by the data layer — see the backfill seed.
+ * broken/hidden links are excluded by the data layer - see the backfill seed.
  */
 export async function getPublicProjectDetail(
     slug: string,
@@ -162,5 +162,5 @@ export function formatDateRange(exp: Experience): string {
         : exp.endDate
             ? formatMonthYear(exp.endDate)
             : "Present";
-    return `${start} — ${end}`;
+    return `${start} - ${end}`;
 }

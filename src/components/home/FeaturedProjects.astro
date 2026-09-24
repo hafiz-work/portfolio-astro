@@ -7,15 +7,16 @@ interface Props {
 }
 
 const { projects } = Astro.props;
-// 5 cards: the featured one spans both columns, the rest fill 2×2 — no holes.
+// 5 cards on a 3-col grid: the featured one spans two columns, so rows are
+// [featured, 1] + [2, 3, 4] - no holes. (2-col: featured full row, then 2×2.)
 const visible = projects.slice(0, 5);
 ---
 
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="line-y grid grid-cols-1 gap-2 p-2 sm:grid-cols-2 lg:grid-cols-3">
   {
     visible.map((project, index) => (
       <div
-        class={index === 0 ? "sm:col-span-2" : ""}
+        class:list={["frame", index === 0 && "sm:col-span-2"]}
         data-reveal
         style={`--reveal-delay: ${(index % 2) * 80}ms`}
       >

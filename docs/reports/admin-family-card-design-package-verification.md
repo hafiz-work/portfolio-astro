@@ -1,4 +1,4 @@
-# Admin Family Card Design — Package Verification
+# Admin Family Card Design - Package Verification
 
 > Date: 2026-06-14 · Branch: `main` · Scope: admin Family chart person-card styling only.
 > No push, deploy, remote D1 migration, or data mutation was performed.

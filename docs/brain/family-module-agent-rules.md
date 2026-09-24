@@ -1,8 +1,8 @@
-# Family Module — Agent Rules (Do / Don't)
+# Family Module - Agent Rules (Do / Don't)
 
 > Strict operating rules for any AI agent (Opus/Codex/etc.) modifying the Family module.
 > Read `family-module-brain.md` first for context. These rules win over convenience.
-> If a rule blocks you, **stop and ask** — do not work around it.
+> If a rule blocks you, **stop and ask** - do not work around it.
 
 ---
 
@@ -10,7 +10,7 @@
 
 1. **Never push.** Commit locally only. The human pushes.
 2. **Never run remote D1 migration** (`npm run db:migrate:remote`) or any `wrangler ... --remote`
-   write. Reads are still privileged — don't run them without being asked.
+   write. Reads are still privileged - don't run them without being asked.
 3. **Never mutate production / remote data.** No remote `UPDATE`/`INSERT`/`DELETE`.
 4. **Never deploy** (`npm run deploy`, `wrangler deploy`).
 5. **Never add `/family` to the public navbar** unless the human explicitly approves the privacy change.
@@ -29,26 +29,26 @@
 
 - **Read the brain docs first** (`brain/family-module-brain.md`,
   `architecture/family-module-architecture.md`) before editing Family code.
-- **Run `npm run build`** (frontend) before committing — it's the only type-check/verify step.
+- **Run `npm run build`** (frontend) before committing - it's the only type-check/verify step.
   ECONNREFUSED during build = local API down = expected, not a failure.
 - **Re-audit the island payload for privacy** whenever you touch pages, the sanitizer, the merge,
   or `chart-data.ts`. Confirm no `notes`/`metadata`/`firstName`/`lastName`/`treeId`/full living
   birthdates/relationship ids/dates reach the browser. (How: run the SSR page against the prod
-  read-only API and parse the `<astro-island props=...>` JSON — see the fable review report for the method.)
+  read-only API and parse the `<astro-island props=...>` JSON - see the fable review report for the method.)
 - **Keep sanitization the last step** before data enters the island. Merge/transform on full data,
   sanitize, *then* pass to React.
 - **Test the four public scenarios** after frontend changes: `/family`, `/family/[slug]`,
   a bad slug (must be HTTP 404), and `?p=<globalKey>`.
 - **Smoke-test the admin builder** after any change to shared code (`FamilyTreeChart.tsx`,
   `chart-data.ts`, `useFamilyChart.ts`, family types): card selection, inline add
-  father/mother/spouse/son/daughter, fit/center/orientation. (This needs auth — if you can't, say so.)
+  father/mother/spouse/son/daughter, fit/center/orientation. (This needs auth - if you can't, say so.)
 - **Verify before remediation.** For D1 work, run `docs/reports/family-page-phase-0-d1-verification.sql`
   SELECTs locally, inspect output, and ask before any remote step.
 - **Mark untested work honestly** in any report you write. Do not claim verified without evidence.
 
 ---
 
-## ⚠️ Red flags — stop and think
+## ⚠️ Red flags - stop and think
 
 | If you catch yourself… | …stop because |
 |---|---|
@@ -68,19 +68,19 @@
 ## Files: edit caution map
 
 **Do not edit casually (shared / contract-bearing / privacy-critical):**
-- `src/lib/family-privacy.ts` — privacy boundary. Changes here can leak PII.
-- `src/lib/family-merge.ts` — identity/merge invariants.
-- `src/components/family/FamilyTreeChart.tsx` — shared with admin; window-event contract + inline edit.
-- `src/hooks/useFamilyChart.ts` — public chart lifecycle; easy to introduce leaks/duplicate inits.
-- `src/lib/chart-data.ts` — shared by public + admin charts.
-- Backend `src/services/family.ts`, `src/routes/v1/**/family.ts` (hono-workers) — API contract.
-- Backend migrations / seeds — schema + `global_key` source of truth.
+- `src/lib/family-privacy.ts` - privacy boundary. Changes here can leak PII.
+- `src/lib/family-merge.ts` - identity/merge invariants.
+- `src/components/family/FamilyTreeChart.tsx` - shared with admin; window-event contract + inline edit.
+- `src/hooks/useFamilyChart.ts` - public chart lifecycle; easy to introduce leaks/duplicate inits.
+- `src/lib/chart-data.ts` - shared by public + admin charts.
+- Backend `src/services/family.ts`, `src/routes/v1/**/family.ts` (hono-workers) - API contract.
+- Backend migrations / seeds - schema + `global_key` source of truth.
 
 **Safer extension points:**
 - `src/components/family/PersonDetailPanel.tsx`, `FamilyListView.tsx`, `PersonSearch.tsx`,
-  `FamilyToolbar.tsx` — presentational, public-only.
-- `src/styles/family-chart-theme.css` — visual theming (verify light/dark in devtools).
-- `src/data/family.ts` — combined-view config.
+  `FamilyToolbar.tsx` - presentational, public-only.
+- `src/styles/family-chart-theme.css` - visual theming (verify light/dark in devtools).
+- `src/data/family.ts` - combined-view config.
 - Docs under `docs/brain`, `docs/architecture`, `docs/reports`.
 
 ---
@@ -88,7 +88,7 @@
 ## Commit etiquette for this module
 
 - Scope commits to the Family module + its docs. Don't bundle unrelated changes.
-- Frontend and backend are **separate repos** — never mix their changes in one commit.
+- Frontend and backend are **separate repos** - never mix their changes in one commit.
 - Run `npm run build` before committing frontend changes; quote the result.
 - If you find a code bug while documenting, **document it first and ask** before patching, unless it
   is a critical, obvious, low-risk fix.

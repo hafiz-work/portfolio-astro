@@ -105,7 +105,7 @@ export function MediaManager({ projectId, onChanged }: { projectId: number; onCh
 
       <div className="rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-3 space-y-2">
         <span className="admin-label">Add media by URL</span>
-        <p className="admin-help">Full upload isn’t wired yet — paste an image URL (e.g. an R2/hosted asset).</p>
+        <p className="admin-help">Full upload isn’t wired yet - paste an image URL (e.g. an R2/hosted asset).</p>
         <div className="flex flex-wrap gap-2">
           <input className="admin-input flex-1 min-w-[220px]" placeholder="https://…/image.png" value={draft.url} onChange={(e) => setDraft({ ...draft, url: e.target.value })} aria-label="New media URL" />
           <Select

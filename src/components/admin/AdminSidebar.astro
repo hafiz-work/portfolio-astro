@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 const links = [
   {
     text: "Dashboard",
@@ -75,14 +76,15 @@ const currentPath = Astro.url.pathname;
         class="sidebar-title font-mono text-base font-semibold text-slate-900 dark:text-slate-100 tracking-tight"
         aria-label="Admin dashboard"
       >
-        hafiz<span class="text-cyan-600 dark:text-cyan-400">.dev</span><span
-          class="text-slate-400 dark:text-slate-500">/admin</span
-        >
+        <span class="inline-flex items-center gap-2">
+          <Image src="/brand/logo.svg" alt="" width={24} height={24} class="h-6 w-6" />
+          hafizbahtiar<span class="text-slate-400 dark:text-slate-500">/admin</span>
+        </span>
       </h1>
       <span
         class="sidebar-mark font-mono text-xl font-semibold text-slate-900 dark:text-slate-100 tracking-tight"
         aria-hidden="true"
-        >h<span class="text-cyan-600 dark:text-cyan-400">.</span></span
+        ><Image src="/brand/logo.svg" alt="" width={28} height={28} class="h-7 w-7" /></span
       >
       <button
         id="close-sidebar"

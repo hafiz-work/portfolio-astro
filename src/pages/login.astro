@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 import CoreLayout from "../layouts/CoreLayout.astro";
 import Background from "../components/layout/Background.astro";
 
@@ -17,9 +18,8 @@ const recaptchaSiteKey =
       <div class="mb-8 text-center">
         <a
           href="/"
-          class="font-mono text-lg font-semibold text-slate-900 dark:text-slate-100 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors"
-        >
-          hafiz<span class="text-cyan-600 dark:text-cyan-400">.dev</span>
+          class="inline-flex" aria-label="Hafiz Bahtiar - home">
+          <Image src="/brand/wordmark.svg" alt="hafizbahtiar" width={383} height={120} loading="eager" class="h-12 w-auto" />
         </a>
         <h1
           class="font-display text-2xl font-bold text-slate-900 dark:text-slate-100 mt-4"
@@ -139,7 +139,7 @@ const recaptchaSiteKey =
           {
             recaptchaSiteKey && (
               <p class="text-[11px] leading-relaxed text-center text-slate-400 dark:text-slate-500">
-                Protected by reCAPTCHA — the Google{" "}
+                Protected by reCAPTCHA - the Google{" "}
                 <a
                   href="https://policies.google.com/privacy"
                   target="_blank"
@@ -189,7 +189,7 @@ const recaptchaSiteKey =
 </CoreLayout>
 
 {
-  // reCAPTCHA v3 — invisible, score-based; a token is fetched per submit.
+  // reCAPTCHA v3 - invisible, score-based; a token is fetched per submit.
   recaptchaSiteKey && (
     <script
       is:inline

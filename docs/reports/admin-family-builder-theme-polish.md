@@ -1,4 +1,4 @@
-# Admin Family Builder — Theme Surface Polish
+# Admin Family Builder - Theme Surface Polish
 
 > Date: 2026-06-14 · Branch: `main` · Scope: admin Family builder chrome and
 > package-generated inline add/edit form. No push, deploy, remote D1 migration, or data mutation was
