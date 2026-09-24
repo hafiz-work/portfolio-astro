@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ChevronUp, ChevronDown, Trash2, Plus, AlertTriangle } from "lucide-react";
 import { cmsService, extractApiError } from "../../../../lib/projects-cms";
 import { showToast, confirmDialog } from "../../../../lib/admin-ui";
+import { Select } from "../../../ui/Select";
 import type { ProjectMedia, MediaType, DeviceFrame, MediaAsset } from "../../../../types/project-cms";
 
 const MEDIA_TYPES: MediaType[] = ["screenshot", "video", "architecture_diagram", "logo", "cover", "og", "other"];
@@ -71,12 +72,20 @@ export function MediaManager({ projectId, onChanged }: { projectId: number; onCh
           <div key={it.id} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               {it.asset?.url && <img src={it.asset.url} alt="" className="h-10 w-16 rounded object-cover border border-slate-200 dark:border-slate-700" />}
-              <select className="admin-input max-w-[160px]" value={it.mediaType} onChange={(e) => setField(it.id, { mediaType: e.target.value as MediaType })} aria-label="Media type">
-                {MEDIA_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-              <select className="admin-input max-w-[120px]" value={it.deviceFrame} onChange={(e) => setField(it.id, { deviceFrame: e.target.value as DeviceFrame })} aria-label="Device frame">
-                {DEVICE_FRAMES.map((f) => <option key={f} value={f}>{f}</option>)}
-              </select>
+              <Select
+                className="max-w-[160px]"
+                value={it.mediaType}
+                onChange={(v) => setField(it.id, { mediaType: v as MediaType })}
+                options={MEDIA_TYPES.map((t) => ({ value: t, label: t }))}
+                ariaLabel="Media type"
+              />
+              <Select
+                className="max-w-[120px]"
+                value={it.deviceFrame}
+                onChange={(v) => setField(it.id, { deviceFrame: v as DeviceFrame })}
+                options={DEVICE_FRAMES.map((f) => ({ value: f, label: f }))}
+                ariaLabel="Device frame"
+              />
               <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400"><input type="checkbox" checked={it.isVisible} onChange={(e) => setField(it.id, { isVisible: e.target.checked })} /> Visible</label>
               <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400"><input type="checkbox" checked={it.isFeatured} onChange={(e) => setField(it.id, { isFeatured: e.target.checked })} /> Featured</label>
               <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
@@ -99,9 +108,13 @@ export function MediaManager({ projectId, onChanged }: { projectId: number; onCh
         <p className="admin-help">Full upload isn’t wired yet — paste an image URL (e.g. an R2/hosted asset).</p>
         <div className="flex flex-wrap gap-2">
           <input className="admin-input flex-1 min-w-[220px]" placeholder="https://…/image.png" value={draft.url} onChange={(e) => setDraft({ ...draft, url: e.target.value })} aria-label="New media URL" />
-          <select className="admin-input max-w-[160px]" value={draft.mediaType} onChange={(e) => setDraft({ ...draft, mediaType: e.target.value as MediaType })} aria-label="New media type">
-            {MEDIA_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
+          <Select
+            className="max-w-[160px]"
+            value={draft.mediaType}
+            onChange={(v) => setDraft({ ...draft, mediaType: v as MediaType })}
+            options={MEDIA_TYPES.map((t) => ({ value: t, label: t }))}
+            ariaLabel="New media type"
+          />
         </div>
         <input className="admin-input" placeholder="Alt text" value={draft.altText} onChange={(e) => setDraft({ ...draft, altText: e.target.value })} aria-label="New media alt text" />
         <div className="flex justify-end"><button type="button" className="admin-btn admin-btn-secondary" onClick={addByUrl}><Plus className="h-4 w-4" /> Add media</button></div>
