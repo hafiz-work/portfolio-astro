@@ -1,0 +1,80 @@
+---
+interface Props {
+  /** Override the anchor classes for the placement (defaults to the Hero style). */
+  class?: string;
+  /** Attribution hint sent to the tracker (e.g. "hero", "contact"). */
+  source?: string;
+}
+
+const {
+  class: className =
+    "inline-flex items-center gap-2 px-6 py-3 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-xl hover:border-slate-400 dark:hover:border-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:-translate-y-0.5 transition-all",
+  source = "site",
+} = Astro.props;
+---
+
+<a
+  href="/docs/hafizbahtiar-resume-4-3.pdf"
+  download="Hafiz-Bahtiar-Resume.pdf"
+  data-resume-download
+  data-source={source}
+  class={className}
+>
+  <svg
+    class="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+  </svg>
+  Download Resume
+</a>
+
+<script>
+  import { API_BASE_URL } from "../../lib/config";
+
+  // Track resume-download clicks across every [data-resume-download] button on
+  // the page. Fire-and-forget: tracking must never block or delay the actual
+  // download (a plain static-file link). The per-element guard makes this safe
+  // to call multiple times and across ClientRouter navigations. Astro hoists
+  // this module script once even when the component is rendered more than once.
+  function setupResumeTracking() {
+    const links = document.querySelectorAll<HTMLAnchorElement>(
+      "[data-resume-download]",
+    );
+    links.forEach((link) => {
+      if (link.dataset.trackingBound === "1") return;
+      link.dataset.trackingBound = "1";
+
+      link.addEventListener("click", () => {
+        const url = `${API_BASE_URL}/public/resume-download`;
+        // text/plain keeps the beacon a CORS-safelisted request (no preflight).
+        // All tracked fields (IP, country, user-agent) are read server-side from
+        // request headers - only this non-sensitive source hint comes from here.
+        const body = link.dataset.source || "site";
+        try {
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon(url, new Blob([body], { type: "text/plain" }));
+          } else {
+            void fetch(url, {
+              method: "POST",
+              body,
+              keepalive: true,
+            }).catch(() => {});
+          }
+        } catch {
+          /* tracking is best-effort */
+        }
+      });
+    });
+  }
+
+  setupResumeTracking();
+  document.addEventListener("astro:page-load", setupResumeTracking);
+</script>

@@ -5,9 +5,9 @@ import type { FamilyGender, FamilyTreeDetail } from "../../../types/family";
 import { buildChartData } from "../../../lib/chart-data";
 
 /**
- * Default readable zoom for the admin builder: center the focused person at 1:1.
- * A full "fit" shrinks a multi-generation tree until the nodes are unreadable, so
- * the builder defaults to centering on the main person instead of fitting all.
+ * Initial view fits the whole family into the canvas so the full tree is visible
+ * up front (small trees render at 1:1 because fit never zooms in past 1). Once the
+ * user clicks a card, focus snaps to that person at a readable 1:1 scale.
  */
 const READABLE_SCALE = 1;
 
@@ -328,18 +328,19 @@ export const FamilyTreeChart = ({
       setSelectedMainId(initialMainId);
       selectedMainIdRef.current = initialMainId;
       chart.updateMainId(initialMainId);
-      // Render once, then center the focused person at a readable 1:1 scale.
-      // (A full "fit" shrinks a multi-generation tree until nodes are unreadable.)
-      chart.updateTree({ initial: true, transition_time: 0 });
-      centerOnMain(chart, 0);
+      // Render once and fit the whole family into view so the full tree is visible
+      // up front (matches the public /family chart). Click any card to focus/re-center
+      // that person at a readable 1:1 scale; the toolbar Fit still re-fits on demand.
+      chart.updateTree({ initial: true, tree_position: "fit", transition_time: 0 });
 
-      // family-chart does not auto-refit on container size changes. Re-center the
-      // main person when the canvas is first laid out or resized (window resize,
-      // sidebar toggle), which also covers init before the container has real size.
+      // family-chart does not auto-refit on container size changes. Fit the tree once
+      // on the first real layout (covers init before the container has size), then
+      // re-center the focused person on later resizes (window resize, sidebar toggle).
       if (typeof ResizeObserver !== "undefined") {
         let raf = 0;
         let lastW = 0;
         let lastH = 0;
+        let firstLayout = true;
         const observer = new ResizeObserver(() => {
           cancelAnimationFrame(raf);
           raf = requestAnimationFrame(() => {
@@ -353,7 +354,12 @@ export const FamilyTreeChart = ({
               return;
             lastW = rect.width;
             lastH = rect.height;
-            centerOnMain(chart, 0);
+            if (firstLayout) {
+              firstLayout = false;
+              chart.updateTree({ tree_position: "fit", transition_time: 0 });
+            } else {
+              centerOnMain(chart, 0);
+            }
           });
         });
         observer.observe(container);

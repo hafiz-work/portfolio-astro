@@ -1,12 +1,12 @@
 # Admin + Backend Implementation Plan
 
-**Status:** Draft (Phase 1) — execute on branch `portfolio-admin-backend` in both repos.
+**Status:** Draft (Phase 1) - execute on branch `portfolio-admin-backend` in both repos.
 **Order rule:** schema → backend → admin → public. Do **not** build the public carousel UI until schema + seed + public read API + admin media ordering exist.
 **Verification rule:** local D1 migrate + seed must pass before any `--remote`. Run `npm run build` (frontend) and `wrangler deploy --dry-run` (backend) before each stage's commit.
 
 ---
 
-## Phase 2 — Data model (normalized, additive)
+## Phase 2 - Data model (normalized, additive)
 
 Target schema (SQLite/D1). `010_projects_cms.sql` **adds** columns/tables; it never drops existing data. Legacy JSON columns (`technologies`, `tags`, `features`) are retained until parity is verified.
 
@@ -47,47 +47,47 @@ Reuse the existing `owner`/`users` tables if they already model email/role/passw
 
 ---
 
-## Phase 4 — Coding order
+## Phase 4 - Coding order
 
-### Stage A — Schema + migrations (`hono-workers`)
+### Stage A - Schema + migrations (`hono-workers`)
 1. `src/database/schemas/projects_cms.sql` (reference schema, mirrors above).
-2. `src/database/migrations/010_projects_cms.sql` — additive columns + new tables + indexes; ends with `INSERT OR IGNORE INTO schema_migrations`.
+2. `src/database/migrations/010_projects_cms.sql` - additive columns + new tables + indexes; ends with `INSERT OR IGNORE INTO schema_migrations`.
 3. `npm run db:migrate` (local) → `npm run db:migrate:status`. **Do not** run `:remote` until Stage I.
 4. Update `src/types/projects.ts` with the extended `Project`, child types, and `Create/Update` DTOs (+ media, tech, link, section types).
 **Verify:** local migrate clean; `wrangler deploy --dry-run` typechecks.
 
-### Stage B — Backend repository/service layer (`hono-workers`)
+### Stage B - Backend repository/service layer (`hono-workers`)
 5. Extend `services/projects.ts`: compose detail (joins to media/sections/features/tech/links), enforce published+public for public reads, assemble the sanitized public DTO server-side.
 6. New services: `media.ts`, `tech-stacks.ts`, `project-links.ts`, `project-sections.ts`, `project-features.ts` (or sub-modules), plus `audit.ts` (write helper) and a server-side `sanitizeHtml` util.
 **Verify:** unit-level reasoning + dry-run; no route wiring yet (safe, additive).
 
-### Stage C — Admin + public API routes (`hono-workers`)
+### Stage C - Admin + public API routes (`hono-workers`)
 7. Validators (Zod `.strict()`): extend `projects.ts`, add `media.ts`, `tech-stacks.ts`, `project-links.ts`, `project-sections.ts`.
 8. Owner routes: publish/unpublish/archive/duplicate, child-resource CRUD + reorder, tech-stacks, media library, audit-logs. Add `PATCH` for projects (keep `PUT` alias).
 9. Public routes: enrich `/projects` + `/projects/:slug` to return the composed DTO (still cached).
 10. Mount in `routes/v1.ts`. Audit-log every mutation.
 **Verify:** dry-run; manual `curl` against `wrangler dev` for representative endpoints; confirm confidential fields absent from public DTO.
 
-### Stage D — Admin project table UI (`portfolio-astro`)
+### Stage D - Admin project table UI (`portfolio-astro`)
 11. Extend `ProjectsTable.tsx`: server search/filter/sort, status/featured/confidential/missing-media/broken-link badges, row actions (Edit/Preview/Publish/Unpublish/Duplicate/Archive), bulk actions. Extend `lib/projects.ts` service for the new endpoints.
 **Verify:** `npm run build`; table loads against `wrangler dev`.
 
-### Stage E — Project create/edit form (`portfolio-astro`)
+### Stage E - Project create/edit form (`portfolio-astro`)
 12. Convert `ProjectForm.astro` / `edit.astro` / `new.astro` to the 6-tab editor (Basics / Case Study / Media / Tech / Links & SEO / Publish). Reuse Dropdown/MultiDropdown/Checkbox/TextEditor/form-guard. Fix the H1 `fullDescription` bug (now a real field).
 **Verify:** build; create→edit→publish round-trip against `wrangler dev`.
 
-### Stage F — Media carousel data model + manager (`portfolio-astro`)
+### Stage F - Media carousel data model + manager (`portfolio-astro`)
 13. Media tab: upload (R2) → `media_assets` + `project_media`, per-item metadata, **drag-to-reorder**, set cover/OG, alt-text enforcement.
 **Verify:** build; reorder persists and reads back.
 
-### Stage G — Public pages read from structured data (`portfolio-astro`)
+### Stage G - Public pages read from structured data (`portfolio-astro`)
 14. Rewire `/projects` + `/projects/[slug]` to the composed public DTO via `public-content.ts` (keep curated fallback). Render sections/features/tech/links per `public-project-case-study-spec.md`. Retire the `PROJECT_LINK_OVERRIDES` stopgap once `project_links` drives CTAs.
 **Verify:** build; parity check vs current content for all 9 projects.
 
-### Stage H — Migrate from static data to DB content (`both`)
+### Stage H - Migrate from static data to DB content (`both`)
 15. Author + run `007_projects_cms_backfill.sql` locally; verify all 9 projects render from normalized data with parity to `FALLBACK_PROJECTS`. Then `db:seed:remote` / `db:migrate:remote` (Stage I gate).
 
-### Stage I — Verification & polish
+### Stage I - Verification & polish
 16. Public carousel UI (`public-media-carousel-spec.md`), accessibility pass, Lighthouse (CLS/LCP), SEO/OG checks, confidential-exposure check, then remote migrate/seed + deploy. Add the Cloudflare www→apex Redirect Rule (audit M1).
 
 ---

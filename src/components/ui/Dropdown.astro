@@ -28,7 +28,7 @@ const labelId = `${name}-label`;
 const menuId = `${name}-menu`;
 ---
 
-<div class={`tech-dropdown-container space-y-2 ${className}`} data-name={name}>
+<div class={`tech-dropdown-container space-y-2 w-64 ${className}`} data-name={name}>
   <label
     id={labelId}
     class="block text-sm font-medium text-slate-500 dark:text-slate-400"
@@ -78,7 +78,7 @@ const menuId = `${name}-menu`;
 
     <div
       id={menuId}
-      class="dropdown-menu hidden absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg dark:shadow-xl overflow-hidden backdrop-blur-xl transform origin-top transition-all duration-200"
+      class="dropdown-menu hidden absolute z-50 w-max min-w-full max-w-[min(92vw,28rem)] mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg dark:shadow-xl overflow-hidden backdrop-blur-xl transform origin-top transition-all duration-200"
     >
       <ul
         class="max-h-60 overflow-y-auto py-1 custom-scrollbar"
@@ -91,7 +91,7 @@ const menuId = `${name}-menu`;
               <button
                 type="button"
                 role="option"
-                class="dropdown-item w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                class="dropdown-item w-full text-left truncate px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
                 data-value={option.value}
               >
                 <span>{option.label}</span>

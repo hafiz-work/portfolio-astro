@@ -37,7 +37,7 @@ if (paths.length === 1 && paths[0] === "admin") {
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-6 w-6"
+                    class="h-5 w-5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -329,7 +329,7 @@ if (paths.length === 1 && paths[0] === "admin") {
             themeToggle.dataset.bound = "true";
         }
 
-        // Delegated: survives first-load module races and DOM swaps — the
+        // Delegated: survives first-load module races and DOM swaps - the
         // listener works no matter when (or in what order) modules loaded.
         if (!document.documentElement.dataset.sidebarTogglesBound) {
             document.documentElement.dataset.sidebarTogglesBound = "true";

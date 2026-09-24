@@ -7,15 +7,21 @@ import cloudflare from '@astrojs/cloudflare';
 
 // https://astro.build/config
 export default defineConfig({
-  // Canonical origin — powers Astro.site for <link rel="canonical"> and OG URLs.
+  // Canonical origin - powers Astro.site for <link rel="canonical"> and OG URLs.
   site: 'https://hafizbahtiar.com',
   output: 'server',
-  // Image passthrough. `imageService: 'cloudflare'` (edge AVIF/WebP via
-  // /cdn-cgi/image/...) caused production 404s on every remote project image
-  // because Transformations is NOT enabled on the zone. Re-enable ONLY after
-  // turning it on (Cloudflare dash → Images → Transformations →
+  // Image passthrough - MUST be set explicitly. @astrojs/cloudflare v13's
+  // default (when `imageService` is unset) is 'cloudflare-binding', which sends
+  // every runtime /_image request through the Cloudflare Images binding
+  // (env.IMAGES). That binding is not configured here, AND remote <Image> URLs
+  // omit the `f` (format) param, so the transform endpoint returns 400
+  // "Unsupported format" on every remote image. 'passthrough' streams the
+  // original bytes and needs no binding/Transformations.
+  // `imageService: 'cloudflare'` (edge AVIF/WebP via /cdn-cgi/image/...) caused
+  // production 404s because Transformations is NOT enabled on the zone. Re-enable
+  // ONLY after turning it on (Cloudflare dash → Images → Transformations →
   // hafizbahtiar.com) and verifying /cdn-cgi/image/ URLs return 200.
-  adapter: cloudflare(),
+  adapter: cloudflare({ imageService: 'passthrough' }),
   integrations: [
     react(),
     sitemap({
@@ -33,6 +39,9 @@ export default defineConfig({
       "github.com",
       "avatars.githubusercontent.com",
       "media.licdn.com"
+      // ghchart.rshah.org is deliberately NOT listed: it serves SVG, and the
+      // passthrough /_image endpoint returns it as "image/undefined", which
+      // browsers refuse to render. Unlisted remotes keep their original URL.
     ]
   },
   vite: {

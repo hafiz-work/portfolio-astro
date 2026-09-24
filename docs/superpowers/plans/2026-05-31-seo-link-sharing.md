@@ -14,7 +14,7 @@
 
 ## Important pre-read (data model facts)
 
-These constrain the plan — do not assume otherwise:
+These constrain the plan - do not assume otherwise:
 
 - `Project` (`src/types/project.ts`) **has** `imageUrl`, `description`, `fullDescription`, `title`, `slug`, `year`, `technologies`, `status`. → per-project OG images are possible immediately.
 - `BlogPost` (`src/types/blog.ts`) has `title`, `excerpt`, `heroText`, `bodyContent`, `publishedDate`, `createdAt`, `updatedAt`, `tags`, `readTimeMinutes`, `sections[]`, `checklist[]`. It **has NO image/cover field**. → blog OG images fall back to the site default until the backend adds one (see "Backend Coordination").
@@ -24,44 +24,44 @@ These constrain the plan — do not assume otherwise:
 
 ---
 
-## Backend Coordination (hand to the backend agent — do NOT edit backend here)
+## Backend Coordination (hand to the backend agent - do NOT edit backend here)
 
 The frontend is the only thing changed in this plan. One enhancement requires backend work and is **out of scope**; until it lands, blog cards use the default OG image.
 
 > **Request for backend agent (repo `/Users/hafiz/Developments/hono-workers`):**
 > Add an optional `coverImageUrl: string | null` field to the blog post resource (D1 column + `GET /api/v1/blog/:slug` response + owner create/update payloads). It should be an absolute or root-relative image URL sized ~1200×630 for social cards. No other behavior changes. Once available, the frontend will read `post.coverImageUrl` for the blog OG image (Phase 3, Task 3.3 has a TODO marker for the one-line switch).
 
-When this field exists, also update `src/types/blog.ts` `BlogPost` and `BlogPostSummary` to include `coverImageUrl: string | null` — but that is a follow-up, not part of this plan.
+When this field exists, also update `src/types/blog.ts` `BlogPost` and `BlogPostSummary` to include `coverImageUrl: string | null` - but that is a follow-up, not part of this plan.
 
 ---
 
 ## File Structure
 
-**Phase 1 — OG plumbing & meta enrichment**
-- Modify: `src/layouts/PublicLayout.astro` — add `image` prop, forward to CoreLayout.
-- Modify: `src/layouts/ProjectLayout.astro` — add `image` prop, forward to PublicLayout.
-- Modify: `src/layouts/CoreLayout.astro` — add `type`, `publishedTime`, `imageAlt` props; emit `og:type`, `og:locale`, `og:image:width/height/alt`, `twitter:site/creator`, conditional `article:*` tags.
-- Create: `public/og-default.png` — 1200×630 default social card (placeholder generation described in task).
+**Phase 1 - OG plumbing & meta enrichment**
+- Modify: `src/layouts/PublicLayout.astro` - add `image` prop, forward to CoreLayout.
+- Modify: `src/layouts/ProjectLayout.astro` - add `image` prop, forward to PublicLayout.
+- Modify: `src/layouts/CoreLayout.astro` - add `type`, `publishedTime`, `imageAlt` props; emit `og:type`, `og:locale`, `og:image:width/height/alt`, `twitter:site/creator`, conditional `article:*` tags.
+- Create: `public/og-default.png` - 1200×630 default social card (placeholder generation described in task).
 
-**Phase 2 — robots & sitemap**
+**Phase 2 - robots & sitemap**
 - Modify: `package.json` / install `@astrojs/sitemap`.
-- Modify: `astro.config.mjs` — register sitemap integration.
+- Modify: `astro.config.mjs` - register sitemap integration.
 - Create: `public/robots.txt`.
 
-**Phase 3 — Blog detail SSR**
-- Modify: `src/pages/blog/[slug]/index.astro` — fetch in frontmatter, real meta + JSON-LD, server-rendered body.
+**Phase 3 - Blog detail SSR**
+- Modify: `src/pages/blog/[slug]/index.astro` - fetch in frontmatter, real meta + JSON-LD, server-rendered body.
 
-**Phase 4 — Project detail SSR**
-- Modify: `src/pages/projects/[slug]/index.astro` — fetch in frontmatter, real meta + JSON-LD, server-rendered body.
-- Modify: `src/pages/projects/[slug]/privacy.astro` and `terms.astro` — pass project `imageUrl` to layout (small).
+**Phase 4 - Project detail SSR**
+- Modify: `src/pages/projects/[slug]/index.astro` - fetch in frontmatter, real meta + JSON-LD, server-rendered body.
+- Modify: `src/pages/projects/[slug]/privacy.astro` and `terms.astro` - pass project `imageUrl` to layout (small).
 
-**Phase 5 — Site-wide structured data**
-- Modify: `src/pages/index.astro` — `Person` + `WebSite` JSON-LD.
-- Create: `src/components/seo/JsonLd.astro` — tiny reusable JSON-LD emitter used by Phases 3–5.
+**Phase 5 - Site-wide structured data**
+- Modify: `src/pages/index.astro` - `Person` + `WebSite` JSON-LD.
+- Create: `src/components/seo/JsonLd.astro` - tiny reusable JSON-LD emitter used by Phases 3–5.
 
 ---
 
-## Phase 1 — OG image plumbing & meta enrichment
+## Phase 1 - OG image plumbing & meta enrichment
 
 **Why first:** Every later phase passes an `image` to a layout. Today `PublicLayout`/`ProjectLayout` silently drop it. This phase is pure scaffolding with no data-fetch changes, so it is safe and unblocks everything else.
 
@@ -226,7 +226,7 @@ const {
   title = "Hafiz Bahtiar - Flutter Developer",
   description = "Portfolio of Hafiz Bahtiar, a Flutter Developer specializing in mobile apps and backend systems.",
   image = "/og-default.png",
-  imageAlt = "Hafiz Bahtiar — Flutter Developer",
+  imageAlt = "Hafiz Bahtiar - Flutter Developer",
   type = "website",
   publishedTime,
   class: className = "",
@@ -271,7 +271,7 @@ Replace the existing block (currently lines 33-45, from `<!-- Open Graph -->` th
     <meta name="twitter:image:alt" content={imageAlt} />
 ```
 
-> Note: leave `twitter:site`/`twitter:creator` out unless the user supplies a real `@handle` — adding a wrong/empty one is worse than omitting it. Ask the user for their X handle; if provided, add `<meta name="twitter:site" content="@handle" />` and `twitter:creator`.
+> Note: leave `twitter:site`/`twitter:creator` out unless the user supplies a real `@handle` - adding a wrong/empty one is worse than omitting it. Ask the user for their X handle; if provided, add `<meta name="twitter:site" content="@handle" />` and `twitter:creator`.
 
 - [ ] **Step 3: Verify build + rendered tags**
 
@@ -291,7 +291,7 @@ git commit -m "feat(seo): enrich OG/Twitter tags (locale, image dims, alt, artic
 
 ---
 
-## Phase 2 — robots.txt & sitemap
+## Phase 2 - robots.txt & sitemap
 
 **Why:** Lets crawlers discover and index all public URLs. Independent of Phases 1/3/4.
 
@@ -338,7 +338,7 @@ Run:
 npm run build
 ls dist/sitemap-index.xml dist/sitemap-0.xml 2>/dev/null && echo "SITEMAP OK"
 ```
-Expected: `SITEMAP OK`. (Note: with `output: "server"`, only `prerender = true` routes are listed. Family + any static routes appear; SSR detail pages won't be auto-listed — acceptable, the index links to listing pages crawlers will follow.)
+Expected: `SITEMAP OK`. (Note: with `output: "server"`, only `prerender = true` routes are listed. Family + any static routes appear; SSR detail pages won't be auto-listed - acceptable, the index links to listing pages crawlers will follow.)
 
 - [ ] **Step 4: Commit**
 
@@ -381,11 +381,11 @@ git commit -m "feat(seo): add robots.txt pointing to sitemap, disallow admin/log
 
 ---
 
-## Phase 3 — Blog detail page server-side rendering
+## Phase 3 - Blog detail page server-side rendering
 
-**Why:** This is the headline fix. Today `src/pages/blog/[slug]/index.astro` fetches the post in the browser (`:462`) and patches meta with JS (`:541`) — invisible to crawlers. We fetch server-side in frontmatter and render meta, JSON-LD, and the article body in the initial HTML.
+**Why:** This is the headline fix. Today `src/pages/blog/[slug]/index.astro` fetches the post in the browser (`:462`) and patches meta with JS (`:541`) - invisible to crawlers. We fetch server-side in frontmatter and render meta, JSON-LD, and the article body in the initial HTML.
 
-**Approach:** Keep `prerender = false` (request-time SSR). Fetch the post in frontmatter; 404 if missing. Pass real `title`/`description`/`type="article"`/`publishedTime` to `PublicLayout`. Port the three markup builders (`buildSectionsHTML`, `buildChecklistHTML`, `buildMinimapHTML`) and the body-content branch from the existing client `<script>` (currently `:369-445`, `:511-536`) into Astro template markup. **Keep** the read-progress `<script>` (`:292-347`) — it is presentation-only and still needed. **Remove** the data-loading `<script>` (`:349-563`) since the server now renders everything.
+**Approach:** Keep `prerender = false` (request-time SSR). Fetch the post in frontmatter; 404 if missing. Pass real `title`/`description`/`type="article"`/`publishedTime` to `PublicLayout`. Port the three markup builders (`buildSectionsHTML`, `buildChecklistHTML`, `buildMinimapHTML`) and the body-content branch from the existing client `<script>` (currently `:369-445`, `:511-536`) into Astro template markup. **Keep** the read-progress `<script>` (`:292-347`) - it is presentation-only and still needed. **Remove** the data-loading `<script>` (`:349-563`) since the server now renders everything.
 
 ### Task 3.1: Create the reusable JsonLd component
 
@@ -449,7 +449,7 @@ if (!post) {
 }
 
 const formatDate = (value?: string | null) => {
-  if (!value) return "—";
+  if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleDateString("en-US", {
@@ -624,16 +624,16 @@ Replace each placeholder's empty content with the server value, porting the exac
 </aside>
 ```
 
-> Also remove any loading/error wrapper logic that toggled `blog-post-loading` / `blog-post-content` visibility (the `hidden` classes and the `#blog-post-loading` block earlier in the file). Since content is server-rendered, the loading skeleton and error state are no longer reachable — delete them so the article shows immediately. Search the file for `blog-post-loading`, `blog-post-error`, `blog-post-content` and remove those wrapper elements, leaving the article markup as the always-visible content.
+> Also remove any loading/error wrapper logic that toggled `blog-post-loading` / `blog-post-content` visibility (the `hidden` classes and the `#blog-post-loading` block earlier in the file). Since content is server-rendered, the loading skeleton and error state are no longer reachable - delete them so the article shows immediately. Search the file for `blog-post-loading`, `blog-post-error`, `blog-post-content` and remove those wrapper elements, leaving the article markup as the always-visible content.
 
 - [ ] **Step 2: Delete the data-loading script, keep the read-progress script**
 
-Remove the entire second `<script>` block (currently `:349-563`, the one beginning `import { sanitizeRichHtml }` and containing `loadBlogPost`). **Keep** the first `<script>` block (`:292-347`, read-progress) intact — but since `set:html` content and IDs now render on the server, confirm `#article-content`/`#read-progress` IDs still exist in the markup it queries; they do (the progress bar markup at the top of the file is unchanged).
+Remove the entire second `<script>` block (currently `:349-563`, the one beginning `import { sanitizeRichHtml }` and containing `loadBlogPost`). **Keep** the first `<script>` block (`:292-347`, read-progress) intact - but since `set:html` content and IDs now render on the server, confirm `#article-content`/`#read-progress` IDs still exist in the markup it queries; they do (the progress bar markup at the top of the file is unchanged).
 
 - [ ] **Step 3: Type-check**
 
 Run: `npx astro check 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | grep -E "blog/\[slug\]|error ts" | head`
-Expected: no errors for `blog/[slug]/index.astro`. (If `section`/`item`/`t` params report implicit-any, annotate them: `(section: BlogSection, index: number)`, `(item: BlogChecklist)`, `(t: string)` — import `BlogSection`, `BlogChecklist` from `../../../types/blog`.)
+Expected: no errors for `blog/[slug]/index.astro`. (If `section`/`item`/`t` params report implicit-any, annotate them: `(section: BlogSection, index: number)`, `(item: BlogChecklist)`, `(t: string)` - import `BlogSection`, `BlogChecklist` from `../../../types/blog`.)
 
 - [ ] **Step 4: Build and assert real meta in server HTML**
 
@@ -656,7 +656,7 @@ git commit -m "feat(seo): server-render blog posts with real meta, OG, and BlogP
 
 ---
 
-## Phase 4 — Project detail page server-side rendering
+## Phase 4 - Project detail page server-side rendering
 
 **Why:** Same crawler-invisibility problem as blog. `src/pages/projects/[slug]/index.astro` fetches client-side (`:372`). Projects **have** `imageUrl`, so per-project OG images work immediately.
 
@@ -758,7 +758,7 @@ Because the project body markup is sizeable and already exists in the client `<s
 
 - [ ] **Step 2: Remove the data-loading `<script>`; keep the tab-switch behavior**
 
-Delete the `<script>` block that performs `fetch(...)` and DOM injection (`:111-416`). If tab switching (privacy/terms/overview) was handled there, re-add a **small** presentation-only `<script>` that only toggles `.is-active` on `.tab-btn` and shows/hides the corresponding panels — no data fetching. Keep the `<style>` block (`:89-109`) unchanged.
+Delete the `<script>` block that performs `fetch(...)` and DOM injection (`:111-416`). If tab switching (privacy/terms/overview) was handled there, re-add a **small** presentation-only `<script>` that only toggles `.is-active` on `.tab-btn` and shows/hides the corresponding panels - no data fetching. Keep the `<style>` block (`:89-109`) unchanged.
 
 - [ ] **Step 3: Type-check**
 
@@ -818,7 +818,7 @@ git commit -m "feat(seo): pass project image to privacy/terms social cards"
 
 ---
 
-## Phase 5 — Site-wide structured data
+## Phase 5 - Site-wide structured data
 
 **Why:** Rich results for the homepage (knowledge-panel `Person`, site `WebSite`). Low risk, uses the `JsonLd` component from Phase 3.
 
@@ -835,7 +835,7 @@ In the frontmatter of `src/pages/index.astro`, add the import (with the other im
 import JsonLd from "../components/seo/JsonLd.astro";
 ```
 
-And define (adjust `sameAs` links to the user's real profiles — ask if unknown; omit `sameAs` if none are confirmed):
+And define (adjust `sameAs` links to the user's real profiles - ask if unknown; omit `sameAs` if none are confirmed):
 
 ```astro
 const personSchema = {
@@ -896,7 +896,7 @@ git commit -m "feat(seo): add Person and WebSite JSON-LD to homepage"
 
 ## Self-Review notes (author checklist results)
 
-- **Spec coverage:** Every audit gap is mapped — client-side meta → Phase 3/4; layout drops `image` → Phase 1.2/1.3; wrong OG image size → Phase 1.1/1.4; no robots → 2.2; no sitemap → 2.1; no JSON-LD → 3.1/3.2/4.1/5.1; missing `og:type=article`/`article:published_time`/dimensions/alt → 1.4. Twitter handle intentionally deferred pending a real handle.
-- **Backend gap:** blog cover image is the only item requiring backend work — isolated in "Backend Coordination" with a one-line frontend switch marked `TODO(backend)` in Task 3.2.
+- **Spec coverage:** Every audit gap is mapped - client-side meta → Phase 3/4; layout drops `image` → Phase 1.2/1.3; wrong OG image size → Phase 1.1/1.4; no robots → 2.2; no sitemap → 2.1; no JSON-LD → 3.1/3.2/4.1/5.1; missing `og:type=article`/`article:published_time`/dimensions/alt → 1.4. Twitter handle intentionally deferred pending a real handle.
+- **Backend gap:** blog cover image is the only item requiring backend work - isolated in "Backend Coordination" with a one-line frontend switch marked `TODO(backend)` in Task 3.2.
 - **Type consistency:** service methods (`getPublicPostBySlug`, `getProjectBySlug`, `getProjectPolicyBySlug`), types (`BlogPost`, `BlogSection`, `BlogChecklist`, `Project`), and the `image`/`type`/`publishedTime`/`imageAlt` prop names are used identically across CoreLayout → PublicLayout → ProjectLayout and the pages.
 - **Verification adapted** to this repo's no-test reality per `CLAUDE.md` (build + astro check + curl HTML assertions).

@@ -1,4 +1,4 @@
-# Family Person-Info — Relationship De-dupe Fix
+# Family Person-Info - Relationship De-dupe Fix
 
 > Fixes duplicated spouse entries (and mis-labeled parent/child) in the public selected-person
 > detail panel by replacing raw-row rendering with a derived, de-duplicated relationship table.
@@ -19,9 +19,9 @@ production data (`GET /api/v1/family/hafiz-family`):
 `PersonDetailPanel.tsx` previously listed **every raw relationship row** touching the selected
 person and labeled each by its raw `relationshipType`. Consequences:
 
-1. **Spouse doubled** — for person `1`, both `spouse(1→2)` and `spouse(2→1)` resolve to the same
+1. **Spouse doubled** - for person `1`, both `spouse(1→2)` and `spouse(2→1)` resolve to the same
    other person (`2`), rendering "Spouse: Nurul Amani" **twice**.
-2. **Parent/child mis-labeled by direction** — a `parent` row was always labeled "Parent" even when
+2. **Parent/child mis-labeled by direction** - a `parent` row was always labeled "Parent" even when
    the selected person was the *parent* (so a father saw his daughter listed as "Parent"), and the
    reciprocal `child` row added a second "Child" entry for the same person.
 
@@ -33,17 +33,17 @@ intentionally retains reciprocal rows (the chart tolerates them); the fix belong
 
 New pure helper **`src/lib/family-relationships.ts`** (framework-independent, easily testable):
 
-- `getRelationKey(person)` — dedupe identity key: **globalKey → id → normalized displayName**
-  (name is a last resort and, because an id is always present, is effectively never used — so two
+- `getRelationKey(person)` - dedupe identity key: **globalKey → id → normalized displayName**
+  (name is a last resort and, because an id is always present, is effectively never used - so two
   distinct same-named people are never merged).
-- `dedupeRelatedPeople(people)` — removes duplicates by the key above, order-preserving.
-- `buildRelationCounts(detail)` — distinct related-person count per id (collapses reciprocal rows).
-- `getPersonRelationshipGroups(detail, person)` — derives ordered, de-duplicated, gender-aware groups.
+- `dedupeRelatedPeople(people)` - removes duplicates by the key above, order-preserving.
+- `buildRelationCounts(detail)` - distinct related-person count per id (collapses reciprocal rows).
+- `getPersonRelationshipGroups(detail, person)` - derives ordered, de-duplicated, gender-aware groups.
 
 `PersonDetailPanel.tsx` now renders a **clean relationship table** (`<table>` with `<th scope="row">`
 labels), one row per non-empty group, each related person shown **once** and clickable.
 `FamilyListView.tsx` now uses `buildRelationCounts` so its "· N relations" count reflects distinct
-related people instead of inflated reciprocal rows. `PersonSearch.tsx` shows no relationships — unchanged.
+related people instead of inflated reciprocal rows. `PersonSearch.tsx` shows no relationships - unchanged.
 
 ## Relationship table / groups implemented
 
@@ -83,19 +83,19 @@ so person B is collected once. The set is then resolved to people and de-duped a
 - Anyone already classified as the selected person's spouse/parent/child is removed from siblings.
 
 Verified on real data (`hamid-family`): e.g. *Ariffin* correctly shows Father (Abd Hamid), Mother
-(Arbaiah), Spouse (Noor Siah), Sons, Daughter, Brothers (Amrani, Kamaruddin), and Sisters — all
+(Arbaiah), Spouse (Noor Siah), Sons, Daughter, Brothers (Amrani, Kamaruddin), and Sisters - all
 de-duped, correct gender, correct direction.
 
 ## Privacy
 
-The helper reads only `id`, `displayName`, `globalKey`, `gender` — all whitelist-safe public fields.
+The helper reads only `id`, `displayName`, `globalKey`, `gender` - all whitelist-safe public fields.
 No birth/death dates, notes, metadata, or other private fields are read or rendered. SSR island-payload
 re-audit after the change: person fields remain exactly the public whitelist; **no full living
 birthdates** present. `/family` remains unlisted from the navbar. Admin builder untouched.
 
 ## Remaining limitations
 
-- **Half-siblings vs full-siblings** are not distinguished — anyone sharing ≥1 parent is a sibling.
+- **Half-siblings vs full-siblings** are not distinguished - anyone sharing ≥1 parent is a sibling.
 - **In-laws / step relations** beyond the seven groups are not modeled.
 - Unknown/other-gender relatives fall into generic **Parent / Child / Sibling** fallback rows.
 - Grouping reflects current relationship rows; it does not fix any underlying D1 data issues

@@ -4,7 +4,7 @@ import PublicLayout from "../../layouts/PublicLayout.astro";
 import { blogService } from "../../lib/blog";
 import type { BlogPostSummary } from "../../types/blog";
 
-// Server-side fetch — no client spinners or error banners. An unreachable
+// Server-side fetch - no client spinners or error banners. An unreachable
 // API degrades to the same tasteful zero-state as an empty blog.
 let posts: BlogPostSummary[] = [];
 try {

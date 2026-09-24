@@ -3,7 +3,7 @@
 **Status:** Draft (Phase 1)
 **Owner:** Hafiz Bahtiar
 **Depends on:** `backend-content-api-spec.md` (public read API), `admin-project-cms-spec.md` (authoring), `public-media-carousel-spec.md` (carousel).
-**Goal:** Turn `/projects` and `/projects/[slug]` into a polished, evidence-driven, recruiter-facing case-study experience driven entirely by structured data — while preserving the current public design direction (slate palette, cyan/blue accents, `container-main`, View Transitions).
+**Goal:** Turn `/projects` and `/projects/[slug]` into a polished, evidence-driven, recruiter-facing case-study experience driven entirely by structured data - while preserving the current public design direction (slate palette, cyan/blue accents, `container-main`, View Transitions).
 
 ---
 
@@ -19,7 +19,7 @@
 ## 2. Public project **list** (`/projects`)
 
 - Source: `GET /api/public/projects` (curated through `curateProject`). Sorted featured-first, then `featured_order`, then `sort_order`.
-- Layout: keep the current responsive grid — first card spans both columns (`sm:col-span-2`), rest 2-up. Preserve `ProjectCard.astro` look.
+- Layout: keep the current responsive grid - first card spans both columns (`sm:col-span-2`), rest 2-up. Preserve `ProjectCard.astro` look.
 - Card content (unchanged shape): cover image (with variant handling + composed preview for logos), eyebrow (`year · type label`), title, 2–3-line clamp summary, up to 4 tech chips + overflow `+N`, whole-card anchor to detail, `Featured` badge on the lead card.
 - **Media on the list:** cover image only. For featured projects, **max 2–3** thumbnail previews are allowed (from `project_media` where `is_featured = 1`), never a heavy multi-image carousel per card (see carousel spec §6).
 - Filtering (progressive enhancement, optional): by `type` and `tech` via query params `?type=&tech=`; default unfiltered. No filter UI required for v1.
@@ -31,18 +31,18 @@
 
 ### 3.1 Section order (top → bottom)
 1. **Back link** → `/projects`.
-2. **Hero** — title, subtitle (optional), meta chips (role · year · type · status), summary dek (single source of the short description), primary CTAs (§3.3).
-3. **Media carousel** — `project_media` ordered by `sort_order`; see `public-media-carousel-spec.md`. Falls back to single cover image, then to "Media coming soon" placeholder.
-4. **Project summary** — `summary` (one paragraph) + Project Info sidebar (role, year, type, status, client when public).
-5. **Problem** — `project_sections[type=problem]` or `projects.problem`.
-6. **My contribution** — `contribution` (what *I* specifically did; first person, scoped).
-7. **Architecture / tech decisions** — `architecture_notes` + optional architecture-diagram media.
-8. **Features** — `project_features` (title + description + optional icon), ordered, visible only.
-9. **Challenges & solutions** — `project_sections[type=challenges]`.
-10. **Results / impact** — `result_summary` + `project_sections[type=results]` (metrics encouraged).
-11. **Tech stack** — `project_tech_stacks` grouped by category (backend/mobile/database/web/infra/language/tooling), primary first.
-12. **Links / CTA** — `project_links` filtered to `is_public = 1 AND status = 'active'`; safe contact fallback otherwise (§3.3).
-13. **Legal** — Privacy / Terms links when a policy exists (unchanged).
+2. **Hero** - title, subtitle (optional), meta chips (role · year · type · status), summary dek (single source of the short description), primary CTAs (§3.3).
+3. **Media carousel** - `project_media` ordered by `sort_order`; see `public-media-carousel-spec.md`. Falls back to single cover image, then to "Media coming soon" placeholder.
+4. **Project summary** - `summary` (one paragraph) + Project Info sidebar (role, year, type, status, client when public).
+5. **Problem** - `project_sections[type=problem]` or `projects.problem`.
+6. **My contribution** - `contribution` (what *I* specifically did; first person, scoped).
+7. **Architecture / tech decisions** - `architecture_notes` + optional architecture-diagram media.
+8. **Features** - `project_features` (title + description + optional icon), ordered, visible only.
+9. **Challenges & solutions** - `project_sections[type=challenges]`.
+10. **Results / impact** - `result_summary` + `project_sections[type=results]` (metrics encouraged).
+11. **Tech stack** - `project_tech_stacks` grouped by category (backend/mobile/database/web/infra/language/tooling), primary first.
+12. **Links / CTA** - `project_links` filtered to `is_public = 1 AND status = 'active'`; safe contact fallback otherwise (§3.3).
+13. **Legal** - Privacy / Terms links when a policy exists (unchanged).
 
 Sections with no content are **omitted** (no empty headings). This is the structural fix for the Phase 0 duplicate-content problem: each block has exactly one data source and renders once.
 
@@ -70,7 +70,7 @@ Buttons render **only** for links the admin marked active + public. No link is e
 - Tap targets ≥ 40 px; no horizontal page scroll.
 
 ## 5. SEO metadata
-- `<title>`: `"{title} — Hafiz Bahtiar"`.
+- `<title>`: `"{title} - Hafiz Bahtiar"`.
 - `<meta name=description>`: `summary` (≤ 160 chars; fall back to `description`).
 - Canonical: `https://hafizbahtiar.com/projects/{slug}` (apex).
 - JSON-LD `CreativeWork`: name, description, url, image (absolute OG), `dateCreated` (year), `keywords` (tech names), `creator` Person. Add `about`/`keywords` from tech stack.
@@ -82,7 +82,7 @@ Buttons render **only** for links the admin marked active + public. No link is e
 - Recommended asset: 1200×630. The carousel media may differ; OG is a dedicated field so social cards stay intentional.
 
 ## 7. Image alt-text rules
-- Every public image **must** have non-empty `alt_text` (enforced in admin before publish — see CMS spec validation).
+- Every public image **must** have non-empty `alt_text` (enforced in admin before publish - see CMS spec validation).
 - Alt text describes the evidence ("Invois invoice PDF export preview"), not "image".
 - Decorative-only images are not allowed in the public carousel (carousel is evidence).
 - Device-framed screenshots: alt describes the screen content, not the frame.
@@ -100,7 +100,7 @@ Buttons render **only** for links the admin marked active + public. No link is e
 ## 9. Private / confidential project handling
 - `is_confidential = 1`: hide `client_name` (show "Confidential client"), hide private links, prefer sanitized `project_sections` authored for public view.
 - `is_public = 0`: never returned by the public API; not reachable at `/projects/[slug]` (→ 404).
-- Confidential projects can still be **published** to show sanitized impact + a "Request access" CTA — this is the first-class replacement for today's "no buttons" dead-ends (audit M2).
+- Confidential projects can still be **published** to show sanitized impact + a "Request access" CTA - this is the first-class replacement for today's "no buttons" dead-ends (audit M2).
 
 ## 10. Acceptance criteria
 - [ ] No field renders more than once on the detail page.

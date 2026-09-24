@@ -39,9 +39,9 @@ const isPubliclyViewable = (p: CmsProject) =>
   ["published", "completed", "in-progress", "maintained"].includes(p.status ?? "");
 
 const formatDate = (s?: string) => {
-  if (!s) return "—";
+  if (!s) return "-";
   const d = new Date(s);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+  return Number.isNaN(d.getTime()) ? "-" : d.toLocaleDateString();
 };
 
 export const ProjectsCmsTable = () => {
@@ -167,7 +167,7 @@ export const ProjectsCmsTable = () => {
       size: 110,
       cell: ({ row }) => (
         <AdminBadge variant={TYPE_VARIANT[row.original.projectType] ?? "neutral"}>
-          {row.original.projectType || "—"}
+          {row.original.projectType || "-"}
         </AdminBadge>
       ),
     },
@@ -247,51 +247,55 @@ export const ProjectsCmsTable = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-3">
-        <Select
-          label="Status"
-          value={statusFilter}
-          onChange={(v) => setStatusFilter(String(v))}
-          options={[
-            { value: "all", label: "All statuses" },
-            { value: "draft", label: "Draft" },
-            { value: "published", label: "Published" },
-            { value: "archived", label: "Archived" },
-            { value: "completed", label: "Completed" },
-            { value: "in-progress", label: "In progress" },
-            { value: "maintained", label: "Maintained" },
-          ]}
-        />
-        <Select
-          label="Type"
-          value={typeFilter}
-          onChange={(v) => setTypeFilter(String(v))}
-          options={[
-            { value: "all", label: "All types" },
-            { value: "personal", label: "Personal" },
-            { value: "business", label: "Business" },
-            { value: "work", label: "Work" },
-          ]}
-        />
-        <Select
-          label="Visibility"
-          value={visibilityFilter}
-          onChange={(v) => setVisibilityFilter(String(v))}
-          options={[
-            { value: "all", label: "All" },
-            { value: "public", label: "Public" },
-            { value: "confidential", label: "Confidential" },
-            { value: "private", label: "Private" },
-          ]}
-        />
-      </div>
-
       <DataTable
         columns={columns}
         data={filtered}
         isLoading={isLoading}
         emptyTitle="No projects"
         emptyDescription="Create your first project to feature it on the portfolio."
+        filters={
+          <>
+            <Select
+              ariaLabel="Filter by status"
+              value={statusFilter}
+              onChange={(v) => setStatusFilter(String(v))}
+              className="w-40"
+              options={[
+                { value: "all", label: "All statuses" },
+                { value: "draft", label: "Draft" },
+                { value: "published", label: "Published" },
+                { value: "archived", label: "Archived" },
+                { value: "completed", label: "Completed" },
+                { value: "in-progress", label: "In progress" },
+                { value: "maintained", label: "Maintained" },
+              ]}
+            />
+            <Select
+              ariaLabel="Filter by type"
+              value={typeFilter}
+              onChange={(v) => setTypeFilter(String(v))}
+              className="w-40"
+              options={[
+                { value: "all", label: "All types" },
+                { value: "personal", label: "Personal" },
+                { value: "business", label: "Business" },
+                { value: "work", label: "Work" },
+              ]}
+            />
+            <Select
+              ariaLabel="Filter by visibility"
+              value={visibilityFilter}
+              onChange={(v) => setVisibilityFilter(String(v))}
+              className="w-40"
+              options={[
+                { value: "all", label: "All" },
+                { value: "public", label: "Public" },
+                { value: "confidential", label: "Confidential" },
+                { value: "private", label: "Private" },
+              ]}
+            />
+          </>
+        }
       />
     </div>
   );

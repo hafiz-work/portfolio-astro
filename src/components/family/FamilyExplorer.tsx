@@ -86,7 +86,7 @@ export const FamilyExplorer = ({
 
   if (detail.people.length === 0) {
     return (
-      <div className="flex h-[420px] items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+      <div className="flex h-[420px] items-center justify-center pattern rounded-xl text-sm text-gray-500">
         No family members have been added yet.
       </div>
     );

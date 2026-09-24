@@ -35,7 +35,7 @@ export const PersonSearch = ({ people, onSelect }: Props) => {
     <div className="relative w-full sm:w-64">
       <svg
         aria-hidden="true"
-        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -trangray-y-1/2 text-gray-400"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -84,13 +84,13 @@ export const PersonSearch = ({ people, onSelect }: Props) => {
           }
         }}
         onBlur={() => setTimeout(() => setOpen(false), 120)}
-        className="w-full rounded-md border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+        className="w-full rounded-full bg-white py-1.5 pl-9 pr-3 text-sm/6 text-gray-950 outline-1 -outline-offset-1 outline-gray-950/10 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-sky-500 dark:bg-white/5 dark:text-white dark:outline-white/15"
       />
       {open && matches.length > 0 && (
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800"
+          className="absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-gray-950/10 dark:bg-gray-900 dark:ring-white/10"
         >
           {matches.map((person, index) => (
             <li
@@ -105,13 +105,13 @@ export const PersonSearch = ({ people, onSelect }: Props) => {
               onMouseEnter={() => setActive(index)}
               className={`cursor-pointer px-3 py-2 text-sm ${
                 index === active
-                  ? "bg-cyan-50 text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-300"
-                  : "text-slate-700 dark:text-slate-300"
+                  ? "bg-gray-950/5 text-gray-950 dark:bg-white/10 dark:text-white"
+                  : "text-gray-700 dark:text-gray-300"
               }`}
             >
               {person.displayName}
               {person.birthDate && (
-                <span className="ml-2 text-xs text-slate-400">
+                <span className="ml-2 text-xs text-gray-400">
                   b. {displayYear(person.birthDate)}
                 </span>
               )}

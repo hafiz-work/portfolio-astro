@@ -26,6 +26,13 @@ export interface DashboardRecentContact {
   createdAt: string;
 }
 
+export interface DashboardRecentDownload {
+  createdAt: string;
+  ipAddress: string;
+  country: string | null;
+  userAgent: string;
+}
+
 export interface DashboardOverview {
   projects: {
     total: number;
@@ -40,6 +47,12 @@ export interface DashboardOverview {
   };
   blog: { total: number };
   experiences: { total: number };
+  // Optional until the backend `/owner/dashboard/overview` endpoint adds it -
+  // the UI defaults to 0 / empty so the dashboard never breaks before then.
+  resumeDownloads?: {
+    total: number;
+    recent: DashboardRecentDownload[];
+  };
 }
 
 class DashboardService extends ApiClient {

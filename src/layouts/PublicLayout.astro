@@ -24,13 +24,21 @@ const { title, description, image, type, publishedTime, imageAlt } =
   type={type}
   publishedTime={publishedTime}
   imageAlt={imageAlt}
+  class="font-inter text-gray-950 dark:text-white"
 >
   <Background />
   <Navbar />
-  <main class="flex-grow pt-20">
-    <slot />
-  </main>
-  <Footer />
+  <!-- tailwindcss.com shell: hatched gutter | column | hatched gutter -->
+  <div class="page-shell">
+    <div class="gutter gutter-left" aria-hidden="true"></div>
+    <div class="page-col">
+      <main class="flex-grow">
+        <slot />
+      </main>
+      <Footer />
+    </div>
+    <div class="gutter gutter-right" aria-hidden="true"></div>
+  </div>
 </CoreLayout>
 
 <script>

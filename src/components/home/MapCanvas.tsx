@@ -55,8 +55,8 @@ function getTimeTheme(): "light" | "dark" {
   return h >= 6 && h < 18 ? "light" : "dark";
 }
 
-// Priority 1: .dark/.light class on <html> — follows the app's global toggle.
-// Priority 2: time of day (6 am–6 pm = light) — first-visit fallback when no
+// Priority 1: .dark/.light class on <html> - follows the app's global toggle.
+// Priority 2: time of day (6 am–6 pm = light) - first-visit fallback when no
 //             app theme class has been set yet.
 function getAppTheme(): "light" | "dark" {
   if (typeof document === "undefined") return getTimeTheme();
@@ -84,7 +84,7 @@ function useMapTheme() {
       attributeFilter: ["class"],
     });
 
-    // Re-evaluate the time fallback every minute — only matters when the app
+    // Re-evaluate the time fallback every minute - only matters when the app
     // hasn't set an explicit theme class (e.g. first visit with no preference).
     const interval = setInterval(() => setAutoTheme(getAppTheme()), 60_000);
 

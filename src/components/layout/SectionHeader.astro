@@ -1,0 +1,62 @@
+---
+import Annot from "./Annot.astro";
+/**
+ * tailwindcss.com section header: eyebrow row, heading row, faint class
+ * annotation (live, see Annot.astro), lead row - each on its own full-bleed hairline row.
+ * Optional `action` slot sits to the right of the heading on sm+.
+ */
+interface Props {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  as?: "h1" | "h2";
+}
+
+const {
+  eyebrow,
+  title,
+  description,
+  as: Heading = "h2",
+} = Astro.props;
+const hasAction = Astro.slots.has("action");
+---
+
+<div data-reveal>
+  {
+    eyebrow && (
+      <div class="line-y">
+        <p class="eyebrow container-main">{eyebrow}</p>
+      </div>
+    )
+  }
+  <div class:list={["line-y", eyebrow && "mt-2"]}>
+    <div
+      class:list={[
+        "container-main",
+        hasAction && "flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between",
+      ]}
+    >
+      <Heading
+        class:list={[
+          "text-4xl/[1.1] font-medium tracking-tighter text-pretty text-gray-950 dark:text-white",
+          Heading === "h1" ? "sm:text-6xl/[1.05]" : "sm:text-5xl/[1.05]",
+        ]}
+      >
+        {title}
+      </Heading>
+      {hasAction && <div class="shrink-0 pb-1.5"><slot name="action" /></div>}
+    </div>
+  </div>
+  {
+    description && (
+      <>
+        <Annot preset="lead" class="mt-4" />
+        <div class="line-y">
+          <p class="lead container-main">
+            {description}
+          </p>
+        </div>
+      </>
+    )
+  }
+</div>

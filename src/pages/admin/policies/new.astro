@@ -197,25 +197,31 @@ import Dropdown from "../../../components/ui/Dropdown.astro";
   async function loadProjects() {
     try {
       const projects = await projectsService.getAdminProjects();
+      // Build options with createElement/textContent so a project title
+      // containing markup (e.g. `<img onerror=…>`) cannot execute as XSS in
+      // the admin session. Mirrors the safe pattern in experiences/new.astro.
       if (dropdownList) {
-        dropdownList.innerHTML = projects
-          .map(
-            (project) => `
-              <li>
-                <button
-                  type="button"
-                  class="dropdown-item w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-blue-900/20 hover:text-blue-400 transition-colors flex items-center justify-between group"
-                  data-value="${project.id}"
-                >
-                  <span>${project.title}</span>
-                  <span class="opacity-0 group-hover:opacity-100 text-blue-500 font-bold">
-                    _
-                  </span>
-                </button>
-              </li>
-            `,
-          )
-          .join("");
+        dropdownList.innerHTML = "";
+        projects.forEach((project) => {
+          const li = document.createElement("li");
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className =
+            "dropdown-item w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-blue-900/20 hover:text-blue-400 transition-colors flex items-center justify-between group";
+          button.dataset.value = String(project.id);
+
+          const label = document.createElement("span");
+          label.textContent = `${project.title}`;
+
+          const indicator = document.createElement("span");
+          indicator.className =
+            "opacity-0 group-hover:opacity-100 text-blue-500 font-bold";
+          indicator.textContent = "_";
+
+          button.append(label, indicator);
+          li.appendChild(button);
+          dropdownList.appendChild(li);
+        });
       }
 
       (window as Window & { setupDropdowns?: () => void }).setupDropdowns?.();

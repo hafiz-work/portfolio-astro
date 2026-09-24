@@ -1,148 +1,163 @@
 ---
+import { Image } from "astro:assets";
+import CommandPalette from "./CommandPalette.astro";
+
 const links = [
     { text: "Projects", href: "/projects", reload: false, spy: "projects" },
-    { text: "Skills", href: "/#skills", reload: true, spy: "skills" },
+    { text: "Stack", href: "/#skills", reload: true, spy: "skills" },
     { text: "Experience", href: "/#experience", reload: true, spy: "experience" },
+    { text: "Blog", href: "/blog", reload: false, spy: "blog" },
+];
+
+// tailwind's "Plus" link: dashed box with a tiny "+" on each corner.
+const corners = [
+    "-top-[3px] -left-[3px]",
+    "-top-[3px] -right-[3px]",
+    "-bottom-[3px] -left-[3px]",
+    "-bottom-[3px] -right-[3px]",
 ];
 ---
 
+<!-- tailwindcss.com line: flat, full-width, hairline bottom, sticky. -->
 <nav
     id="main-nav"
-    class="fixed top-0 left-0 w-full z-50 transition-all duration-300 py-5"
+    class="sticky top-0 z-50 w-full [overflow-x:clip] bg-canvas/95 backdrop-blur-sm dark:bg-pub-dark/95"
 >
     <div
-        id="nav-container"
-        class="container-main flex items-center justify-between transition-all duration-300"
+        class="line-b flex h-14 items-center justify-between gap-4 px-4 sm:px-6"
     >
-        <a
-            href="/"
-            data-astro-reload
-            class="font-mono text-base font-semibold text-slate-900 dark:text-slate-100 tracking-tight hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors"
-        >
-            hafiz<span class="text-cyan-600 dark:text-cyan-400">.dev</span>
-        </a>
+        <div class="flex items-center gap-3">
+            <a
+                href="/"
+                data-astro-reload
+                class="inline-flex items-center"
+                aria-label="Hafiz Bahtiar - home"
+            >
+                <Image
+                    src="/brand/wordmark.svg"
+                    alt="hafizbahtiar"
+                    width={383}
+                    height={120}
+                    loading="eager"
+                    class="h-11 w-auto"
+                />
+            </a>
+            <!-- tailwind's "v4.3" pill → availability -->
+            <span
+                class="hidden items-center gap-1.5 rounded-full bg-gray-950/5 px-2.5 py-0.5 text-xs/5 font-medium text-gray-700 sm:inline-flex dark:bg-white/10 dark:text-gray-300"
+            >
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                Available
+            </span>
+        </div>
 
-        <div class="flex items-center gap-1.5">
-            <!-- Desktop nav links -->
-            <div class="hidden md:flex items-center gap-1" id="navbar-default">
+        <div class="flex items-center gap-1 md:gap-6">
+            <!-- ⌘K search pill (desktop) / icon (mobile) -->
+            <button
+                type="button"
+                data-cmdk-open
+                class="hidden items-center gap-1.5 rounded-full bg-gray-950/[0.03] px-2.5 py-1 text-gray-500 ring-1 ring-gray-950/5 ring-inset transition-colors hover:text-gray-950 md:inline-flex dark:bg-white/5 dark:text-gray-400 dark:ring-white/10 dark:hover:text-white"
+                aria-label="Search (⌘K)"
+            >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M17 10.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z"></path>
+                </svg>
+                <kbd class="font-sans text-xs/5" data-cmdk-kbd>⌘K</kbd>
+            </button>
+            <button
+                type="button"
+                data-cmdk-open
+                class="inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-950 hover:bg-gray-950/5 md:hidden dark:text-white dark:hover:bg-white/10"
+                aria-label="Search"
+            >
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M17 10.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z"></path>
+                </svg>
+            </button>
+
+            <div class="hidden items-center gap-6 md:flex" id="navbar-default">
                 {
                     links.map((link) => (
                         <a
                             href={link.href}
                             data-astro-reload={link.reload ? true : undefined}
                             data-spy={link.spy}
-                            class="nav-link relative px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                            class="nav-link text-sm/6 text-gray-600 transition-colors hover:text-gray-950 dark:text-gray-300 dark:hover:text-white"
                         >
                             {link.text}
-                            <span class="nav-link-dot absolute left-1/2 -translate-x-1/2 -bottom-0.5 w-1 h-1 rounded-full bg-cyan-500 dark:bg-cyan-400 opacity-0 scale-0 transition-all duration-200" />
                         </a>
                     ))
                 }
-                <!-- Contact CTA -->
                 <a
                     href="/#contact"
                     data-astro-reload
                     data-spy="contact"
-                    class="nav-cta ml-1 inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-full shadow-sm shadow-blue-600/25 hover:shadow-blue-600/40 transition-all"
+                    class="relative inline-flex items-center bg-sky-400/10 px-2 text-sm/6 font-medium text-sky-700 transition-colors hover:bg-sky-400/20 dark:text-sky-300"
                 >
-                    <span
-                        class="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"
-                    ></span>
                     Contact
+                    <span
+                        class="pointer-events-none absolute inset-0 border border-dashed border-sky-500/50 dark:border-sky-300/40"
+                        aria-hidden="true"></span>
+                    {
+                        corners.map((pos) => (
+                            <svg
+                                class={`pointer-events-none absolute size-[5px] text-sky-600 dark:text-sky-300 ${pos}`}
+                                viewBox="0 0 5 5"
+                                aria-hidden="true"
+                            >
+                                <path d="M2.5 0v5M0 2.5h5" stroke="currentColor" stroke-width="1" />
+                            </svg>
+                        ))
+                    }
+                </a>
+                <a
+                    href="https://github.com/hafizbahtiar"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="GitHub"
+                    class="text-gray-950 transition-colors hover:text-gray-600 dark:text-white dark:hover:text-gray-300"
+                >
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            fill-rule="evenodd"
+                            d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                            clip-rule="evenodd"></path>
+                    </svg>
                 </a>
             </div>
-
-            <!-- Theme toggle -->
-            <button
-                id="theme-toggle"
-                type="button"
-                aria-label="Toggle theme"
-                class="theme-toggle-btn p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-                <!-- Sun icon — shown in dark mode -->
-                <svg
-                    id="theme-sun"
-                    class="hidden w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"
-                    ></path>
-                </svg>
-                <!-- Moon icon — shown in light mode -->
-                <svg
-                    id="theme-moon"
-                    class="block w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                    ></path>
-                </svg>
-            </button>
 
             <!-- Hamburger (mobile) -->
             <button
                 id="navbar-toggle"
                 type="button"
-                class="inline-flex items-center p-2 w-9 h-9 justify-center text-slate-500 dark:text-slate-400 rounded-lg md:hidden hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                class="-mr-1.5 inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-950 hover:bg-gray-950/5 md:hidden dark:text-white dark:hover:bg-white/10"
                 aria-controls="mobile-menu"
                 aria-expanded="false"
             >
                 <span class="sr-only">Open main menu</span>
-                <svg
-                    id="nav-icon-open"
-                    class="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M4 6h16M4 12h16M4 18h16"></path>
+                <svg id="nav-icon-open" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5"></path>
                 </svg>
-                <svg
-                    id="nav-icon-close"
-                    class="hidden w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M6 18L18 6M6 6l12 12"></path>
+                <svg id="nav-icon-close" class="hidden h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"></path>
                 </svg>
             </button>
         </div>
     </div>
 
-    <!-- Mobile menu -->
+    <!-- Mobile menu: full-width sheet under the bar, hairline rows -->
     <div
         id="mobile-menu"
-        class="md:hidden mx-4 mt-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/97 dark:bg-slate-900/97 backdrop-blur-xl overflow-hidden grid grid-rows-[0fr] opacity-0 -translate-y-1 pointer-events-none transition-all duration-300 ease-out"
+        class="line-b grid grid-rows-[0fr] bg-canvas transition-[grid-template-rows] duration-300 ease-out md:hidden dark:bg-pub-dark"
     >
-        <div class="min-h-0">
-            <div class="p-2">
+        <div class="min-h-0 overflow-hidden">
+            <div class="flex flex-col py-2">
                 {
                     links.map((link) => (
                         <a
                             href={link.href}
                             data-astro-reload={link.reload ? true : undefined}
-                            class="block px-4 py-3 text-sm rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            class="px-4 py-2.5 text-base/7 font-medium text-gray-950 hover:bg-gray-950/[0.025] sm:px-6 dark:text-white dark:hover:bg-white/5"
                         >
                             {link.text}
                         </a>
@@ -151,152 +166,44 @@ const links = [
                 <a
                     href="/#contact"
                     data-astro-reload
-                    class="block px-4 py-3 text-sm font-semibold rounded-xl text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors"
+                    class="px-4 py-2.5 text-base/7 font-medium text-sky-700 hover:bg-gray-950/[0.025] sm:px-6 dark:text-sky-300 dark:hover:bg-white/5"
                 >
                     Contact
                 </a>
-            </div>
-            <div
-                class="flex items-center justify-between px-6 py-3 border-t border-slate-200 dark:border-slate-700"
-            >
-                <span
-                    class="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500"
-                >
-                    <span
-                        class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
-                    ></span>
-                    Available for work
-                </span>
                 <a
-                    href="mailto:hafiz@hafizbahtiar.com"
-                    class="font-mono text-[11px] text-slate-400 dark:text-slate-500 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors"
+                    href="https://github.com/hafizbahtiar"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="px-4 py-2.5 text-base/7 font-medium text-gray-950 hover:bg-gray-950/[0.025] sm:px-6 dark:text-white dark:hover:bg-white/5"
                 >
-                    hafiz@hafizbahtiar.com
+                    GitHub
                 </a>
             </div>
         </div>
     </div>
 </nav>
 
+<CommandPalette />
+
 <style>
-    nav.floating-nav {
-        padding-top: 0;
-        padding-bottom: 0;
-        top: 1rem;
-    }
-
-    nav.floating-nav #nav-container {
-        background-color: rgba(248, 250, 252, 0.92);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(148, 163, 184, 0.35);
-        border-radius: 9999px;
-        padding: 0.5rem 1.25rem;
-        /* Match .container-main (860px) so the pill aligns with content */
-        max-width: 860px;
-        margin-left: auto;
-        margin-right: auto;
-        box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
-    }
-
-    html.dark nav.floating-nav #nav-container {
-        background-color: rgba(15, 23, 42, 0.92);
-        border-color: rgba(51, 65, 85, 0.5);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-    }
-
     /* Active link (scroll-spy / current page) */
     .nav-link[aria-current] {
-        color: var(--color-slate-900, #0f172a);
+        color: var(--color-gray-950);
+        font-weight: 500;
     }
-    html.dark .nav-link[aria-current] {
-        color: var(--color-slate-100, #f1f5f9);
-    }
-    .nav-link[aria-current] .nav-link-dot {
-        opacity: 1;
-        scale: 1;
+    :global(html.dark) .nav-link[aria-current] {
+        color: var(--color-white);
     }
 
     /* Mobile menu open state */
+    #mobile-menu:not(.is-open)::after {
+        display: none;
+    }
     #mobile-menu.is-open {
         grid-template-rows: 1fr;
-        opacity: 1;
-        translate: 0 0;
-        pointer-events: auto;
     }
 
-    /* Theme toggle button — press feedback */
-    .theme-toggle-btn {
-        transform-origin: center;
-        transition:
-            transform 0.15s ease,
-            background-color 0.2s,
-            color 0.2s;
-    }
-
-    .theme-toggle-btn:active {
-        transform: scale(0.8);
-    }
-
-    /* Icon animations */
-    #theme-sun,
-    #theme-moon {
-        transform-origin: center;
-    }
-
-    @keyframes icon-into-dark {
-        0% {
-            transform: rotate(-60deg) scale(0.3);
-            opacity: 0;
-        }
-        70% {
-            transform: rotate(8deg) scale(1.15);
-            opacity: 1;
-        }
-        100% {
-            transform: rotate(0deg) scale(1);
-            opacity: 1;
-        }
-    }
-
-    @keyframes icon-into-light {
-        0% {
-            transform: rotate(60deg) scale(0.3);
-            opacity: 0;
-        }
-        70% {
-            transform: rotate(-8deg) scale(1.15);
-            opacity: 1;
-        }
-        100% {
-            transform: rotate(0deg) scale(1);
-            opacity: 1;
-        }
-    }
-
-    .icon-anim-sun {
-        animation: icon-into-dark 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-    }
-    .icon-anim-moon {
-        animation: icon-into-light 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-    }
-
-    /* Scope view-transition overrides to theme-switching only, so Astro page
-       transitions are not affected. */
-    html[data-theme-switching]::view-transition-old(root),
-    html[data-theme-switching]::view-transition-new(root) {
-        animation: none;
-        mix-blend-mode: normal;
-    }
-
-    /* Skip view transitions entirely for users who prefer reduced motion */
     @media (prefers-reduced-motion: reduce) {
-        html[data-theme-switching]::view-transition-group(*),
-        html[data-theme-switching]::view-transition-old(*),
-        html[data-theme-switching]::view-transition-new(*) {
-            animation: none !important;
-        }
-
         #mobile-menu {
             transition: none;
         }
@@ -308,9 +215,6 @@ const links = [
         const nav = document.getElementById("main-nav");
         const toggleBtn = document.getElementById("navbar-toggle");
         const mobileMenu = document.getElementById("mobile-menu");
-        const themeToggle = document.getElementById("theme-toggle");
-        const sunIcon = document.getElementById("theme-sun");
-        const moonIcon = document.getElementById("theme-moon");
         const iconOpen = document.getElementById("nav-icon-open");
         const iconClose = document.getElementById("nav-icon-close");
 
@@ -340,12 +244,7 @@ const links = [
         document.addEventListener(
             "click",
             (e) => {
-                if (
-                    !mobileMenu.contains(e.target as Node) &&
-                    !toggleBtn.contains(e.target as Node)
-                ) {
-                    setMenu(false);
-                }
+                if (!nav.contains(e.target as Node)) setMenu(false);
             },
             { signal },
         );
@@ -362,13 +261,6 @@ const links = [
             link.addEventListener("click", () => setMenu(false), { signal });
         });
 
-        // ── Floating pill on scroll ──────────────────────────────────
-        const handleScroll = () => {
-            nav.classList.toggle("floating-nav", window.scrollY > 50);
-        };
-        handleScroll();
-        window.addEventListener("scroll", handleScroll, { signal });
-
         // ── Active link: current page + homepage scroll-spy ──────────
         const spyLinks =
             document.querySelectorAll<HTMLAnchorElement>("[data-spy]");
@@ -384,6 +276,8 @@ const links = [
 
         if (window.location.pathname.startsWith("/projects")) {
             setActive("projects");
+        } else if (window.location.pathname.startsWith("/blog")) {
+            setActive("blog");
         } else if (window.location.pathname === "/") {
             const sections = ["projects", "skills", "experience", "contact"]
                 .map((id) => document.getElementById(id))
@@ -408,120 +302,6 @@ const links = [
             );
             sections.forEach((s) => spyObserver.observe(s));
             signal.addEventListener("abort", () => spyObserver.disconnect());
-        }
-
-        // ── Theme toggle (icon sync + radial view transition) ────────
-        const syncThemeIcon = (animate = false) => {
-            const isDark = document.documentElement.classList.contains("dark");
-
-            if (!sunIcon || !moonIcon) return;
-
-            if (isDark) {
-                moonIcon.classList.add("hidden");
-                moonIcon.classList.remove("block", "icon-anim-moon");
-                sunIcon.classList.remove("hidden");
-                sunIcon.classList.add("block");
-                if (animate) {
-                    sunIcon.classList.remove("icon-anim-sun");
-                    void (sunIcon as HTMLElement).offsetWidth; // force reflow
-                    sunIcon.classList.add("icon-anim-sun");
-                }
-            } else {
-                sunIcon.classList.add("hidden");
-                sunIcon.classList.remove("block", "icon-anim-sun");
-                moonIcon.classList.remove("hidden");
-                moonIcon.classList.add("block");
-                if (animate) {
-                    moonIcon.classList.remove("icon-anim-moon");
-                    void (moonIcon as HTMLElement).offsetWidth;
-                    moonIcon.classList.add("icon-anim-moon");
-                }
-            }
-        };
-
-        syncThemeIcon();
-
-        if (themeToggle) {
-            themeToggle.addEventListener(
-                "click",
-                () => {
-                    const willBeDark =
-                        !document.documentElement.classList.contains("dark");
-
-                    // Capture button center for radial origin
-                    const rect = themeToggle.getBoundingClientRect();
-                    const x = rect.left + rect.width / 2;
-                    const y = rect.top + rect.height / 2;
-                    const radius = Math.hypot(
-                        Math.max(x, window.innerWidth - x),
-                        Math.max(y, window.innerHeight - y),
-                    );
-
-                    const applyTheme = () => {
-                        document.documentElement.classList.toggle(
-                            "dark",
-                            willBeDark,
-                        );
-                        localStorage.setItem(
-                            "theme",
-                            willBeDark ? "dark" : "light",
-                        );
-                        syncThemeIcon(true);
-                    };
-
-                    // Skip animation for browsers without View Transitions API
-                    // or when user prefers reduced motion
-                    const reducedMotion = window.matchMedia(
-                        "(prefers-reduced-motion: reduce)",
-                    ).matches;
-
-                    if (
-                        typeof document.startViewTransition !== "function" ||
-                        reducedMotion
-                    ) {
-                        applyTheme();
-                        return;
-                    }
-
-                    // Shorter duration on small (mobile) screens
-                    const duration = window.innerWidth < 768 ? 350 : 500;
-
-                    // Scope transition CSS to theme-switch only
-                    document.documentElement.setAttribute(
-                        "data-theme-switching",
-                        "",
-                    );
-                    const vt = document.startViewTransition(applyTheme);
-
-                    vt.ready
-                        .then(() => {
-                            document.documentElement.animate(
-                                {
-                                    clipPath: [
-                                        `circle(0px at ${x}px ${y}px)`,
-                                        `circle(${radius}px at ${x}px ${y}px)`,
-                                    ],
-                                },
-                                {
-                                    duration,
-                                    easing: "cubic-bezier(0.4, 0, 0.2, 1)",
-                                    pseudoElement:
-                                        "::view-transition-new(root)",
-                                },
-                            );
-                        })
-                        .catch(() => {
-                            // Transition was skipped or interrupted — theme already applied
-                        });
-
-                    vt.finished.finally(() => {
-                        document.documentElement.removeAttribute(
-                            "data-theme-switching",
-                        );
-                    });
-                },
-                { signal },
-            );
         }
 
         // Smooth-scroll hash anchors when already on home page

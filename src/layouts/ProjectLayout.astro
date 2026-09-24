@@ -12,7 +12,7 @@ const { title, description, image, imageAlt } = Astro.props;
 ---
 
 <PublicLayout title={title} description={description} image={image} imageAlt={imageAlt}>
-  <div class="container-main py-8 md:py-10 min-h-screen">
+  <div class="min-h-screen pb-20 sm:pb-28">
     <slot />
   </div>
 </PublicLayout>

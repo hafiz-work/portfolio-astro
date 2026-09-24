@@ -1,0 +1,61 @@
+---
+/**
+ * tailwindcss.com-style class hint above a row. It prints the classes that are
+ * actually in effect right now: one span per breakpoint / theme, toggled with
+ * CSS, so resizing the window or switching theme changes the text (no JS).
+ *
+ * Presets mirror the real classes of `.display` and `.lead` in index.css -
+ * keep them in sync if those change.
+ */
+type Sizes = { base: string; sm?: string; lg?: string };
+
+interface Props {
+  preset?: "display" | "lead" | "hero-lead";
+  sizes?: Sizes;
+  /** Theme-dependent colour class, e.g. { light: "text-gray-950", dark: "text-white" } */
+  color?: { light: string; dark: string };
+  /** Remaining static classes, printed after size + colour. */
+  rest?: string;
+  class?: string;
+  style?: string;
+}
+
+const PRESETS: Record<NonNullable<Props["preset"]>, Omit<Props, "preset" | "class" | "style">> = {
+  display: {
+    sizes: { base: "text-5xl", sm: "text-7xl", lg: "text-8xl" },
+    color: { light: "text-gray-950", dark: "text-white" },
+    rest: "font-medium tracking-tighter text-balance",
+  },
+  lead: {
+    sizes: { base: "text-base/7", sm: "text-lg/8" },
+    color: { light: "text-gray-600", dark: "text-gray-400" },
+  },
+  "hero-lead": {
+    sizes: { base: "text-lg/8" },
+    color: { light: "text-gray-950", dark: "text-white" },
+    rest: "font-medium",
+  },
+};
+
+const props = Astro.props;
+const resolved = { ...(props.preset ? PRESETS[props.preset] : {}), ...props };
+const { sizes = { base: "" }, color, rest, class: className, style } = resolved;
+
+// Visibility per breakpoint span (literal strings so Tailwind generates them).
+const baseVis = sizes.sm ? "sm:hidden" : sizes.lg ? "lg:hidden" : "";
+const smVis = sizes.lg ? "hidden sm:inline lg:hidden" : "hidden sm:inline";
+---
+
+<p class:list={["annot", className]} style={style} aria-hidden="true">
+  <span class={baseVis}>{sizes.base}</span>{
+    sizes.sm && <span class={smVis}>{sizes.sm}</span>
+  }{sizes.lg && <span class="hidden lg:inline">{sizes.lg}</span>}{
+    color && (
+      <>
+        {" "}
+        <span class="dark:hidden">{color.light}</span>
+        <span class="hidden dark:inline">{color.dark}</span>
+      </>
+    )
+  }{rest && ` ${rest}`}
+</p>

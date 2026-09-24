@@ -1,4 +1,4 @@
-# Family Module — Memory Brain
+# Family Module - Memory Brain
 
 > **Purpose.** This is the long-term "brain" for the Family module. If you are an AI
 > agent (Opus/Codex/etc.) about to touch anything related to `/family`, read this first,
@@ -24,7 +24,7 @@ These docs live in the **frontend** repo (`docs/brain`, `docs/architecture`) but
 **API base URLs** (frontend `src/lib/config.ts`):
 - Local: `http://localhost:8787/api/v1`
 - Production: `https://api.hafizbahtiar.com/api/v1`
-- (The `hono-workers.hafizbahtiar98.workers.dev` host is **not** the family API origin — it 404s.)
+- (The `hono-workers.hafizbahtiar98.workers.dev` host is **not** the family API origin - it 404s.)
 
 ---
 
@@ -32,18 +32,18 @@ These docs live in the **frontend** repo (`docs/brain`, `docs/architecture`) but
 
 A public, read-only family-tree explorer plus a private admin builder.
 
-- **Public** `/family` — a synthetic **combined** tree merging every public family tree
+- **Public** `/family` - a synthetic **combined** tree merging every public family tree
   (currently 5: `azhari-family`, `bahtiar-family`, `basri-family`, `hafiz-family`,
   `hamid-family`), centered on `muhamad-nurhafiz`.
-- **Public** `/family/[slug]` — a single public tree by slug.
-- **Admin** `/admin/family`, `/admin/family/new`, `/admin/family/edit` — authenticated
+- **Public** `/family/[slug]` - a single public tree by slug.
+- **Admin** `/admin/family`, `/admin/family/new`, `/admin/family/edit` - authenticated
   CRUD builder for trees / people / relationships, with an inline "add relative" canvas.
 
 `/family` is intentionally **not linked from the public navbar** (privacy decision).
 
 ---
 
-## 2. How `/family` (combined) works — exact sequence
+## 2. How `/family` (combined) works - exact sequence
 
 File: `src/pages/family/index.astro` (`prerender = false`, SSR at request time).
 
@@ -92,7 +92,7 @@ Children: `FamilyToolbar`, `FamilyTreeCanvas` *or* `FamilyListView`, and `Person
 `src/hooks/useFamilyChart.ts` owns the **public** chart lifecycle around `family-chart@0.9.0`.
 
 - Dynamically `import("family-chart")`, `createChart(container, data)`, `setCardHtml()` with `imageCircleRect`, avatar field, `[["label"],["birthday"]]` display.
-- **Real d3 zoom** via `f3.handlers.manualZoom({ amount, svg, transition_time })` and `f3.handlers.zoomTo(svg, 1)` — **not** fake card-spacing. (✅ both handlers confirmed to exist in the installed package types.)
+- **Real d3 zoom** via `f3.handlers.manualZoom({ amount, svg, transition_time })` and `f3.handlers.zoomTo(svg, 1)` - **not** fake card-spacing. (✅ both handlers confirmed to exist in the installed package types.)
 - Exposed `FamilyChartApi`: `setMain`, `zoomIn` (×1.25), `zoomOut` (×0.8), `fit`, `resetView` (zoomTo 1 + fit), `centerMain` (`main_to_middle`), `setOrientation`.
 - **Reduced motion**: `prefersReducedMotion()` → `transitionTime = 0` (✅ respected).
 - Init effect deps: `[ancestryDepth, data, progenyDepth, showSiblings]` (callbacks held in refs so they don't re-init). A separate effect re-centers when `mainId` changes.
@@ -108,14 +108,14 @@ users to use List view for keyboard access; bridges the chart API up via `apiRef
 **admin** `FamilyTreeChart`.
 
 - Person → `{ id, data: {...}, rels: {parents, spouses, children} }`.
-- `metadata` is included **only if the object has it** (`"metadata" in person`) — public DTOs
+- `metadata` is included **only if the object has it** (`"metadata" in person`) - public DTOs
   don't, so it resolves to `null` (no leak).
 - `first name`/`last name` use the real fields if present, else derive from `displayName`
-  (`splitDisplayName`). Public DTOs have no `firstName`/`lastName`, so they derive — again no leak.
+  (`splitDisplayName`). Public DTOs have no `firstName`/`lastName`, so they derive - again no leak.
 - `birthday`/`death` use `displayYear()` (timezone-safe; see §8).
 - Relationships → edges: `parent`/`adoptive_parent` and `child`/`adopted_child` populate
   parents/children; `spouse` populates spouses (both directions). **`sibling` rows are NOT turned
-  into chart edges** — family-chart infers siblings from shared parents. (Sibling labels still
+  into chart edges** - family-chart infers siblings from shared parents. (Sibling labels still
   appear in the detail panel relationship list.) All `rels` arrays are de-duplicated via `Set`.
 
 ## 7. Privacy model (read carefully)
@@ -137,7 +137,7 @@ the whitelist fields; 69 living people all year-only birth + null death; 8 decea
 no `notes`, `metadata`, `firstName`, `lastName`, `treeId`, relationship `id`/`isPrimary`/dates,
 `createdByUserId`, or timestamps present.
 
-⚠️ **RED FLAG — backend does not sanitize.** The public API
+⚠️ **RED FLAG - backend does not sanitize.** The public API
 (`GET /api/v1/family/:slug`, `/family`, `/family/person/:id`) returns **full** rows: `notes`,
 `metadata`, `firstName`, `lastName`, `treeId`, **full living birthdates**, relationship
 `id`/`isPrimary`/`startDate`/`endDate`/`notes`, and timestamps. The only gate is `is_public = 1`
@@ -175,7 +175,7 @@ cross-tree person *missing* a `globalKey` appears twice until the key is backfil
 
 | | Public | Admin |
 |---|---|---|
-| Island root | `FamilyExplorer.tsx` | `FamilyManager.tsx` / `FamilyTreeBuilder.tsx` |
+| Island root | `FamilyExplorer.tsx` | `FamilyTreeBuilder.tsx` (new/edit) / `FamilyTreesTable.tsx` (index) |
 | Chart | `useFamilyChart.ts` + `FamilyTreeCanvas.tsx` | `FamilyTreeChart.tsx` (legacy) |
 | Data | sanitized `PublicFamilyTreeDetail` | full `FamilyTreeDetail` (auth) |
 | Controls | props/state (`apiRef`) | **window events** (`family:set-main`, `family:on-main-changed`, `family:on-spouses`, `family:zoom-in/out`, `family:fit`, `family:center-main`, `family:set-orientation`) |
@@ -202,11 +202,11 @@ was deliberately **not** migrated onto the public hook to avoid regressing the i
 - **Schema** `src/database/migrations/006_family_chart.sql`: `family_trees`, `family_people`,
   `family_relationships`. Migration `007` recreates the `global_key` index with `COLLATE NOCASE`.
 - **Seeds** `src/database/seeds/004_setup_family.sql`, `005_setup_basri.sql`, `006_setup_hamid.sql`
-  — this is where `global_key` values are assigned.
+  - this is where `global_key` values are assigned.
 
 **Consequence (important):** because `globalKey` is **seed/SQL-managed only**, cross-tree identity
 and `?p=` deep-link stability depend on data that the admin UI cannot edit. Fixing/adding a
-`globalKey` is a **D1 remediation task**, not an app feature — and must be verified (see
+`globalKey` is a **D1 remediation task**, not an app feature - and must be verified (see
 `docs/reports/family-page-phase-0-d1-verification.sql`) before any remote run.
 
 ## 12. Data model quick reference
@@ -223,7 +223,7 @@ and `?p=` deep-link stability depend on data that the admin UI cannot edit. Fixi
 |---|---|
 | `/family`, `/family/[slug]`, bad-slug 404, `?p=` SSR render | ✅ verified via dev server + curl against prod API |
 | Public island payload privacy (whitelist, living year-only, deceased full) | ✅ verified against real prod data |
-| Backend public API exposes full PII | ✅ verified (direct curl) — this is a gap, not a pass |
+| Backend public API exposes full PII | ✅ verified (direct curl) - this is a gap, not a pass |
 | `npm run build` | ✅ passes (exit 0) |
 | family-chart zoom/method API names exist | ✅ verified in installed types |
 | Deep-link interactive centering (visual) | ⚠️ code-reviewed + SSR 200; not visually confirmed |

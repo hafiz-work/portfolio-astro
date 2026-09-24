@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 import PublicLayout from "../../../layouts/PublicLayout.astro";
+import Annot from "../../../components/layout/Annot.astro";
 import { FamilyExplorer } from "../../../components/family/FamilyExplorer";
 import { getPublicFamilyTreeBySlug } from "../../../lib/family";
 import {
@@ -26,61 +27,62 @@ if (!detail && !loadError) {
 ---
 
 <PublicLayout title={detail ? detail.tree.name : "Family"}>
-  <section class="container-main py-24 space-y-8">
-    <div class="space-y-3">
-      <a
-        href="/family"
-        class="group inline-flex items-center gap-1.5 text-sm text-slate-400 transition-colors hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-100"
-      >
-        <svg
-          aria-hidden="true"
-          class="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+  <section>
+    <div class="h-10 sm:h-16"></div>
+    <div class="line-y">
+      <div class="container-main">
+        <a
+          href="/family"
+          class="group inline-flex items-center gap-1.5 font-mono text-xs/6 text-gray-500 transition-colors hover:text-gray-950 dark:hover:text-white"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 19l-7-7 7-7"></path>
-        </svg>
-        All families
-      </a>
-      <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+          <span class="transition-transform group-hover:-translate-x-0.5" aria-hidden="true">&larr;</span>
+          All families
+        </a>
+      </div>
+    </div>
+    <div class="h-8 sm:h-12"></div>
+    <div class="line-y">
+      <p class="eyebrow container-main">Family tree</p>
+    </div>
+    <div class="line-y mt-2">
+      <h1 class="container-main text-4xl/[1.1] font-medium tracking-tighter text-balance text-gray-950 sm:text-6xl/[1.05] dark:text-white">
         {detail ? detail.tree.name : "Family tree not found"}
       </h1>
+    </div>
+    {
+      detail?.tree.description && (
+        <>
+          <Annot preset="lead" class="mt-4" />
+          <div class="line-y">
+            <p class="lead container-main">{detail.tree.description}</p>
+          </div>
+        </>
+      )
+    }
+
+    <div class="h-12 sm:h-16"></div>
+    <div class="line-y p-2">
       {
-        detail?.tree.description && (
-          <p class="max-w-3xl text-slate-500 dark:text-slate-400">
-            {detail.tree.description}
-          </p>
+        loadError && (
+          <div
+            role="alert"
+            class="rounded-xl bg-red-500/10 p-4 text-sm/6 text-red-700 ring-1 ring-red-500/20 ring-inset dark:text-red-400"
+          >
+            Failed to load this family tree. Please refresh to try again.
+          </div>
         )
       }
+
+      {
+        !loadError && !detail && (
+          <div class="pattern flex h-[320px] flex-col items-center justify-center gap-3 rounded-xl text-sm text-gray-500">
+            <p>There is no family tree at this address.</p>
+            <a href="/family" class="btn-pill btn-pill-ghost">Browse all families</a>
+          </div>
+        )
+      }
+
+      {detail && <FamilyExplorer client:load detail={detail} />}
     </div>
-
-    {
-      loadError && (
-        <div
-          role="alert"
-          class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 dark:border-red-900/20 dark:bg-red-900/5 dark:text-red-400"
-        >
-          Failed to load this family tree. Please refresh to try again.
-        </div>
-      )
-    }
-
-    {
-      !loadError && !detail && (
-        <div class="flex h-[320px] flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-          <p>There is no family tree at this address.</p>
-          <a href="/family" class="text-cyan-600 hover:underline dark:text-cyan-400">
-            Browse all families
-          </a>
-        </div>
-      )
-    }
-
-    {detail && <FamilyExplorer client:load detail={detail} />}
   </section>
 </PublicLayout>

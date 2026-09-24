@@ -1,127 +1,254 @@
 ---
+import ResumeDownloadButton from "../ui/ResumeDownloadButton.astro";
+import Annot from "../layout/Annot.astro";
+
 interface Props {
     projectCount: number;
     yearsExperience: number;
 }
 const { projectCount, yearsExperience } = Astro.props;
+
+// JSON "response" shown in the code window, one entry per rendered line so
+// the gutter can number them like tailwindcss.com's editor panels.
+type Tok = { t: string; c?: "key" | "str" | "num" | "punct" };
+// `k` links a JSON line to the matching field in the rendered card, so
+// hovering either side highlights both (tailwind's code ↔ preview pairing).
+const stack = ["Node.js", "Hono", "Flutter", "Workers"];
+const lines: { k?: string; toks: Tok[] }[] = [
+    { toks: [{ t: "{", c: "punct" }] },
+    { k: "name", toks: [{ t: '  "name"', c: "key" }, { t: ": " }, { t: '"Hafiz Bahtiar"', c: "str" }, { t: "," }] },
+    { k: "role", toks: [{ t: '  "role"', c: "key" }, { t: ": " }, { t: '"Backend & Flutter developer"', c: "str" }, { t: "," }] },
+    { k: "based_in", toks: [{ t: '  "based_in"', c: "key" }, { t: ": " }, { t: '"Kuala Lumpur, MY"', c: "str" }, { t: "," }] },
+    {
+        k: "stack",
+        toks: [
+            { t: '  "stack"', c: "key" },
+            { t: ": [" },
+            ...stack.flatMap((name, i) => [
+                { t: `"${name}"`, c: "str" as const },
+                { t: i < stack.length - 1 ? ", " : "" },
+            ]),
+            { t: "]," },
+        ],
+    },
+    { k: "years_exp", toks: [{ t: '  "years_exp"', c: "key" }, { t: ": " }, { t: String(yearsExperience), c: "num" }, { t: "," }] },
+    { k: "projects_shipped", toks: [{ t: '  "projects_shipped"', c: "key" }, { t: ": " }, { t: String(projectCount), c: "num" }, { t: "," }] },
+    { k: "status", toks: [{ t: '  "status"', c: "key" }, { t: ": " }, { t: '"available_for_work"', c: "str" }] },
+    { toks: [{ t: "}", c: "punct" }] },
+];
+const tokClass: Record<string, string> = {
+    key: "text-pink-400",
+    str: "text-sky-300",
+    num: "text-amber-300",
+    punct: "text-gray-500",
+};
 ---
 
-<section id="about" class="relative pt-12 pb-14 md:pt-20 md:pb-20 scroll-offset">
-    <div class="container-main">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
-            <!-- Intro -->
-            <div class="lg:col-span-7 min-w-0 flex flex-col gap-6">
-                <p
-                    class="hero-stagger font-mono text-xs tracking-[0.18em] uppercase text-slate-500 dark:text-slate-400"
-                    style="--stagger-i: 0"
-                >
-                    <span class="text-cyan-600 dark:text-cyan-400">~</span> Kuala Lumpur, Malaysia
-                    <span class="mx-2 text-slate-300 dark:text-slate-600">·</span>
-                    <span class="inline-flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Available for work
-                    </span>
-                </p>
+<section id="about" class="scroll-offset">
+    <div class="h-16 sm:h-24 lg:h-32"></div>
 
-                <h1
-                    class="hero-stagger font-display text-4xl md:text-5xl font-bold text-slate-900 dark:text-slate-50 leading-[1.08] tracking-tight"
-                    style="--stagger-i: 1"
-                >
-                    I build the systems
-                    <span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 dark:from-cyan-300 dark:via-blue-400 dark:to-cyan-300"
-                        >behind the screens</span
-                    > — and the apps in front of them.
-                </h1>
+    <Annot preset="display" class="hero-stagger" style="--stagger-i: 0" />
+    <div class="line-y hero-stagger" style="--stagger-i: 1">
+        <h1 class="display container-main">
+            I build the systems behind the screens.
+        </h1>
+    </div>
 
-                <p
-                    class="hero-stagger text-slate-600 dark:text-slate-400 text-base md:text-lg leading-relaxed max-w-xl"
-                    style="--stagger-i: 2"
-                >
-                    Backend &amp; Flutter developer with {yearsExperience}+ years
-                    shipping production software: reliable APIs on Node.js and
-                    Cloudflare Workers, mobile apps in Flutter, and everything
-                    needed to take a product from idea to release.
-                </p>
+    <Annot preset="hero-lead" class="mt-4 hero-stagger" style="--stagger-i: 2" />
+    <div class="line-y hero-stagger" style="--stagger-i: 2">
+        <p
+            class="container-main max-w-4xl text-lg/8 font-medium text-gray-950 dark:text-white"
+        >
+            Backend &amp; Flutter developer in Kuala Lumpur with {yearsExperience}+
+            years shipping production software - reliable APIs on
+            <code class="token">Node.js</code>, <code class="token">Hono</code>
+            and <code class="token">Workers</code>, mobile apps in
+            <code class="token">Flutter</code>, and everything between idea and
+            release.
+        </p>
+    </div>
 
-                <div class="hero-stagger flex flex-wrap gap-3" style="--stagger-i: 3">
-                    <a
-                        href="#projects"
-                        class="px-6 py-3 bg-blue-600 text-white font-semibold text-sm rounded-xl hover:bg-blue-500 shadow-lg shadow-blue-600/20 hover:shadow-blue-600/35 hover:-translate-y-0.5 transition-all"
+    <div class="h-8 sm:h-12"></div>
+
+    <div class="line-y hero-stagger" style="--stagger-i: 3">
+        <div class="container-main flex flex-wrap items-center gap-3 py-0">
+            <a href="#projects" class="btn-pill btn-pill-primary">View projects</a>
+            <!-- tailwind's "Quick search" pill → copy-email pill -->
+            <button
+                type="button"
+                id="hero-copy-email"
+                data-email="hafiz@hafizbahtiar.com"
+                class="group inline-flex w-full max-w-sm items-center gap-2 rounded-full px-4 py-2 text-left text-sm/6 text-gray-600 ring-1 ring-gray-950/10 ring-inset transition-colors hover:ring-gray-950/20 sm:w-80 dark:text-gray-400 dark:ring-white/15 dark:hover:ring-white/25"
+            >
+                <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"></path>
+                </svg>
+                <span class="flex-1 truncate">hafiz@hafizbahtiar.com</span>
+                <kbd
+                    data-copy-label
+                    class="font-sans text-xs/4 text-gray-500 dark:text-gray-400"
+                    >Copy</kbd
+                >
+            </button>
+            <ResumeDownloadButton
+                source="hero"
+                class="btn-pill btn-pill-ghost"
+            />
+        </div>
+    </div>
+
+    <div class="h-16 sm:h-24"></div>
+
+    <!-- Hero demo: JSON response (left) + the card it renders (right),
+         overlapping like tailwindcss.com's code ↔ preview pair. -->
+    <div class="line-y hero-stagger" style="--stagger-i: 4">
+        <div
+            id="hero-demo"
+            class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]"
+        >
+            <div class="p-2">
+                <div
+                    class="h-full rounded-2xl bg-gray-950 p-1.5 ring-1 ring-gray-950/10 dark:bg-white/[0.04] dark:ring-white/10"
+                >
+                    <div class="flex items-center gap-2 px-2.5 py-2.5">
+                        <span class="size-3 rounded-full bg-white/15"></span>
+                        <span class="size-3 rounded-full bg-white/15"></span>
+                        <span class="size-3 rounded-full bg-white/15"></span>
+                        <span
+                            class="ml-3 rounded-md bg-white/10 px-2 py-0.5 font-mono text-[11px] text-gray-300"
+                            >GET /v1/profile</span
+                        >
+                        <span class="ml-auto font-mono text-[11px] text-emerald-400">200 OK</span>
+                    </div>
+                    <div
+                        class="overflow-x-auto rounded-xl bg-white/[0.04] py-4 ring-1 ring-white/5"
                     >
-                        View projects
-                    </a>
-                    <a
-                        href="#contact"
-                        class="px-6 py-3 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-xl hover:border-slate-400 dark:hover:border-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:-translate-y-0.5 transition-all"
-                    >
-                        Get in touch
-                    </a>
-                    <a
-                        href="https://github.com/hafizbahtiar"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="GitHub profile"
-                        class="inline-flex items-center justify-center w-11 h-11 border border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 rounded-xl hover:border-slate-400 dark:hover:border-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:-translate-y-0.5 transition-all"
-                    >
-                        <svg class="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path
-                                fill-rule="evenodd"
-                                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                                clip-rule="evenodd"></path>
-                        </svg>
-                    </a>
+                        <pre
+                            class="font-mono text-[12.5px]/6 text-gray-200 sm:text-sm/7"><code>{lines.map((line, i) => (
+<span class="demo-line flex" data-k={line.k}><span class="w-10 shrink-0 pr-4 text-right text-gray-600 select-none">{i + 1}</span><span class="pr-6">{line.toks.map((tok) => <span class={tok.c ? tokClass[tok.c] : ""}>{tok.t}</span>)}</span></span>))}</code></pre>
+                    </div>
                 </div>
             </div>
 
-            <!-- API-response status card — the backend-first signature -->
-            <div class="lg:col-span-5 min-w-0 hero-stagger" style="--stagger-i: 4">
+            <!-- Rendered output, in a bezel, pulled left over the editor -->
+            <div
+                class="pattern flex items-center justify-center border-t border-gray-950/5 p-6 sm:p-10 lg:border-t-0 lg:py-12 lg:pr-10 lg:pl-0 dark:border-white/10"
+            >
                 <div
-                    class="relative rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-surface-code shadow-xl shadow-slate-200/50 dark:shadow-black/30 overflow-hidden"
+                    class="relative z-10 w-full max-w-md rounded-[2rem] bg-gray-950/5 p-2 ring-1 ring-gray-950/10 ring-inset lg:-ml-36 dark:bg-white/10 dark:ring-white/10"
                 >
-                    <!-- Glow accent -->
                     <div
-                        class="absolute -top-16 -right-16 w-48 h-48 bg-cyan-500/10 dark:bg-cyan-400/10 rounded-full blur-3xl pointer-events-none"
+                        class="rounded-3xl bg-white p-6 shadow-xl shadow-gray-950/5 ring-1 ring-gray-950/5 sm:p-7 dark:bg-gray-950 dark:shadow-none dark:ring-white/10"
                     >
-                    </div>
-                    <!-- Title bar -->
-                    <div
-                        class="flex items-center gap-2 px-4 py-3 border-b border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-surface-code-rail"
-                    >
-                        <span class="w-2.5 h-2.5 rounded-full bg-red-400/80"></span>
-                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400/80"></span>
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400/80"></span>
-                        <span
-                            class="ml-2 font-mono text-[11px] text-slate-400 dark:text-slate-500 truncate"
-                            >api.hafizbahtiar.com/profile</span
-                        >
-                    </div>
-                    <!-- JSON body -->
-                    <pre
-                        class="px-5 py-4 font-mono text-xs sm:text-[12.5px] leading-[1.7] text-slate-600 dark:text-slate-400 overflow-x-auto max-w-full"><code><span class="text-slate-400 dark:text-slate-500">{`{`}</span>
-  <span class="text-cyan-700 dark:text-cyan-300">"name"</span>: <span class="text-emerald-700 dark:text-emerald-300">"Hafiz Bahtiar"</span>,
-  <span class="text-cyan-700 dark:text-cyan-300">"role"</span>: <span class="text-emerald-700 dark:text-emerald-300">"backend_flutter"</span>,
-  <span class="text-cyan-700 dark:text-cyan-300">"stack"</span>: [
-    <span class="text-emerald-700 dark:text-emerald-300">"APIs"</span>,
-    <span class="text-emerald-700 dark:text-emerald-300">"Flutter"</span>,
-    <span class="text-emerald-700 dark:text-emerald-300">"Workers"</span>
-  ],
-  <span class="text-cyan-700 dark:text-cyan-300">"years_exp"</span>: <span class="text-amber-600 dark:text-amber-300">{yearsExperience}</span>,
-  <span class="text-cyan-700 dark:text-cyan-300">"projects"</span>: <span class="text-amber-600 dark:text-amber-300">{projectCount}</span>,
-  <span class="text-cyan-700 dark:text-cyan-300">"status"</span>: <span class="text-emerald-700 dark:text-emerald-300">"available_for_work"</span>
-<span class="text-slate-400 dark:text-slate-500">{`}`}</span></code></pre>
-                    <!-- Status line -->
-                    <div
-                        class="flex items-center gap-2 px-5 pb-4 font-mono text-[11px] text-slate-400 dark:text-slate-500"
-                    >
-                        <span class="text-emerald-600 dark:text-emerald-400 font-medium">200 OK</span>
-                        <span>·</span>
-                        <span>23ms</span>
-                        <span>·</span>
-                        <span>edge: KUL</span>
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <span
+                                    class="flex size-12 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-sky-400 to-indigo-500 text-base font-semibold text-white"
+                                    aria-hidden="true">HB</span
+                                >
+                                <div class="min-w-0">
+                                    <p data-f="name" class="demo-field text-lg/7 font-semibold tracking-tight text-gray-950 dark:text-white">
+                                        Hafiz Bahtiar
+                                    </p>
+                                    <p data-f="role" class="demo-field text-sm/6 font-medium text-sky-600 dark:text-sky-400">
+                                        Backend &amp; Flutter developer
+                                    </p>
+                                </div>
+                            </div>
+                            <span
+                                data-f="status"
+                                class="demo-field inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs/5 font-medium text-emerald-700 dark:text-emerald-400"
+                            >
+                                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>
+                                Available
+                            </span>
+                        </div>
+
+                        <p data-f="based_in" class="demo-field mt-4 inline-flex items-center gap-1.5 text-sm/6 text-gray-600 dark:text-gray-400">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"></path>
+                            </svg>
+                            Kuala Lumpur, MY
+                        </p>
+
+                        <div data-f="stack" class="demo-field mt-4 flex flex-wrap gap-1.5">
+                            {stack.map((name) => <span class="tag">{name}</span>)}
+                        </div>
+
+                        <dl class="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-gray-950/5 ring-1 ring-gray-950/5 dark:bg-white/10 dark:ring-white/10">
+                            <div data-f="years_exp" class="demo-field bg-white px-4 py-3 dark:bg-gray-950">
+                                <dt class="font-mono text-[11px] tracking-widest text-gray-500 uppercase">Years</dt>
+                                <dd class="mt-1 text-3xl font-medium tracking-tighter text-gray-950 dark:text-white">{yearsExperience}+</dd>
+                            </div>
+                            <div data-f="projects_shipped" class="demo-field bg-white px-4 py-3 dark:bg-gray-950">
+                                <dt class="font-mono text-[11px] tracking-widest text-gray-500 uppercase">Shipped</dt>
+                                <dd class="mt-1 text-3xl font-medium tracking-tighter text-gray-950 dark:text-white">{projectCount}</dd>
+                            </div>
+                        </dl>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+<style>
+    .demo-line.is-hl {
+        background-color: rgb(255 255 255 / 0.07);
+        box-shadow: inset 2px 0 0 var(--color-sky-400);
+    }
+    .demo-field {
+        border-radius: 0.375rem;
+        transition: outline-color 150ms;
+        outline: 1px dashed transparent;
+        outline-offset: 3px;
+    }
+    .demo-field.is-hl {
+        outline-color: var(--color-sky-500);
+    }
+</style>
+
+<script>
+    // Hovering a JSON line highlights the card field it renders, and back.
+    const initHeroDemo = () => {
+        const demo = document.getElementById("hero-demo");
+        if (!demo || demo.dataset.bound === "1") return;
+        demo.dataset.bound = "1";
+        const set = (key: string | undefined, on: boolean) => {
+            if (!key) return;
+            demo
+                .querySelectorAll(`[data-k="${key}"], [data-f="${key}"]`)
+                .forEach((el) => el.classList.toggle("is-hl", on));
+        };
+        demo.querySelectorAll<HTMLElement>("[data-k], [data-f]").forEach((el) => {
+            const key = el.dataset.k ?? el.dataset.f;
+            el.addEventListener("mouseenter", () => set(key, true));
+            el.addEventListener("mouseleave", () => set(key, false));
+        });
+    };
+    initHeroDemo();
+    document.addEventListener("astro:page-load", initHeroDemo);
+
+    const initCopyEmail = () => {
+        const btn = document.getElementById("hero-copy-email");
+        if (!btn || btn.dataset.bound === "1") return;
+        btn.dataset.bound = "1";
+        const label = btn.querySelector<HTMLElement>("[data-copy-label]");
+        btn.addEventListener("click", async () => {
+            const email = btn.dataset.email ?? "";
+            try {
+                await navigator.clipboard.writeText(email);
+                if (label) label.textContent = "Copied";
+            } catch {
+                window.location.href = `mailto:${email}`;
+                return;
+            }
+            window.setTimeout(() => {
+                if (label) label.textContent = "Copy";
+            }, 1600);
+        });
+    };
+    initCopyEmail();
+    document.addEventListener("astro:page-load", initCopyEmail);
+</script>

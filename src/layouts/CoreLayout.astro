@@ -16,7 +16,7 @@ const {
   title = "Hafiz Bahtiar | Backend & Flutter Developer",
   description = "Backend & Flutter developer in Kuala Lumpur. I build reliable APIs and backend systems, production Flutter apps, and ship complete products end to end.",
   image = "/og-default.png",
-  imageAlt = "Hafiz Bahtiar — Backend & Flutter Developer",
+  imageAlt = "Hafiz Bahtiar - Backend & Flutter Developer",
   type = "website",
   publishedTime,
   class: className = "",
@@ -47,12 +47,16 @@ const socialImageURL = new URL(image, siteOrigin);
     <meta property="og:image:alt" content={imageAlt} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    {type === "article" && publishedTime && (
-      <meta property="article:published_time" content={publishedTime} />
-    )}
-    {type === "article" && (
-      <meta property="article:author" content="Hafiz Bahtiar" />
-    )}
+    {
+      type === "article" && publishedTime && (
+        <meta property="article:published_time" content={publishedTime} />
+      )
+    }
+    {
+      type === "article" && (
+        <meta property="article:author" content="Hafiz Bahtiar" />
+      )
+    }
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -131,8 +135,9 @@ const socialImageURL = new URL(image, siteOrigin);
       sizes="16x16"
       href="/favicons/favicon-16x16.png"
     />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="msapplication-TileColor" content="#ffffff" />
+    <meta name="msapplication-TileColor" content="#030712" />
     <meta
       name="msapplication-TileImage"
       content="/favicons/favicon-144x144.png"
@@ -143,7 +148,7 @@ const socialImageURL = new URL(image, siteOrigin);
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <script>

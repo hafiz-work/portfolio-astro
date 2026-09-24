@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ChevronUp, ChevronDown, X, Plus } from "lucide-react";
 import { cmsService, extractApiError } from "../../../../lib/projects-cms";
 import { showToast } from "../../../../lib/admin-ui";
+import { Select } from "../../../ui/Select";
 import type { TechStack, ProjectTechStack, TechCategory } from "../../../../types/project-cms";
 
 const CATEGORIES: TechCategory[] = ["backend", "mobile", "database", "web", "infra", "language", "tooling"];
@@ -83,19 +84,27 @@ export function TechManager({ projectId, onChanged }: { projectId: number; onCha
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <select className="admin-input max-w-[220px]" value={selectedId} onChange={(e) => setSelectedId(e.target.value)} aria-label="Available tech stacks">
-          <option value="">Attach existing tech…</option>
-          {available.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-        </select>
+        <Select
+          className="max-w-[220px]"
+          value={selectedId}
+          onChange={(v) => setSelectedId(String(v))}
+          options={available.map((t) => ({ value: String(t.id), label: t.name }))}
+          placeholder="Attach existing tech…"
+          ariaLabel="Available tech stacks"
+        />
         <button type="button" className="admin-btn admin-btn-secondary" onClick={attach}><Plus className="h-4 w-4" /> Attach</button>
       </div>
 
       <div className="rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-3 flex flex-wrap items-center gap-2">
         <input className="admin-input max-w-[200px]" placeholder="New tech name" value={newTech.name}
           onChange={(e) => setNewTech({ ...newTech, name: e.target.value })} aria-label="New tech name" />
-        <select className="admin-input max-w-[150px]" value={newTech.category} onChange={(e) => setNewTech({ ...newTech, category: e.target.value as TechCategory })} aria-label="New tech category">
-          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
+        <Select
+          className="max-w-[150px]"
+          value={newTech.category}
+          onChange={(v) => setNewTech({ ...newTech, category: v as TechCategory })}
+          options={CATEGORIES.map((c) => ({ value: c, label: c }))}
+          ariaLabel="New tech category"
+        />
         <button type="button" className="admin-btn admin-btn-secondary" onClick={createTech}><Plus className="h-4 w-4" /> Create + attach</button>
       </div>
     </div>

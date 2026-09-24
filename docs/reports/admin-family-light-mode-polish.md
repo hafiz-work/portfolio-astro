@@ -1,4 +1,4 @@
-# Admin Family Builder — Light Mode Polish
+# Admin Family Builder - Light Mode Polish
 
 > Date: 2026-06-14 · Branch: `main` · Scope: `/admin/family/new` and
 > `/admin/family/edit` surrounding builder UI only. No push, deploy, remote D1 migration, or data

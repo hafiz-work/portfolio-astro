@@ -2,7 +2,7 @@
 
 **Status:** Draft (Phase 1)
 **Repo:** `hono-workers` (Hono + D1 + KV + R2 on Cloudflare Workers).
-**Convention alignment:** This spec follows the **existing** route scheme — public reads live at `/api/v1/<resource>` (folder `routes/v1/public/`), admin writes at `/api/v1/owner/<resource>` (folder `routes/v1/owner/`, behind `jwtAuth` + `requireAdmin`). The brief's `/api/public/*` and `/api/admin/*` map onto these respectively. We do **not** introduce a parallel URL scheme.
+**Convention alignment:** This spec follows the **existing** route scheme - public reads live at `/api/v1/<resource>` (folder `routes/v1/public/`), admin writes at `/api/v1/owner/<resource>` (folder `routes/v1/owner/`, behind `jwtAuth` + `requireAdmin`). The brief's `/api/public/*` and `/api/admin/*` map onto these respectively. We do **not** introduce a parallel URL scheme.
 
 ---
 
@@ -28,7 +28,7 @@ All public GETs set `Cache-Control: public, max-age=60, stale-while-revalidate=6
 | GET | `/api/v1/projects/:slug` | full case study (sections, media, features, tech, public links) |
 | GET | `/api/v1/projects/:slug/policy` | existing privacy/terms |
 
-**Public project DTO (detail)** — composed, no internal/admin fields:
+**Public project DTO (detail)** - composed, no internal/admin fields:
 ```jsonc
 {
   "id", "slug", "title", "subtitle", "summary", "description",
@@ -49,7 +49,7 @@ All public GETs set `Cache-Control: public, max-age=60, stale-while-revalidate=6
 ```
 The **public list DTO** is a lighter projection (no rich sections; cover + summary + tech names + up to 3 featured media).
 
-> Note (carried from the family module): the public *backend* API is the privacy boundary for projects — the public DTO must be assembled server-side so confidential client names / private links never leave the Worker. Do not rely on the frontend to strip them.
+> Note (carried from the family module): the public *backend* API is the privacy boundary for projects - the public DTO must be assembled server-side so confidential client names / private links never leave the Worker. Do not rely on the frontend to strip them.
 
 ## 4. Admin write API (`/api/v1/owner/...`, `jwtAuth` + `requireAdmin`)
 
@@ -96,14 +96,14 @@ New validators in `src/validators/projects.ts` (extend) + `media.ts`, `tech-stac
 ## 8. Media upload / storage strategy
 - R2 bucket `honoworkersobject`, public base `R2_PUBLIC_URL`. Existing `/owner/upload` returns a URL.
 - On upload, also persist a `media_assets` row (filename, original_filename, url, mime, width/height, size_bytes, optional blurhash, storage_key). Image dimensions/blurhash computed client-side or via a follow-up (best-effort; nullable).
-- Rich-text and section/feature HTML is **sanitized server-side at write time** (allowlist tags/attrs, strip `on*`, safe URLs only) before storage — the source of truth is clean. Mirrors the client `sanitizeRichHtml` allowlist.
+- Rich-text and section/feature HTML is **sanitized server-side at write time** (allowlist tags/attrs, strip `on*`, safe URLs only) before storage - the source of truth is clean. Mirrors the client `sanitizeRichHtml` allowlist.
 
 ## 9. Cache / revalidation strategy
 - Public GETs keep `max-age=60, stale-while-revalidate=600` (Cloudflare edge + browser).
 - On any admin mutation to a published project, **purge/refresh** the relevant KV cache keys (pattern already used by the family module's KV cache) and rely on the short TTL for edge. v1 acceptable: short TTL only (≤ 60 s propagation). v2: explicit KV invalidation per slug.
 
 ## 10. Database migration strategy (additive, non-destructive)
-- New migration `010_projects_cms.sql` (next after `009`), applied via `scripts/migrate.js` (tracks `schema_migrations`; D1 has no `ADD COLUMN IF NOT EXISTS`, so the runner skips already-present columns — follow the `009` pattern).
+- New migration `010_projects_cms.sql` (next after `009`), applied via `scripts/migrate.js` (tracks `schema_migrations`; D1 has no `ADD COLUMN IF NOT EXISTS`, so the runner skips already-present columns - follow the `009` pattern).
 - **Additive only:** add new columns to `projects` (subtitle, summary, project_scope, client_name, problem, solution, contribution, architecture_notes, result_summary, is_public, is_confidential, featured_order, sort_order, cover_image_id, logo_image_id, og_image_id, full_description, published_at, archived_at) with safe defaults; create new tables (`media_assets`, `project_media`, `project_sections`, `project_features`, `tech_stacks`, `project_tech_stacks`, `project_links`, `audit_logs`; `admin_users` if not already covered by `owner`/`users`).
 - **Keep the existing JSON columns** (`technologies`, `tags`, `features`) during transition; a backfill migration/seed copies them into the normalized tables. Deprecate (not drop) JSON columns only after the public page reads exclusively from normalized data and a verification pass confirms parity.
 - `status` gains `'draft' | 'published' | 'archived'` in addition to the legacy `'completed' | 'in-progress' | 'maintained'` (map legacy → `published` on backfill; preserve original in a `legacy_status` note or a section).
@@ -115,7 +115,7 @@ New validators in `src/validators/projects.ts` (extend) + `media.ts`, `tech-stac
 
 ## 12. Security checks
 - Owner routes: `jwtAuth` + `requireAdmin` (already enforced per-router).
-- All bodies `.strict()` (reject unknown fields — this is also why H1's `fullDescription` 400s today; the field gets added properly here).
+- All bodies `.strict()` (reject unknown fields - this is also why H1's `fullDescription` 400s today; the field gets added properly here).
 - Public DTO assembled server-side; confidential fields never serialized for `is_confidential` projects.
 - URL fields validated; no SSRF from link-validation action (allowlist schemes http/https, timeout, no following to internal hosts).
 - Audit log on every mutation.

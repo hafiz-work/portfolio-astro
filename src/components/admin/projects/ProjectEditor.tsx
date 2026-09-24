@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { cmsService, extractApiError } from "../../../lib/projects-cms";
 import { showToast, confirmDialog } from "../../../lib/admin-ui";
+import { Select } from "../../ui/Select";
 import { AdminBadge, statusBadgeVariant } from "../../ui/admin/primitives";
 import type { AdminProjectDetail, ProjectType } from "../../../types/project-cms";
 import { SectionsManager } from "./managers/SectionsManager";
@@ -215,14 +216,17 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
       {(isCreate || tab === "basics") && (
         <div className="admin-card space-y-5">
           <h3 className="admin-card-title">Basics</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Title"><input className="admin-input" value={basics.title} onChange={(e) => onTitle(e.target.value)} /></Field>
             <Field label="Slug" hint="lowercase, numbers, hyphens"><input className="admin-input" value={basics.slug} onChange={(e) => { setSlugTouched(true); setB({ slug: e.target.value }); }} /></Field>
             <Field label="Subtitle"><input className="admin-input" value={basics.subtitle} onChange={(e) => setB({ subtitle: e.target.value })} /></Field>
             <Field label="Project type">
-              <select className="admin-input" value={basics.projectType} onChange={(e) => setB({ projectType: e.target.value as ProjectType })}>
-                {PROJECT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
+              <Select
+                value={basics.projectType}
+                onChange={(v) => setB({ projectType: v as ProjectType })}
+                options={PROJECT_TYPES.map((t) => ({ value: t, label: t }))}
+                placeholder="Select type"
+              />
             </Field>
             <Field label="Short description (required)"><textarea className="admin-input min-h-16" value={basics.description} onChange={(e) => setB({ description: e.target.value })} /></Field>
             <Field label="Summary"><textarea className="admin-input min-h-16" value={basics.summary} onChange={(e) => setB({ summary: e.target.value })} /></Field>
@@ -232,7 +236,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
             <Field label="Client name" hint="Hidden publicly when confidential"><input className="admin-input" value={basics.clientName} onChange={(e) => setB({ clientName: e.target.value })} /></Field>
             <Field label="Featured order"><input type="number" className="admin-input" value={basics.featuredOrder} onChange={(e) => setB({ featuredOrder: e.target.value })} /></Field>
           </div>
-          <div className="flex flex-wrap gap-5">
+          <div className="flex flex-wrap gap-4">
             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><input type="checkbox" checked={basics.isPublic} onChange={(e) => setB({ isPublic: e.target.checked })} /> Public</label>
             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><input type="checkbox" checked={basics.isConfidential} onChange={(e) => setB({ isConfidential: e.target.checked })} /> Confidential</label>
             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><input type="checkbox" checked={basics.featured} onChange={(e) => setB({ featured: e.target.checked })} /> Featured</label>
@@ -282,7 +286,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
           <div className="admin-card space-y-2">
             <h3 className="admin-card-title">SEO / images</h3>
             <p className="admin-help">Cover / OG images are set in the Media tab (attach media with type <code>cover</code> or <code>og</code>).</p>
-            <p className="text-sm text-slate-600 dark:text-slate-300">Cover image id: {detail?.coverImageId ?? "—"} · OG image id: {detail?.ogImageId ?? "—"}</p>
+            <p className="text-sm text-slate-600 dark:text-slate-300">Cover image id: {detail?.coverImageId ?? "-"} · OG image id: {detail?.ogImageId ?? "-"}</p>
           </div>
         </div>
       )}

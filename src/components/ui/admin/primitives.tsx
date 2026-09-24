@@ -2,7 +2,7 @@ import React from "react";
 import { Pencil, Trash2, Eye, type LucideIcon } from "lucide-react";
 
 /**
- * Shared admin UI primitives — badges, row action buttons, cell text.
+ * Shared admin UI primitives - badges, row action buttons, cell text.
  * Every admin table/list must use these instead of ad-hoc spans so the
  * admin reads as one system in both light and dark mode.
  */

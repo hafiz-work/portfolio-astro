@@ -1,4 +1,4 @@
-# Family Module — Architecture
+# Family Module - Architecture
 
 > Technical architecture, end-to-end data flow, module boundaries, and a file-by-file map.
 > Companion to `../brain/family-module-brain.md` (context) and
@@ -58,7 +58,7 @@ PersonDetailPanel (desktop side panel + mobile bottom sheet)
 **Why this shape:**
 - SSR-in-frontmatter replaced an old **browser-side fetch waterfall** (the previous combined page
   did N+1 cross-tree fetches in the browser). One server-side fetch+merge is faster, avoids the
-  waterfall, and — crucially — lets us sanitize **before** serialization.
+  waterfall, and - crucially - lets us sanitize **before** serialization.
 - The sanitizer exists because the **backend returns full rows** (privacy is enforced here, on the
   way into the island). See brain §7 for the gap this leaves at the raw-API layer.
 
@@ -72,7 +72,7 @@ PersonDetailPanel (desktop side panel + mobile bottom sheet)
   fails safe to `null`.
 - **URL sync:** `syncUrl()` writes `?p = globalKey || id` via `replaceState` (prefers globalKey).
 - **Chart control API** (`FamilyChartApi`, from `useFamilyChart`): `setMain`, `zoomIn`, `zoomOut`,
-  `fit`, `resetView`, `centerMain`, `setOrientation` — handed to the toolbar via `apiRef`.
+  `fit`, `resetView`, `centerMain`, `setOrientation` - handed to the toolbar via `apiRef`.
 - **List fallback:** `view === "list"` renders `FamilyListView` (keyboard-accessible) instead of the
   canvas; toolbar chart controls disable in list mode.
 - **Reduced motion:** transition time forced to 0.
@@ -81,7 +81,7 @@ PersonDetailPanel (desktop side panel + mobile bottom sheet)
 
 - **Public** is read-only, props/state-driven, sanitized. Root `FamilyExplorer.tsx`, chart via
   `useFamilyChart`/`FamilyTreeCanvas`.
-- **Admin** is authenticated CRUD. Root `FamilyManager.tsx` / `FamilyTreeBuilder.tsx`, chart via the
+- **Admin** is authenticated CRUD. Root `FamilyTreeBuilder.tsx` (new/edit) / `FamilyTreesTable.tsx` (index), chart via the
   **legacy** `FamilyTreeChart.tsx`, controlled by **window events** and supporting inline add/edit
   through `chart.editTree()`.
 - **Shared** code: `chart-data.ts` (transform), `FamilyTreeChart.tsx` (admin chart), family types.
@@ -89,7 +89,7 @@ PersonDetailPanel (desktop side panel + mobile bottom sheet)
 
 ---
 
-## 5. File map (frontend — `portfolio-astro`)
+## 5. File map (frontend - `portfolio-astro`)
 
 | Path | Role | Notes |
 |---|---|---|
@@ -110,14 +110,12 @@ PersonDetailPanel (desktop side panel + mobile bottom sheet)
 | `src/lib/family-format.ts` | shared | `displayYear` (timezone-safe year). |
 | `src/data/family.ts` | config | `COMBINED_FAMILY` (slug/name/desc/mainPersonGlobalKey). |
 | `src/styles/family-chart-theme.css` | styling | Light/dark `.f3` theme; imported by `src/styles/index.css`. |
-| `src/components/admin/family/FamilyManager.tsx` | admin-only | Admin manager UI. |
 | `src/components/admin/family/FamilyTreeBuilder.tsx` | admin-only | Builder; passes `enableCrossTreeNavigation={false}` (no-op). |
-| `src/components/admin/family/FamilyTreeDirectory.tsx` | admin-only | Tree directory UI. |
 | `src/components/admin/family/FamilyTreesTable.tsx` | admin-only | Trees table UI. |
 | `src/pages/admin/family/{index,new,edit}.astro` | admin-only | Admin routes. |
 | `docs/brain/*`, `docs/architecture/*` | docs-only | This memory brain. |
 
-## 6. File map (backend — `hono-workers`)
+## 6. File map (backend - `hono-workers`)
 
 | Path | Role | Notes |
 |---|---|---|

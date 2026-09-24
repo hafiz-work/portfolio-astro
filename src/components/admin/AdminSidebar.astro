@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 const links = [
   {
     text: "Dashboard",
@@ -64,28 +65,34 @@ const currentPath = Astro.url.pathname;
 
 <aside
   id="admin-sidebar"
-  class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 transform -translate-x-full md:translate-x-0 transition-all duration-300 ease-in-out is-open"
+  class="fixed top-3 bottom-3 left-3 z-40 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[10px] shadow-lg overflow-hidden transform -translate-x-full md:translate-x-0 transition-all duration-300 ease-in-out is-open"
 >
-  <div class="h-full flex flex-col">
+  <div class="sidebar-content h-full flex flex-col">
     <!-- Header -->
     <div
-      class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between"
+      class="sidebar-header p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between"
     >
       <h1
         class="sidebar-title font-mono text-base font-semibold text-slate-900 dark:text-slate-100 tracking-tight"
         aria-label="Admin dashboard"
       >
-        hafiz<span class="text-cyan-600 dark:text-cyan-400">.dev</span><span
-          class="text-slate-400 dark:text-slate-500">/admin</span
-        >
+        <span class="inline-flex items-center gap-2">
+          <Image src="/brand/logo.svg" alt="" width={24} height={24} class="h-6 w-6" />
+          hafizbahtiar<span class="text-slate-400 dark:text-slate-500">/admin</span>
+        </span>
       </h1>
+      <span
+        class="sidebar-mark font-mono text-xl font-semibold text-slate-900 dark:text-slate-100 tracking-tight"
+        aria-hidden="true"
+        ><Image src="/brand/logo.svg" alt="" width={28} height={28} class="h-7 w-7" /></span
+      >
       <button
         id="close-sidebar"
-        class="md:hidden text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+        class="md:hidden p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
+          class="h-5 w-5"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -104,7 +111,7 @@ const currentPath = Astro.url.pathname;
       {
         groups.map((group) => (
           <div class="mb-4 last:mb-0">
-            <p class="nav-group-label px-3 mb-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
+            <p class="nav-group-label px-3 mb-1.5 font-mono text-xs font-medium uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
               {group.label}
             </p>
             <div class="space-y-0.5">
@@ -184,7 +191,7 @@ const currentPath = Astro.url.pathname;
         </div>
         <button
           id="logout-btn"
-          class="logout-btn w-full inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+          class="logout-btn w-full inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
           type="button"
         >
           <svg
@@ -212,11 +219,20 @@ const currentPath = Astro.url.pathname;
       width 300ms ease,
       transform 300ms ease;
   }
+  #admin-sidebar .sidebar-content {
+    transition:
+      opacity 250ms ease,
+      transform 250ms ease;
+  }
   #admin-sidebar .nav-item {
-    transition: padding 300ms ease;
+    transition:
+      padding 300ms ease,
+      gap 300ms ease,
+      justify-content 300ms ease;
   }
   #admin-sidebar .nav-label,
   #admin-sidebar .sidebar-title,
+  #admin-sidebar .sidebar-mark,
   #admin-sidebar .user-meta,
   #admin-sidebar .logout-label {
     transition:
@@ -231,6 +247,14 @@ const currentPath = Astro.url.pathname;
     white-space: nowrap;
     overflow: hidden;
   }
+  #admin-sidebar .sidebar-mark {
+    white-space: nowrap;
+    overflow: hidden;
+    opacity: 0;
+    max-width: 0;
+    transform: translateX(6px);
+    pointer-events: none;
+  }
   #admin-sidebar .nav-icon {
     flex-shrink: 0;
   }
@@ -242,6 +266,10 @@ const currentPath = Astro.url.pathname;
   }
   :root[data-admin-sidebar="closed"] #admin-sidebar {
     transform: translateX(-100%);
+  }
+  :root[data-admin-sidebar="closed"] #admin-sidebar .sidebar-content {
+    opacity: 0;
+    transform: translateX(-12px);
   }
   :root[data-admin-sidebar="minimized"] #admin-sidebar .nav-group-label {
     opacity: 0;
@@ -255,6 +283,16 @@ const currentPath = Astro.url.pathname;
     opacity: 0;
     max-width: 0;
     transform: translateX(-6px);
+  }
+  :root[data-admin-sidebar="minimized"] #admin-sidebar .sidebar-mark {
+    opacity: 1;
+    max-width: 4rem;
+    transform: none;
+  }
+  :root[data-admin-sidebar="minimized"] #admin-sidebar .sidebar-header {
+    justify-content: center;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
   :root[data-admin-sidebar="minimized"] #admin-sidebar .user-meta {
     opacity: 0;
@@ -309,7 +347,7 @@ const currentPath = Astro.url.pathname;
               class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-900/30 sm:mx-0 sm:h-10 sm:w-10"
             >
               <svg
-                class="h-6 w-6 text-red-400"
+                class="h-5 w-5 text-red-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
@@ -349,14 +387,14 @@ const currentPath = Astro.url.pathname;
           <button
             type="button"
             id="logout-confirm-btn"
-            class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto transition-colors"
+            class="inline-flex w-full justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto transition-colors"
           >
             Log out
           </button>
           <button
             type="button"
             id="logout-cancel-btn"
-            class="mt-3 inline-flex w-full justify-center rounded-md bg-transparent border border-slate-600 px-3 py-2 text-sm font-semibold text-slate-400 shadow-sm hover:bg-slate-700 sm:mt-0 sm:w-auto transition-colors"
+            class="mt-3 inline-flex w-full justify-center rounded-lg bg-transparent border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-400 shadow-sm hover:bg-slate-700 sm:mt-0 sm:w-auto transition-colors"
           >
             Cancel
           </button>

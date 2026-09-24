@@ -96,7 +96,7 @@ export const BlogPostsTable = () => {
       header: "Published",
       size: 130,
       cell: ({ row }) => (
-        <CellText mono>{row.original.publishedDate || "—"}</CellText>
+        <CellText mono>{row.original.publishedDate || "-"}</CellText>
       ),
     },
     {
@@ -107,7 +107,7 @@ export const BlogPostsTable = () => {
         <CellText>
           {row.original.readTimeMinutes
             ? `${row.original.readTimeMinutes} min`
-            : "—"}
+            : "-"}
         </CellText>
       ),
     },

@@ -5,24 +5,29 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Design tokens — the ONLY place raw hex is allowed to live.
+ * Design tokens - the ONLY place raw hex is allowed to live.
  * Anything outside the slate/blue/cyan Tailwind palette must be added here as
  * a named token and referenced by utility class (e.g. `bg-surface-code`),
  * never inlined as an arbitrary `bg-[#...]` value in markup.
  */
 @theme {
-    /* Typography — public site type system.
+    /* Typography - public site type system.
      * Display: Bricolage Grotesque (headings), Sans: Instrument Sans (body),
      * Mono: IBM Plex Mono (labels, stats, code accents). Loaded in CoreLayout. */
     --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
     --font-display: "Bricolage Grotesque", "Instrument Sans", ui-sans-serif, sans-serif;
     --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+    /* Public site face (tailwindcss.com uses Inter). Applied by PublicLayout
+       only, so admin keeps Instrument Sans. */
+    --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
 
     /* App canvas */
-    --color-canvas: #f8fafc;
-    /* light-mode page background */
+    --color-canvas: #ffffff;
+    /* light-mode page background (white - tailwindcss.com line) */
+    --color-pub-dark: #030712;
+    /* dark-mode public background (= gray-950, oklch(.13 .028 261.692)) */
     --color-admin-base: #0f172a;
-    /* locked admin canvas (= slate-900) + dark body */
+    /* locked admin canvas (= slate-900) + dark body source of truth */
 
     /* Code / editor surfaces (GitHub-dark family) */
     --color-surface-code: #0d1117;
@@ -35,8 +40,15 @@
     /* family-chart wrapper */
 }
 
+:root {
+    /* Hairline / hatch ink for the public shell (≤5% light, ≤10% dark). */
+    --pattern-fg: rgb(3 7 18 / 0.05);
+    --gutter-width: 2.5rem;
+}
+
 .dark {
     --color-family-canvas: #1a1f29;
+    --pattern-fg: rgb(255 255 255 / 0.1);
 }
 
 @layer base {
@@ -49,7 +61,7 @@
     }
 
     html.dark body {
-        @apply text-slate-200 bg-admin-base;
+        @apply text-slate-200 bg-pub-dark;
     }
 }
 
@@ -70,34 +82,236 @@ html[data-theme-switching]::view-transition-new(root) {
 
 @layer components {
 
-    /* Layout */
-    .container-main {
-        @apply max-w-[860px] mx-auto px-6 md:px-10;
+    /* ── Public shell: tailwindcss.com line ──────────────────────────────
+       PublicLayout renders   [gutter | column | gutter]   on md+. Gutters are
+       hatched rails; every content row inside the column can draw full-bleed
+       hairlines (.line-t / .line-b / .line-y) that run through the gutters to
+       the viewport edges. .page-shell clips them (overflow-x: clip keeps
+       position: sticky working, unlike overflow: hidden). */
+    .page-shell {
+        @apply grid flex-grow grid-cols-1;
+        overflow-x: clip;
     }
 
-    /* Section header system — numbered mono label + rule line */
+    .page-col {
+        @apply flex min-w-0 flex-col;
+    }
+
+    .gutter {
+        @apply hidden;
+    }
+
+    @media (min-width: 768px) {
+        .page-shell {
+            /* Gutters are at least --gutter-width and absorb any extra
+               viewport width, so the hatch always reaches the screen edge. */
+            grid-template-columns: minmax(var(--gutter-width), 1fr) minmax(0, 96rem) minmax(var(--gutter-width), 1fr);
+        }
+
+        .page-col {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .gutter {
+            display: block;
+            grid-row: 1;
+            border-inline: 1px solid var(--pattern-fg);
+        }
+
+        .gutter-left {
+            grid-column: 1;
+        }
+
+        .gutter-right {
+            grid-column: 3;
+        }
+    }
+
+    /* Diagonal 10px hatch - gutters and deliberate "empty" fills. */
+    .pattern,
+    .gutter {
+        background-image: repeating-linear-gradient(315deg, var(--pattern-fg) 0, var(--pattern-fg) 1px, transparent 0, transparent 50%);
+        background-size: 10px 10px;
+        background-attachment: fixed;
+    }
+
+    /* Full-bleed hairlines. The pseudo line is 200vw wide, centered on the
+       row, so it always reaches both viewport edges. */
+    .line-t,
+    .line-b,
+    .line-y {
+        position: relative;
+    }
+
+    .line-t::before,
+    .line-y::before,
+    .line-b::after,
+    .line-y::after {
+        content: "";
+        position: absolute;
+        left: -100vw;
+        width: 200vw;
+        height: 1px;
+        background-color: var(--pattern-fg);
+        pointer-events: none;
+    }
+
+    .line-t::before,
+    .line-y::before {
+        top: 0;
+    }
+
+    .line-b::after,
+    .line-y::after {
+        bottom: 0;
+    }
+
+    /* Row padding inside the column (text aligns to one left edge). */
+    .container-main {
+        @apply w-full px-4 sm:px-6;
+    }
+
+    /* Vertical rhythm between sections: plain canvas, no lines. */
+    .section-gap {
+        @apply h-20 sm:h-28 lg:h-36;
+    }
+
+    /* Faint mono annotation above a row (tailwind's "class hint"). */
+    .annot {
+        @apply w-full truncate px-4 font-mono sm:px-6 text-xs/6 text-gray-400 dark:text-gray-600;
+    }
+
+    /* Hero display type */
+    .display {
+        /* Keep in sync with the "display" preset in Annot.astro. */
+        @apply text-5xl font-medium tracking-tighter text-balance text-gray-950 sm:text-7xl lg:text-8xl dark:text-white;
+    }
+
+    .eyebrow {
+        @apply font-mono text-xs/6 font-semibold tracking-widest uppercase text-sky-600 dark:text-sky-400;
+    }
+
+    /* Keep in sync with the "lead" preset in Annot.astro. */
+    .lead {
+        @apply max-w-3xl text-base/7 text-gray-600 sm:text-lg/8 dark:text-gray-400;
+    }
+
+    /* Inline code-ish token inside prose (tailwind's `flex`, `pt-4`). */
+    .token {
+        @apply font-mono font-semibold text-sky-600 dark:text-sky-400;
+    }
+
+    /* Framed surface: outer tinted ring + inner panel (tailwind windows). */
+    .frame {
+        @apply rounded-2xl bg-gray-950/[0.025] p-1.5 ring-1 ring-gray-950/5 ring-inset dark:bg-white/[0.03] dark:ring-white/10;
+    }
+
+    .frame-inner {
+        @apply overflow-hidden rounded-xl bg-white outline outline-gray-950/5 dark:bg-gray-950 dark:outline-white/10;
+    }
+
+    /* Grid whose 1px gaps ARE the hairlines between cells. */
+    .divided-grid {
+        @apply grid gap-px bg-gray-950/5 dark:bg-white/10;
+    }
+
+    .divided-grid > * {
+        @apply bg-canvas dark:bg-pub-dark;
+    }
+
+    /* Responsive card grid (1 → 2 → 3 cols) whose row separators are
+       full-bleed hairlines like every other row. The first cell of each row
+       draws the 200vw line (z-index lifts it over its row siblings); the 1px
+       column gap shows the tinted grid bg as vertical dividers. Don't put
+       transforms (data-reveal) on the cells - that traps the line. */
+    .row-grid {
+        @apply grid grid-cols-1 gap-x-px bg-gray-950/5 sm:grid-cols-2 lg:grid-cols-3 dark:bg-white/10;
+    }
+
+    .row-grid > * {
+        @apply relative bg-canvas dark:bg-pub-dark;
+    }
+
+    .row-grid > *::after {
+        content: "";
+        position: absolute;
+        z-index: 1;
+        bottom: 0;
+        left: -100vw;
+        width: 200vw;
+        height: 1px;
+        background-color: var(--pattern-fg);
+        pointer-events: none;
+    }
+
+    @media (min-width: 640px) {
+        .row-grid > *:nth-child(2n)::after {
+            display: none;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .row-grid > *:nth-child(2n)::after {
+            display: block;
+        }
+
+        .row-grid > *:not(:nth-child(3n + 1))::after {
+            display: none;
+        }
+    }
+
+    /* Pill buttons */
+    .btn-pill {
+        @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm/6 font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:cursor-not-allowed disabled:opacity-60;
+    }
+
+    .btn-pill-primary {
+        @apply bg-gray-950 text-white hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600;
+    }
+
+    .btn-pill-ghost {
+        @apply text-gray-950 ring-1 ring-gray-950/10 ring-inset hover:bg-gray-950/[0.025] dark:text-white dark:ring-white/15 dark:hover:bg-white/5;
+    }
+
+    /* Small rounded tag */
+    .tag {
+        @apply inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[11px]/5 font-medium text-gray-600 ring-1 ring-gray-950/10 ring-inset dark:text-gray-400 dark:ring-white/10;
+    }
+
+    /* Form fields (public) */
+    .field {
+        @apply block w-full rounded-lg bg-white px-3 py-2 text-sm/6 text-gray-950 outline-1 -outline-offset-1 outline-gray-950/10 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-sky-500 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500;
+    }
+
+    /* Legacy section header API (blog pages still use it) - now renders
+       as the tailwind eyebrow; the rule line is retired. */
     .section-label {
-        @apply flex items-center gap-3 mb-3;
+        @apply mb-2 flex items-center gap-3;
     }
 
     .section-label .section-index {
-        @apply font-mono text-xs tracking-[0.2em] uppercase text-cyan-600 dark:text-cyan-400;
+        @apply font-mono text-xs/6 font-semibold tracking-widest uppercase text-sky-600 dark:text-sky-400;
     }
 
     .section-label .section-rule {
-        @apply h-px flex-1 bg-gradient-to-r from-slate-300 to-transparent dark:from-slate-700;
+        @apply hidden;
     }
 
     .section-heading {
-        @apply font-display text-2xl md:text-[1.75rem] font-bold tracking-tight text-slate-900 dark:text-slate-50;
+        @apply text-4xl/[1.1] font-medium tracking-tighter text-pretty text-gray-950 sm:text-5xl/[1.05] dark:text-white;
     }
 
     .section-sub {
-        @apply text-sm text-slate-500 dark:text-slate-400 mt-1.5;
+        @apply mt-2 max-w-3xl text-base/7 text-gray-600 sm:text-lg/8 dark:text-gray-400;
     }
 
     .section-padding {
         @apply py-16 md:py-24;
+    }
+
+    .scroll-offset {
+        @apply scroll-mt-20;
     }
 
     /* Typography */
@@ -130,7 +344,7 @@ html[data-theme-switching]::view-transition-new(root) {
         @apply inline-flex items-center text-blue-400 font-medium hover:text-blue-300 transition-colors;
     }
 
-    /* Admin form system — single source of truth for admin cards, labels,
+    /* Admin form system - single source of truth for admin cards, labels,
        and fields. Pages must use these instead of per-file class constants
        so the admin stays one coherent system. */
     .admin-card {
@@ -146,7 +360,7 @@ html[data-theme-switching]::view-transition-new(root) {
     }
 
     .admin-input {
-        @apply w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-100 dark:placeholder:text-slate-500;
+        @apply w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-100 dark:placeholder:text-slate-500;
     }
 
     .admin-help {
@@ -184,7 +398,7 @@ html[data-theme-switching]::view-transition-new(root) {
 
     /* Cards */
     .card {
-        @apply bg-white backdrop-blur-sm rounded-xl shadow-sm hover:shadow-md hover:shadow-blue-900/20 transition-all duration-300 border border-slate-200 overflow-hidden;
+        @apply bg-white rounded-2xl outline outline-slate-950/5 overflow-hidden transition-colors duration-300 dark:bg-pub-dark dark:outline-white/10;
     }
 
     .card-hover {
@@ -273,15 +487,6 @@ html[data-theme-switching]::view-transition-new(root) {
 }
 
 @layer utilities {
-    .glass-nav {
-        @apply backdrop-blur-md border-b border-slate-200;
-        background-color: rgba(248, 250, 252, 0.92);
-    }
-
-    .scroll-offset {
-        @apply scroll-mt-24;
-    }
-
     .animate-fade-in {
         animation: fadeInUp 0.6s ease-out forwards;
     }
@@ -292,7 +497,7 @@ html[data-theme-switching]::view-transition-new(root) {
     }
 }
 
-/* reCAPTCHA v3 floating badge — hidden site-wide; the contact and login
+/* reCAPTCHA v3 floating badge - hidden site-wide; the contact and login
    forms show the required inline Google disclosure instead. */
 .grecaptcha-badge {
     visibility: hidden !important;
