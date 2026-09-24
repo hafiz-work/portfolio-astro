@@ -64,9 +64,9 @@ const currentPath = Astro.url.pathname;
 
 <aside
   id="admin-sidebar"
-  class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 transform -translate-x-full md:translate-x-0 transition-all duration-300 ease-in-out is-open"
+  class="fixed top-3 bottom-3 left-3 z-40 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[10px] shadow-lg overflow-hidden transform -translate-x-full md:translate-x-0 transition-all duration-300 ease-in-out is-open"
 >
-  <div class="h-full flex flex-col">
+  <div class="sidebar-content h-full flex flex-col">
     <!-- Header -->
     <div
       class="sidebar-header p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between"
@@ -217,8 +217,16 @@ const currentPath = Astro.url.pathname;
       width 300ms ease,
       transform 300ms ease;
   }
+  #admin-sidebar .sidebar-content {
+    transition:
+      opacity 250ms ease,
+      transform 250ms ease;
+  }
   #admin-sidebar .nav-item {
-    transition: padding 300ms ease;
+    transition:
+      padding 300ms ease,
+      gap 300ms ease,
+      justify-content 300ms ease;
   }
   #admin-sidebar .nav-label,
   #admin-sidebar .sidebar-title,
@@ -256,6 +264,10 @@ const currentPath = Astro.url.pathname;
   }
   :root[data-admin-sidebar="closed"] #admin-sidebar {
     transform: translateX(-100%);
+  }
+  :root[data-admin-sidebar="closed"] #admin-sidebar .sidebar-content {
+    opacity: 0;
+    transform: translateX(-12px);
   }
   :root[data-admin-sidebar="minimized"] #admin-sidebar .nav-group-label {
     opacity: 0;
