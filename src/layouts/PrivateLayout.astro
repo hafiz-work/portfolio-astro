@@ -16,18 +16,18 @@ const { title, description } = Astro.props;
 
 <CoreLayout title={title} description={description}>
     <Background />
-    <div class="flex min-h-screen relative z-10 bg-canvas dark:bg-admin-base">
+    <div class="flex h-screen relative z-10 bg-canvas dark:bg-admin-base">
         <!-- Sidebar -->
         <AdminSidebar />
 
         <!-- Main content -->
         <main
-            class="admin-main flex-grow flex flex-col min-w-0 transition-all duration-300"
+            class="admin-main flex-grow flex flex-col min-w-0 rounded-[10px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg overflow-hidden transition-all duration-300"
         >
             <!-- Topbar -->
             <AdminNavbar />
 
-            <div class="flex-grow p-6 overflow-y-auto">
+            <div class="flex-grow min-h-0 p-6 overflow-y-auto">
                 <slot />
             </div>
         </main>
@@ -39,20 +39,17 @@ const { title, description } = Astro.props;
 
 <style>
     .admin-main {
-        margin-left: 0;
+        margin: 0.75rem;
     }
     @media (min-width: 768px) {
-        .admin-main {
-            margin-left: 16rem;
-        }
         :root[data-admin-sidebar="open"] .admin-main {
-            margin-left: 16rem;
+            margin-left: calc(16rem + 1.5rem);
         }
         :root[data-admin-sidebar="minimized"] .admin-main {
-            margin-left: 5rem;
+            margin-left: calc(5rem + 1.5rem);
         }
         :root[data-admin-sidebar="closed"] .admin-main {
-            margin-left: 0;
+            margin-left: 0.75rem;
         }
     }
 </style>
