@@ -948,7 +948,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
               />
               {isInvalidJson(rootMetadataInput) && (
                 <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  Invalid JSON — check your metadata.
+                  Invalid JSON - check your metadata.
                 </p>
               )}
             </div>
@@ -1478,7 +1478,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                           />
                           {isInvalidJson(personMetadataInput) && (
                             <p className="text-xs text-red-600 dark:text-red-400">
-                              Invalid JSON — the value would be saved as null.
+                              Invalid JSON - the value would be saved as null.
                             </p>
                           )}
                           <div className="flex flex-wrap items-center gap-2">

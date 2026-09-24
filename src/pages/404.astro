@@ -1,71 +1,34 @@
 ---
 import PublicLayout from "../layouts/PublicLayout.astro";
+import Annot from "../components/layout/Annot.astro";
 ---
 
 <PublicLayout
   title="Page Not Found | Hafiz Bahtiar"
   description="The page you are looking for could not be found."
 >
-  <section
-    class="container-main min-h-[calc(100vh-10rem)] flex items-center justify-center py-16"
-  >
-    <div class="max-w-xl text-center">
-      <p
-        class="mb-4 text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400"
-      >
-        404
+  <section class="flex min-h-[calc(100vh-3.5rem)] flex-col justify-center py-16">
+    <div class="line-y">
+      <p class="eyebrow container-main">Error 404</p>
+    </div>
+    <Annot preset="display" class="mt-4" />
+    <div class="line-y">
+      <h1 class="display container-main">Page not found.</h1>
+    </div>
+    <Annot preset="lead" class="mt-4" />
+    <div class="line-y">
+      <p class="lead container-main">
+        The page may have moved, or the link might be incorrect. Try
+        <code class="token">/</code> or <code class="token">/projects</code>.
       </p>
-      <h1
-        class="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-slate-100"
-      >
-        Page not found
-      </h1>
-      <p
-        class="mt-4 text-sm md:text-base leading-relaxed text-slate-500 dark:text-slate-400"
-      >
-        The page may have moved, or the link might be incorrect.
-      </p>
-
-      <div
-        class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
-      >
-        <a href="/" class="admin-btn admin-btn-primary">
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 12l9-9 9 9M5 10v10h14V10"></path>
-          </svg>
-          Back home
-        </a>
-        <a href="/projects" class="admin-btn admin-btn-secondary">
-          View projects
-        </a>
-      </div>
-
-      <div
-        class="mx-auto mt-10 grid w-28 grid-cols-4 gap-2 opacity-70"
-        aria-hidden="true"
-      >
-        {
-          Array.from({ length: 16 }).map((_, index) => (
-            <div
-              class:list={[
-                "aspect-square rounded border",
-                index === 5 || index === 6 || index === 9 || index === 10
-                  ? "border-blue-300 bg-blue-100 dark:border-blue-500/40 dark:bg-blue-500/20"
-                  : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800",
-              ]}
-            />
-          ))
-        }
+    </div>
+    <div class="h-10"></div>
+    <div class="line-y">
+      <div class="container-main flex flex-wrap gap-3">
+        <a href="/" class="btn-pill btn-pill-primary">Back home</a>
+        <a href="/projects" class="btn-pill btn-pill-ghost">View projects</a>
       </div>
     </div>
+    <div class="pattern line-b mt-16 h-24 sm:h-32" aria-hidden="true"></div>
   </section>
 </PublicLayout>

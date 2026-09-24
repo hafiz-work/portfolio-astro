@@ -9,7 +9,7 @@ import type {
  * clean, de-duplicated groups for the public detail panel.
  *
  * Why this exists: relationship rows in D1 are stored *directionally and often
- * reciprocally* — e.g. both `A spouse B` and `B spouse A`, and both
+ * reciprocally* - e.g. both `A spouse B` and `B spouse A`, and both
  * `parent (A→child)` and `child (child→A)`. Listing raw rows therefore doubles
  * spouses and mislabels parent/child by direction. These helpers collapse rows
  * into directionless, gender-aware groups, de-duplicating each related person.
@@ -58,7 +58,7 @@ const CHILD_TYPES: ReadonlySet<FamilyRelationshipType> = new Set([
  * Stable identity key for de-duplication, preferring:
  *   1. globalKey  2. person id  3. normalized displayName (last resort only).
  * Because a person id is always present, the name fallback is effectively never
- * reached — so this never merges two distinct same-named people.
+ * reached - so this never merges two distinct same-named people.
  */
 export const getRelationKey = (person: {
   globalKey?: string | null;

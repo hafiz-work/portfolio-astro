@@ -1,13 +1,13 @@
-# Resume Download Button + Click Tracking — Design
+# Resume Download Button + Click Tracking - Design
 
 **Date:** 2026-06-23
 **Status:** Approved (design); pending implementation plan
-**Repos affected:** `portfolio-astro` (frontend — built here), `hono-workers` (backend — specified here for the separate backend agent; not edited from this repo)
+**Repos affected:** `portfolio-astro` (frontend - built here), `hono-workers` (backend - specified here for the separate backend agent; not edited from this repo)
 
 ## Goal
 
 Add a "Download Resume" button to the public site and track each download
-attempt — count, visitor IP address, country, device/user-agent, and time —
+attempt - count, visitor IP address, country, device/user-agent, and time -
 so the owner can see download activity from the admin dashboard.
 
 The resume PDF already exists at:
@@ -36,7 +36,7 @@ The resume PDF already exists at:
   frontend Astro Worker has no database.
 - The beacon goes **browser → backend directly**, so `CF-Connecting-IP` on that
   request is the real visitor (not a chained Worker). No IP is ever sent from
-  client JS — the server reads it from request headers.
+  client JS - the server reads it from request headers.
 
 ## Data flow
 
@@ -64,7 +64,7 @@ Read server-side from request headers (never trusted from the client body):
 | `source`     | beacon body (e.g. `"hero"`)    | Nullable; which button        |
 | `created_at` | server time (ISO)              | DEFAULT now                   |
 
-## Frontend changes (this repo — `portfolio-astro`)
+## Frontend changes (this repo - `portfolio-astro`)
 
 ### 1. `src/components/home/Hero.astro`
 - Add a "Download Resume" CTA styled to the established aesthetic
@@ -108,11 +108,11 @@ Read server-side from request headers (never trusted from the client body):
   already present should be reused.
 - Grid note: the KPI row is currently `lg:grid-cols-4`. Adding a 5th card is a
   minor layout detail to resolve during implementation (e.g. allow it to wrap, or
-  restructure the row) — does not affect data flow.
+  restructure the row) - does not affect data flow.
 
-## Backend specification (for the backend agent — `hono-workers`, NOT edited here)
+## Backend specification (for the backend agent - `hono-workers`, NOT edited here)
 
-### 1. Migration — new table `resume_downloads`
+### 1. Migration - new table `resume_downloads`
 Follow the existing migration naming/sequence in
 `src/database/migrations/`. Suggested schema:
 ```sql
@@ -128,7 +128,7 @@ CREATE TABLE resume_downloads (
 CREATE INDEX idx_resume_downloads_created_at ON resume_downloads (created_at);
 ```
 
-### 2. Public write endpoint — `POST /api/v1/public/resume-download`
+### 2. Public write endpoint - `POST /api/v1/public/resume-download`
 - Add alongside `src/routes/v1/public/contact.ts` (public write resource).
 - Read headers server-side: `CF-Connecting-IP`, `CF-IPCountry`, `User-Agent`,
   `Referer`. Read optional `source` from the request body (best-effort; ignore on
@@ -139,7 +139,7 @@ CREATE INDEX idx_resume_downloads_created_at ON resume_downloads (created_at);
 - Must be covered by the existing public CORS config so the cross-origin beacon
   from the frontend origin is accepted (POST, no credentials required).
 
-### 3. Admin read — extend `GET /api/v1/owner/dashboard/overview`
+### 3. Admin read - extend `GET /api/v1/owner/dashboard/overview`
 - In `src/routes/v1/owner/dashboard.ts` (and its service), add to the overview
   response returned by the `/overview` handler (this is the exact endpoint the
   frontend calls via `dashboardService.getOverview()`):
@@ -175,7 +175,7 @@ Storing raw IPs is PII. Recommended (not required to ship):
 ## Error handling
 
 - Beacon is fire-and-forget. If it fails, is blocked by an ad-blocker, or the
-  backend errors, **the download still works** — it's a separate static link.
+  backend errors, **the download still works** - it's a separate static link.
   Tracking must never block or delay the user.
 
 ## Out of scope (YAGNI)

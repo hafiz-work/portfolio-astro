@@ -25,7 +25,7 @@ import type {
 
 /**
  * Owner/admin Project CMS client. Wraps the authenticated ApiClient (httpOnly
- * cookie auth + refresh). All methods hit /owner/* endpoints — never call these
+ * cookie auth + refresh). All methods hit /owner/* endpoints - never call these
  * from public/unauthenticated contexts.
  */
 export class ProjectsCmsService extends ApiClient {

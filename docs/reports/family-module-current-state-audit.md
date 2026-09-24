@@ -1,4 +1,4 @@
-# Family Module — Current-State Audit
+# Family Module - Current-State Audit
 
 > Snapshot of the Family module after the Phase 0–4 refactor + Opus review fix were merged to
 > `main`. Audit performed by reading both repos (`portfolio-astro`, `hono-workers`) and
@@ -39,11 +39,11 @@
    is frontend-only.** Recommend moving/duplicating sanitization into the backend.
 2. **Synthetic combined ids are unstable.** Numeric ids in `/family` depend on data ordering. Share
    links prefer `globalKey`, but a numeric `?p=` could point at a different person after data churn.
-3. **People missing `globalKey` appear twice** across trees until backfilled — and `globalKey` is
+3. **People missing `globalKey` appear twice** across trees until backfilled - and `globalKey` is
    **seed/SQL-managed only** (not editable via admin UI), so this is a D1 task.
 4. **D1 remediation not done.** The `globalKey` backfill / parent-bridge rows in
    `docs/reports/family-page-phase-0-d1-verification.sql` are **not applied** and **not verified**.
-   Its §3 backfill matches by `display_name` without tree scoping — could over-merge same-named
+   Its §3 backfill matches by `display_name` without tree scoping - could over-merge same-named
    people. Must run §1/§2 SELECTs and inspect before any remote step.
 5. **`metadata.birth_order` is JSON-in-TEXT.** Admin child sort parses it ad hoc; no typed column.
 6. **Bottom sheet has no full focus trap** (Esc + focus-in/return only). Acceptable, not ideal.
@@ -68,13 +68,13 @@
 
 ## 5. Recommended next steps (in priority order)
 
-1. **Backend public DTO / sanitization** — close the API PII gap (mirror the frontend whitelist;
+1. **Backend public DTO / sanitization** - close the API PII gap (mirror the frontend whitelist;
    reduce living birthdates to year server-side; drop notes/metadata/relationship internals).
-2. **D1 globalKey/relationship remediation** — run verification SELECTs locally, fix the §3 scoping,
+2. **D1 globalKey/relationship remediation** - run verification SELECTs locally, fix the §3 scoping,
    get human approval, then apply (local → remote) carefully.
-3. **Admin builder manual QA** — full click-through after the shared-chart changes.
+3. **Admin builder manual QA** - full click-through after the shared-chart changes.
 4. **Accessibility pass** + **light/dark chart visual tuning**.
-5. **E2E privacy test** — automate the island-payload audit so leaks regress loudly.
+5. **E2E privacy test** - automate the island-payload audit so leaks regress loudly.
 6. (Optional, approval-gated) **Phase 5 visibility schema**, **typed `birth_order` column**,
    **photo/avatar management**.
 

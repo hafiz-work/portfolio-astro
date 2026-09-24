@@ -1,5 +1,5 @@
 // Frontend types mirroring the hono-workers project CMS DTOs.
-// Single source for admin CMS shapes — do not redefine these ad hoc in components.
+// Single source for admin CMS shapes - do not redefine these ad hoc in components.
 
 export type ProjectType = "personal" | "business" | "work";
 export type ImageVariant = "banner" | "logo" | "width-banner";
@@ -174,7 +174,7 @@ export interface ProjectLink {
   updatedAt: string;
 }
 
-/** GET /owner/projects/:id — composed detail + completeness warnings. */
+/** GET /owner/projects/:id - composed detail + completeness warnings. */
 export interface AdminProjectDetail extends CmsProject {
   media: ProjectMedia[];
   sections: ProjectSection[];

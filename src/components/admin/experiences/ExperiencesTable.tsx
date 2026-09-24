@@ -100,7 +100,7 @@ export const ExperiencesTable = () => {
       {
         accessorKey: "location",
         header: "Location",
-        cell: ({ row }) => <CellText>{row.original.location || "—"}</CellText>,
+        cell: ({ row }) => <CellText>{row.original.location || "-"}</CellText>,
       },
       {
         accessorKey: "startDate",
@@ -108,7 +108,7 @@ export const ExperiencesTable = () => {
         size: 200,
         cell: ({ row }) => (
           <CellText mono>
-            {formatDate(row.original.startDate)} —{" "}
+            {formatDate(row.original.startDate)} -{" "}
             {formatDate(row.original.endDate)}
           </CellText>
         ),

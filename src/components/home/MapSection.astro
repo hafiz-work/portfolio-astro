@@ -1,5 +1,6 @@
 ---
 import MapCanvas from "./MapCanvas";
+import SectionHeader from "../layout/SectionHeader.astro";
 import type { Experience } from "../../types/experiences";
 import { formatDateRange } from "../../lib/public-content";
 import { KL_CENTER } from "../../lib/constants";
@@ -41,77 +42,70 @@ const mapCenter: [number, number] =
 ---
 
 <section id="experience" class="scroll-offset">
-  <div data-reveal>
-    <div class="section-label">
-      <span class="section-index">04 / Experience</span>
-      <span class="section-rule"></span>
-    </div>
-    <h2 class="section-heading">Where I've shipped</h2>
-    <p class="section-sub">
-      Five years of production work across Kuala Lumpur — every pin is a place
-      I've built software for.
-    </p>
-  </div>
+  <div class="section-gap"></div>
+  <SectionHeader
+    eyebrow="Experience"
+    title="Where I've shipped."
+    description="Five years of production work across Kuala Lumpur - every pin is a place I've built software for."
+  />
+  <div class="h-10"></div>
 
-  <div class="mt-6 grid grid-cols-1 lg:grid-cols-5 gap-4">
+  <div class="line-y grid grid-cols-1 lg:grid-cols-5">
     <!-- Timeline -->
-    <div class="lg:col-span-3 flex flex-col" data-reveal>
+    <ol class="divide-y divide-gray-950/5 lg:col-span-3 dark:divide-white/10" data-reveal>
       {
         experiences.map((exp, index) => (
-          <button
-            type="button"
-            class="exp-entry group relative text-left flex gap-4 rounded-xl px-4 py-4 transition-colors hover:bg-slate-100/80 dark:hover:bg-slate-800/60"
-            data-marker-id={exp.id}
-            aria-pressed={index === 0 ? "true" : "false"}
-          >
-            <div class="flex flex-col items-center pt-1.5 shrink-0">
+          <li>
+            <button
+              type="button"
+              class="exp-entry group relative flex w-full gap-4 px-4 py-5 text-left transition-colors hover:bg-gray-950/[0.025] sm:px-6 dark:hover:bg-white/[0.03]"
+              data-marker-id={exp.id}
+              aria-pressed={index === 0 ? "true" : "false"}
+            >
               <span
-                class={`exp-dot w-2.5 h-2.5 rounded-full ring-4 transition-colors ${
+                class={`exp-dot mt-2 h-2 w-2 shrink-0 rounded-full ring-4 transition-colors ${
                   exp.isCurrent
                     ? "bg-emerald-500 ring-emerald-500/15"
-                    : "bg-slate-300 dark:bg-slate-600 ring-slate-300/20 dark:ring-slate-600/20"
+                    : "bg-gray-300 ring-gray-300/20 dark:bg-gray-600 dark:ring-gray-600/20"
                 }`}
               />
-              {index < experiences.length - 1 && (
-                <span class="w-px flex-1 bg-slate-200 dark:bg-slate-700 mt-2" />
-              )}
-            </div>
-            <div class="flex-1 pb-1 min-w-0">
-              <div class="flex items-baseline justify-between gap-3 flex-wrap">
-                <h3 class="text-[15px] font-semibold text-slate-900 dark:text-slate-100 leading-snug">
-                  {exp.companyName}
-                </h3>
-                <span class="font-mono text-[11px] text-slate-400 dark:text-slate-500 shrink-0">
-                  {formatDateRange(exp)}
-                </span>
-              </div>
-              <p class="text-sm text-cyan-700 dark:text-cyan-400 mt-0.5 font-medium">
-                {exp.role}
-                {exp.isCurrent && (
-                  <span class="ml-2 font-mono text-[10px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                    current
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                  <h3 class="text-base/7 font-semibold tracking-tight text-gray-950 dark:text-white">
+                    {exp.companyName}
+                  </h3>
+                  <span class="shrink-0 font-mono text-[11px] text-gray-500">
+                    {formatDateRange(exp)}
                   </span>
-                )}
-              </p>
-              {exp.description && (
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
-                  {exp.description}
+                </div>
+                <p class="text-sm/6 font-medium text-sky-600 dark:text-sky-400">
+                  {exp.role}
+                  {exp.isCurrent && (
+                    <span class="ml-2 font-mono text-[10px] tracking-widest text-emerald-600 uppercase dark:text-emerald-400">
+                      current
+                    </span>
+                  )}
                 </p>
-              )}
-            </div>
-          </button>
+                {exp.description && (
+                  <p class="mt-1.5 text-sm/6 text-gray-600 dark:text-gray-400">
+                    {exp.description}
+                  </p>
+                )}
+              </div>
+            </button>
+          </li>
         ))
       }
-    </div>
+    </ol>
 
     <!-- Map -->
-    <div class="lg:col-span-2" data-reveal style="--reveal-delay: 100ms">
-      <div
-        class="lg:sticky lg:top-24 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 p-2.5"
-      >
-        <div
-          class="h-[260px] lg:h-[420px] w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700"
-        >
+    <div
+      class="pattern border-t border-gray-950/5 p-2 lg:col-span-2 lg:border-t-0 lg:border-l dark:border-white/10"
+      data-reveal
+      style="--reveal-delay: 100ms"
+    >
+      <div class="frame lg:sticky lg:top-20">
+        <div class="frame-inner h-[280px] w-full lg:h-[440px]">
           <MapCanvas client:only="react" markers={markers} center={mapCenter} />
         </div>
       </div>
@@ -121,10 +115,10 @@ const mapCenter: [number, number] =
 
 <style>
   .exp-entry[aria-pressed="true"] {
-    background-color: rgb(241 245 249 / 0.9);
+    background-color: rgb(3 7 18 / 0.035);
   }
-  html.dark .exp-entry[aria-pressed="true"] {
-    background-color: rgb(30 41 59 / 0.7);
+  :global(html.dark) .exp-entry[aria-pressed="true"] {
+    background-color: rgb(255 255 255 / 0.05);
   }
 </style>
 

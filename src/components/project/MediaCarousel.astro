@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 import type { PublicMediaItem } from "../../types/project-cms";
 
 interface Props {
@@ -10,11 +11,11 @@ const { items, title = "Project media" } = Astro.props;
 
 // Frame wrapper sizing/treatment per device_frame. CSS-only (no frame image assets).
 const FRAME: Record<string, string> = {
-  phone: "max-w-[280px] rounded-[2rem] border-4 border-slate-800 dark:border-slate-600 bg-slate-800 dark:bg-slate-900 p-1.5",
-  tablet: "max-w-[460px] rounded-2xl border-4 border-slate-800 dark:border-slate-600 bg-slate-800 dark:bg-slate-900 p-1.5",
-  desktop: "rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-1",
-  browser: "rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800",
-  none: "rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden",
+  phone: "max-w-[280px] rounded-[2rem] border-4 border-gray-800 dark:border-gray-600 bg-gray-800 dark:bg-gray-900 p-1.5",
+  tablet: "max-w-[460px] rounded-2xl border-4 border-gray-800 dark:border-gray-600 bg-gray-800 dark:bg-gray-900 p-1.5",
+  desktop: "rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-1",
+  browser: "rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800",
+  none: "rounded-xl bg-white outline outline-gray-950/5 dark:bg-white/5 dark:outline-white/10 overflow-hidden",
 };
 const innerRadius = (f: string) =>
   f === "phone" ? "rounded-[1.6rem]" : f === "tablet" ? "rounded-xl" : "rounded-md";
@@ -22,20 +23,20 @@ const innerRadius = (f: string) =>
 
 {
   items.length > 0 && (
-    <section class="media-carousel mb-8" aria-roledescription="carousel" aria-label={title}>
+    <section class="media-carousel px-4 sm:px-6" aria-roledescription="carousel" aria-label={title}>
       <div class="flex items-center justify-between mb-3">
-        <h2 class="text-base font-semibold text-slate-900 dark:text-slate-100">Screenshots</h2>
+        <h2 class="eyebrow">Screenshots</h2>
         <div class="flex gap-2">
           <button
             type="button"
-            class="carousel-prev inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 hover:text-slate-900 hover:border-slate-400 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
+            class="carousel-prev inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-600 ring-1 ring-gray-950/10 ring-inset hover:text-gray-950 disabled:opacity-40 dark:text-gray-400 dark:ring-white/15 dark:hover:text-white"
             aria-label="Previous"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
           </button>
           <button
             type="button"
-            class="carousel-next inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 hover:text-slate-900 hover:border-slate-400 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
+            class="carousel-next inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-600 ring-1 ring-gray-950/10 ring-inset hover:text-gray-950 disabled:opacity-40 dark:text-gray-400 dark:ring-white/15 dark:hover:text-white"
             aria-label="Next"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
@@ -44,7 +45,7 @@ const innerRadius = (f: string) =>
       </div>
 
       <div
-        class="carousel-track flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500"
+        class="carousel-track flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
         tabindex="0"
         role="group"
         aria-label={`${title}, use arrow keys to navigate`}
@@ -57,7 +58,7 @@ const innerRadius = (f: string) =>
             <figure class="carousel-slide snap-start shrink-0 flex flex-col">
               <div class={frame}>
                 {m.deviceFrame === "browser" && (
-                  <div class="flex items-center gap-1.5 px-3 py-2 border-b border-slate-200 dark:border-slate-700">
+                  <div class="flex items-center gap-1.5 px-3 py-2 border-b border-gray-200 dark:border-gray-700">
                     <span class="h-2.5 w-2.5 rounded-full bg-red-400" />
                     <span class="h-2.5 w-2.5 rounded-full bg-amber-400" />
                     <span class="h-2.5 w-2.5 rounded-full bg-emerald-400" />
@@ -74,11 +75,11 @@ const innerRadius = (f: string) =>
                     <source src={m.url} />
                   </video>
                 ) : (
-                  <img
+                  <Image
                     src={m.url}
                     alt={m.alt ?? ""}
-                    width={m.width ?? undefined}
-                    height={m.height ?? undefined}
+                    width={m.width ?? 880}
+                    height={m.height ?? 550}
                     loading={i === 0 ? "eager" : "lazy"}
                     decoding="async"
                     fetchpriority={i === 0 ? "high" : "auto"}
@@ -88,7 +89,7 @@ const innerRadius = (f: string) =>
                 )}
               </div>
               {m.caption && (
-                <figcaption class="mt-2 text-xs text-slate-500 dark:text-slate-400 max-w-[440px]">{m.caption}</figcaption>
+                <figcaption class="mt-2 text-xs text-gray-500 dark:text-gray-400 max-w-[440px]">{m.caption}</figcaption>
               )}
             </figure>
           );

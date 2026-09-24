@@ -39,9 +39,9 @@ const isPubliclyViewable = (p: CmsProject) =>
   ["published", "completed", "in-progress", "maintained"].includes(p.status ?? "");
 
 const formatDate = (s?: string) => {
-  if (!s) return "—";
+  if (!s) return "-";
   const d = new Date(s);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+  return Number.isNaN(d.getTime()) ? "-" : d.toLocaleDateString();
 };
 
 export const ProjectsCmsTable = () => {
@@ -167,7 +167,7 @@ export const ProjectsCmsTable = () => {
       size: 110,
       cell: ({ row }) => (
         <AdminBadge variant={TYPE_VARIANT[row.original.projectType] ?? "neutral"}>
-          {row.original.projectType || "—"}
+          {row.original.projectType || "-"}
         </AdminBadge>
       ),
     },

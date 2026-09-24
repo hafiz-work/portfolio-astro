@@ -32,10 +32,10 @@ export const FamilyListView = ({ detail, selectedId, onSelect }: Props) => {
             type="button"
             onClick={() => onSelect(person.id)}
             aria-current={selectedId === person.id ? "true" : undefined}
-            className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 ${
+            className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
               selectedId === person.id
-                ? "border-cyan-500/60 bg-cyan-50 dark:bg-cyan-900/15"
-                : "border-slate-200 bg-white hover:border-cyan-500/40 dark:border-slate-700 dark:bg-slate-800"
+                ? "border-sky-500/60 bg-sky-500/5 dark:bg-sky-400/10"
+                : "border-gray-950/10 bg-white hover:border-gray-950/20 dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/20"
             }`}
           >
             {person.photoUrl ? (
@@ -50,16 +50,16 @@ export const FamilyListView = ({ detail, selectedId, onSelect }: Props) => {
             ) : (
               <span
                 aria-hidden="true"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-300"
               >
                 {initials(person.displayName)}
               </span>
             )}
             <span className="min-w-0">
-              <span className="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+              <span className="block truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                 {person.displayName}
               </span>
-              <span className="block text-xs text-slate-500 dark:text-slate-400">
+              <span className="block text-xs text-gray-500 dark:text-gray-400">
                 {person.birthDate
                   ? `b. ${displayYear(person.birthDate)}`
                   : "Birth year unknown"}

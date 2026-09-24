@@ -333,7 +333,7 @@ export const PROJECT_COPY: Record<
 );
 
 /**
- * Per-slug link overrides — STOPGAP until the structured `project_links` model
+ * Per-slug link overrides - STOPGAP until the structured `project_links` model
  * (admin-managed, status-aware) ships in the admin/backend phase.
  *
  * The production DB still carries links that 404 or no longer resolve. Until an

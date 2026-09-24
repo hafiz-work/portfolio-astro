@@ -19,13 +19,13 @@ interface Props {
 }
 
 const iconButtonClass =
-  "inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-slate-600 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:opacity-40 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700";
+  "inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-600 ring-1 ring-gray-950/10 ring-inset hover:bg-gray-950/5 hover:text-gray-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40 dark:text-gray-300 dark:ring-white/15 dark:hover:bg-white/10 dark:hover:text-white";
 
 const segmentedButtonClass = (active: boolean) =>
-  `rounded-md px-3 py-1.5 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 ${
+  `rounded-full px-3 py-1 text-sm/6 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
     active
-      ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
-      : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+      ? "bg-white text-gray-950 ring-1 ring-gray-950/10 dark:bg-gray-700 dark:text-white dark:ring-transparent"
+      : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
   }`;
 
 export const FamilyToolbar = ({
@@ -44,13 +44,13 @@ export const FamilyToolbar = ({
   const treeMode = view === "tree";
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+    <div className="flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 outline outline-gray-950/5 dark:bg-white/[0.03] dark:outline-white/10">
       <PersonSearch people={people} onSelect={onSelectPerson} />
 
       <div
         role="group"
         aria-label="View mode"
-        className="flex rounded-lg bg-slate-100 p-1 dark:bg-slate-900/60"
+        className="flex rounded-full bg-gray-950/5 p-0.75 dark:bg-white/10"
       >
         <button
           type="button"

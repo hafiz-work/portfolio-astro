@@ -4,7 +4,7 @@
   "short_name": "Hafiz Bahtiar",
   "icons": [
     {
-      "src": "/favicons/favicon.svg",
+      "src": "/favicon.svg",
       "type": "image/svg+xml",
       "sizes": "any",
       "purpose": "any"
@@ -139,6 +139,6 @@
   "scope": "/",
   "start_url": "/?source=pwa",
   "display": "standalone",
-  "theme_color": "#171717",
-  "background_color": "#171717"
+  "theme_color": "#030712",
+  "background_color": "#030712"
 }

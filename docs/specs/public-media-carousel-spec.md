@@ -1,7 +1,7 @@
 # Public Media Carousel Spec (Phase 5)
 
 **Status:** Draft (Phase 1, built in Phase 4 Stage I)
-**Inspiration:** App Store / Play Store screenshot strips — but **evidence-driven**, portfolio-specific, never decorative.
+**Inspiration:** App Store / Play Store screenshot strips - but **evidence-driven**, portfolio-specific, never decorative.
 **Data source:** `project_media` (ordered by `sort_order`, `is_visible=1`) joined to `media_assets`. **No images hardcoded in components.**
 
 ---
@@ -16,8 +16,8 @@
 ## 2. Item model
 Each item renders from `project_media`:
 - `image` or `video` (`media_type`).
-- `alt` (required — from `media_assets.alt_text`).
-- optional `caption` (explains value/contribution, e.g. "Offline PDF export — works with zero connectivity").
+- `alt` (required - from `media_assets.alt_text`).
+- optional `caption` (explains value/contribution, e.g. "Offline PDF export - works with zero connectivity").
 - optional `device_frame`: `phone | tablet | desktop | browser | none` → CSS frame wrapper (no heavy image assets for frames).
 - `architecture_diagram` type renders full-width, uncropped, with caption.
 

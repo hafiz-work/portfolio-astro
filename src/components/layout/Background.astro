@@ -1,21 +1,6 @@
-<div id="bg-base" class="fixed inset-0 z-[-1]">
-  <!-- Subtle dot grid (adapts to theme) -->
-  <div
-    class="absolute inset-0 bg-[radial-gradient(#94a3b820_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff0d_1px,transparent_1px)] [background-size:32px_32px]"
-  >
-  </div>
-  <!-- Soft blue ambient glow -->
-  <div
-    class="absolute top-0 left-1/2 -translate-x-1/2 w-[70vw] h-[45vh] bg-blue-400/8 dark:bg-blue-500/10 rounded-full blur-[140px] pointer-events-none"
-  >
-  </div>
-</div>
+---
+// Public canvas - tailwindcss.com line: flat white / gray-950. The diagonal
+// hatch lives only in the shell gutters (.gutter in index.css), not here.
+---
 
-<style>
-  #bg-base {
-    background-color: #f8fafc;
-  }
-  html.dark #bg-base {
-    background-color: #0f172a;
-  }
-</style>
+<div id="bg-base" class="fixed inset-0 z-[-1] bg-canvas dark:bg-pub-dark"></div>

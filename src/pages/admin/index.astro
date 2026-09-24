@@ -38,12 +38,12 @@ const cardClass = "admin-card";
         <span
           id="kpi-projects"
           class="text-xl font-bold text-slate-900 dark:text-slate-100 tabular-nums"
-          >—</span
+          >-</span
         >
         <span
           id="kpi-projects-sub"
           class="text-xs px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-900 text-blue-500 dark:text-blue-400"
-          >—</span
+          >-</span
         >
       </div>
     </a>
@@ -59,12 +59,12 @@ const cardClass = "admin-card";
         <span
           id="kpi-messages"
           class="text-xl font-bold text-slate-900 dark:text-slate-100 tabular-nums"
-          >—</span
+          >-</span
         >
         <span
           id="kpi-messages-sub"
           class="text-xs px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-900 text-yellow-500 dark:text-yellow-400"
-          >—</span
+          >-</span
         >
       </div>
     </a>
@@ -80,7 +80,7 @@ const cardClass = "admin-card";
         <span
           id="kpi-blog"
           class="text-xl font-bold text-slate-900 dark:text-slate-100 tabular-nums"
-          >—</span
+          >-</span
         >
         <span
           class="text-xs px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-900 text-emerald-500 dark:text-emerald-400"
@@ -100,7 +100,7 @@ const cardClass = "admin-card";
         <span
           id="kpi-experiences"
           class="text-xl font-bold text-slate-900 dark:text-slate-100 tabular-nums"
-          >—</span
+          >-</span
         >
         <span
           class="text-xs px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-900 text-purple-500 dark:text-purple-400"
@@ -117,7 +117,7 @@ const cardClass = "admin-card";
         <span
           id="kpi-resume"
           class="text-xl font-bold text-slate-900 dark:text-slate-100 tabular-nums"
-          >—</span
+          >-</span
         >
         <span
           class="text-xs px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-900 text-cyan-500 dark:text-cyan-400"
@@ -134,7 +134,7 @@ const cardClass = "admin-card";
         Messages by status
       </h2>
       <p class="text-xs text-slate-400 dark:text-slate-500 mb-5">
-        <span id="cs-total" class="tabular-nums">—</span> total
+        <span id="cs-total" class="tabular-nums">-</span> total
       </p>
       <div class="space-y-4">
         {
@@ -153,7 +153,7 @@ const cardClass = "admin-card";
                   id={`cs-${row.key}`}
                   class="text-slate-900 dark:text-slate-100 font-medium tabular-nums"
                 >
-                  —
+                  -
                 </span>
               </div>
               <div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -263,7 +263,7 @@ const cardClass = "admin-card";
     ARCHIVED: "text-slate-400 dark:text-slate-500",
   };
 
-  // Build list rows with textContent only — contact name/subject are
+  // Build list rows with textContent only - contact name/subject are
   // attacker-controlled (public contact form), so never use innerHTML here.
   function renderProjects(list: DashboardRecentProject[]) {
     const ul = document.getElementById("recent-projects");
@@ -377,7 +377,7 @@ const cardClass = "admin-card";
     return os ? `${browser}/${os}` : browser;
   }
 
-  // textContent only — ipAddress/userAgent/country originate from request
+  // textContent only - ipAddress/userAgent/country originate from request
   // headers an attacker fully controls, so never use innerHTML here.
   function renderDownloads(list: DashboardRecentDownload[]) {
     const ul = document.getElementById("recent-downloads");

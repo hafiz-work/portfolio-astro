@@ -106,7 +106,7 @@
 
 /* Cards clearly separated from the canvas. Following the Fable 5 public card
    design, people WITH a photo render as a circular avatar (.card-image-circle)
-   and people WITHOUT render as a rounded rect — so the radius/accent rules must
+   and people WITHOUT render as a rounded rect - so the radius/accent rules must
    not square or streak the circles. */
 .family-chart--admin .f3 div.card-inner {
   background: var(--f3-card-bg);

@@ -47,7 +47,7 @@ export interface DashboardOverview {
   };
   blog: { total: number };
   experiences: { total: number };
-  // Optional until the backend `/owner/dashboard/overview` endpoint adds it —
+  // Optional until the backend `/owner/dashboard/overview` endpoint adds it -
   // the UI defaults to 0 / empty so the dashboard never breaks before then.
   resumeDownloads?: {
     total: number;

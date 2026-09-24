@@ -286,7 +286,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
           <div className="admin-card space-y-2">
             <h3 className="admin-card-title">SEO / images</h3>
             <p className="admin-help">Cover / OG images are set in the Media tab (attach media with type <code>cover</code> or <code>og</code>).</p>
-            <p className="text-sm text-slate-600 dark:text-slate-300">Cover image id: {detail?.coverImageId ?? "—"} · OG image id: {detail?.ogImageId ?? "—"}</p>
+            <p className="text-sm text-slate-600 dark:text-slate-300">Cover image id: {detail?.coverImageId ?? "-"} · OG image id: {detail?.ogImageId ?? "-"}</p>
           </div>
         </div>
       )}

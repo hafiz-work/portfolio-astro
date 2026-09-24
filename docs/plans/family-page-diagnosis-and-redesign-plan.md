@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn the public Family pages (`/family`, `/family/[slug]`) into a polished, server-rendered, responsive, accessible family-tree experience — removing the window-event/global-variable architecture, hardcoded data patches, cache-busting, and fake zoom, while keeping the admin family module working unchanged.
+**Goal:** Turn the public Family pages (`/family`, `/family/[slug]`) into a polished, server-rendered, responsive, accessible family-tree experience - removing the window-event/global-variable architecture, hardcoded data patches, cache-busting, and fake zoom, while keeping the admin family module working unchanged.
 
 **Architecture:** Fetch family data server-side in Astro frontmatter (request-time SSR on Cloudflare, leaning on the API's KV + HTTP cache) and pass it as props to a single React island per page (`FamilyExplorer`) that owns toolbar, chart, search, person detail, and a mobile list fallback. The `family-chart` rendering core is extracted into a `useFamilyChart` hook shared by the new public explorer and the existing admin `FamilyTreeChart` wrapper.
 
@@ -10,7 +10,7 @@
 
 ---
 
-## Part A — Diagnosis
+## Part A - Diagnosis
 
 ### A1. Current state summary
 
@@ -22,68 +22,68 @@
 | Public page | `src/pages/family/[slug]/index.astro` | 414 | Single-tree page; Astro Dropdowns populated via `innerHTML` injection |
 | Component | `src/components/family/FamilyTreeChart.tsx` | 762 | Monolith: data transform + chart lifecycle + window-event bus + cross-tree navigation + inline-edit wiring |
 | Component | `src/components/family/PublicFamilyExplorer.tsx` | 115 | Fetch-then-render wrapper used only on `[slug]` page |
-| Component | `src/components/family/CombinedFamilyExplorer.tsx` | 188 | **Unused on any page** — duplicate of the merge script in `index.astro` |
+| Component | `src/components/family/CombinedFamilyExplorer.tsx` | 188 | **Unused on any page** - duplicate of the merge script in `index.astro` |
 | Component | `src/components/family/PersonInfoPanel.tsx` | 118 | Reads selection from window events + `window.__familyDetail` |
-| Service | `src/lib/family.ts` | 139 | `FamilyService` — public + admin endpoints, forces `noCache=1&_=Date.now()` on every public call |
+| Service | `src/lib/family.ts` | 139 | `FamilyService` - public + admin endpoints, forces `noCache=1&_=Date.now()` on every public call |
 | Types | `src/types/family.ts` | 100 | Clean, matches backend |
 | Admin | `src/components/admin/family/*` (4 files) | ~2,800 | Tree CRUD + visual builder; reuses `FamilyTreeChart` |
-| Backend | `hono-workers/src/routes/v1/public/family.ts` | — | KV-cached (120 s TTL) public endpoints with `Cache-Control: max-age=60, SWR 600` |
-| Backend | `hono-workers/src/database/schemas/family_chart.sql` | — | `family_trees` / `family_people` / `family_relationships` |
+| Backend | `hono-workers/src/routes/v1/public/family.ts` | - | KV-cached (120 s TTL) public endpoints with `Cache-Control: max-age=60, SWR 600` |
+| Backend | `hono-workers/src/database/schemas/family_chart.sql` | - | `family_trees` / `family_people` / `family_relationships` |
 
 **Headline problems**
 
-1. **Three communication mechanisms used at once** — React props, `window` CustomEvents (`family:set-main`, `family:set-data`, `family:on-main-changed`, `family:on-spouses`, `family:zoom-*`, …), and window globals (`window.__combinedFamilyDetail`, `window.__familyDetail`, `window.familyChartApi`). Zoom/fit/center logic is implemented **twice** inside `FamilyTreeChart.tsx` (once on `window.familyChartApi`, once as event listeners).
-2. **Personal data hardcoded in code** — `addParentRelIfMissing("Mohd Bahtiar", "Muhamad Nurhafiz")`, `addParentRelIfMissing("Zarina", …)`, and "muhamad nurhafiz" centering live in *two* places (`index.astro` script and `CombinedFamilyExplorer.tsx`). Data fixes belong in the database.
+1. **Three communication mechanisms used at once** - React props, `window` CustomEvents (`family:set-main`, `family:set-data`, `family:on-main-changed`, `family:on-spouses`, `family:zoom-*`, …), and window globals (`window.__combinedFamilyDetail`, `window.__familyDetail`, `window.familyChartApi`). Zoom/fit/center logic is implemented **twice** inside `FamilyTreeChart.tsx` (once on `window.familyChartApi`, once as event listeners).
+2. **Personal data hardcoded in code** - `addParentRelIfMissing("Mohd Bahtiar", "Muhamad Nurhafiz")`, `addParentRelIfMissing("Zarina", …)`, and "muhamad nurhafiz" centering live in *two* places (`index.astro` script and `CombinedFamilyExplorer.tsx`). Data fixes belong in the database.
 3. **The entire combined-merge algorithm is duplicated** (~140 lines) between the inline `<script>` of `index.astro` and the unused `CombinedFamilyExplorer.tsx`. They have already drifted (different descriptions).
-4. **Every public fetch busts every cache** — `withNoCache` appends `noCache=1&_=Date.now()`, which skips the backend KV cache **and** makes the URL unique so browser/CDN HTTP caching is impossible. The backend's caching design is fully defeated by its only consumer.
-5. **Pages are `prerender = false` but fetch client-side anyway** — worst of both worlds: SSR cost without SSR benefit, plus loading skeletons, race guards (`familyLoadRunning`), and FOUC. (CLAUDE.md still claims these pages prerender at build time — stale.)
-6. **Fake zoom** — the +/− buttons change `setCardXSpacing/setCardYSpacing` (node spacing) instead of zooming. The library exports real programmatic zoom (`handlers.manualZoom`, `zoomTo`); native wheel/pinch zoom already works on the canvas, so buttons and gestures disagree about what "zoom" means.
-7. **Cross-tree navigation is an N+1 storm** — every card click with no `globalKey` fetches **all trees + all tree details** (each cache-busted) just to decide whether to jump trees. This also runs in the admin builder (`enableCrossTreeNavigation` defaults to `true`). With the combined view existing, this feature is redundant.
-8. **Orphan page** — `/family` is not linked from the public Navbar (Projects/Skills/Experience only). See Open Decisions.
-9. **Debug artifacts in production UI** — yellow "Live data will be loaded in the browser for this family." banner on `[slug]`; `console.error`-only failure paths.
-10. **CLAUDE.md drift** — rendering model and family sections describe behavior that no longer matches the code.
+4. **Every public fetch busts every cache** - `withNoCache` appends `noCache=1&_=Date.now()`, which skips the backend KV cache **and** makes the URL unique so browser/CDN HTTP caching is impossible. The backend's caching design is fully defeated by its only consumer.
+5. **Pages are `prerender = false` but fetch client-side anyway** - worst of both worlds: SSR cost without SSR benefit, plus loading skeletons, race guards (`familyLoadRunning`), and FOUC. (CLAUDE.md still claims these pages prerender at build time - stale.)
+6. **Fake zoom** - the +/− buttons change `setCardXSpacing/setCardYSpacing` (node spacing) instead of zooming. The library exports real programmatic zoom (`handlers.manualZoom`, `zoomTo`); native wheel/pinch zoom already works on the canvas, so buttons and gestures disagree about what "zoom" means.
+7. **Cross-tree navigation is an N+1 storm** - every card click with no `globalKey` fetches **all trees + all tree details** (each cache-busted) just to decide whether to jump trees. This also runs in the admin builder (`enableCrossTreeNavigation` defaults to `true`). With the combined view existing, this feature is redundant.
+8. **Orphan page** - `/family` is not linked from the public Navbar (Projects/Skills/Experience only). See Open Decisions.
+9. **Debug artifacts in production UI** - yellow "Live data will be loaded in the browser for this family." banner on `[slug]`; `console.error`-only failure paths.
+10. **CLAUDE.md drift** - rendering model and family sections describe behavior that no longer matches the code.
 
-### A2. Package / library analysis — `family-chart` 0.9.0
+### A2. Package / library analysis - `family-chart` 0.9.0
 
-- **Identity:** `family-chart` by donatso, v0.9.0 — which is the **latest published version** (verified via npm). D3.js-based, TypeScript types shipped, MIT/ISC-style licensed.
+- **Identity:** `family-chart` by donatso, v0.9.0 - which is the **latest published version** (verified via npm). D3.js-based, TypeScript types shipped, MIT/ISC-style licensed.
 - **Size:** ESM bundle 220 KB raw (106 KB min) **plus** a hard dependency on full `d3` v7 (~870 KB unpacked). It is already loaded via dynamic `import("family-chart")` inside the component, so it's code-split and only downloaded on family pages. CSS is imported statically (fine, tiny).
-- **SSR:** Not SSR-compatible (touches DOM/d3 on import path usage); must stay a client island with dynamic import — current usage is correct on this point.
+- **SSR:** Not SSR-compatible (touches DOM/d3 on import path usage); must stay a client island with dynamic import - current usage is correct on this point.
 
 **Capability matrix vs. requirements**
 
 | Requirement | Supported? | Notes / current usage |
 |---|---|---|
-| Zoom / pan | ✅ native d3 wheel/drag/pinch + `handlers.manualZoom({amount, svg})`, `zoomTo(svg, level)`, `getCurrentZoom` | **Misused** — buttons change card spacing instead |
+| Zoom / pan | ✅ native d3 wheel/drag/pinch + `handlers.manualZoom({amount, svg})`, `zoomTo(svg, level)`, `getCurrentZoom` | **Misused** - buttons change card spacing instead |
 | Expand / collapse | ⚠️ partial | Global `setAncestryDepth` / `setProgenyDepth`; `setDuplicateBranchToggle`; **no true per-branch collapse API** |
-| Spouse / children rels | ✅ | `rels: {parents, spouses, children}` — correctly mapped from the relationship edge list |
+| Spouse / children rels | ✅ | `rels: {parents, spouses, children}` - correctly mapped from the relationship edge list |
 | Multiple generations | ✅ | depth-limited; currently 6/5 on combined view |
 | Mobile responsiveness | ⚠️ | Canvas resizes; touch pan/pinch work; cards/controls are our responsibility |
-| Custom node UI | ✅ | `setCardHtml()`, `setStyle("imageCircleRect" \| "imageCircle" \| …)`, `setCardImageField("avatar")`, `setDefaultPersonIcon`, `setOnCardUpdate` — **avatars currently unused** (`label`-only cards) |
+| Custom node UI | ✅ | `setCardHtml()`, `setStyle("imageCircleRect" \| "imageCircle" \| …)`, `setCardImageField("avatar")`, `setDefaultPersonIcon`, `setOnCardUpdate` - **avatars currently unused** (`label`-only cards) |
 | Search | ✅ built-in `setPersonDropdown` | unused; we'll build our own combobox for styling/a11y consistency |
-| Kinship labels | ✅ `calculateKinships(id)` | unused — would give "relationship to main" labels for free |
+| Kinship labels | ✅ `calculateKinships(id)` | unused - would give "relationship to main" labels for free |
 | Privacy | ✅ `setPrivateCardsConfig` | unused |
 | Lazy / large-tree perf | ⚠️ | No virtualization; fine for this dataset (3 trees, ~30 people seeded); depth limits are the lever |
 | SSR w/ Astro | ❌ by design | dynamic import already in place ✅ |
 
-**Verdict: keep `family-chart`.** It is current, capable, and *under*-used — the problems are in our integration, not the library. Alternatives (react-family-tree, relatives-tree, GoJS, yFiles) are either abandoned, can't model spouses+multi-generation as well, or are commercial. Replacement is not justified.
+**Verdict: keep `family-chart`.** It is current, capable, and *under*-used - the problems are in our integration, not the library. Alternatives (react-family-tree, relatives-tree, GoJS, yFiles) are either abandoned, can't model spouses+multi-generation as well, or are commercial. Replacement is not justified.
 
 ### A3. UI/UX diagnosis
 
 | Area | Finding |
 |---|---|
-| Layout | `[slug]`: `flex gap-4 h-[580px]` with fixed `w-64` side panel — panel never collapses; on a 375 px phone the chart gets ~90 px. Fixed 580 px heights everywhere regardless of viewport. |
+| Layout | `[slug]`: `flex gap-4 h-[580px]` with fixed `w-64` side panel - panel never collapses; on a 375 px phone the chart gets ~90 px. Fixed 580 px heights everywhere regardless of viewport. |
 | Visual hierarchy | Toolbar on `[slug]` is a flat row of 8 same-weight buttons ("Vertical Horizontal − + Center Main Fit") with no grouping or icons. |
 | Card design | Label-only dark cards; no avatars, no birth years on combined view, no deceased indicator, no "you are here" affordance. |
 | Empty states | Decent on `index` ("Family data unavailable"); `[slug]` has none for the chart itself. |
 | Loading states | `index` has skeletons (only needed because fetching is client-side); `[slug]` shows raw slug as title + "Loading family details..." text that can stick forever on error. |
 | Error states | Generic red box; no retry; `[slug]` can show error box *and* stale toolbar simultaneously. |
 | Responsive | Toolbar buttons wrap awkwardly; side panel fixed-width; no mobile alternative view. |
-| Dark/light | Chart canvas is **always dark** (`--color-family-canvas: #212121`) inside a light page — jarring in light mode. family-chart ships dark-styled cards only. |
+| Dark/light | Chart canvas is **always dark** (`--color-family-canvas: #212121`) inside a light page - jarring in light mode. family-chart ships dark-styled cards only. |
 | Mobile usability | Pinch/pan works (library), but +/− buttons do spacing-not-zoom; person info panel unreachable (squeezed); dropdowns are desktop-sized. |
 | Accessibility | Buttons labeled literally "+" / "−" with no `aria-label`; dropdown options injected as raw HTML strings; no focus management; no keyboard path to select a person; no reduced-motion handling (1000 ms transitions). |
 | Touch gestures | Native d3 pinch-zoom OK; no affordance hinting the canvas is interactive. |
 | Large-tree readability | Depth caps exist (good); no search-to-person (must hunt by panning); no breadcrumb of who is "main". |
-| Consistency | Yellow debug banner; mixed Astro-Dropdown + React islands on one toolbar; the rest of the portfolio is clean slate/cyan — family pages feel like a lab. |
+| Consistency | Yellow debug banner; mixed Astro-Dropdown + React islands on one toolbar; the rest of the portfolio is clean slate/cyan - family pages feel like a lab. |
 
 ### A4. Functional gap list
 
@@ -102,16 +102,16 @@
 | Shareable link | ❌ no `?person=` deep link; main-person selection lost on reload |
 | Mobile fallback view | ❌ none |
 | Large-tree perf | Acceptable now; cross-tree N+1 is the real perf bug |
-| Invalid/malformed data | Relationship endpoints referencing missing people are skipped (good); cyclic data unguarded (library may hang — low risk, admin-controlled data) |
+| Invalid/malformed data | Relationship endpoints referencing missing people are skipped (good); cyclic data unguarded (library may hang - low risk, admin-controlled data) |
 | Empty family data | Handled on `index`; partial on `[slug]` |
 
 ### A5. Data model review
 
-The backend model (`family_trees`, `family_people`, `family_relationships` edge table) is **sound and scalable** — people and typed directional relationships with `UNIQUE(tree_id, person_id, related_person_id, relationship_type)` and proper FKs/indexes. Keep it. Gaps, in priority order:
+The backend model (`family_trees`, `family_people`, `family_relationships` edge table) is **sound and scalable** - people and typed directional relationships with `UNIQUE(tree_id, person_id, related_person_id, relationship_type)` and proper FKs/indexes. Keep it. Gaps, in priority order:
 
 1. **`global_key` is the cross-tree identity but is optional** → display-name fallback merging (duplicate-name hazard, hardcoded patches). *Fix: backfill `global_key` for every person appearing in >1 tree, and add the missing bridge relationships as data (Phase 0).* Long-term: make it NOT NULL.
-2. **`birth_order` lives in untyped `metadata` JSON (sometimes string-encoded)** — the chart sorter has to try/catch-parse it. *Recommended (optional backend phase): promote to `birth_order INTEGER` column.*
-3. **No per-person privacy** — full names + birth years of living relatives are public. *Recommended (optional backend phase): `visibility TEXT CHECK(visibility IN ('public','members','private')) DEFAULT 'public'` + filter in the public service; frontend pairs with `setPrivateCardsConfig`.* Until then, an interim frontend rule (hide exact birth dates of living people, show year only) is included in Phase 3.
+2. **`birth_order` lives in untyped `metadata` JSON (sometimes string-encoded)** - the chart sorter has to try/catch-parse it. *Recommended (optional backend phase): promote to `birth_order INTEGER` column.*
+3. **No per-person privacy** - full names + birth years of living relatives are public. *Recommended (optional backend phase): `visibility TEXT CHECK(visibility IN ('public','members','private')) DEFAULT 'public'` + filter in the public service; frontend pairs with `setPrivateCardsConfig`.* Until then, an interim frontend rule (hide exact birth dates of living people, show year only) is included in Phase 3.
 4. **Relationship direction convention is implicit** (`parent`: personId=parent → relatedPersonId=child; `child` rows are the inverse duplicate). Document it; the transform already handles both.
 
 Frontend `FamilyPerson` / `FamilyRelationship` types are fine as-is; no changes needed beyond what the new components consume.
@@ -125,13 +125,13 @@ Frontend `FamilyPerson` / `FamilyRelationship` types are fine as-is; no changes 
 | Cross-tree nav fetch storm per card click | N+1 requests per click, also in admin | Delete the feature (P2) |
 | Combined merge runs in every browser | CPU + duplicated code | Merge once per request on the server (P1) |
 | `FamilyTreeChart` island mounted (hidden) before data exists | Hydrates React + listeners for nothing | Single island receives data as props (P3) |
-| `family-chart`+d3 in initial island chunk | already dynamic-imported ✅ keep | — |
-| Avatars (when added) | — | `loading="lazy"`, fixed dims, R2 URLs (P3) |
+| `family-chart`+d3 in initial island chunk | already dynamic-imported ✅ keep | - |
+| Avatars (when added) | - | `loading="lazy"`, fixed dims, R2 URLs (P3) |
 | 1000 ms tree transitions | Feels sluggish; ignores reduced-motion | 300 ms default; 0 when `prefers-reduced-motion` (P3/P4) |
 
 ---
 
-## Part B — Proposed design
+## Part B - Proposed design
 
 ### B1. Page layout
 
@@ -166,7 +166,7 @@ Frontend `FamilyPerson` / `FamilyRelationship` types are fine as-is; no changes 
 ```
 src/
   data/family.ts                      # combined-view config (slug, title, main person globalKey)
-  lib/family.ts                       # service — withNoCache removed
+  lib/family.ts                       # service - withNoCache removed
   lib/family-merge.ts                 # pure mergeFamilyTrees() (server-side)
   components/family/
     FamilyExplorer.tsx                # island root: state, layout, URL sync
@@ -177,7 +177,7 @@ src/
     FamilyTreeCanvas.tsx              # thin mount point using useFamilyChart
     useFamilyChart.ts                 # chart lifecycle hook (create/update/destroy, api ref)
     chart-data.ts                     # buildChartData() transform (moved out of FamilyTreeChart)
-    FamilyTreeChart.tsx               # SLIMMED legacy wrapper — admin only, same props/events
+    FamilyTreeChart.tsx               # SLIMMED legacy wrapper - admin only, same props/events
   styles/family-chart-theme.css      # .f3 light/dark token overrides
   pages/family/index.astro            # SSR fetch + merge → <FamilyExplorer client:load />
   pages/family/[slug]/index.astro     # SSR fetch → <FamilyExplorer client:load />
@@ -218,11 +218,11 @@ Summarized from A6: SSR data + props (zero client data fetching on happy path), 
 
 ---
 
-## Part C — Implementation phases
+## Part C - Implementation phases
 
 > **Verification baseline:** this project has no test runner or linter. Per CLAUDE.md, `npm run build` (runs `@astrojs/check` TypeScript checks + Vite bundling) is the verification step, plus manual checks against `npm run dev`. ECONNREFUSED build noise is expected when the local API isn't running. Work happens on the `dev` branch (current branch, clean); **no push to main**.
 
-### Phase 0 — Data fix in D1 (hono-workers) — *prerequisite, no code changes*
+### Phase 0 - Data fix in D1 (hono-workers) - *prerequisite, no code changes*
 
 **Files:** none in portfolio-astro; SQL run against hono-workers D1 (local first, then remote).
 
@@ -239,7 +239,7 @@ npx wrangler d1 execute hono_workers_db --local --command \
 
 Expected: every person appearing in more than one tree (e.g. Muhamad Nurhafiz, Mohd Bahtiar, Zarina) shares the same non-null `global_key`. List any row where duplicates have NULL/differing keys.
 
-- [ ] **Step 0.2: Backfill missing `global_key`s** (template — substitute real IDs from 0.1)
+- [ ] **Step 0.2: Backfill missing `global_key`s** (template - substitute real IDs from 0.1)
 
 ```sql
 UPDATE family_people SET global_key = 'muhamad-nurhafiz' WHERE id IN (<ids>);
@@ -264,11 +264,11 @@ npx wrangler d1 execute hono_workers_db --local --command \
 "SELECT * FROM family_relationships WHERE relationship_type='parent' AND related_person_id IN (<hafiz ids>);"
 ```
 
-Expected: both parent rows present. Then run the same statements with `--remote`. (KV cache TTL is 120 s — changes appear publicly within 2 minutes.)
+Expected: both parent rows present. Then run the same statements with `--remote`. (KV cache TTL is 120 s - changes appear publicly within 2 minutes.)
 
 ---
 
-### Phase 1 — Server-side data layer
+### Phase 1 - Server-side data layer
 
 #### Task 1: Remove cache-busting from the public family service
 
@@ -367,7 +367,7 @@ const personKey = (p: FamilyPerson) => {
   const gk = (p.globalKey || "").trim().toLowerCase();
   if (gk.length > 0) return gk;
   // Fallback for people without a globalKey. Same-named people without
-  // keys WILL be merged — Phase 0 backfills keys to prevent this.
+  // keys WILL be merged - Phase 0 backfills keys to prevent this.
   return p.displayName.trim().toLowerCase();
 };
 
@@ -461,7 +461,7 @@ export function mergeFamilyTrees(
 
 - [ ] **Step 2.3: Build check**
 
-Run: `npm run build` — Expected: clean type check.
+Run: `npm run build` - Expected: clean type check.
 
 - [ ] **Step 2.4: Commit**
 
@@ -472,7 +472,7 @@ git commit -m "feat(family): extract pure server-side tree merge with config-dri
 
 ---
 
-### Phase 2 — Chart core refactor (shared with admin)
+### Phase 2 - Chart core refactor (shared with admin)
 
 #### Task 3: Extract `buildChartData` into `chart-data.ts`
 
@@ -480,7 +480,7 @@ git commit -m "feat(family): extract pure server-side tree merge with config-dri
 - Create: `src/components/family/chart-data.ts`
 - Modify: `src/components/family/FamilyTreeChart.tsx:32-119` (delete moved code, import instead)
 
-- [ ] **Step 3.1: Create `src/components/family/chart-data.ts`** — move `mapGender`, `splitDisplayName`, `buildChartData` verbatim from `FamilyTreeChart.tsx:32-119`, exporting all three, with one behavior fix: keep gender `"unknown"`/`"other"` out of the `F` bucket but record the original on data for the detail panel (the library only accepts M/F):
+- [ ] **Step 3.1: Create `src/components/family/chart-data.ts`** - move `mapGender`, `splitDisplayName`, `buildChartData` verbatim from `FamilyTreeChart.tsx:32-119`, exporting all three, with one behavior fix: keep gender `"unknown"`/`"other"` out of the `F` bucket but record the original on data for the detail panel (the library only accepts M/F):
 
 ```ts
 import type { Data } from "family-chart";
@@ -503,9 +503,9 @@ export const buildChartData = (detail: FamilyTreeDetail): Data => {
 
 (Copy the existing body exactly; it is correct. Only the imports/exports are new.)
 
-- [ ] **Step 3.2: Update `FamilyTreeChart.tsx`** — delete lines 32–119, add `import { buildChartData } from "./chart-data";`.
+- [ ] **Step 3.2: Update `FamilyTreeChart.tsx`** - delete lines 32–119, add `import { buildChartData } from "./chart-data";`.
 
-- [ ] **Step 3.3: Build check** — `npm run build`, expected clean.
+- [ ] **Step 3.3: Build check** - `npm run build`, expected clean.
 
 - [ ] **Step 3.4: Commit**
 
@@ -519,12 +519,12 @@ git commit -m "refactor(family): extract chart data transform into chart-data.ts
 **Files:**
 - Modify: `src/components/family/FamilyTreeChart.tsx` (remove lines ~420–540 cross-tree block, `enableCrossTreeNavigation` prop/refs, and the now-unused `getPublicFamilyTree*` imports)
 
-- [ ] **Step 4.1: Remove the feature** — in `setOnCardClick`, everything after the `family:on-spouses` dispatch and `addRelative` call (the `if (!enableCrossTreeNavigationRef.current)` block through the end of the handler) is deleted. Delete the prop, its ref, its effect, and imports `getPublicFamilyTreeBySlug, getPublicFamilyTrees, getPublicFamilyTreesByGlobalKey` from `../../lib/family`.
+- [ ] **Step 4.1: Remove the feature** - in `setOnCardClick`, everything after the `family:on-spouses` dispatch and `addRelative` call (the `if (!enableCrossTreeNavigationRef.current)` block through the end of the handler) is deleted. Delete the prop, its ref, its effect, and imports `getPublicFamilyTreeBySlug, getPublicFamilyTrees, getPublicFamilyTreesByGlobalKey` from `../../lib/family`.
 
 - [ ] **Step 4.2: Check call sites**
 
 Run: `grep -rn "enableCrossTreeNavigation" src/`
-Expected: zero hits after edit (admin never passed it explicitly — verified: `FamilyManager.tsx:609`, `FamilyTreeBuilder.tsx:1159` pass other props only).
+Expected: zero hits after edit (admin never passed it explicitly - verified: `FamilyManager.tsx:609`, `FamilyTreeBuilder.tsx:1159` pass other props only).
 
 - [ ] **Step 4.3: Build + admin smoke test**
 
@@ -664,9 +664,9 @@ export function useFamilyChart({
 }
 ```
 
-> Dev-verify during Task 9: `setStyle("imageCircleRect")` + `setCardImageField("avatar")` render the photo with the default person icon as fallback; if dims look off, tune `setCardDim` then — values are a starting point, not gospel.
+> Dev-verify during Task 9: `setStyle("imageCircleRect")` + `setCardImageField("avatar")` render the photo with the default person icon as fallback; if dims look off, tune `setCardDim` then - values are a starting point, not gospel.
 
-- [ ] **Step 5.2: Build check** — `npm run build`, expected clean.
+- [ ] **Step 5.2: Build check** - `npm run build`, expected clean.
 
 - [ ] **Step 5.3: Commit**
 
@@ -677,7 +677,7 @@ git commit -m "feat(family): add useFamilyChart hook with real zoom and reduced-
 
 ---
 
-### Phase 3 — Public explorer UI
+### Phase 3 - Public explorer UI
 
 #### Task 6: `PersonSearch` combobox
 
@@ -778,7 +778,7 @@ git commit -m "feat(family): accessible person search combobox"
 **Files:**
 - Create: `src/components/family/PersonDetailPanel.tsx`
 
-- [ ] **Step 7.1: Write the component** (replaces `PersonInfoPanel`; props-driven, no window events; photo + initials fallback; living-person birth dates shown as year only — interim privacy rule from A5.3; relations clickable):
+- [ ] **Step 7.1: Write the component** (replaces `PersonInfoPanel`; props-driven, no window events; photo + initials fallback; living-person birth dates shown as year only - interim privacy rule from A5.3; relations clickable):
 
 ```tsx
 import React, { useEffect, useMemo, useRef } from "react";
@@ -794,7 +794,7 @@ const initials = (name: string) =>
   name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
 
 const formatDate = (iso: string | null, yearOnly: boolean) => {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso;
   return yearOnly
@@ -1247,11 +1247,11 @@ git commit -m "feat(family): FamilyExplorer island with deep links, list view, m
 - Modify: `src/styles/index.css` (replace the single `--color-family-canvas` definition)
 - Create: `src/styles/family-chart-theme.css`
 
-- [ ] **Step 10.1: Theme the canvas token** — in `src/styles/index.css`, change `--color-family-canvas: #212121;` to a light value and add a dark override alongside the existing dark-mode pattern:
+- [ ] **Step 10.1: Theme the canvas token** - in `src/styles/index.css`, change `--color-family-canvas: #212121;` to a light value and add a dark override alongside the existing dark-mode pattern:
 
 ```css
 /* in the :root / @theme block */
---color-family-canvas: #f1f5f9;   /* slate-100 — light mode canvas */
+--color-family-canvas: #f1f5f9;   /* slate-100 - light mode canvas */
 
 /* with the other .dark overrides */
 .dark { --color-family-canvas: #1a1f29; }
@@ -1268,7 +1268,7 @@ git commit -m "feat(family): FamilyExplorer island with deep links, list view, m
   --f3-card-text: #0f172a;        /* slate-900 */
   --f3-card-sub: #64748b;         /* slate-500 */
   --f3-card-border: #e2e8f0;      /* slate-200 */
-  --f3-card-main: #0891b2;        /* cyan-600 — main person accent */
+  --f3-card-main: #0891b2;        /* cyan-600 - main person accent */
   --f3-link: #94a3b8;             /* slate-400 connectors */
 }
 .dark .f3 {
@@ -1289,9 +1289,9 @@ git commit -m "feat(family): FamilyExplorer island with deep links, list view, m
 .f3 .card_main .card-inner { border-color: var(--f3-card-main); box-shadow: 0 0 0 1px var(--f3-card-main); }
 ```
 
-> **Dev-verify step:** open the page, inspect rendered `.f3` DOM, and adjust the selector names to what `family-chart/styles/family-chart.css` actually emits (`.card_cont`, `.card-inner`, `.card_main`, `.link` are the expected ones for HTML cards — confirm and fix in place). Check text contrast in light mode.
+> **Dev-verify step:** open the page, inspect rendered `.f3` DOM, and adjust the selector names to what `family-chart/styles/family-chart.css` actually emits (`.card_cont`, `.card-inner`, `.card_main`, `.link` are the expected ones for HTML cards - confirm and fix in place). Check text contrast in light mode.
 
-- [ ] **Step 10.3: Build + visual check** — `npm run build`; `npm run dev` → `/family` in both themes. Expected: light canvas/cards in light mode, dark in dark.
+- [ ] **Step 10.3: Build + visual check** - `npm run build`; `npm run dev` → `/family` in both themes. Expected: light canvas/cards in light mode, dark in dark.
 
 - [ ] **Step 10.4: Commit**
 
@@ -1373,9 +1373,9 @@ try {
 </PublicLayout>
 ```
 
-(The entire 260-line inline script — fetch, merge, hardcoded patches, skeleton toggling — is gone.)
+(The entire 260-line inline script - fetch, merge, hardcoded patches, skeleton toggling - is gone.)
 
-- [ ] **Step 11.2: Manual check** — `npm run dev` with the local API running (`npm run dev` in hono-workers): `/family` renders the merged tree server-side, no `/api/v1/family` requests from the browser on load (devtools Network), search/zoom/list/sheet all work, `?p=` updates on selection and restores on reload.
+- [ ] **Step 11.2: Manual check** - `npm run dev` with the local API running (`npm run dev` in hono-workers): `/family` renders the merged tree server-side, no `/api/v1/family` requests from the browser on load (devtools Network), search/zoom/list/sheet all work, `?p=` updates on selection and restores on reload.
 
 - [ ] **Step 11.3: Build + commit**
 
@@ -1451,9 +1451,9 @@ if (!detail && !loadError) {
 </PublicLayout>
 ```
 
-(Removes: yellow banner, Astro-Dropdown DOM injection, both inline scripts, fixed `w-64` panel, the "No Spouse" checkbox — spouse links are core information; YAGNI for a public viewer.)
+(Removes: yellow banner, Astro-Dropdown DOM injection, both inline scripts, fixed `w-64` panel, the "No Spouse" checkbox - spouse links are core information; YAGNI for a public viewer.)
 
-- [ ] **Step 12.2: Manual check** — `/family/hafiz-family` works; `/family/nonexistent` returns 404 status with friendly state; mobile layout sane at 375 px.
+- [ ] **Step 12.2: Manual check** - `/family/hafiz-family` works; `/family/nonexistent` returns 404 status with friendly state; mobile layout sane at 375 px.
 
 - [ ] **Step 12.3: Build + commit**
 
@@ -1465,7 +1465,7 @@ git commit -m "feat(family): SSR single-tree page with proper 404 and responsive
 
 ---
 
-### Phase 4 — Cleanup, accessibility pass, docs
+### Phase 4 - Cleanup, accessibility pass, docs
 
 #### Task 13: Delete dead components
 
@@ -1493,7 +1493,7 @@ git commit -m "chore(family): remove superseded explorer/panel components"
 **Files:** touch-ups only in components from Phase 3 as findings require.
 
 - [ ] **Step 14.1:** Walk the B6 checklist on `/family` and `/family/[slug]` (keyboard only, then VoiceOver spot-check, then `prefers-reduced-motion` emulation in devtools). Fix findings in place.
-- [ ] **Step 14.2:** Lighthouse a11y audit in devtools — target ≥ 95 on both pages. Note remaining items (the SVG tree itself won't be fully screen-reader navigable; List view is the documented alternative).
+- [ ] **Step 14.2:** Lighthouse a11y audit in devtools - target ≥ 95 on both pages. Note remaining items (the SVG tree itself won't be fully screen-reader navigable; List view is the documented alternative).
 - [ ] **Step 14.3:** Commit fixes: `git commit -am "fix(family): accessibility pass findings"`
 
 #### Task 15: Update CLAUDE.md (stale sections)
@@ -1512,7 +1512,7 @@ git commit -m "docs: update CLAUDE.md family architecture sections"
 
 ---
 
-### Phase 5 (OPTIONAL, separate approval — backend changes in hono-workers)
+### Phase 5 (OPTIONAL, separate approval - backend changes in hono-workers)
 
 Not required for the redesign to ship; listed for completeness per the data-model review:
 
@@ -1526,7 +1526,7 @@ Not required for the redesign to ship; listed for completeness per the data-mode
 
 | Risk | Likelihood | Mitigation |
 |---|---|---|
-| family-chart card image/style API details differ from plan code (`setStyle`, `setCardDim` keys, `.f3` CSS class names) | Medium | Tasks 5/10 include explicit dev-verify steps; adjust in place — the API surface is confirmed from shipped `.d.ts` files, only cosmetic params may need tuning |
+| family-chart card image/style API details differ from plan code (`setStyle`, `setCardDim` keys, `.f3` CSS class names) | Medium | Tasks 5/10 include explicit dev-verify steps; adjust in place - the API surface is confirmed from shipped `.d.ts` files, only cosmetic params may need tuning |
 | Phase 0 data fix happens in production D1; mistakes affect the live site | Medium | Run `--local` first, verify with SELECTs, KV cache gives a 2-min grace; statements are `INSERT OR IGNORE`/targeted UPDATEs |
 | Combined-view merged person IDs are unstable across data changes → `?p=` links break | Low | Deep links prefer `globalKey`; numeric id is only a fallback |
 | Admin regression via shared `FamilyTreeChart` edits (Tasks 3–4) | Medium | Props/events kept identical; explicit admin smoke test in Task 4.3; cross-tree deletion verified unused by grep |
@@ -1536,7 +1536,7 @@ Not required for the redesign to ship; listed for completeness per the data-mode
 
 ## Testing checklist (final, before review)
 
-- [ ] `npm run build` — zero TypeScript/build errors
+- [ ] `npm run build` - zero TypeScript/build errors
 - [ ] `/family`: tree renders SSR-fast; tabs link to slug pages; search → select centers person; zoom buttons actually zoom (not spacing); Fit/Center work; orientation toggle works
 - [ ] `/family/[slug]`: valid slug renders; bogus slug → 404 + friendly state; back link works
 - [ ] Deep link: select person → URL gains `?p=`; reload restores selection; link with `?p=<globalKey>` works on combined view
@@ -1566,17 +1566,17 @@ Not required for the redesign to ship; listed for completeness per the data-mode
 
 ## Open decisions (need your call before/while implementing)
 
-1. **Navbar link** — `/family` is currently unlisted (reachable only by URL). Intentional privacy choice, or should "Family" be added to the public nav? Plan does not add it by default.
-2. **Public exposure of living relatives** — interim rule in Task 7 shows year-only birth dates for living people. OK, or do you want full dates / or the Phase 5 `visibility` column prioritized?
-3. **Phase 5 backend work** — approve separately or drop.
+1. **Navbar link** - `/family` is currently unlisted (reachable only by URL). Intentional privacy choice, or should "Family" be added to the public nav? Plan does not add it by default.
+2. **Public exposure of living relatives** - interim rule in Task 7 shows year-only birth dates for living people. OK, or do you want full dates / or the Phase 5 `visibility` column prioritized?
+3. **Phase 5 backend work** - approve separately or drop.
 
 ---
 
-## Codex Execution Status — 2026-06-13
+## Codex Execution Status - 2026-06-13
 
 Branch: `codex/family-page-phase-0-4`
 
-### Phase 0 — Data Fix
+### Phase 0 - Data Fix
 
 Status: partially done.
 
@@ -1586,7 +1586,7 @@ Status: partially done.
 - Skipped: no local or remote D1 write was performed from this portfolio branch. The backend repo is outside this writable workspace, and production data should be reviewed/applied separately.
 - Note: `hafiz-family` does not contain the parent people in the seed, so inserting those two parent rows there would not be valid without adding people. The frontend now relies on keyed cross-tree merging rather than name patches.
 
-### Phase 1 — Server-Side Data Layer
+### Phase 1 - Server-Side Data Layer
 
 Status: done.
 
@@ -1598,7 +1598,7 @@ Status: done.
 - Stripped notes, metadata/raw JSON blobs, first/last names, tree IDs, relationship IDs, timestamps, relationship dates, `isPrimary`, `isPublic`, `createdByUserId`, and other backend/admin-only fields from public island payloads.
 - Removed frontend hardcoded person-name matching from the public family flow.
 
-### Phase 2 — Chart Core Refactor
+### Phase 2 - Chart Core Refactor
 
 Status: mostly done.
 
@@ -1610,7 +1610,7 @@ Status: mostly done.
 - Kept `enableCrossTreeNavigation?: boolean` as a deprecated no-op prop to avoid breaking current admin builder props.
 - Skipped: deeper shared-hook migration of the legacy admin chart. The admin chart still owns its inline-add/event behavior to reduce regression risk.
 
-### Phase 3 — New UI
+### Phase 3 - New UI
 
 Status: done for code; pending manual QA.
 
@@ -1625,7 +1625,7 @@ Status: done for code; pending manual QA.
 - Kept `/family` unlisted from the public navbar.
 - Skipped: expand/depth controls in the UI because `family-chart` only provides global depth settings and no clean per-branch collapse API.
 
-### Phase 4 — Cleanup, Accessibility, Docs
+### Phase 4 - Cleanup, Accessibility, Docs
 
 Status: done for code/docs; pending manual accessibility audit.
 

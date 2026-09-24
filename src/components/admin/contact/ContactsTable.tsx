@@ -190,7 +190,7 @@ export const ContactsTable = () => {
                                 <div className="space-y-1">
                                     <p className="text-xs text-slate-400 dark:text-slate-500 font-mono">PHONE</p>
                                     <p className="text-sm text-slate-600 dark:text-slate-300">
-                                        {selectedContact.phone || "—"}
+                                        {selectedContact.phone || "-"}
                                     </p>
                                 </div>
                                 <div className="space-y-1">

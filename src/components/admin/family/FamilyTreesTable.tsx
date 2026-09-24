@@ -47,7 +47,7 @@ export const FamilyTreesTable = () => {
         accessorKey: "description",
         header: "Description",
         cell: ({ row }) => (
-          <CellText>{row.original.description || "—"}</CellText>
+          <CellText>{row.original.description || "-"}</CellText>
         ),
       },
       {

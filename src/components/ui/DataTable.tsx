@@ -147,7 +147,7 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
-            {/* Toolbar — part of the card, not a floating box */}
+            {/* Toolbar - part of the card, not a floating box */}
             <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="relative w-full sm:w-56">
@@ -273,7 +273,7 @@ export function DataTable<TData, TValue>({
                 </table>
             </div>
 
-            {/* Mobile card list — same rows, no horizontal scroll */}
+            {/* Mobile card list - same rows, no horizontal scroll */}
             <div className="md:hidden">
                 {isLoading ? (
                     loadingState

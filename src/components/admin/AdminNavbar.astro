@@ -329,7 +329,7 @@ if (paths.length === 1 && paths[0] === "admin") {
             themeToggle.dataset.bound = "true";
         }
 
-        // Delegated: survives first-load module races and DOM swaps — the
+        // Delegated: survives first-load module races and DOM swaps - the
         // listener works no matter when (or in what order) modules loaded.
         if (!document.documentElement.dataset.sidebarTogglesBound) {
             document.documentElement.dataset.sidebarTogglesBound = "true";

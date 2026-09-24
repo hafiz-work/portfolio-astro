@@ -27,5 +27,5 @@ disclosure timeline before any public fix announcement.
 ## Private Data Notice
 
 The admin panel contains a **family tree module with real personal data**.
-Treat any data you encounter while testing as private — do not share names,
+Treat any data you encounter while testing as private - do not share names,
 birth dates, or relationships outside of the fix discussion.
