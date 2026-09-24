@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ChevronUp, ChevronDown, Trash2, Plus } from "lucide-react";
 import { cmsService, extractApiError } from "../../../../lib/projects-cms";
 import { showToast, confirmDialog } from "../../../../lib/admin-ui";
+import { Select } from "../../../ui/Select";
 import type { ProjectLink, ProjectLinkType, ProjectLinkStatus } from "../../../../types/project-cms";
 
 const LINK_TYPES: ProjectLinkType[] = ["source", "demo", "app_store", "play_store", "case_study", "contact", "private", "other"];
@@ -63,12 +64,20 @@ export function LinksManager({ projectId, onChanged }: { projectId: number; onCh
             <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => remove(it)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <select className="admin-input max-w-[150px]" value={it.linkType} onChange={(e) => setField(it.id, { linkType: e.target.value as ProjectLinkType })} aria-label="Link type">
-              {LINK_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <select className="admin-input max-w-[130px]" value={it.status} onChange={(e) => setField(it.id, { status: e.target.value as ProjectLinkStatus })} aria-label="Link status">
-              {LINK_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <Select
+              className="max-w-[150px]"
+              value={it.linkType}
+              onChange={(v) => setField(it.id, { linkType: v as ProjectLinkType })}
+              options={LINK_TYPES.map((t) => ({ value: t, label: t }))}
+              ariaLabel="Link type"
+            />
+            <Select
+              className="max-w-[130px]"
+              value={it.status}
+              onChange={(v) => setField(it.id, { status: v as ProjectLinkStatus })}
+              options={LINK_STATUSES.map((s) => ({ value: s, label: s }))}
+              ariaLabel="Link status"
+            />
             <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
               <input type="checkbox" checked={it.isPublic} onChange={(e) => setField(it.id, { isPublic: e.target.checked })} /> Public
             </label>
@@ -79,9 +88,13 @@ export function LinksManager({ projectId, onChanged }: { projectId: number; onCh
       <div className="rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-3 flex flex-wrap gap-2 items-center">
         <input className="admin-input max-w-[160px]" placeholder="Label" value={draft.label} onChange={(e) => setDraft({ ...draft, label: e.target.value })} aria-label="New link label" />
         <input className="admin-input flex-1 min-w-[200px]" placeholder="https://…" value={draft.url} onChange={(e) => setDraft({ ...draft, url: e.target.value })} aria-label="New link URL" />
-        <select className="admin-input max-w-[150px]" value={draft.linkType} onChange={(e) => setDraft({ ...draft, linkType: e.target.value as ProjectLinkType })} aria-label="New link type">
-          {LINK_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
+        <Select
+          className="max-w-[150px]"
+          value={draft.linkType}
+          onChange={(v) => setDraft({ ...draft, linkType: v as ProjectLinkType })}
+          options={LINK_TYPES.map((t) => ({ value: t, label: t }))}
+          ariaLabel="New link type"
+        />
         <button type="button" className="admin-btn admin-btn-secondary" onClick={add}><Plus className="h-4 w-4" /> Add link</button>
       </div>
     </div>

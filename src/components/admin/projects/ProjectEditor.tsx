@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { cmsService, extractApiError } from "../../../lib/projects-cms";
 import { showToast, confirmDialog } from "../../../lib/admin-ui";
+import { Select } from "../../ui/Select";
 import { AdminBadge, statusBadgeVariant } from "../../ui/admin/primitives";
 import type { AdminProjectDetail, ProjectType } from "../../../types/project-cms";
 import { SectionsManager } from "./managers/SectionsManager";
@@ -220,9 +221,12 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
             <Field label="Slug" hint="lowercase, numbers, hyphens"><input className="admin-input" value={basics.slug} onChange={(e) => { setSlugTouched(true); setB({ slug: e.target.value }); }} /></Field>
             <Field label="Subtitle"><input className="admin-input" value={basics.subtitle} onChange={(e) => setB({ subtitle: e.target.value })} /></Field>
             <Field label="Project type">
-              <select className="admin-input" value={basics.projectType} onChange={(e) => setB({ projectType: e.target.value as ProjectType })}>
-                {PROJECT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
+              <Select
+                value={basics.projectType}
+                onChange={(v) => setB({ projectType: v as ProjectType })}
+                options={PROJECT_TYPES.map((t) => ({ value: t, label: t }))}
+                placeholder="Select type"
+              />
             </Field>
             <Field label="Short description (required)"><textarea className="admin-input min-h-16" value={basics.description} onChange={(e) => setB({ description: e.target.value })} /></Field>
             <Field label="Summary"><textarea className="admin-input min-h-16" value={basics.summary} onChange={(e) => setB({ summary: e.target.value })} /></Field>
