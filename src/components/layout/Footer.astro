@@ -1,8 +1,16 @@
 ---
 const currentYear = new Date().getFullYear();
 
+type FooterLink = {
+    text: string;
+    href: string;
+    external?: boolean;
+    /** Attribution hint recorded with a resume download (see lib/track.ts). */
+    source?: string;
+};
+
 // tailwindcss.com footer: three link columns split by thin gutter strips.
-const columns = [
+const columns: { title: string; links: FooterLink[] }[] = [
     {
         title: "Hafiz Bahtiar",
         links: [
@@ -16,7 +24,7 @@ const columns = [
         title: "Writing",
         links: [
             { text: "Blog", href: "/blog" },
-            { text: "Resume (PDF)", href: "/docs/hafizbahtiar-resume-4-3.pdf" },
+            { text: "Resume (PDF)", href: "/docs/hafizbahtiar-resume-4-3.pdf", source: "footer" },
         ],
     },
     {
@@ -55,6 +63,7 @@ const columns = [
                                         href={link.href}
                                         target={link.external ? "_blank" : undefined}
                                         rel={link.external ? "noopener noreferrer" : undefined}
+                                        data-source={link.source}
                                         class="text-sm/6 text-gray-700 transition-colors hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
                                     >
                                         {link.text}

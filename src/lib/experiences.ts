@@ -11,11 +11,6 @@ export class ExperiencesService extends ApiClient {
         super(API_BASE_URL);
     }
 
-    async getPublicExperiences(): Promise<Experience[]> {
-        const result = await this.get<Experience[]>("experiences");
-        return result || [];
-    }
-
     async getAdminExperiences(): Promise<Experience[]> {
         const result = await this.get<Experience[]>("owner/experiences");
         return result || [];

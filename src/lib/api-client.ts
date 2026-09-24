@@ -99,7 +99,7 @@ export class ApiClient {
             }
 
             if (!response.ok) {
-                // A 404 on a read means "this thing does not exist" — callers render
+                // A 404 on a read means "this thing does not exist" - callers render
                 // an empty/not-found state, so null is the meaningful answer. On a
                 // write it means the target is gone: returning null would surface a
                 // false "saved" toast, so it throws like any other API error.

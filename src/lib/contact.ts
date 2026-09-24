@@ -34,14 +34,6 @@ export interface OwnerContact {
     updatedAt: string;
 }
 
-export interface ContactStats {
-    total: number;
-    new: number;
-    read: number;
-    replied: number;
-    archived: number;
-}
-
 export class ContactService extends ApiClient {
     constructor() {
         super(API_BASE_URL);
@@ -84,10 +76,6 @@ export class ContactService extends ApiClient {
     async getOwnerContacts(): Promise<OwnerContact[]> {
         const result = await this.get<OwnerContact[]>('owner/contact');
         return result || [];
-    }
-
-    async getContactStats(): Promise<ContactStats | null> {
-        return this.get<ContactStats>('owner/contact/stats');
     }
 
     /** Owner: move a message to READ / REPLIED / ARCHIVED. */

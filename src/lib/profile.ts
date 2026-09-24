@@ -21,15 +21,6 @@ class ProfileService extends ApiClient {
     super(API_BASE_URL);
   }
 
-  async getProfile(): Promise<Profile | null> {
-    try {
-      return await this.get<Profile>('/profile');
-    } catch (error) {
-      console.error('Get profile error:', error);
-      return null;
-    }
-  }
-
   async getOwnerProfile(): Promise<Profile | null> {
     try {
       return await this.get<Profile>('/owner/profile');

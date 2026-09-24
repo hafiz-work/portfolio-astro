@@ -1,16 +1,13 @@
 ---
 import PrivateLayout from "../../layouts/PrivateLayout.astro";
 import AdminPageHeader from "../../components/admin/AdminPageHeader.astro";
-import { systemService } from "../../lib/system";
-
-const logs = await systemService.getLogs().catch(() => []);
 ---
 
 <PrivateLayout title="System Logs">
   <div class="space-y-6">
     <AdminPageHeader
       title="System Logs"
-      description="System status and diagnostics"
+      description="Owner action audit trail - every create, update, publish and delete"
     >
       <button
         slot="actions"
@@ -33,6 +30,14 @@ const logs = await systemService.getLogs().catch(() => []);
         Refresh
       </button>
     </AdminPageHeader>
+
+    <!-- Error banner -->
+    <div
+      id="logs-error"
+      class="hidden rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm px-4 py-3"
+    >
+      Couldn’t load system logs. Please refresh to try again.
+    </div>
 
     <div
       class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden"
@@ -65,46 +70,104 @@ const logs = await systemService.getLogs().catch(() => []);
               >
             </tr>
           </thead>
-          <tbody>
-            {
-              logs.map((log) => (
-                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                  <td class="px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
-                    {new Date(log.createdAt).toLocaleString()}
-                  </td>
-                  <td class="px-6 py-4">
-                    <span
-                      class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        log.action === "delete" || log.action === "archive" || log.action === "unpublish"
-                          ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
-                          : log.action === "create" || log.action === "publish" || log.action === "attach"
-                            ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-                            : "bg-slate-100 dark:bg-slate-700/40 text-slate-600 dark:text-slate-300"
-                      }`}
-                    >
-                      {log.action.toUpperCase()}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 text-slate-900 dark:text-slate-100">
-                    {log.entityType}
-                    {log.entityId ? ` #${log.entityId}` : ""}
-                  </td>
-                  <td class="px-6 py-4 text-slate-500 dark:text-slate-400">
-                    {log.ipAddress ?? "-"}
-                  </td>
-                </tr>
-              ))
-            }
+          <tbody id="logs-body">
+            <tr>
+              <td
+                colspan="4"
+                class="px-6 py-8 text-center text-slate-400 dark:text-slate-500"
+                >Loading…</td
+              >
+            </tr>
           </tbody>
         </table>
       </div>
-      {
-        logs.length === 0 && (
-          <div class="p-8 text-center text-slate-500 dark:text-slate-400">
-            No logs found.
-          </div>
-        )
-      }
+      <p
+        id="logs-empty"
+        class="hidden p-8 text-center text-slate-500 dark:text-slate-400"
+      >
+        No logs found.
+      </p>
     </div>
   </div>
 </PrivateLayout>
+
+<script>
+  import { systemService, type AuditLog } from "../../lib/system";
+
+  // Fetched client-side on purpose: the SSR Worker cannot forward the httpOnly
+  // API cookie, so the old frontmatter fetch always 401'd and this page was
+  // permanently empty. Every other admin page fetches client-side too.
+
+  const badgeClass = (action: string): string =>
+    ["delete", "archive", "unpublish"].includes(action)
+      ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+      : ["create", "publish", "attach"].includes(action)
+        ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+        : "bg-slate-100 dark:bg-slate-700/40 text-slate-600 dark:text-slate-300";
+
+  // Guarded: an unparseable timestamp renders as-is instead of throwing and
+  // blanking the table.
+  const formatTimestamp = (value: string): string => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  };
+
+  // textContent only - entity/ip values come from request data the caller
+  // controls, so never use innerHTML here.
+  const renderLogs = (logs: AuditLog[]): void => {
+    const body = document.getElementById("logs-body");
+    if (!body) return;
+    body.replaceChildren();
+
+    for (const log of logs) {
+      const row = document.createElement("tr");
+      row.className =
+        "border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors";
+
+      const time = document.createElement("td");
+      time.className = "px-6 py-4 text-xs text-slate-500 dark:text-slate-400";
+      time.textContent = formatTimestamp(log.createdAt);
+
+      const actionCell = document.createElement("td");
+      actionCell.className = "px-6 py-4";
+      const badge = document.createElement("span");
+      badge.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeClass(log.action)}`;
+      badge.textContent = log.action.toUpperCase();
+      actionCell.appendChild(badge);
+
+      const entity = document.createElement("td");
+      entity.className = "px-6 py-4 text-slate-900 dark:text-slate-100";
+      entity.textContent = log.entityId
+        ? `${log.entityType} #${log.entityId}`
+        : log.entityType;
+
+      const ip = document.createElement("td");
+      ip.className = "px-6 py-4 text-slate-500 dark:text-slate-400";
+      ip.textContent = log.ipAddress ?? "-";
+
+      row.append(time, actionCell, entity, ip);
+      body.appendChild(row);
+    }
+  };
+
+  const loadLogs = async (): Promise<void> => {
+    const body = document.getElementById("logs-body");
+    if (!body) return;
+    const errorEl = document.getElementById("logs-error");
+    const emptyEl = document.getElementById("logs-empty");
+    errorEl?.classList.add("hidden");
+
+    try {
+      const logs = await systemService.getLogs();
+      renderLogs(logs);
+      emptyEl?.classList.toggle("hidden", logs.length > 0);
+    } catch (error) {
+      console.error("System logs load failed:", error);
+      body.replaceChildren();
+      errorEl?.classList.remove("hidden");
+    }
+  };
+
+  loadLogs();
+  document.addEventListener("astro:page-load", loadLogs);
+</script>

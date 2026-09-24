@@ -5,8 +5,7 @@ import Annot from "../../../components/layout/Annot.astro";
 import { Image } from "astro:assets";
 import JsonLd from "../../../components/seo/JsonLd.astro";
 import MediaCarousel from "../../../components/project/MediaCarousel.astro";
-import { getPublicProjectDetail } from "../../../lib/public-content";
-import { projectsService } from "../../../lib/projects";
+import { getPublicProjectDetail, getPublicProjectPolicy } from "../../../lib/public-content";
 import type { ProjectLinkType } from "../../../types/project-cms";
 
 const slug = Astro.params.slug ?? "";
@@ -16,9 +15,7 @@ let policy = null;
 try {
   if (slug) {
     project = await getPublicProjectDetail(slug);
-    policy = await projectsService
-      .getProjectPolicyBySlug(slug)
-      .catch(() => null);
+    policy = await getPublicProjectPolicy(slug);
   }
 } catch (err) {
   console.error("Failed to load project", slug, err);

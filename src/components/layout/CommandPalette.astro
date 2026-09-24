@@ -95,6 +95,8 @@ const groups = ["Pages", "Sections", "Actions"] as const;
 </dialog>
 
 <script>
+  import { isResumePdfHref, trackResumeDownload } from "../../lib/track";
+
   const initCommandPalette = () => {
     const dialog = document.getElementById("cmdk") as HTMLDialogElement | null;
     const input = document.getElementById("cmdk-input") as HTMLInputElement | null;
@@ -162,6 +164,9 @@ const groups = ["Pages", "Sections", "Actions"] as const;
         return;
       }
       if (!href) return;
+      // Palette rows are not anchors, so the layout's link binding can't see
+      // them - track the resume action explicitly.
+      if (isResumePdfHref(href)) trackResumeDownload("palette");
       if (external) {
         window.open(href, "_blank", "noopener,noreferrer");
       } else if (href.startsWith("/#") && window.location.pathname === "/") {

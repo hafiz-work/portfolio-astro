@@ -2,18 +2,15 @@
 export const prerender = false;
 import PublicLayout from "../../../layouts/PublicLayout.astro";
 import JsonLd from "../../../components/seo/JsonLd.astro";
-import { blogService } from "../../../lib/blog";
+import { getPublicPostBySlug } from "../../../lib/public-content";
 import { sanitizeRichHtml } from "../../../lib/sanitize";
 import type { BlogSection, BlogChecklist } from "../../../types/blog";
 
 const slug = Astro.params.slug ?? "";
 
-let post = null;
-try {
-  post = slug ? await blogService.getPublicPostBySlug(slug) : null;
-} catch (err) {
-  console.error("Failed to load blog post", slug, err);
-}
+// Cache-friendly public loader: returns null on 404 or an unreachable API
+// instead of throwing.
+const post = slug ? await getPublicPostBySlug(slug) : null;
 
 if (!post) {
   return Astro.redirect("/404");
@@ -35,8 +32,8 @@ const metaDescription =
   post.excerpt ||
   "Insights on building reliable products, clean architecture, and shipping fast.";
 
-// TODO(backend): when BlogPost gains coverImageUrl, use it here (undefined => CoreLayout default OG image)
-const ogImage = undefined;
+// Per-post social card; undefined falls back to the CoreLayout default OG image.
+const ogImage = post.coverImageUrl ?? undefined;
 
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
 const canonical = new URL(`/blog/${post.slug}`, siteOrigin).toString();

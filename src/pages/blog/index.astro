@@ -1,17 +1,11 @@
 ---
 export const prerender = false;
 import PublicLayout from "../../layouts/PublicLayout.astro";
-import { blogService } from "../../lib/blog";
-import type { BlogPostSummary } from "../../types/blog";
+import { getPublicPosts } from "../../lib/public-content";
 
-// Server-side fetch - no client spinners or error banners. An unreachable
-// API degrades to the same tasteful zero-state as an empty blog.
-let posts: BlogPostSummary[] = [];
-try {
-  posts = await blogService.getPublicPosts();
-} catch {
-  posts = [];
-}
+// Cache-friendly public loader: never throws, degrades to the same tasteful
+// zero-state as an empty blog.
+const posts = await getPublicPosts();
 
 const formatDate = (value?: string | null) => {
   if (!value) return null;

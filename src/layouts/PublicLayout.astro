@@ -42,6 +42,8 @@ const { title, description, image, type, publishedTime, imageAlt } =
 </CoreLayout>
 
 <script>
+  import { isResumePdfHref, trackResumeDownload } from "../lib/track";
+
   // Scroll-reveal: elements with [data-reveal] slide up when entering the
   // viewport. CSS handles prefers-reduced-motion (elements stay visible).
   const initReveal = () => {
@@ -65,4 +67,24 @@ const { title, description, image, type, publishedTime, imageAlt } =
 
   initReveal();
   document.addEventListener("astro:page-load", initReveal);
+
+  // Resume-download tracking lives in the layout, not in the button component:
+  // the same PDF is linked from the footer on every page, and opt-in attributes
+  // were silently missing there. Bind by href so every resume link is covered.
+  const initResumeTracking = () => {
+    const links = document.querySelectorAll<HTMLAnchorElement>(
+      'a[data-resume-download], a[href*="resume"]',
+    );
+    links.forEach((link) => {
+      if (link.dataset.trackingBound === "1") return;
+      if (!isResumePdfHref(link.getAttribute("href"))) return;
+      link.dataset.trackingBound = "1";
+      link.addEventListener("click", () => {
+        trackResumeDownload(link.dataset.source || "site");
+      });
+    });
+  };
+
+  initResumeTracking();
+  document.addEventListener("astro:page-load", initResumeTracking);
 </script>

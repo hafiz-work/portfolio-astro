@@ -60,6 +60,9 @@ No route changes needed. `GET /api/v1/blog` and `GET /api/v1/blog/:slug` (in `sr
 6. Confirm `API_CONTRACT.md` is updated if it enumerates blog fields.
 
 ## After backend ships (frontend side - handled separately)
-- Add `coverImageUrl: string | null` to the frontend `src/types/blog.ts` (`BlogPost` + `BlogPostSummary`).
-- Flip the `TODO(backend)` in `src/pages/blog/[slug]/index.astro` from `const ogImage = undefined;` to `const ogImage = post.coverImageUrl ?? undefined;` (undefined keeps the CoreLayout default fallback).
-- Optionally surface the cover on blog listing cards and add a cover-image input to the admin blog form.
+
+**Done 2026-09-24:**
+- `coverImageUrl: string | null` added to `BlogPost` + `BlogPostSummary`, and `coverImageUrl?: string | null` to `CreateBlogPostPayload`.
+- `TODO(backend)` in `src/pages/blog/[slug]/index.astro` flipped to `const ogImage = post.coverImageUrl ?? undefined;`.
+- Admin form gained a "Cover image URL" input (`BlogPostForm.astro`, in Publish Settings); the edit page hydrates it, and emptying it sends `null` so the column actually clears (the backend validator maps `""` → `null`).
+- Still open: surfacing the cover on blog listing cards (`/blog`), and no visible hero image on the post page - the field is used for the social card only.

@@ -178,6 +178,7 @@ const statusOptions = [
         setInputValue("slug", post.slug);
         setInputValue("excerpt", post.excerpt);
         setInputValue("heroText", post.heroText || "");
+        setInputValue("coverImageUrl", post.coverImageUrl || "");
         setInputValue("bodyContent", post.bodyContent || "");
         setInputValue("status", post.status || "draft");
         setInputValue("publishedDate", formatDateInput(post.publishedDate));
@@ -251,6 +252,12 @@ const statusOptions = [
 
     if (data.slug && String(data.slug).trim().length === 0) {
       delete data.slug;
+    }
+
+    // The empty-string filter above drops an emptied cover field, which would
+    // silently keep the old image. Send null so the column actually clears.
+    if (data.coverImageUrl === undefined) {
+      data.coverImageUrl = null;
     }
 
     try {

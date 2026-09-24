@@ -25,10 +25,10 @@ export interface BlogPost {
   title: string
   excerpt: string
   heroText: string | null
+  coverImageUrl: string | null
   bodyContent: string
   publishedDate: string | null
   readTimeMinutes: number
-  viewsCount: number
   tags: string[]
   category: string | null
   status: BlogStatus
@@ -45,6 +45,7 @@ export interface BlogPostSummary {
   title: string
   excerpt: string
   heroText: string | null
+  coverImageUrl: string | null
   publishedDate: string | null
   readTimeMinutes: number
   tags: string[]
@@ -60,6 +61,8 @@ export interface CreateBlogPostPayload {
   title: string
   excerpt: string
   heroText?: string | null
+  /** Social-share image: absolute https URL or root-relative path (~1200x630). */
+  coverImageUrl?: string | null
   bodyContent?: string
   publishedDate?: string | null
   readTimeMinutes?: number

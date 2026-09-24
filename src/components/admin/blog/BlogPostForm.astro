@@ -96,6 +96,21 @@ const inputClass = "admin-input";
           />
         </div>
         <div class="space-y-2">
+          <label class={labelClass} for="blog-cover-image">
+            Cover image URL
+          </label>
+          <input
+            id="blog-cover-image"
+            type="text"
+            name="coverImageUrl"
+            placeholder="https://… or /images/cover.png"
+            class={inputClass}
+          />
+          <p class="admin-help">
+            Social-share card (og:image), ~1200×630. Empty = site default.
+          </p>
+        </div>
+        <div class="space-y-2">
           <label class={labelClass} for="blog-category">Category</label>
           <input
             id="blog-category"

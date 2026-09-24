@@ -1,5 +1,6 @@
-import type { Project } from "../types/project";
+import type { Project, ProjectPolicy } from "../types/project";
 import type { Experience } from "../types/experiences";
+import type { BlogPost, BlogPostSummary } from "../types/blog";
 import type { PublicProjectDetail } from "../types/project-cms";
 import { API_BASE_URL } from "./config";
 import {
@@ -19,12 +20,23 @@ import {
 
 const FETCH_TIMEOUT_MS = 4000;
 
+/** `cf` is a Workers fetch option; the DOM lib's RequestInit does not know it. */
+type WorkerFetchInit = RequestInit & {
+    cf: { cacheTtl: number; cacheEverything: boolean };
+};
+
 async function fetchJson<T>(path: string): Promise<T | null> {
     try {
-        const response = await fetch(`${API_BASE_URL}/${path}`, {
+        const init: WorkerFetchInit = {
             headers: { Accept: "application/json" },
             signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-        });
+            // Opt this public read into Cloudflare's edge cache. `cache: 'no-store'`
+            // (what the ApiClient sets for browser callers) does nothing in a
+            // Worker, so without this every visitor's SSR render re-hits the API
+            // and D1. 60s is the free-plan floor and the owner publishes rarely.
+            cf: { cacheTtl: 60, cacheEverything: true },
+        };
+        const response = await fetch(`${API_BASE_URL}/${path}`, init);
         if (!response.ok) return null;
         const json = (await response.json()) as { success?: boolean; data?: T };
         return (json?.data as T) ?? null;
@@ -135,6 +147,25 @@ export async function getPublicProjectDetail(
         techStacks: [],
         links: [],
     } as PublicProjectDetail;
+}
+
+/**
+ * Public blog loaders. Same contract as the loaders above: never throw, and an
+ * unreachable API degrades to the page's own empty state. They replace the
+ * ApiClient-based calls on the SSR blog pages, which sent `cache: 'no-store'`
+ * (a browser-cache directive the Worker runtime ignores) and therefore never
+ * let the edge cache a subrequest.
+ */
+export async function getPublicPosts(): Promise<BlogPostSummary[]> {
+    return (await fetchJson<BlogPostSummary[]>("blog")) ?? [];
+}
+
+export async function getPublicPostBySlug(slug: string): Promise<BlogPost | null> {
+    return await fetchJson<BlogPost>(`blog/${slug}`);
+}
+
+export async function getPublicProjectPolicy(slug: string): Promise<ProjectPolicy | null> {
+    return await fetchJson<ProjectPolicy>(`projects/${slug}/policy`);
 }
 
 export async function getPublicExperiences(): Promise<Experience[]> {

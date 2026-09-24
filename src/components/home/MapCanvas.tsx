@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Clock, Sun, Moon } from "lucide-react";
+import { Clock, Sun, Moon, Cuboid, Hexagon } from "lucide-react";
 import type { Polygon } from "geojson";
 import {
   Map as MapComponent,
@@ -41,6 +41,55 @@ declare global {
   interface Window {
     __experienceMapState?: ExperienceMapState;
   }
+}
+
+// ─── 3D buildings ────────────────────────────────────────────────────────────
+
+const BUILDINGS_LAYER_ID = "3d-buildings";
+const PITCH_3D = 55;
+// CARTO's tiles top out at z14 and the extrusion layer is gated to the same
+// zoom, so enabling 3D from a city-wide view has to zoom in to show anything.
+const MIN_ZOOM_3D = 15;
+
+/**
+ * Adds/removes the extruded-buildings layer for the current style.
+ *
+ * CARTO's vector tiles already carry `render_height` / `render_min_height` on
+ * the `building` layer (plus a `hide_3d` flag for shapes that must stay flat,
+ * e.g. construction sites), so 3D needs no extra tile source and no extra
+ * network host. Must be re-run on every `styledata`: switching theme replaces
+ * the whole style and drops imperatively-added layers.
+ */
+function syncBuildingsLayer(map: MapRef, enabled: boolean, theme: "light" | "dark") {
+  // Custom styles may not include CARTO's source - nothing to extrude then.
+  if (!map.getSource("carto")) return;
+
+  if (!enabled) {
+    if (map.getLayer(BUILDINGS_LAYER_ID)) map.removeLayer(BUILDINGS_LAYER_ID);
+    return;
+  }
+  if (map.getLayer(BUILDINGS_LAYER_ID)) return;
+
+  // Insert below the first symbol layer so labels stay readable on top.
+  const firstSymbolId = map.getStyle()?.layers?.find((l) => l.type === "symbol")?.id;
+
+  map.addLayer(
+    {
+      id: BUILDINGS_LAYER_ID,
+      type: "fill-extrusion",
+      source: "carto",
+      "source-layer": "building",
+      minzoom: 14,
+      filter: ["!=", ["get", "hide_3d"], true],
+      paint: {
+        "fill-extrusion-color": theme === "dark" ? "#334155" : "#d4d4d8",
+        "fill-extrusion-height": ["coalesce", ["get", "render_height"], 8],
+        "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
+        "fill-extrusion-opacity": 0.9,
+      },
+    },
+    firstSymbolId,
+  );
 }
 
 // ─── Theme logic ─────────────────────────────────────────────────────────────
@@ -125,7 +174,7 @@ function MapThemeToggle({
       type="button"
       onClick={onCycle}
       aria-label={`Map theme: ${label}. Click to cycle.`}
-      className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 rounded-full bg-white/90 border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white transition-colors"
+      className="flex items-center gap-1.5 rounded-full bg-white/90 border border-slate-200 px-2 py-1 sm:px-2.5 text-xs font-medium text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white transition-colors"
     >
       <Icon className="w-3.5 h-3.5 shrink-0" />
       <span className="leading-none">{label}</span>
@@ -149,6 +198,8 @@ const MapCanvas = ({
   const [markersState, setMarkersState] = useState<MapMarkerData[]>(markers);
   const markersRef = useRef<MapMarkerData[]>(markers);
   const [centerState, setCenterState] = useState<[number, number]>(center);
+  const [is3D, setIs3D] = useState(false);
+  const [showBoundary, setShowBoundary] = useState(true);
   const { resolvedTheme, preference, setPreference } = useMapTheme();
 
   const updateMarkers = (nextMarkers: MapMarkerData[]) => {
@@ -262,6 +313,31 @@ const MapCanvas = ({
     setPreference(next);
   };
 
+  // Tilt the camera and (un)extrude buildings. `styledata` re-applies the layer
+  // after a theme switch, which loads a fresh style.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const apply = () => {
+      if (!map.isStyleLoaded()) return;
+      syncBuildingsLayer(map, is3D, resolvedTheme);
+    };
+
+    apply();
+    map.easeTo({
+      ...(is3D
+        ? { pitch: PITCH_3D, zoom: Math.max(map.getZoom(), MIN_ZOOM_3D) }
+        : { pitch: 0 }),
+      duration: reducedMotion ? 0 : 700,
+    });
+    map.on("styledata", apply);
+    return () => {
+      map.off("styledata", apply);
+    };
+  }, [is3D, resolvedTheme]);
+
   return (
     <div className="h-full w-full relative">
       <MapComponent
@@ -274,15 +350,17 @@ const MapCanvas = ({
       >
         <MapControls position="bottom-right" showZoom={true} showLocate={true} />
 
-        <MapPolygon
-          id="kuala-lumpur-boundary"
-          coordinates={kualaLumpurPolygon.coordinates}
-          fillColor="#22c55e"
-          fillOpacity={0.15}
-          outlineColor="#16a34a"
-          outlineWidth={2}
-          interactive={false}
-        />
+        {showBoundary && (
+          <MapPolygon
+            id="kuala-lumpur-boundary"
+            coordinates={kualaLumpurPolygon.coordinates}
+            fillColor="#22c55e"
+            fillOpacity={0.15}
+            outlineColor="#16a34a"
+            outlineWidth={2}
+            interactive={false}
+          />
+        )}
 
         {markersState.map((marker) => {
           const isActive = marker.id === activeMarkerId;
@@ -320,7 +398,29 @@ const MapCanvas = ({
         })}
       </MapComponent>
 
-      <MapThemeToggle preference={preference} onCycle={cyclePreference} />
+      <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2">
+        <MapThemeToggle preference={preference} onCycle={cyclePreference} />
+        <button
+          type="button"
+          onClick={() => setIs3D((v) => !v)}
+          aria-pressed={is3D}
+          aria-label={`Buildings: ${is3D ? "3D" : "flat"}. Click to toggle.`}
+          className="flex items-center gap-1.5 rounded-full bg-white/90 border border-slate-200 px-2 py-1 sm:px-2.5 text-xs font-medium text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white transition-colors"
+        >
+          <Cuboid className="w-3.5 h-3.5 shrink-0" />
+          <span className="leading-none">{is3D ? "3D" : "2D"}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowBoundary((v) => !v)}
+          aria-pressed={showBoundary}
+          aria-label={`Kuala Lumpur boundary: ${showBoundary ? "shown" : "hidden"}. Click to toggle.`}
+          className={`flex items-center gap-1.5 rounded-full bg-white/90 border border-slate-200 px-2 py-1 sm:px-2.5 text-xs font-medium shadow-sm backdrop-blur-sm hover:bg-white transition-colors ${showBoundary ? "text-slate-600" : "text-slate-400 opacity-70"}`}
+        >
+          <Hexagon className="w-3.5 h-3.5 shrink-0" />
+          <span className="leading-none">KL</span>
+        </button>
+      </div>
     </div>
   );
 };

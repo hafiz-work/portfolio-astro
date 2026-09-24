@@ -1,7 +1,7 @@
 # Resume Download Button + Click Tracking - Design
 
 **Date:** 2026-06-23
-**Status:** Approved (design); pending implementation plan
+**Status:** Implemented (2026-09-24) - see "Implementation notes" at the end
 **Repos affected:** `portfolio-astro` (frontend - built here), `hono-workers` (backend - specified here for the separate backend agent; not edited from this repo)
 
 ## Goal
@@ -191,3 +191,34 @@ Storing raw IPs is PII. Recommended (not required to ship):
 - Manual: click the button → PDF downloads; a row appears (dev) / dashboard count
   increments. Direct `/docs/...pdf` access confirmed to *not* log (expected
   bypass).
+
+---
+
+## Implementation notes (2026-09-24)
+
+Shipped as designed: migration `011_resume_downloads` (same columns as specified),
+`POST /api/v1/public/resume-download` behind `strictRateLimit()` reading every
+identifying field from request headers, `resumeDownloads: { total, recent[] }` in
+`GET /owner/dashboard/overview`, KPI card + recent list on `/admin`, and the
+`text/plain` beacon with a `keepalive` fetch fallback.
+
+Deliberate deviations from the text above:
+
+- **`referer` is not stored.** The `source` hint is more precise (hero, contact,
+  footer, palette) and a column nobody reads is how `views_count` became dead
+  data in the same schema.
+- **No standalone beacon script per button.** The original plan attached the
+  listener inside the button component, which only renders on the home page - so
+  the footer link (present on *every* page) was never tracked. Binding now lives
+  in `PublicLayout.astro` and matches resume links by href; the command palette
+  (rows are `<li data-href>`, not anchors) calls the shared helper directly.
+- **Retention added now rather than later** (the privacy note's "consider a
+  retention cap"): a daily cron (`0 3 * * *`) prunes rows older than 180 days via
+  `ResumeDownloadService.pruneOlderThan()`.
+- `created_at` uses the repo's `DATETIME DEFAULT CURRENT_TIMESTAMP` convention
+  instead of the spec's `TEXT DEFAULT (datetime('now'))`; the route always writes
+  an ISO string, and the prune compares with `datetime()` so both formats order
+  correctly.
+
+Still open (not part of this feature): where to note the IP logging for visitors -
+there is no site-level privacy page, only per-project `/projects/[slug]/privacy`.
