@@ -52,7 +52,7 @@ export const FamilyTreeDirectory = () => {
         </div>
         <a
           href="/admin/family/new"
-          className="rounded-md bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500"
+          className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500"
         >
           New Family Tree
         </a>
@@ -94,7 +94,7 @@ export const FamilyTreeDirectory = () => {
                 </span>
                 <a
                   href={`/admin/family/edit?id=${tree.id}`}
-                  className="rounded-md border border-cyan-500/40 bg-cyan-500/10 px-3 py-2 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20"
+                  className="rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20"
                 >
                   Open Builder
                 </a>

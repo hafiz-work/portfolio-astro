@@ -80,17 +80,17 @@ const currentPath = Astro.url.pathname;
         >
       </h1>
       <span
-        class="sidebar-mark font-mono text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight"
+        class="sidebar-mark font-mono text-xl font-semibold text-slate-900 dark:text-slate-100 tracking-tight"
         aria-hidden="true"
         >h<span class="text-cyan-600 dark:text-cyan-400">.</span></span
       >
       <button
         id="close-sidebar"
-        class="md:hidden text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+        class="md:hidden p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
+          class="h-5 w-5"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -109,7 +109,7 @@ const currentPath = Astro.url.pathname;
       {
         groups.map((group) => (
           <div class="mb-4 last:mb-0">
-            <p class="nav-group-label px-3 mb-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
+            <p class="nav-group-label px-3 mb-1.5 font-mono text-xs font-medium uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
               {group.label}
             </p>
             <div class="space-y-0.5">
@@ -189,7 +189,7 @@ const currentPath = Astro.url.pathname;
         </div>
         <button
           id="logout-btn"
-          class="logout-btn w-full inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+          class="logout-btn w-full inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
           type="button"
         >
           <svg
@@ -345,7 +345,7 @@ const currentPath = Astro.url.pathname;
               class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-900/30 sm:mx-0 sm:h-10 sm:w-10"
             >
               <svg
-                class="h-6 w-6 text-red-400"
+                class="h-5 w-5 text-red-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
@@ -385,14 +385,14 @@ const currentPath = Astro.url.pathname;
           <button
             type="button"
             id="logout-confirm-btn"
-            class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto transition-colors"
+            class="inline-flex w-full justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto transition-colors"
           >
             Log out
           </button>
           <button
             type="button"
             id="logout-cancel-btn"
-            class="mt-3 inline-flex w-full justify-center rounded-md bg-transparent border border-slate-600 px-3 py-2 text-sm font-semibold text-slate-400 shadow-sm hover:bg-slate-700 sm:mt-0 sm:w-auto transition-colors"
+            class="mt-3 inline-flex w-full justify-center rounded-lg bg-transparent border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-400 shadow-sm hover:bg-slate-700 sm:mt-0 sm:w-auto transition-colors"
           >
             Cancel
           </button>

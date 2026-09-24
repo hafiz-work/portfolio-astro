@@ -140,7 +140,7 @@ export const ContactsTable = () => {
                         className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
                         onClick={() => setSelectedContact(null)}
                     />
-                    <div className="relative w-full max-w-3xl rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden dark:border-slate-700 dark:bg-slate-900">
+                    <div className="relative w-full max-w-3xl rounded-xl border border-slate-200 bg-white shadow-2xl overflow-hidden dark:border-slate-700 dark:bg-slate-900">
                         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                             <div className="space-y-1">
                                 <p className="text-xs text-cyan-600 dark:text-cyan-400 font-mono uppercase tracking-wider">

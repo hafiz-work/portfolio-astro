@@ -55,7 +55,7 @@ const initials = (name: string) =>
     .join("");
 
 const builderShellClass =
-  "admin-family-builder rounded-2xl border border-slate-200 bg-white/70 p-4 shadow-sm shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900/30 dark:shadow-none md:p-5";
+  "admin-family-builder rounded-xl border border-slate-200 bg-white/70 p-4 shadow-sm shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900/30 dark:shadow-none md:p-5";
 const sectionCardClass =
   "rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 md:p-5";
 const insetPanelClass =
@@ -70,7 +70,7 @@ const eyebrowClass =
 const headingClass = "text-slate-900 dark:text-slate-100";
 const bodyTextClass = "text-slate-600 dark:text-slate-400";
 const toolbarButtonClass =
-  "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-cyan-400 hover:bg-cyan-50/60 hover:text-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-200 dark:hover:border-cyan-500/60 dark:hover:bg-cyan-500/10 dark:hover:text-cyan-200";
+  "rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-cyan-400 hover:bg-cyan-50/60 hover:text-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-200 dark:hover:border-cyan-500/60 dark:hover:bg-cyan-500/10 dark:hover:text-cyan-200";
 const emptyStateClass =
   "rounded-xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400";
 const errorClass =
@@ -796,7 +796,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
           >
             <div>
               <p className={eyebrowClass}>Family setup</p>
-              <h2 className={`mt-2 text-2xl font-bold ${headingClass}`}>
+              <h2 className={`mt-2 text-xl font-bold ${headingClass}`}>
                 Create Family Tree
               </h2>
               <p className={`mt-2 text-sm ${bodyTextClass}`}>
@@ -1316,35 +1316,35 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                           <button
                             type="button"
                             onClick={() => beginRelationAction("father")}
-                            className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${relationActionStyles.father.compact}`}
+                            className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${relationActionStyles.father.compact}`}
                           >
                             Add Father
                           </button>
                           <button
                             type="button"
                             onClick={() => beginRelationAction("mother")}
-                            className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${relationActionStyles.mother.compact}`}
+                            className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${relationActionStyles.mother.compact}`}
                           >
                             Add Mother
                           </button>
                           <button
                             type="button"
                             onClick={() => beginRelationAction("son")}
-                            className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${relationActionStyles.son.compact}`}
+                            className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${relationActionStyles.son.compact}`}
                           >
                             Add Son
                           </button>
                           <button
                             type="button"
                             onClick={() => beginRelationAction("daughter")}
-                            className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${relationActionStyles.daughter.compact}`}
+                            className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${relationActionStyles.daughter.compact}`}
                           >
                             Add Daughter
                           </button>
                           <button
                             type="button"
                             onClick={() => beginRelationAction("spouse")}
-                            className={`col-span-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${relationActionStyles.spouse.compact}`}
+                            className={`col-span-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${relationActionStyles.spouse.compact}`}
                           >
                             Add Spouse
                           </button>
@@ -1467,7 +1467,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                                   defaultMainPersonId: selectedPerson.id,
                                 }))
                               }
-                              className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${relationActionStyles.spouse.compact}`}
+                              className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${relationActionStyles.spouse.compact}`}
                             >
                               Set As Main
                             </button>

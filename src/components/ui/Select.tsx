@@ -93,14 +93,14 @@ export const Select: React.FC<SelectProps> = ({
                 </button>
 
                 {isOpen && (
-                    <div className="absolute z-50 w-full min-w-[100px] mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg dark:shadow-xl overflow-hidden backdrop-blur-xl transform origin-top animate-fade-in">
+                    <div className="absolute z-50 w-max min-w-full max-w-[min(92vw,28rem)] mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg dark:shadow-xl overflow-hidden backdrop-blur-xl transform origin-top animate-fade-in">
                         <ul className="max-h-60 overflow-y-auto py-1">
                             {options.map((option) => (
                                 <li key={option.value}>
                                     <button
                                         type="button"
                                         onClick={() => handleSelect(option.value)}
-                                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${option.value === value
+                                        className={`w-full text-left truncate px-4 py-2 text-sm transition-colors ${option.value === value
                                             ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
                                             : 'text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400'
                                             }`}
