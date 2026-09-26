@@ -12,13 +12,11 @@ const slug = Astro.params.slug ?? "";
 
 let project = null;
 let policy = null;
-try {
-  if (slug) {
-    project = await getPublicProjectDetail(slug);
-    policy = await getPublicProjectPolicy(slug);
-  }
-} catch (err) {
-  console.error("Failed to load project", slug, err);
+if (slug) {
+  [project, policy] = await Promise.all([
+    getPublicProjectDetail(slug),
+    getPublicProjectPolicy(slug),
+  ]);
 }
 
 if (!project) {

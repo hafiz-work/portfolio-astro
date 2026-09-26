@@ -7,20 +7,6 @@ export class ProjectsService extends ApiClient {
         super(API_BASE_URL);
     }
 
-    // Public methods
-    async getProjects(): Promise<Project[]> {
-        const result = await this.get<Project[]>('projects');
-        return result || [];
-    }
-
-    async getProjectBySlug(slug: string): Promise<Project | null> {
-        return this.get<Project>(`projects/${slug}`);
-    }
-
-    async getProjectPolicyBySlug(slug: string): Promise<ProjectPolicy | null> {
-        return this.get<ProjectPolicy>(`projects/${slug}/policy`);
-    }
-
     // Admin methods
     async getAdminProjects(): Promise<Project[]> {
         const result = await this.get<Project[]>('owner/projects/all');
@@ -61,8 +47,3 @@ export class ProjectsService extends ApiClient {
 
 // Export a singleton instance
 export const projectsService = new ProjectsService();
-
-// Export standalone functions for backward compatibility
-export const getProjects = () => projectsService.getProjects();
-export const getProjectBySlug = (slug: string) => projectsService.getProjectBySlug(slug);
-export const getProjectPolicyBySlug = (slug: string) => projectsService.getProjectPolicyBySlug(slug);

@@ -3,35 +3,22 @@ export const prerender = true;
 import ProjectLayout from "../../../layouts/ProjectLayout.astro";
 import { TextEditor } from "../../../components/ui/TextEditor";
 import {
-  getProjectBySlug,
-  getProjectPolicyBySlug,
-  getProjects,
-} from "../../../lib/projects";
-import type { Project, ProjectPolicy } from "../../../types/project";
+  getPublicProjectPolicy,
+  getPublicProjects,
+} from "../../../lib/public-content";
+import type { Project } from "../../../types/project";
 
 export async function getStaticPaths() {
-  try {
-    const projects = await getProjects();
-    return projects.map((project) => ({
-      params: { slug: project.slug },
-      props: { slug: project.slug },
-    }));
-  } catch (error) {
-    console.error("Failed to fetch projects for terms paths:", error);
-    return [];
-  }
+  const projects = await getPublicProjects();
+  return projects.map((project) => ({
+    params: { slug: project.slug },
+    props: { project },
+  }));
 }
 
-const { slug } = Astro.props as { slug: string };
-let project: Project | null = null;
-let policy: ProjectPolicy | null = null;
-
-try {
-  project = await getProjectBySlug(slug);
-  policy = await getProjectPolicyBySlug(slug);
-} catch (error) {
-  console.error("Failed to fetch terms:", error);
-}
+const { project } = Astro.props as { project: Project };
+const slug = project.slug;
+const policy = await getPublicProjectPolicy(slug);
 
 const hasTerms = Boolean(policy?.termsAndConditions);
 ---
