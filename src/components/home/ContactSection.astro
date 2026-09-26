@@ -269,6 +269,9 @@ const turnstileSiteKey =
   // re-inits (astro:page-load) and one submit -> reset cycle.
   let turnstileWidgetId: string | null = null;
   let pendingTurnstile: ((token: string) => void) | null = null;
+  // The widget can finish before the visitor submits, so the token is kept
+  // rather than only handed to a pending submit.
+  let turnstileToken = "";
 
   // A challenge that never calls back must not leave the button spinning.
   const TURNSTILE_TIMEOUT_MS = 15_000;
@@ -281,6 +284,7 @@ const turnstileSiteKey =
 
   const resetTurnstile = () => {
     pendingTurnstile = null;
+    turnstileToken = "";
     const turnstile = (window as any).turnstile;
     if (turnstileWidgetId && turnstile?.reset) {
       turnstile.reset(turnstileWidgetId);
@@ -324,7 +328,10 @@ const turnstileSiteKey =
         action: "contact",
         execution: "execute",
         appearance: "interaction-only",
-        callback: (token: string) => settleTurnstile(token || ""),
+        callback: (token: string) => {
+          turnstileToken = token || "";
+          settleTurnstile(turnstileToken);
+        },
         "error-callback": () => settleTurnstile(""),
       });
     };
@@ -356,8 +363,16 @@ const turnstileSiteKey =
           return;
         }
 
-        // A solved-but-unused response is still valid, and executing while the
-        // widget is already running never calls back - reuse, don't execute.
+        // A token that arrived before this submit is still valid and single-use:
+        // consume it instead of executing again (executing on a finished widget
+        // never calls back).
+        if (turnstileToken) {
+          const token = turnstileToken;
+          turnstileToken = "";
+          resolve(token);
+          return;
+        }
+
         const existing = turnstile.getResponse?.(turnstileWidgetId);
         if (existing) {
           resolve(existing);

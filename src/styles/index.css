@@ -261,6 +261,15 @@ html[data-theme-switching]::view-transition-new(root) {
         }
     }
 
+    /* The skills grid has nine cells: exact 3x3 at lg, but two columns always
+       leave one cell alone. Let it span the row so the block stays rectangular
+       instead of showing an empty half. */
+    @media (min-width: 640px) and (max-width: 1023.98px) {
+        .row-grid > *:last-child:nth-child(odd) {
+            grid-column: 1 / -1;
+        }
+    }
+
     /* Pill buttons */
     .btn-pill {
         @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm/6 font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:cursor-not-allowed disabled:opacity-60;

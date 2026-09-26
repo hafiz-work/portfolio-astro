@@ -2,7 +2,21 @@
 
 Priorities: P0 = bug/vuln, P1 = perf/correctness, P2 = polish/cleanup.
 
-Fail ni senarai **kerja yang belum siap** sahaja. Item yang dah selesai dibuang - butirannya ada dalam git diff / commit sesi 2026-09-24 (CORS PATCH, validator blog/experiences/profile, rate-limit memory, audit-log route, resume tracking + retention, upload R2 peribadi + proxy media, cover image blog, viewsCount dibuang, System Logs client-side fetch) dan sesi 2026-09-26 (loader cache-friendly untuk blog/policy/projek detail, `lib/projects.ts` tinggal admin sahaja, guard tarikh `profile.astro`, stub settings dilabel, build astro 7 dibaiki: buang override `vite ^7`, `@astrojs/react ^6.0.6`, declare `htmlparser2`/`domhandler`/`entities`, `map.tsx` namespace import + **`setWorkerUrl()` untuk worker maplibre v6**).
+Fail ni senarai **kerja yang belum siap** sahaja. Item yang dah selesai dibuang - butirannya ada dalam git diff / commit sesi 2026-09-24 (CORS PATCH, validator blog/experiences/profile, rate-limit memory, audit-log route, resume tracking + retention, upload R2 peribadi + proxy media, cover image blog, viewsCount dibuang, System Logs client-side fetch) dan sesi 2026-09-26 (loader cache-friendly untuk blog/policy/projek detail, `lib/projects.ts` tinggal admin sahaja, guard tarikh `profile.astro`, stub settings dilabel, build astro 7 dibaiki: buang override `vite ^7`, `@astrojs/react ^6.0.6`, declare `htmlparser2`/`domhandler`/`entities`, `map.tsx` namespace import + **`setWorkerUrl()` untuk worker maplibre v6**, **captcha Google reCAPTCHA → Cloudflare Turnstile** pada login + contact form).
+
+## Captcha - Cloudflare Turnstile (menggantikan reCAPTCHA v3)
+
+Sisi backend dan frontend dua-dua **dah live dan disahkan** (2026-09-26):
+- API produksi proses `captchaToken`; field lama ditolak - `{"success":false,"error":"Unrecognized key(s) in object: 'recaptchaToken'"}`.
+- Frontend produksi serve `challenges.cloudflare.com/turnstile/v0/api.js?render=explicit` + `data-turnstile-site-key="0x4AAAAAAFD-PSk_u7NHAF-5"` pada `/login` dan home.
+- Guard timeout 15s berfungsi di produksi (challenge yang tak selesai tak tinggalkan spinner).
+
+Baki:
+
+- [ ] **Sahkan `TURNSTILE_SECRET` betul** dengan satu login (atau hantar contact) sebenar dalam browser biasa. Dari luar, "secret tak diset" dan "token tak sah" dua-dua pulang 400 yang sama, jadi ia kena disahkan dari dalam: login berjaya (atau sekurang-kurangnya masuk peringkat semak kredential) = secret sah. Challenge Turnstile **tidak selesai dalam browser automasi** (headless mahupun headed/CDP) - aku dah cuba, jadi ini kerja manusia. `wrangler tail` sambil cuba login akan tunjuk baris `Turnstile siteverify result:` kalau nak bukti log.
+- [ ] **Sahkan domain widget** dalam dashboard ada `localhost` (+ `127.0.0.1`) untuk dev lokal; produksi guna `hafizbahtiar.com` + `www.hafizbahtiar.com` (var `TURNSTILE_HOSTNAMES`).
+- [ ] Replay: token single-use - cubaan kedua dengan token yang sama sepatutnya ditolak.
+- [ ] Nota dev: `.env.development`/`.env.example` guna `PUBLIC_TURNSTILE_SITE_KEY`; biar kosong untuk matikan captcha lokal (backend skip bila secret tak diset).
 
 ## P0 - Deploy & operasi
 
@@ -21,7 +35,7 @@ Fail ni senarai **kerja yang belum siap** sahaja. Item yang dah selesai dibuang 
 
 ## Security & hardening
 
-- [ ] **[P1] Lockout brute-force login hanya client-side.** `login.astro:402` (5 gagal → 60s dalam browser boleh dimatikan). Sahkan backend had kadar `/auth/login` (reCAPTCHA dah membantu) - kerja `hono-workers`.
+- [ ] **[P1] Lockout brute-force login hanya client-side.** `login.astro:402` (5 gagal → 60s dalam browser boleh dimatikan). Sahkan backend had kadar `/auth/login` (Turnstile dah membantu) - kerja `hono-workers`.
 - [ ] **[P2] CSP `'unsafe-inline'` untuk script** (`middleware.ts:33`, diperlukan oleh inline theme-init `CoreLayout`). Risiko sync: CSP `middleware.ts` kena sepadan dengan `public/_headers` secara manual (`middleware.ts:11`).
 - [ ] **[P2] Token verify-email melalui query URL** (`verify-email.astro:14`) - standard untuk link email; ubah hanya kalau backend boleh terima POST.
 
