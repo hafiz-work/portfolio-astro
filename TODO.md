@@ -6,11 +6,19 @@ Fail ni senarai **kerja yang belum siap** sahaja. Item yang dah selesai dibuang 
 
 ## P0 - Deploy & operasi
 
-- [ ] `npm run db:migrate:remote` **dahulu**, baru `wrangler deploy` backend. D1 prod belum ada table `resume_downloads`; tanpa ini dashboard `GET /owner/dashboard/overview` pulang 500 dan setiap beacon download dibuang senyap.
+- [ ] `npm run db:migrate:remote` **dahulu**, baru `wrangler deploy` backend. D1 prod belum ada table `resume_downloads` **dan migration 014 (kolum telegram)** - tanpa 014, `GET /owner/profile` pulang 500 dan page profile admin mati sepenuhnya.
 - [ ] Deploy frontend - semua fix sesi lepas belum naik.
 - [ ] Commit semuanya. Kerja sesi ni masih dalam staging index, belum ada commit.
 - [ ] Sahkan selepas deploy: overview 200 + `resumeDownloads` naik; klik link resume di footer → row masuk; cron `0 3 * * *` terdaftar (`wrangler deployments`/dashboard).
 - [ ] **[P0] `astro build` tak keluar output untuk deploy.** Exit 0 tapi `dist/` cuma ada `dist/server/.prerender/` (15 fail, entry `index.js` noop) - tiada `dist/client`, tiada HTML, tiada entry worker sebenar. Astro print "Could not find the prerender entry point in the build output. This is likely a bug in Astro." Dah berlaku sebelum perubahan 2026-09-26; kemungkinan dari commit `da0a410` (astro ^7.3.5 + @astrojs/cloudflare ^14.3.3). Sahkan (`wrangler deploy --dry-run`) sebelum deploy sebenar.
+
+## Telegram (WIP - UI staged, backend plumbing siap)
+
+- [ ] **Remote belum konfigur** (`hono-workers`): `bunx wrangler secret put TELEGRAM_BOT_TOKEN` + `TELEGRAM_WEBHOOK_SECRET`, `bun run db:migrate:remote` (014), `bun run telegram:webhook`. Verifikasi lokal: `bun scripts/verify-telegram.ts` (24 checks, lulus); migration 014 dah apply di D1 lokal.
+- [ ] **[P2] Kemas UI Telegram**: `Profile` (`lib/profile.ts`) tak ada `telegramChatId`/`telegramLinkedAt`; `profile.astro` guna `new ApiClient(API_BASE_URL)` inline + `profile as any`. Pindah ke `profileService` (link/unlink/status) dan buang cast.
+- [ ] **[P3] Error Telegram guna `alert()`** (`profile.astro:543,557`) - admin lain guna `showToast`.
+- [ ] **[P3] `/owner/profile` kongsi `AUTH_RATE_LIMITER` (5/60s per IP)**: visit profile (GET) + link (PUT+GET) + save (PUT) = 4; 6 aksi pantas dalam 60s → 429. Pertimbang limiter berasingan untuk CRUD profile.
+- [ ] **[P3] Bot commands belum ada**: `/status`, `/stats`, `/recent`, `/mute` (chat owner cuma dapat help) + notifikasi contact message. Dijejak dalam TODO `hono-workers`.
 
 ## Security & hardening
 
