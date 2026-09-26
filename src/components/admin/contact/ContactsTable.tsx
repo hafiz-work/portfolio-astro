@@ -137,23 +137,23 @@ export const ContactsTable = () => {
                     <button
                         type="button"
                         aria-label="Close modal"
-                        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+                        className="absolute inset-0 bg-gray-950/60 backdrop-blur-sm"
                         onClick={() => setSelectedContact(null)}
                     />
-                    <div className="relative w-full max-w-3xl rounded-xl border border-slate-200 bg-white shadow-2xl overflow-hidden dark:border-slate-700 dark:bg-slate-900">
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                    <div className="relative w-full max-w-3xl rounded-xl border border-gray-950/5 bg-white shadow-2xl overflow-hidden dark:border-white/10 dark:bg-white/[0.03]">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-950/5 dark:border-white/10">
                             <div className="space-y-1">
-                                <p className="text-xs text-cyan-600 dark:text-cyan-400 font-mono uppercase tracking-wider">
+                                <p className="text-xs text-sky-600 dark:text-sky-400 font-mono uppercase tracking-wider">
                                     Contact Details
                                 </p>
-                                <h2 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-slate-100">
+                                <h2 className="text-lg md:text-xl font-semibold text-gray-950 dark:text-white">
                                     {selectedContact.subject}
                                 </h2>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setSelectedContact(null)}
-                                className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                                className="text-gray-400 hover:text-gray-950 dark:hover:text-white transition-colors"
                                 aria-label="Close contact details"
                             >
                                 <svg
@@ -175,39 +175,39 @@ export const ContactsTable = () => {
                         <div className="max-h-[75vh] overflow-y-auto px-6 py-5 space-y-6">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-1">
-                                    <p className="text-xs text-slate-400 dark:text-slate-500 font-mono">FROM</p>
-                                    <p className="text-slate-900 dark:text-slate-100">{selectedContact.name}</p>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400 font-mono">
+                                    <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">FROM</p>
+                                    <p className="text-gray-950 dark:text-white">{selectedContact.name}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">
                                         {selectedContact.email}
                                     </p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-xs text-slate-400 dark:text-slate-500 font-mono">STATUS</p>
+                                    <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">STATUS</p>
                                     <AdminBadge variant={statusBadgeVariant(selectedContact.status)} dot>
                                         {selectedContact.status.toLowerCase()}
                                     </AdminBadge>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-xs text-slate-400 dark:text-slate-500 font-mono">PHONE</p>
-                                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                                    <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">PHONE</p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300">
                                         {selectedContact.phone || "-"}
                                     </p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-xs text-slate-400 dark:text-slate-500 font-mono">RECEIVED</p>
-                                    <p className="text-sm text-slate-600 dark:text-slate-300 font-mono">
+                                    <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">RECEIVED</p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300 font-mono">
                                         {formatDate(selectedContact.createdAt)}
                                     </p>
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <p className="text-xs text-slate-400 dark:text-slate-500 font-mono">MESSAGE</p>
-                                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 leading-relaxed whitespace-pre-line dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-200">
+                                <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">MESSAGE</p>
+                                <div className="rounded-xl border border-gray-950/5 bg-gray-950/[0.025] p-4 text-sm text-gray-700 leading-relaxed whitespace-pre-line dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-200">
                                     {selectedContact.message}
                                 </div>
                             </div>
                         </div>
-                        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-slate-200 dark:border-slate-700">
+                        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-gray-950/5 dark:border-white/10">
                             <div className="flex flex-wrap items-center gap-2">
                                 {(["READ", "REPLIED", "ARCHIVED"] as const).map((status) => (
                                     <button
@@ -215,7 +215,7 @@ export const ContactsTable = () => {
                                         type="button"
                                         disabled={statusUpdating || selectedContact.status === status}
                                         onClick={() => updateStatus(selectedContact, status)}
-                                        className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-blue-400 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-blue-400 dark:hover:text-blue-300"
+                                        className="rounded-lg border border-gray-950/10 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-sky-400 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-300 dark:hover:border-sky-400 dark:hover:text-sky-300"
                                     >
                                         {status === "READ" ? "Mark read" : status === "REPLIED" ? "Mark replied" : "Archive"}
                                     </button>
@@ -223,7 +223,7 @@ export const ContactsTable = () => {
                             </div>
                             <button
                                 type="button"
-                                className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-300 rounded-lg hover:text-slate-900 hover:border-slate-400 transition-colors dark:text-slate-300 dark:border-slate-600 dark:hover:text-white dark:hover:border-slate-400"
+                                className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-950/10 rounded-lg hover:text-gray-950 hover:border-gray-950/20 transition-colors dark:text-gray-300 dark:border-white/10 dark:hover:text-white dark:hover:border-gray-950/20"
                                 onClick={() => setSelectedContact(null)}
                             >
                                 Close

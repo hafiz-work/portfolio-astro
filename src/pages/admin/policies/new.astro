@@ -34,7 +34,7 @@ import Dropdown from "../../../components/ui/Dropdown.astro";
 
     <div
       id="loading-state"
-      class="text-center py-12 text-slate-500 dark:text-slate-400"
+      class="text-center py-12 text-gray-500 dark:text-gray-400"
     >
       Loading projects...
     </div>
@@ -56,7 +56,7 @@ import Dropdown from "../../../components/ui/Dropdown.astro";
             aria-selected="true"
             aria-controls="policy-panel-privacy"
             data-tab="privacy"
-            class="inline-flex items-center gap-1.5 rounded-lg border border-slate-400 dark:border-slate-500 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 transition-colors hover:border-slate-500 dark:hover:border-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-gray-950/15 dark:border-white/15 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 transition-colors hover:border-gray-950/20 dark:hover:border-gray-950/20 hover:text-gray-800 dark:hover:text-white"
           >
             Privacy Policy
           </button>
@@ -67,7 +67,7 @@ import Dropdown from "../../../components/ui/Dropdown.astro";
             aria-selected="false"
             aria-controls="policy-panel-terms"
             data-tab="terms"
-            class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-1.5 text-xs text-slate-500 dark:text-slate-400 transition-colors hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-gray-950/10 dark:border-white/10 px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 transition-colors hover:border-gray-950/20 dark:hover:border-white/20 hover:text-gray-700 dark:hover:text-gray-300"
           >
             Terms &amp; Conditions
           </button>
@@ -81,7 +81,7 @@ import Dropdown from "../../../components/ui/Dropdown.astro";
         >
           <label class="space-y-2 block">
             <span
-              class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
+              class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest"
               >Privacy Policy</span
             >
             <TextEditor name="privacyPolicy" content="" client:load />
@@ -97,7 +97,7 @@ import Dropdown from "../../../components/ui/Dropdown.astro";
         >
           <label class="space-y-2 block">
             <span
-              class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
+              class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest"
               >Terms &amp; Conditions</span
             >
             <TextEditor name="termsAndConditions" content="" client:load />
@@ -164,18 +164,18 @@ import Dropdown from "../../../components/ui/Dropdown.astro";
       button.setAttribute("aria-selected", String(isActive));
       // Theme-aware active state (light + dark)
       for (const cls of [
-        "text-blue-700",
-        "dark:text-blue-300",
-        "border-blue-500/60",
-        "bg-blue-500/10",
+        "text-sky-700",
+        "dark:text-sky-300",
+        "border-sky-500/60",
+        "bg-sky-500/10",
       ]) {
         button.classList.toggle(cls, isActive);
       }
       for (const cls of [
-        "text-slate-600",
-        "dark:text-slate-400",
-        "border-slate-300",
-        "dark:border-slate-600",
+        "text-gray-600",
+        "dark:text-gray-400",
+        "border-gray-950/10",
+        "dark:border-white/10",
       ]) {
         button.classList.toggle(cls, !isActive);
       }
@@ -207,7 +207,7 @@ import Dropdown from "../../../components/ui/Dropdown.astro";
           const button = document.createElement("button");
           button.type = "button";
           button.className =
-            "dropdown-item w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-blue-900/20 hover:text-blue-400 transition-colors flex items-center justify-between group";
+            "dropdown-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors flex items-center justify-between group";
           button.dataset.value = String(project.id);
 
           const label = document.createElement("span");
@@ -215,7 +215,7 @@ import Dropdown from "../../../components/ui/Dropdown.astro";
 
           const indicator = document.createElement("span");
           indicator.className =
-            "opacity-0 group-hover:opacity-100 text-blue-500 font-bold";
+            "opacity-0 group-hover:opacity-100 text-sky-500 font-bold";
           indicator.textContent = "_";
 
           button.append(label, indicator);

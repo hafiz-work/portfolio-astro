@@ -19,8 +19,8 @@ export type BadgeVariant =
 
 const BADGE_VARIANTS: Record<BadgeVariant, string> = {
     neutral:
-        "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-700/60 dark:text-slate-300 dark:border-slate-600",
-    info: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+        "bg-gray-950/[0.03] text-gray-700 border-gray-950/5 dark:bg-white/10 dark:text-gray-300 dark:border-white/10",
+    info: "bg-sky-500/10 text-sky-700 border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30",
     success:
         "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
     warning:
@@ -28,16 +28,16 @@ const BADGE_VARIANTS: Record<BadgeVariant, string> = {
     danger:
         "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
     accent:
-        "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30",
+        "bg-sky-500/10 text-sky-700 border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30",
 };
 
 const BADGE_DOTS: Record<BadgeVariant, string> = {
-    neutral: "bg-slate-400 dark:bg-slate-500",
-    info: "bg-blue-500 dark:bg-blue-400",
+    neutral: "bg-gray-400 dark:bg-gray-400",
+    info: "bg-sky-500 dark:bg-sky-400",
     success: "bg-emerald-500 dark:bg-emerald-400",
     warning: "bg-amber-500 dark:bg-amber-400",
     danger: "bg-red-500 dark:bg-red-400",
-    accent: "bg-cyan-500 dark:bg-cyan-400",
+    accent: "bg-sky-500/100 dark:bg-sky-400",
 };
 
 export function AdminBadge({
@@ -87,13 +87,13 @@ export const statusBadgeVariant = (status: string | null | undefined): BadgeVari
 // ── Row action buttons ────────────────────────────────────────────────────
 
 const ACTION_BASE =
-    "inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800";
+    "inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:focus-visible:ring-offset-pub-dark";
 
 const ACTION_STYLES = {
     default:
-        "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-900 hover:bg-slate-50 focus-visible:ring-blue-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-100 dark:hover:bg-slate-700",
+        "border-gray-950/5 bg-white text-gray-500 hover:border-gray-950/15 hover:text-gray-950 hover:bg-gray-950/[0.025] focus-visible:ring-sky-400 dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-white dark:hover:bg-white/10",
     danger:
-        "border-red-200 bg-white text-red-500 hover:border-red-300 hover:text-red-700 hover:bg-red-50 focus-visible:ring-red-400 dark:border-red-500/30 dark:bg-slate-800 dark:text-red-400 dark:hover:border-red-500/50 dark:hover:text-red-300 dark:hover:bg-red-500/10",
+        "border-red-200 bg-white text-red-500 hover:border-red-300 hover:text-red-700 hover:bg-red-50 focus-visible:ring-red-400 dark:border-red-500/30 dark:bg-white/[0.03] dark:text-red-400 dark:hover:border-red-500/50 dark:hover:text-red-300 dark:hover:bg-red-500/10",
 };
 
 type ActionProps = {
@@ -166,7 +166,7 @@ export function RowActions({ children }: { children: React.ReactNode }) {
 
 export function CellPrimary({ children }: { children: React.ReactNode }) {
     return (
-        <span className="block font-medium text-slate-900 dark:text-slate-100">
+        <span className="block font-medium text-gray-950 dark:text-white">
             {children}
         </span>
     );
@@ -181,7 +181,7 @@ export function CellSecondary({
 }) {
     return (
         <span
-            className={`block text-xs text-slate-500 dark:text-slate-400 ${mono ? "font-mono" : ""}`}
+            className={`block text-xs text-gray-500 dark:text-gray-400 ${mono ? "font-mono" : ""}`}
         >
             {children}
         </span>
@@ -197,7 +197,7 @@ export function CellText({
 }) {
     return (
         <span
-            className={`text-sm text-slate-700 dark:text-slate-300 ${mono ? "font-mono text-[13px]" : ""}`}
+            className={`text-sm text-gray-700 dark:text-gray-300 ${mono ? "font-mono text-[13px]" : ""}`}
         >
             {children}
         </span>

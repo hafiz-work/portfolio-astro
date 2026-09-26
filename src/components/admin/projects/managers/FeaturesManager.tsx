@@ -49,13 +49,13 @@ export function FeaturesManager({ projectId, onChanged }: { projectId: number; o
     <div className="space-y-3">
       {items.length === 0 && <p className="admin-help">No features yet.</p>}
       {items.map((it, i) => (
-        <div key={it.id} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 space-y-2">
+        <div key={it.id} className="rounded-lg border border-gray-950/5 dark:border-white/10 p-3 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <input className="admin-input flex-1 min-w-[180px]" placeholder="Title" value={it.title}
               onChange={(e) => setField(it.id, { title: e.target.value })} aria-label="Feature title" />
             <input className="admin-input max-w-[120px]" placeholder="Icon" value={it.icon ?? ""}
               onChange={(e) => setField(it.id, { icon: e.target.value })} aria-label="Feature icon" />
-            <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+            <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
               <input type="checkbox" checked={it.isVisible} onChange={(e) => setField(it.id, { isVisible: e.target.checked })} /> Visible
             </label>
             <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
@@ -67,7 +67,7 @@ export function FeaturesManager({ projectId, onChanged }: { projectId: number; o
           <div className="flex justify-end"><button type="button" className="admin-btn admin-btn-primary" onClick={() => save(it)}>Save feature</button></div>
         </div>
       ))}
-      <div className="rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-3 space-y-2">
+      <div className="rounded-lg border border-dashed border-gray-950/10 dark:border-white/10 p-3 space-y-2">
         <div className="flex flex-wrap gap-2">
           <input className="admin-input flex-1 min-w-[180px]" placeholder="New feature title" value={draft.title}
             onChange={(e) => setDraft({ ...draft, title: e.target.value })} aria-label="New feature title" />

@@ -16,13 +16,13 @@ const { title, description } = Astro.props;
 
 <CoreLayout title={title} description={description}>
     <Background />
-    <div class="flex h-screen relative z-10 bg-canvas dark:bg-admin-base">
+    <div class="flex h-screen relative z-10 bg-canvas dark:bg-pub-dark font-inter text-gray-950 dark:text-white">
         <!-- Sidebar -->
         <AdminSidebar />
 
         <!-- Main content -->
         <main
-            class="admin-main flex-grow flex flex-col min-w-0 rounded-[10px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg overflow-hidden transition-all duration-300"
+            class="admin-main flex-grow flex flex-col min-w-0 rounded-xl border border-gray-950/5 dark:border-white/10 bg-canvas dark:bg-white/[0.03] overflow-hidden transition-all duration-300"
         >
             <!-- Topbar -->
             <AdminNavbar />

@@ -15,9 +15,9 @@ const DEFAULT_LATITUDE = KL_DEFAULT_LATITUDE;
 const DEFAULT_LONGITUDE = KL_DEFAULT_LONGITUDE;
 
 const inputClass =
-  "w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 outline-none transition-all font-mono text-sm";
+  "admin-input font-mono";
 
-const labelClass = "block text-sm font-medium text-gray-400 font-mono tracking-wide";
+const labelClass = "admin-label";
 
 function MapClickHandler({ onSelect }: { onSelect: (coords: { latitude: number; longitude: number }) => void }) {
   const { map } = useMap();
@@ -113,12 +113,12 @@ export function ExperienceMapPicker({
         <button
           type="button"
           onClick={handleClear}
-          className="text-xs font-mono text-gray-400 hover:text-cyan-400 transition-colors"
+          className="text-xs font-mono text-gray-500 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400 transition-colors"
         >
           CLEAR
         </button>
       </div>
-      <div className="overflow-hidden rounded-lg border border-gray-700 bg-gray-900/50">
+      <div className="overflow-hidden rounded-lg border border-gray-950/10 dark:border-white/10">
         <div className="h-64 w-full">
           <Map
             className="h-full w-full"
@@ -134,7 +134,7 @@ export function ExperienceMapPicker({
               onDragEnd={handleMarkerDrag}
             >
               <MarkerContent>
-                <div className="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.8)]" />
+                <div className="w-3 h-3 rounded-full bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.8)]" />
               </MarkerContent>
             </MapMarker>
           </Map>

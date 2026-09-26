@@ -65,30 +65,30 @@ const currentPath = Astro.url.pathname;
 
 <aside
   id="admin-sidebar"
-  class="fixed top-3 bottom-3 left-3 z-40 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[10px] shadow-lg overflow-hidden transform -translate-x-full md:translate-x-0 transition-all duration-300 ease-in-out is-open"
+  class="fixed top-3 bottom-3 left-3 z-40 w-64 bg-white dark:bg-white/[0.03] border border-gray-950/5 dark:border-white/10 rounded-xl overflow-hidden transform -translate-x-full md:translate-x-0 transition-all duration-300 ease-in-out is-open"
 >
   <div class="sidebar-content h-full flex flex-col">
     <!-- Header -->
     <div
-      class="sidebar-header p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between"
+      class="sidebar-header p-6 border-b border-gray-950/5 dark:border-white/10 flex items-center justify-between"
     >
       <h1
-        class="sidebar-title font-mono text-base font-semibold text-slate-900 dark:text-slate-100 tracking-tight"
+        class="sidebar-title font-mono text-base font-semibold text-gray-950 dark:text-white tracking-tight"
         aria-label="Admin dashboard"
       >
         <span class="inline-flex items-center gap-2">
           <Image src="/brand/logo.svg" alt="" width={24} height={24} class="h-6 w-6" />
-          hafizbahtiar<span class="text-slate-400 dark:text-slate-500">/admin</span>
+          hafizbahtiar<span class="text-gray-400 dark:text-gray-500">/admin</span>
         </span>
       </h1>
       <span
-        class="sidebar-mark font-mono text-xl font-semibold text-slate-900 dark:text-slate-100 tracking-tight"
+        class="sidebar-mark font-mono text-xl font-semibold text-gray-950 dark:text-white tracking-tight"
         aria-hidden="true"
         ><Image src="/brand/logo.svg" alt="" width={28} height={28} class="h-7 w-7" /></span
       >
       <button
         id="close-sidebar"
-        class="md:hidden p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg"
+        class="md:hidden p-2 text-gray-500 dark:text-gray-400 hover:text-gray-950 dark:hover:text-gray-200 rounded-lg"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -111,7 +111,7 @@ const currentPath = Astro.url.pathname;
       {
         groups.map((group) => (
           <div class="mb-4 last:mb-0">
-            <p class="nav-group-label px-3 mb-1.5 font-mono text-xs font-medium uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
+            <p class="nav-group-label px-3 mb-1.5 font-mono text-xs font-medium uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
               {group.label}
             </p>
             <div class="space-y-0.5">
@@ -127,20 +127,20 @@ const currentPath = Astro.url.pathname;
                     class:list={[
                       "nav-item relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150 group",
                       isActive
-                        ? "bg-blue-50 text-blue-700 font-medium dark:bg-slate-800 dark:text-slate-100"
-                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/70",
+                        ? "bg-sky-500/10 text-sky-700 font-medium dark:bg-white/[0.03] dark:text-white"
+                        : "text-gray-500 hover:text-gray-950 hover:bg-gray-950/[0.025] dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-white/5",
                     ]}
                   >
                     {isActive && (
-                      <span class="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-blue-500 dark:bg-cyan-400" />
+                      <span class="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-sky-500 dark:bg-sky-400" />
                     )}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       class:list={[
                         "nav-icon h-[18px] w-[18px]",
                         isActive
-                          ? "text-blue-600 dark:text-cyan-400"
-                          : "text-slate-400 group-hover:text-slate-700 dark:text-slate-500 dark:group-hover:text-slate-300",
+                          ? "text-sky-600 dark:text-sky-400"
+                          : "text-gray-400 group-hover:text-gray-700 dark:text-gray-500 dark:group-hover:text-gray-300",
                       ]}
                       fill="none"
                       viewBox="0 0 24 24"
@@ -163,35 +163,35 @@ const currentPath = Astro.url.pathname;
 
     <!-- User Profile Footer -->
     <div
-      class="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-900/50"
+      class="p-4 border-t border-gray-950/5 dark:border-white/10 bg-gray-950/[0.025] dark:bg-white/5"
     >
       <div class="space-y-3">
         <div class="flex items-center space-x-3 px-2">
           <div class="relative">
             <div
-              class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm"
+              class="w-10 h-10 rounded-full bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center text-white font-bold text-sm"
             >
               HB
             </div>
             <div
-              class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900"
+              class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-pub-dark"
             >
             </div>
           </div>
           <div class="user-meta flex-grow min-w-0">
             <div
-              class="text-slate-900 dark:text-slate-100 font-medium truncate"
+              class="text-gray-950 dark:text-white font-medium truncate"
             >
               Hafiz Bahtiar
             </div>
-            <div class="text-slate-500 dark:text-slate-500 text-xs truncate">
+            <div class="text-gray-500 dark:text-gray-500 text-xs truncate">
               Super Admin
             </div>
           </div>
         </div>
         <button
           id="logout-btn"
-          class="logout-btn w-full inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+          class="logout-btn w-full inline-flex items-center justify-center gap-2 rounded-lg border border-gray-950/10 dark:border-white/10 bg-white dark:bg-white/[0.03] px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-950/[0.025] dark:hover:bg-white/10 hover:text-gray-950 dark:hover:text-white transition-colors"
           type="button"
         >
           <svg
@@ -328,7 +328,7 @@ const currentPath = Astro.url.pathname;
   aria-modal="true"
 >
   <div
-    class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm transition-opacity opacity-0"
+    class="fixed inset-0 bg-gray-950/80 backdrop-blur-sm transition-opacity opacity-0"
     id="logout-backdrop"
   >
   </div>
@@ -338,16 +338,16 @@ const currentPath = Astro.url.pathname;
       class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0"
     >
       <div
-        class="relative transform overflow-hidden rounded-lg bg-slate-800 border border-red-500/30 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+        class="relative transform overflow-hidden rounded-xl bg-white dark:bg-gray-950 ring-1 ring-gray-950/5 dark:ring-white/10 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
         id="logout-panel"
       >
-        <div class="bg-slate-800/50 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+        <div class="bg-white dark:bg-white/[0.03] px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
           <div class="sm:flex sm:items-start">
             <div
-              class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-900/30 sm:mx-0 sm:h-10 sm:w-10"
+              class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-500/10 sm:mx-0 sm:h-10 sm:w-10"
             >
               <svg
-                class="h-5 w-5 text-red-400"
+                class="h-5 w-5 text-red-600 dark:text-red-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
@@ -367,13 +367,13 @@ const currentPath = Astro.url.pathname;
             </div>
             <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
               <h3
-                class="text-base font-semibold leading-6 text-slate-100"
+                class="text-base/6 font-semibold text-gray-950 dark:text-white"
                 id="logout-modal-title"
               >
                 Log out
               </h3>
               <div class="mt-2">
-                <p class="text-sm text-slate-400">
+                <p class="text-sm/6 text-gray-500 dark:text-gray-400">
                   Are you sure you want to log out? You'll need to sign in again
                   to access the admin panel.
                 </p>
@@ -382,19 +382,19 @@ const currentPath = Astro.url.pathname;
           </div>
         </div>
         <div
-          class="bg-slate-900/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-2"
+          class="bg-gray-950/[0.03] dark:bg-white/5 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-2"
         >
           <button
             type="button"
             id="logout-confirm-btn"
-            class="inline-flex w-full justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto transition-colors"
+            class="admin-btn w-full bg-red-600 text-white hover:bg-red-500 sm:ml-3 sm:w-auto"
           >
             Log out
           </button>
           <button
             type="button"
             id="logout-cancel-btn"
-            class="mt-3 inline-flex w-full justify-center rounded-lg bg-transparent border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-400 shadow-sm hover:bg-slate-700 sm:mt-0 sm:w-auto transition-colors"
+            class="admin-btn admin-btn-secondary mt-3 w-full sm:mt-0 sm:w-auto"
           >
             Cancel
           </button>

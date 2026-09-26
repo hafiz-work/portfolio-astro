@@ -42,7 +42,7 @@ export const TextEditor = ({
                 autolink: true,
                 linkOnPaste: true,
                 HTMLAttributes: {
-                    class: "text-blue-300 underline underline-offset-4",
+                    class: "text-sky-300 underline underline-offset-4",
                 },
             }),
         ],
@@ -55,7 +55,7 @@ export const TextEditor = ({
         editorProps: {
             attributes: {
                 class:
-                    "prose prose-invert prose-lg max-w-none text-slate-200 leading-relaxed focus:outline-none min-h-[220px] sm:min-h-[240px] md:min-h-[280px] lg:min-h-[320px] prose-headings:text-white prose-strong:text-white prose-a:text-blue-300 prose-a:font-medium prose-a:no-underline prose-a:hover:text-blue-200 prose-code:text-blue-300 prose-code:bg-slate-950/70 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-pre:bg-slate-950/70 prose-pre:border prose-pre:border-blue-500/30 prose-pre:overflow-x-auto prose-pre:rounded-xl prose-pre:font-mono prose-blockquote:border-blue-500/40 prose-blockquote:text-slate-300 prose-hr:border-slate-800",
+                    "prose prose-invert prose-lg max-w-none text-gray-200 leading-relaxed focus:outline-none min-h-[220px] sm:min-h-[240px] md:min-h-[280px] lg:min-h-[320px] prose-headings:text-white prose-strong:text-white prose-a:text-sky-300 prose-a:font-medium prose-a:no-underline prose-a:hover:text-sky-200 prose-code:text-sky-300 prose-code:bg-gray-950/70 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-pre:bg-gray-950/70 prose-pre:border prose-pre:border-sky-500/30 prose-pre:overflow-x-auto prose-pre:rounded-xl prose-pre:font-mono prose-blockquote:border-sky-500/40 prose-blockquote:text-gray-300 prose-hr:border-gray-800",
             },
         },
     });
@@ -91,12 +91,12 @@ export const TextEditor = ({
         "h-8 w-8 sm:h-9 sm:w-9 grid place-items-center rounded-md border transition-colors";
     const wideButtonClass =
         "h-8 w-10 sm:h-9 sm:w-11 grid place-items-center rounded-md border transition-colors";
-    const activeClass = "text-white border-blue-400/60 bg-blue-500/20";
+    const activeClass = "text-white border-sky-400/60 bg-sky-500/20";
     const inactiveClass =
-        "text-slate-400 border-slate-800 hover:text-white hover:border-blue-500/40";
+        "text-gray-400 border-gray-800 hover:text-white hover:border-sky-500/40";
 
     return (
-        <div className="rounded-lg border border-blue-500/20 bg-slate-950/60 shadow-lg overflow-hidden">
+        <div className="rounded-lg border border-sky-500/20 bg-gray-950 shadow-lg overflow-hidden">
             {name && (
                 <textarea
                     ref={textareaRef}
@@ -108,7 +108,7 @@ export const TextEditor = ({
                 />
             )}
             {showToolbar && (
-                <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 border-b border-blue-500/20 bg-slate-950/80 px-2 sm:px-3 py-2 overflow-x-auto">
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 border-b border-sky-500/20 bg-gray-950/80 px-2 sm:px-3 py-2 overflow-x-auto">
                     <button
                         type="button"
                         aria-label="Bold"
@@ -220,7 +220,7 @@ export const TextEditor = ({
                             <path d="M16 8l4 4-4 4" />
                         </svg>
                     </button>
-                    <div className="h-6 w-px bg-slate-800" />
+                    <div className="h-6 w-px bg-gray-800" />
                     <button
                         type="button"
                         aria-label="Heading 2"
@@ -414,7 +414,7 @@ export const TextEditor = ({
                             <path d="M14 11a5 5 0 0 1 0 7l-2 2a5 5 0 1 1-7-7l2-2" />
                         </svg>
                     </button>
-                    <div className="h-6 w-px bg-slate-800" />
+                    <div className="h-6 w-px bg-gray-800" />
                     <button
                         type="button"
                         aria-label="Undo"

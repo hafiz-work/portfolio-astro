@@ -181,7 +181,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
 
   if (loading) return <p className="admin-help">Loading project…</p>;
   if (notFound) return (
-    <div className="admin-card"><p className="text-slate-600 dark:text-slate-300">Project not found.</p>
+    <div className="admin-card"><p className="text-gray-600 dark:text-gray-300">Project not found.</p>
       <a href="/admin/projects" className="admin-btn admin-btn-secondary mt-3">Back to projects</a></div>
   );
 
@@ -200,11 +200,11 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
 
       {/* Tabs (create mode shows Basics only) */}
       {!isCreate && (
-        <div className="border-b border-slate-200 dark:border-slate-700">
+        <div className="border-b border-gray-950/5 dark:border-white/10">
           <div className="flex -mb-px overflow-x-auto">
             {TABS.map((t) => (
               <button key={t.id} type="button" onClick={() => setTab(t.id)}
-                className={`shrink-0 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${tab === t.id ? "border-blue-500 text-slate-900 dark:text-slate-100" : "border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}>
+                className={`shrink-0 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${tab === t.id ? "border-sky-500 text-gray-950 dark:text-white" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}>
                 {t.label}
               </button>
             ))}
@@ -237,9 +237,9 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
             <Field label="Featured order"><input type="number" className="admin-input" value={basics.featuredOrder} onChange={(e) => setB({ featuredOrder: e.target.value })} /></Field>
           </div>
           <div className="flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><input type="checkbox" checked={basics.isPublic} onChange={(e) => setB({ isPublic: e.target.checked })} /> Public</label>
-            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><input type="checkbox" checked={basics.isConfidential} onChange={(e) => setB({ isConfidential: e.target.checked })} /> Confidential</label>
-            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><input type="checkbox" checked={basics.featured} onChange={(e) => setB({ featured: e.target.checked })} /> Featured</label>
+            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300"><input type="checkbox" checked={basics.isPublic} onChange={(e) => setB({ isPublic: e.target.checked })} /> Public</label>
+            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300"><input type="checkbox" checked={basics.isConfidential} onChange={(e) => setB({ isConfidential: e.target.checked })} /> Confidential</label>
+            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300"><input type="checkbox" checked={basics.featured} onChange={(e) => setB({ featured: e.target.checked })} /> Featured</label>
           </div>
           <div className="admin-form-actions">
             <a href="/admin/projects" className="admin-btn admin-btn-secondary">Cancel</a>
@@ -286,7 +286,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
           <div className="admin-card space-y-2">
             <h3 className="admin-card-title">SEO / images</h3>
             <p className="admin-help">Cover / OG images are set in the Media tab (attach media with type <code>cover</code> or <code>og</code>).</p>
-            <p className="text-sm text-slate-600 dark:text-slate-300">Cover image id: {detail?.coverImageId ?? "-"} · OG image id: {detail?.ogImageId ?? "-"}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">Cover image id: {detail?.coverImageId ?? "-"} · OG image id: {detail?.ogImageId ?? "-"}</p>
           </div>
         </div>
       )}
@@ -303,7 +303,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
                   {detail.warnings.map((w) => (
                     <li key={w.code} className="flex items-center gap-2 text-sm">
                       <AdminBadge variant={w.severity === "error" ? "danger" : "warning"}>{w.severity}</AdminBadge>
-                      <span className="text-slate-600 dark:text-slate-300">{w.message}</span>
+                      <span className="text-gray-600 dark:text-gray-300">{w.message}</span>
                     </li>
                   ))}
                 </ul>}

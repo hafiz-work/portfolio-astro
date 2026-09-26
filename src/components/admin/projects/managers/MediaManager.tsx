@@ -69,9 +69,9 @@ export function MediaManager({ projectId, onChanged }: { projectId: number; onCh
       {items.map((it, i) => {
         const missingAlt = it.isVisible && !(it.asset?.altText && it.asset.altText.trim());
         return (
-          <div key={it.id} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 space-y-2">
+          <div key={it.id} className="rounded-lg border border-gray-950/5 dark:border-white/10 p-3 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              {it.asset?.url && <img src={it.asset.url} alt="" className="h-10 w-16 rounded-lg object-cover border border-slate-200 dark:border-slate-700" />}
+              {it.asset?.url && <img src={it.asset.url} alt="" className="h-10 w-16 rounded-lg object-cover border border-gray-950/5 dark:border-white/10" />}
               <Select
                 className="max-w-[160px]"
                 value={it.mediaType}
@@ -86,8 +86,8 @@ export function MediaManager({ projectId, onChanged }: { projectId: number; onCh
                 options={DEVICE_FRAMES.map((f) => ({ value: f, label: f }))}
                 ariaLabel="Device frame"
               />
-              <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400"><input type="checkbox" checked={it.isVisible} onChange={(e) => setField(it.id, { isVisible: e.target.checked })} /> Visible</label>
-              <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400"><input type="checkbox" checked={it.isFeatured} onChange={(e) => setField(it.id, { isFeatured: e.target.checked })} /> Featured</label>
+              <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"><input type="checkbox" checked={it.isVisible} onChange={(e) => setField(it.id, { isVisible: e.target.checked })} /> Visible</label>
+              <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"><input type="checkbox" checked={it.isFeatured} onChange={(e) => setField(it.id, { isFeatured: e.target.checked })} /> Featured</label>
               <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
               <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
               <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => detach(it)} aria-label="Remove"><Trash2 className="h-4 w-4" /></button>
@@ -103,7 +103,7 @@ export function MediaManager({ projectId, onChanged }: { projectId: number; onCh
         );
       })}
 
-      <div className="rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-3 space-y-2">
+      <div className="rounded-lg border border-dashed border-gray-950/10 dark:border-white/10 p-3 space-y-2">
         <span className="admin-label">Add media by URL</span>
         <p className="admin-help">Full upload isn’t wired yet - paste an image URL (e.g. an R2/hosted asset).</p>
         <div className="flex flex-wrap gap-2">

@@ -6,7 +6,7 @@
   aria-modal="true"
 >
   <div
-    class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity opacity-0"
+    class="fixed inset-0 bg-gray-950/80 backdrop-blur-sm transition-opacity opacity-0"
     id="confirm-modal-backdrop"
   >
   </div>
@@ -14,14 +14,14 @@
   <div class="fixed inset-0 z-10 overflow-y-auto">
     <div class="flex min-h-full items-center justify-center p-4">
       <div
-        class="relative transform overflow-hidden rounded-xl bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-700 text-left shadow-xl transition-all w-full max-w-md opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+        class="relative transform overflow-hidden rounded-xl bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700 text-left shadow-xl transition-all w-full max-w-md opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
         id="confirm-modal-panel"
       >
         <div class="px-4 py-4 sm:px-5">
           <div class="flex items-start gap-3">
             <div
               id="confirm-modal-icon"
-              class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-slate-200 dark:border-white/10"
+              class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 dark:border-white/10"
             >
               <svg
                 class="h-5 w-5"
@@ -40,13 +40,13 @@
             </div>
             <div class="text-left">
               <h3
-                class="text-base font-semibold leading-6 text-slate-900 dark:text-white"
+                class="text-base font-semibold leading-6 text-gray-900 dark:text-white"
                 id="confirm-modal-title"
               >
                 Confirm Action
               </h3>
               <p
-                class="mt-1.5 text-sm text-slate-500 dark:text-slate-300/90 leading-relaxed"
+                class="mt-1.5 text-sm text-gray-500 dark:text-gray-300/90 leading-relaxed"
                 id="confirm-modal-message"
               >
                 Are you sure you want to continue?
@@ -55,7 +55,7 @@
           </div>
         </div>
         <div
-          class="px-4 py-3 sm:px-5 border-t border-slate-200 dark:border-white/5 flex flex-col-reverse sm:flex-row-reverse gap-2"
+          class="px-4 py-3 sm:px-5 border-t border-gray-200 dark:border-white/5 flex flex-col-reverse sm:flex-row-reverse gap-2"
         >
           <button
             type="button"
@@ -67,7 +67,7 @@
           <button
             type="button"
             id="confirm-modal-cancel-btn"
-            class="inline-flex w-full justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-white sm:w-auto transition-all"
+            class="inline-flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-900 dark:border-white/10 dark:bg-gray-900/40 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-white sm:w-auto transition-all"
           >
             Cancel
           </button>
@@ -103,12 +103,12 @@
 
     const variantClasses = {
       primary: {
-        icon: ["bg-blue-900/30", "text-blue-300", "border-blue-500/30"],
-        panel: ["border-blue-500/30"],
-        confirm: ["bg-blue-600", "hover:bg-blue-500"],
+        icon: ["bg-sky-500/10", "text-sky-600", "dark:text-sky-300", "border-sky-500/30"],
+        panel: ["border-sky-500/30"],
+        confirm: ["bg-sky-600", "hover:bg-sky-500"],
       },
       danger: {
-        icon: ["bg-red-900/30", "text-red-300", "border-red-500/30"],
+        icon: ["bg-red-500/10", "text-red-600", "dark:text-red-300", "border-red-500/30"],
         panel: ["border-red-500/30"],
         confirm: ["bg-red-600", "hover:bg-red-500"],
       },

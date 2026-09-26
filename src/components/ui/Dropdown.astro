@@ -31,7 +31,7 @@ const menuId = `${name}-menu`;
 <div class={`tech-dropdown-container space-y-2 w-64 ${className}`} data-name={name}>
   <label
     id={labelId}
-    class="block text-sm font-medium text-slate-500 dark:text-slate-400"
+    class="block text-sm font-medium text-gray-500 dark:text-gray-400"
     for={triggerId}
   >
     {label}
@@ -51,15 +51,15 @@ const menuId = `${name}-menu`;
       aria-haspopup="listbox"
       aria-expanded="false"
       type="button"
-      class="dropdown-trigger w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2 text-left text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all flex justify-between items-center group hover:border-blue-500/50"
+      class="dropdown-trigger w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-left text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 outline-none transition-all flex justify-between items-center group hover:border-sky-500/50"
     >
       <span
-        class="selected-text text-sm text-slate-600 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate"
+        class="selected-text text-sm text-gray-600 dark:text-gray-300 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors truncate"
       >
         {options.find((opt) => opt.value === value)?.label || placeholder}
       </span>
       <div
-        class="flex items-center text-slate-400 dark:text-slate-500 group-hover:text-blue-600 dark:group-hover:text-blue-500 transition-colors"
+        class="flex items-center text-gray-400 dark:text-gray-500 group-hover:text-sky-600 dark:group-hover:text-sky-500 transition-colors"
       >
         <svg
           class="w-4 h-4 transform transition-transform duration-200"
@@ -78,7 +78,7 @@ const menuId = `${name}-menu`;
 
     <div
       id={menuId}
-      class="dropdown-menu hidden absolute z-50 w-max min-w-full max-w-[min(92vw,28rem)] mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg dark:shadow-xl overflow-hidden backdrop-blur-xl transform origin-top transition-all duration-200"
+      class="dropdown-menu hidden absolute z-50 w-max min-w-full max-w-[min(92vw,28rem)] mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-xl overflow-hidden backdrop-blur-xl transform origin-top transition-all duration-200"
     >
       <ul
         class="max-h-60 overflow-y-auto py-1 custom-scrollbar"
@@ -91,7 +91,7 @@ const menuId = `${name}-menu`;
               <button
                 type="button"
                 role="option"
-                class="dropdown-item w-full text-left truncate px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                class="dropdown-item w-full text-left truncate px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-700 dark:hover:text-sky-400 transition-colors"
                 data-value={option.value}
               >
                 <span>{option.label}</span>
@@ -156,9 +156,9 @@ const menuId = `${name}-menu`;
           });
           arrow?.classList.add("rotate-180");
           trigger.classList.add(
-            "border-blue-500",
+            "border-sky-500",
             "ring-2",
-            "ring-blue-500/50",
+            "ring-sky-500/50",
           );
         } else {
           menu.classList.add("opacity-0", "scale-95");
@@ -170,9 +170,9 @@ const menuId = `${name}-menu`;
           }, 200);
           arrow?.classList.remove("rotate-180");
           trigger.classList.remove(
-            "border-blue-500",
+            "border-sky-500",
             "ring-2",
-            "ring-blue-500/50",
+            "ring-sky-500/50",
           );
         }
       };
@@ -220,9 +220,9 @@ const menuId = `${name}-menu`;
             if (matchingItem) {
               newLabel =
                 matchingItem.querySelector("span")?.textContent || newLabel;
-              selectedText.classList.add("text-blue-400");
+              selectedText.classList.add("text-sky-600", "dark:text-sky-400");
             } else {
-              selectedText.classList.remove("text-blue-400");
+              selectedText.classList.remove("text-sky-600", "dark:text-sky-400");
             }
 
             selectedText.textContent = newLabel;
@@ -242,7 +242,7 @@ const menuId = `${name}-menu`;
 
           input.value = value;
           selectedText.textContent = label;
-          selectedText.classList.add("text-blue-400");
+          selectedText.classList.add("text-sky-600", "dark:text-sky-400");
 
           input.dispatchEvent(new Event("change", { bubbles: true }));
 

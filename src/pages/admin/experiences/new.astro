@@ -132,7 +132,7 @@ import AlertToast from "../../../components/ui/AlertToast.astro";
         const button = document.createElement("button");
         button.type = "button";
         button.className =
-          "dropdown-item w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-blue-900/20 hover:text-blue-400 transition-colors flex items-center justify-between group";
+          "dropdown-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors flex items-center justify-between group";
         button.dataset.value = String(project.id);
 
         const label = document.createElement("span");
@@ -140,7 +140,7 @@ import AlertToast from "../../../components/ui/AlertToast.astro";
 
         const indicator = document.createElement("span");
         indicator.className =
-          "indicator opacity-0 group-hover:opacity-100 text-blue-500 font-bold";
+          "indicator opacity-0 group-hover:opacity-100 text-sky-500 font-bold";
         indicator.textContent = "_";
 
         button.append(label, indicator);

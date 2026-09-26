@@ -53,7 +53,7 @@ export function LinksManager({ projectId, onChanged }: { projectId: number; onCh
     <div className="space-y-3">
       {items.length === 0 && <p className="admin-help">No links yet. Public CTAs come from active + public links.</p>}
       {items.map((it, i) => (
-        <div key={it.id} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 space-y-2">
+        <div key={it.id} className="rounded-lg border border-gray-950/5 dark:border-white/10 p-3 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <input className="admin-input max-w-[160px]" placeholder="Label" value={it.label}
               onChange={(e) => setField(it.id, { label: e.target.value })} aria-label="Link label" />
@@ -78,14 +78,14 @@ export function LinksManager({ projectId, onChanged }: { projectId: number; onCh
               options={LINK_STATUSES.map((s) => ({ value: s, label: s }))}
               ariaLabel="Link status"
             />
-            <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+            <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
               <input type="checkbox" checked={it.isPublic} onChange={(e) => setField(it.id, { isPublic: e.target.checked })} /> Public
             </label>
             <span className="ml-auto"><button type="button" className="admin-btn admin-btn-primary" onClick={() => save(it)}>Save link</button></span>
           </div>
         </div>
       ))}
-      <div className="rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-3 flex flex-wrap gap-2 items-center">
+      <div className="rounded-lg border border-dashed border-gray-950/10 dark:border-white/10 p-3 flex flex-wrap gap-2 items-center">
         <input className="admin-input max-w-[160px]" placeholder="Label" value={draft.label} onChange={(e) => setDraft({ ...draft, label: e.target.value })} aria-label="New link label" />
         <input className="admin-input flex-1 min-w-[200px]" placeholder="https://…" value={draft.url} onChange={(e) => setDraft({ ...draft, url: e.target.value })} aria-label="New link URL" />
         <Select

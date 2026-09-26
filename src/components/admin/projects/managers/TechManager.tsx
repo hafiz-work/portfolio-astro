@@ -69,10 +69,10 @@ export function TechManager({ projectId, onChanged }: { projectId: number; onCha
         {attached.length === 0 && <p className="admin-help mt-1">No tech attached yet.</p>}
         <div className="mt-2 space-y-2">
           {attached.map((it, i) => (
-            <div key={it.id} className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
-              <span className="font-medium text-slate-800 dark:text-slate-200">{it.tech?.name ?? `#${it.techStackId}`}</span>
+            <div key={it.id} className="flex items-center gap-2 rounded-lg border border-gray-950/5 dark:border-white/10 px-3 py-2">
+              <span className="font-medium text-gray-800 dark:text-gray-200">{it.tech?.name ?? `#${it.techStackId}`}</span>
               {it.tech?.category && <span className="admin-help">· {it.tech.category}</span>}
-              <label className="ml-auto flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <label className="ml-auto flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                 <input type="checkbox" checked={it.isPrimary} onChange={(e) => setPrimary(it, e.target.checked)} /> Primary
               </label>
               <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
@@ -95,7 +95,7 @@ export function TechManager({ projectId, onChanged }: { projectId: number; onCha
         <button type="button" className="admin-btn admin-btn-secondary" onClick={attach}><Plus className="h-4 w-4" /> Attach</button>
       </div>
 
-      <div className="rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-3 flex flex-wrap items-center gap-2">
+      <div className="rounded-lg border border-dashed border-gray-950/10 dark:border-white/10 p-3 flex flex-wrap items-center gap-2">
         <input className="admin-input max-w-[200px]" placeholder="New tech name" value={newTech.name}
           onChange={(e) => setNewTech({ ...newTech, name: e.target.value })} aria-label="New tech name" />
         <Select

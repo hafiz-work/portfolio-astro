@@ -1,7 +1,7 @@
 ---
 import { Image } from "astro:assets";
 import CoreLayout from "../layouts/CoreLayout.astro";
-import Background from "../components/layout/Background.astro";
+import SectionHeader from "../components/layout/SectionHeader.astro";
 
 // Cloudflare Turnstile (invisible until a challenge is needed). This site key is
 // public; keep it as a fallback so production login still works when build-time
@@ -11,34 +11,57 @@ const turnstileSiteKey =
   import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || DEFAULT_TURNSTILE_SITE_KEY;
 ---
 
-<CoreLayout title="Sign in | Hafiz Bahtiar">
-  <Background />
-  <div class="min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-sm">
-      <!-- Header -->
-      <div class="mb-8 text-center">
-        <a
-          href="/"
-          class="inline-flex" aria-label="Hafiz Bahtiar - home">
-          <Image src="/brand/wordmark.svg" alt="hafizbahtiar" width={383} height={120} loading="eager" class="h-12 w-auto" />
-        </a>
-        <h1
-          class="font-display text-2xl font-bold text-slate-900 dark:text-slate-100 mt-4"
-        >
-          Welcome back
-        </h1>
-        <p class="text-sm text-slate-400 dark:text-slate-500 mt-1">
-          Sign in to manage your portfolio
-        </p>
-      </div>
+<CoreLayout
+  title="Sign in | Hafiz Bahtiar"
+  description="Sign in to manage the portfolio - projects, posts, experiences and policies."
+>
+  <!-- Public shell without PublicLayout's navbar/footer: gutters + full-bleed
+       hairlines + Inter, so /login reads as part of the site but stays focused. -->
+  <div class="page-shell font-inter text-gray-950 dark:text-white">
+    <div class="gutter gutter-left" aria-hidden="true"></div>
+    <div class="page-col">
+      <main class="flex-grow">
+        <div class="line-b">
+          <div class="container-main flex h-14 items-center">
+            <a
+              href="/"
+              class="inline-flex items-center"
+              aria-label="Hafiz Bahtiar - home"
+            >
+              <Image
+                src="/brand/wordmark.svg"
+                alt="hafizbahtiar"
+                width={383}
+                height={120}
+                loading="eager"
+                class="h-8 w-auto"
+              />
+            </a>
+          </div>
+        </div>
 
-      <!-- Status message -->
-      <div id="status-display" class="mb-4 hidden" aria-live="polite">
-        <div
-          id="status-panel"
-          role="alert"
-          class="flex items-center gap-3 px-4 py-3 rounded-lg border text-sm border-red-300 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-300"
-        >
+        <div class="section-gap"></div>
+
+        <SectionHeader
+          as="h1"
+          eyebrow="Account"
+          title="Welcome back."
+          description="Sign in to manage projects, posts, experiences and policies."
+        />
+
+        <div class="h-10"></div>
+
+        <!-- Form row: same full-bleed hairline rhythm as the contact form. -->
+        <div class="line-y">
+          <form
+            class="container-main max-w-md space-y-5 py-10 sm:py-14"
+            id="login-form"
+            novalidate
+            data-turnstile-site-key={turnstileSiteKey || undefined}
+          >
+      <!-- Status message: error by default, emerald when the script flips it. -->
+      <div id="status-display" class="hidden" aria-live="polite">
+        <div id="status-panel" role="alert" class="flex items-center gap-3">
           <div id="status-icon" class="shrink-0">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -56,133 +79,126 @@ const turnstileSiteKey =
         </div>
       </div>
 
-      <!-- Login Form -->
-      <div
-        class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 sm:p-6 shadow-xl shadow-slate-200/50 dark:shadow-black/30"
-      >
-        <form
-          class="space-y-5"
-          id="login-form"
-          novalidate
-          data-turnstile-site-key={turnstileSiteKey || undefined}
+      <div>
+        <label
+          for="username"
+          class="mb-1.5 block text-sm/6 font-medium text-gray-950 dark:text-white"
+          >Email</label
         >
-          <div class="space-y-1.5">
-            <label
-              for="username"
-              class="block text-sm font-medium text-slate-700 dark:text-slate-300"
-              >Email</label
-            >
-            <input
-              type="email"
-              id="username"
-              name="username"
-              autocomplete="username"
-              inputmode="email"
-              class="block w-full px-3.5 py-2.5 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/60 transition-colors text-sm"
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-
-          <div class="space-y-1.5">
-            <label
-              for="password"
-              class="block text-sm font-medium text-slate-700 dark:text-slate-300"
-              >Password</label
-            >
-            <div class="relative">
-              <input
-                type="password"
-                id="password"
-                name="password"
-                autocomplete="current-password"
-                class="block w-full px-3.5 py-2.5 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/60 transition-colors text-sm pr-10"
-                placeholder="••••••••"
-                required
-              />
-              <button
-                type="button"
-                id="toggle-password"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-                aria-label="Toggle password visibility"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                  ></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            id="submit-btn"
-            class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            Sign in
-          </button>
-
-          {
-            turnstileSiteKey && (
-              <div id="turnstile-login" class="flex justify-center"></div>
-            )
-          }
-
-          {
-            turnstileSiteKey && (
-              <p class="text-[11px] leading-relaxed text-center text-slate-400 dark:text-slate-500">
-                Protected by Cloudflare Turnstile - the Cloudflare{" "}
-                <a
-                  href="https://www.cloudflare.com/privacypolicy/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="underline hover:text-slate-600 dark:hover:text-slate-300"
-                >
-                  Privacy Policy
-                </a>{" "}
-                applies.
-              </p>
-            )
-          }
-        </form>
+        <input
+          type="email"
+          id="username"
+          name="username"
+          autocomplete="username"
+          inputmode="email"
+          class="field"
+          placeholder="you@example.com"
+          required
+        />
       </div>
 
-      <p class="mt-6 text-center">
-        <a
-          href="/"
-          class="inline-flex items-center gap-1.5 text-sm text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+      <div>
+        <label
+          for="password"
+          class="mb-1.5 block text-sm/6 font-medium text-gray-950 dark:text-white"
+          >Password</label
         >
-          <svg
-            class="w-3.5 h-3.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div class="relative">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="current-password"
+            class="field pr-11"
+            placeholder="••••••••"
+            required
+          />
+          <button
+            type="button"
+            id="toggle-password"
+            class="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-gray-400 transition-colors hover:text-gray-950 dark:text-gray-500 dark:hover:text-white"
+            aria-label="Toggle password visibility"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 19l-7-7 7-7"></path>
-          </svg>
-          Back to site
-        </a>
-      </p>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              ></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" id="submit-btn" class="btn-pill btn-pill-primary w-full">
+        Sign in
+      </button>
+
+      {
+        turnstileSiteKey && (
+          <div id="turnstile-login" class="flex justify-center"></div>
+        )
+      }
+
+      {
+        turnstileSiteKey && (
+          <p class="text-xs/5 text-gray-500 dark:text-gray-400">
+            Protected by Cloudflare Turnstile - the Cloudflare{" "}
+            <a
+              href="https://www.cloudflare.com/privacypolicy/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="underline hover:text-gray-950 dark:hover:text-white"
+            >
+              Privacy Policy
+            </a>{" "}
+            applies.
+          </p>
+        )
+      }
+    </form>
+  </div>
+
+  <!-- Return row -->
+  <div class="line-y">
+    <div class="container-main flex flex-wrap items-center gap-x-4 gap-y-3 py-5">
+      <a href="/" class="btn-pill btn-pill-ghost">
+        <svg
+          class="h-3.5 w-3.5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"></path>
+        </svg>
+        Back to site
+      </a>
+      <span class="font-mono text-xs/6 text-gray-400 dark:text-gray-500"
+        >/login</span
+      >
     </div>
+  </div>
+
+        <div class="section-gap"></div>
+      </main>
+    </div>
+    <div class="gutter gutter-right" aria-hidden="true"></div>
   </div>
 </CoreLayout>
 

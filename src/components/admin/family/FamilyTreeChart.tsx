@@ -558,14 +558,14 @@ export const FamilyTreeChart = ({
 
   if (chartData.length === 0) {
     return (
-      <div className="h-full w-full min-h-[320px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center p-5 text-sm text-slate-500 dark:text-slate-400">
+      <div className="h-full w-full min-h-[320px] rounded-xl border border-gray-950/5 dark:border-white/10 bg-gray-950/[0.025] dark:bg-white/[0.03] flex items-center justify-center p-5 text-sm text-gray-500 dark:text-gray-400">
         No people available to render chart.
       </div>
     );
   }
 
   return (
-    <div className="family-chart--admin h-full w-full min-h-[480px] overflow-hidden rounded-xl border border-slate-200 bg-family-canvas shadow-sm dark:border-slate-700 dark:shadow-none">
+    <div className="family-chart--admin h-full w-full min-h-[480px] overflow-hidden rounded-xl border border-gray-950/5 bg-family-canvas dark:border-white/10 dark:shadow-none">
       <div ref={containerRef} className="f3 h-full w-full" />
     </div>
   );

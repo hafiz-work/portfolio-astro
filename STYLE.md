@@ -1,9 +1,10 @@
 # STYLE.md - Design language
 
-Two themes live in this repo. **Public** (non-admin) pages follow the
-tailwindcss.com styling line: flat canvas, hatched gutter rails, full-bleed
-hairline rows, huge tight headings, pill buttons. **Admin** is a locked slate/blue/cyan system inside `PrivateLayout`,
-always dark - never restyle it to match public.
+**One line for the whole site.** Every surface - public pages and the `/admin`
+panel behind `/login` - follows the tailwindcss.com styling line: flat canvas,
+hatched gutter rails, full-bleed hairline rows, huge tight headings, pill
+buttons, gray ink with a sky accent. Admin used to be a locked slate/blue/cyan
+dark system; it was migrated on 2026-09-26 (see "Admin" below).
 
 `src/styles/index.css` is the single source of truth. Raw hex only lives in the
 `@theme` block as named tokens; markup must use token/utility classes, never
@@ -13,15 +14,12 @@ inlined `bg-[#...]`.
 
 | Token | Light | Dark |
 |---|---|---|
-| `--color-canvas` (public page bg) | `#ffffff` (white) | - |
-| `--color-pub-dark` (public dark bg) | - | `#030712` (= tailwind gray-950, `oklch(.13 .028 261.692)`) |
-| `--color-admin-base` (locked admin canvas) | - | `#0f172a` (slate-900) |
+| `--color-canvas` (page bg) | `#ffffff` (white) | - |
+| `--color-pub-dark` (dark page bg) | - | `#030712` (= tailwind gray-950, `oklch(.13 .028 261.692)`) |
 | `--color-surface-code` / `-rail` | - | `#0d1117` / `#161b22` (code & editor) |
 | `--color-family-canvas` | `#f1f5f9` | `#1a1f29` |
 
-`html.dark body` → `bg-pub-dark`. Admin: `PrivateLayout` forces
-`bg-admin-base` on its container, so the public body color never reaches the
-admin chrome.
+`html.dark body` → `bg-pub-dark`; admin panels use the same pair.
 
 ## Public shell (`PublicLayout.astro` + `index.css`)
 
@@ -46,17 +44,36 @@ Depth via hairlines, not shadows:
 - Code windows stay dark in both themes (`bg-gray-950` light / `white/4` dark), three gray dots, line numbers; keys `pink-400`, strings `sky-300`, numbers `amber-300`.
 - Shadows only on floating chrome (status card, dropdowns).
 
+## Admin (`PrivateLayout` + the `.admin-*` atoms)
+
+Same line, focused chrome - no second theme:
+
+- **Layout**: `PrivateLayout` = canvas + fixed hairline sidebar (`rounded-xl`,
+  no shadow) + a `rounded-xl` main panel (hairline ring, no shadow) + a `h-16`
+  hairline header with breadcrumbs and the theme toggle. It follows the app
+  theme (light/dark), not a locked dark mode.
+- **Atoms**: `.admin-card` (flat panel + hairline ring), `.admin-card-title`,
+  `.admin-label`, `.admin-input` (= `.field`), `.admin-help`, `.admin-error`,
+  `.admin-form-actions`, `.admin-btn` / `-primary` / `-secondary` / `-danger`
+  (pills). They live in `index.css` and are the single source of truth - fix the
+  look there, never per page.
+- **Depth**: hairline rings, like the public surfaces. Shadows only on floating
+  chrome (modals, dropdowns, drawers).
+- **Login** (`/login`) is the door to this panel but not inside it: it uses
+  `CoreLayout` + `.page-shell`/`.line-*`/`.field`/`.btn-pill` directly, so it
+  reads as part of the public site without `PublicLayout`'s navbar and footer.
+
 ## Color
 
 - **Public**: Tailwind **gray** (`gray-950` headings / `gray-600` body light; `white` / `gray-400` dark). Accent **sky** (`sky-600` light / `sky-400` dark) for eyebrows, inline `.token` code, focus rings.
-- **Buttons**: `.btn-pill .btn-pill-primary` (gray-950 light / gray-700 dark) and `.btn-pill .btn-pill-ghost` (inset ring). `.btn-*` / `.admin-btn-*` are admin - don't use them on public pages.
-- **Admin**: unchanged slate/blue/cyan, locked in `PrivateLayout`.
+- **Buttons**: `.btn-pill .btn-pill-primary` (gray-950 light / gray-700 dark) and `.btn-pill .btn-pill-ghost` (inset ring). Inside admin pages use the `.admin-btn*` atoms - same pills, same palette - so the admin stays one system.
+- **Admin**: identical palette (gray ink, sky accent, emerald/red for status). Slate, blue and cyan are gone; `.admin-*` atoms carry the admin look.
 - `--pattern-fg` (`rgb(3 7 18 / .05)` light, `rgb(255 255 255 / .1)` dark) is the only line/hatch ink.
 
 ## Type
 
 - Public: `font-inter` (Inter), set on `<body>` by `PublicLayout`. Headings `font-medium tracking-tighter`; hero `.display` up to `text-8xl`.
-- Admin: `--font-sans` Instrument Sans / `--font-display` Bricolage Grotesque (unchanged).
+- Admin: `PrivateLayout` applies the same `font-inter`; page titles use the public heading treatment. (Legacy: `blog/index.astro` and `verify-email.astro` still use `font-display`/Bricolage - clean up when those pages are next touched.)
 - `--font-mono` IBM Plex Mono - eyebrows, annotations, tags, code.
 
 ## Brand
@@ -72,7 +89,7 @@ Never hand-edit those files - change the generator and re-run.
 
 ## Rules
 
-1. Any new public page/component: use `SectionHeader`, `.line-*`, `.container-main`, `.frame`, `.btn-pill-*`, `.eyebrow`, `.lead` before writing ad-hoc classes.
-2. Never restyle sibling admin atoms to match the public line just because they're on screen together.
+1. Any new page/component: use `SectionHeader`, `.line-*`, `.container-main`, `.frame`, `.btn-pill-*`, `.eyebrow`, `.lead` - and inside admin the `.admin-*` atoms - before writing ad-hoc classes.
+2. Admin shares the public line: change the look in the shared atoms (`index.css`) or the chrome (`PrivateLayout`, `AdminSidebar`, `AdminNavbar`), never one page at a time.
 3. New colors: add a token to `@theme`, don't inline arbitrary hex.
 4. Pattern alpha must stay ≤ 5% light / ≤ 10% dark - texture is a whisper.

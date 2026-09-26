@@ -12,7 +12,7 @@ const settings = {
       <div class="flex items-center gap-4">
         <a
           href="/admin/settings/security"
-          class="text-slate-400 hover:text-slate-100 transition-colors"
+          class="text-gray-400 hover:text-white transition-colors"
         >
           <svg
             class="h-5 w-5"
@@ -29,11 +29,11 @@ const settings = {
         </a>
         <div>
           <h1
-            class="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100"
+            class="text-xl md:text-2xl font-bold text-gray-950 dark:text-white"
           >
             Maintenance Mode
           </h1>
-          <p class="text-slate-400 dark:text-slate-500 text-xs md:text-sm mt-1">
+          <p class="text-gray-400 dark:text-gray-500 text-xs md:text-sm mt-1">
             Maintenance mode and site availability
           </p>
         </div>
@@ -67,16 +67,16 @@ const settings = {
     </p>
 
     <div
-      class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 md:p-5 max-w-2xl"
+      class="rounded-xl border border-gray-950/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 md:p-5 max-w-2xl"
     >
       <div
-        class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700"
+        class="flex items-center justify-between p-4 bg-gray-950/[0.025] dark:bg-white/5 rounded-lg border border-gray-950/5 dark:border-white/10"
       >
         <div>
-          <h4 class="text-slate-900 dark:text-slate-100 font-medium">
+          <h4 class="text-gray-950 dark:text-white font-medium">
             Enable Maintenance Mode
           </h4>
-          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Temporarily disable public access to the site. Only admins will be
             able to access the dashboard.
           </p>
@@ -90,7 +90,7 @@ const settings = {
             checked={settings.maintenanceMode}
           />
           <div
-            class="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-400/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-500"
+            class="w-11 h-6 bg-gray-950/15 dark:bg-white/15 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-sky-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-950/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"
           >
           </div>
         </label>

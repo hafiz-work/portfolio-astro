@@ -32,22 +32,12 @@ The project uses SSR (`output: "server"`) via `@astrojs/cloudflare`. Pages that 
 
 - `CoreLayout.astro` - root HTML shell (theme choice lives in the public Footer's system/light/dark switcher), injects theme-init script (reads `localStorage("theme")`, adds `.dark` to `<html>`), uses Astro `<ClientRouter>` for SPA transitions.
 - `PublicLayout.astro` - wraps CoreLayout with `Navbar`, `Footer`, `Background`.
-- `PrivateLayout.astro` - wraps CoreLayout with `AdminSidebar`, `AdminNavbar`. Forces always-dark via `class="... bg-[#0f172a] dark"` on the flex container - never remove this or the admin UI breaks.
+- `PrivateLayout.astro` - wraps CoreLayout with `AdminSidebar`, `AdminNavbar`. Follows the app theme (light/dark) like the public site - do **not** re-add a locked `dark` class; every admin class needs a light and a `dark:` variant.
 - `ProjectLayout.astro` - thin wrapper for the projects listing page.
 
 ### Dark mode
 
-Tailwind v4 with `@custom-variant dark (&:where(.dark, .dark *))` in `src/styles/index.css`. The `.dark` class is toggled on `<html>` by the inline script in `CoreLayout`. Admin is always dark (locked via PrivateLayout). Use the established slate palette:
-
-```
-text-slate-900 dark:text-slate-100       (headings)
-text-slate-500 dark:text-slate-400       (body / labels)
-bg-white dark:bg-slate-800               (card backgrounds)
-border-slate-200 dark:border-slate-700   (card borders)
-border-slate-300 dark:border-slate-600   (input borders)
-```
-
-Accent color is **cyan** (`cyan-400/500`) for interactive elements, **blue** for buttons/CTAs - admin. Public pages use gray + **sky** and `.btn-pill-*` (see `STYLE.md`).
+Tailwind v4 with `@custom-variant dark (&:where(.dark, .dark *))` in `src/styles/index.css`. The `.dark` class is toggled on `<html>` by the inline script in `CoreLayout`. Admin follows the same theme. One palette everywhere - gray ink, **sky** accent, `.btn-pill-*` on public pages and the `.admin-*` atoms (`index.css`) inside admin. No slate/blue/cyan. See `STYLE.md`.
 
 ### UI components (`src/components/ui/`)
 
@@ -55,7 +45,6 @@ Custom Astro components with their own inline `<script>` blocks that set up even
 
 - `Dropdown.astro` - single-select. Hidden `<input type="hidden">` stores value. Items must have a `<span>` wrapping the label text (required by the change-listener that reads `querySelector("span")?.textContent`).
 - `MultiDropdown.astro` - multi-select, stores JSON array in hidden input.
-- `Checkbox.astro` - styled toggle button over a hidden `<input type="checkbox">`.
 - `DateInput.astro` - styled date input.
 - `Select.tsx` - React equivalent of Dropdown for use inside React components.
 

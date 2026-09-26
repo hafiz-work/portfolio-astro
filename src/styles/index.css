@@ -26,8 +26,6 @@
     /* light-mode page background (white - tailwindcss.com line) */
     --color-pub-dark: #030712;
     /* dark-mode public background (= gray-950, oklch(.13 .028 261.692)) */
-    --color-admin-base: #0f172a;
-    /* locked admin canvas (= slate-900) + dark body source of truth */
 
     /* Code / editor surfaces (GitHub-dark family) */
     --color-surface-code: #0d1117;
@@ -355,34 +353,38 @@ html[data-theme-switching]::view-transition-new(root) {
 
     /* Admin form system - single source of truth for admin cards, labels,
        and fields. Pages must use these instead of per-file class constants
-       so the admin stays one coherent system. */
+       so the admin stays one coherent system.
+
+       Retuned to the public line (2026-09-26): flat surfaces, hairline rings,
+       gray ink, sky accent - no shadows, no slate/blue/cyan. Class names are
+       unchanged, so every admin page inherits the retune. */
     .admin-card {
-        @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 md:p-5;
+        @apply rounded-xl bg-white p-4 ring-1 ring-gray-950/5 dark:bg-white/[0.03] dark:ring-white/10 md:p-5;
     }
 
     .admin-card-title {
-        @apply mb-4 border-b border-slate-200 pb-3 text-sm font-semibold text-slate-900 dark:border-slate-700 dark:text-slate-100;
+        @apply mb-4 border-b border-gray-950/5 pb-3 text-sm/6 font-semibold text-gray-950 dark:border-white/10 dark:text-white;
     }
 
     .admin-label {
-        @apply block text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400;
+        @apply block text-sm/6 font-medium text-gray-950 dark:text-white;
     }
 
     .admin-input {
-        @apply w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-100 dark:placeholder:text-slate-500;
+        @apply block w-full rounded-lg bg-white px-3 py-2 text-sm/6 text-gray-950 outline-1 -outline-offset-1 outline-gray-950/10 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-sky-500 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500;
     }
 
     .admin-help {
-        @apply text-xs text-slate-400 dark:text-slate-500;
+        @apply text-xs/5 text-gray-500 dark:text-gray-400;
     }
 
     .admin-error {
-        @apply text-xs text-red-600 dark:text-red-400;
+        @apply text-xs/5 text-red-600 dark:text-red-400;
     }
 
     /* Admin actions */
     .admin-form-actions {
-        @apply flex flex-col gap-3 border-t border-slate-200 pt-5 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-end;
+        @apply flex flex-col gap-3 border-t border-gray-950/5 pt-5 dark:border-white/10 sm:flex-row sm:items-center sm:justify-end;
     }
 
     .admin-form-actions .admin-btn {
@@ -390,19 +392,19 @@ html[data-theme-switching]::view-transition-new(root) {
     }
 
     .admin-btn {
-        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-60 dark:focus:ring-offset-slate-900;
+        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-full px-4 py-2 text-sm/6 font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:cursor-not-allowed disabled:opacity-60;
     }
 
     .admin-btn-primary {
-        @apply border border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-950/10 hover:border-blue-500 hover:bg-blue-500 focus:ring-blue-400;
+        @apply bg-gray-950 text-white hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600;
     }
 
     .admin-btn-secondary {
-        @apply border border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 focus:ring-slate-400 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-800;
+        @apply text-gray-950 ring-1 ring-gray-950/10 ring-inset hover:bg-gray-950/[0.025] dark:text-white dark:ring-white/15 dark:hover:bg-white/5;
     }
 
     .admin-btn-danger {
-        @apply border border-red-500/50 bg-red-500/10 text-red-600 hover:bg-red-500/15 focus:ring-red-400 dark:text-red-300;
+        @apply text-red-600 ring-1 ring-red-500/30 ring-inset hover:bg-red-500/10 dark:text-red-400;
     }
 
     /* Cards */

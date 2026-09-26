@@ -165,9 +165,9 @@ type MapRef = MapLibreGL.Map;
 const DefaultLoader = () => (
   <div className="absolute inset-0 flex items-center justify-center">
     <div className="flex gap-1">
-      <span className="size-1.5 rounded-full bg-slate-400/60 animate-pulse" />
-      <span className="size-1.5 rounded-full bg-slate-400/60 animate-pulse [animation-delay:150ms]" />
-      <span className="size-1.5 rounded-full bg-slate-400/60 animate-pulse [animation-delay:300ms]" />
+      <span className="size-1.5 rounded-full bg-gray-400/60 animate-pulse" />
+      <span className="size-1.5 rounded-full bg-gray-400/60 animate-pulse [animation-delay:150ms]" />
+      <span className="size-1.5 rounded-full bg-gray-400/60 animate-pulse [animation-delay:300ms]" />
     </div>
   </div>
 );
@@ -342,7 +342,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
         className={cn("relative w-full h-full", className)}
       >
         {initFailed ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-400 dark:text-slate-500">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400 dark:text-gray-500">
             <svg
               className="w-5 h-5"
               fill="none"
@@ -556,7 +556,7 @@ function MarkerContent({ children, className }: MarkerContentProps) {
 
 function DefaultMarkerIcon() {
   return (
-    <div className="relative h-4 w-4 rounded-full border-2 border-white bg-blue-500 shadow-lg" />
+    <div className="relative h-4 w-4 rounded-full border-2 border-white bg-sky-500 shadow-lg" />
   );
 }
 
@@ -784,8 +784,8 @@ function ControlGroup({ children }: { children: React.ReactNode }) {
         "flex flex-col rounded-md border shadow-md overflow-hidden",
         "[&>button:not(:last-child)]:border-b",
         dark
-          ? "bg-slate-800 border-slate-600 [&>button:not(:last-child)]:border-slate-600"
-          : "bg-white border-slate-200 [&>button:not(:last-child)]:border-slate-200"
+          ? "bg-gray-800 border-gray-600 [&>button:not(:last-child)]:border-gray-600"
+          : "bg-white border-gray-200 [&>button:not(:last-child)]:border-gray-200"
       )}
     >
       {children}
@@ -814,8 +814,8 @@ function ControlButton({
       className={cn(
         "flex items-center justify-center size-8 transition-colors",
         dark
-          ? "text-slate-200 hover:bg-slate-700"
-          : "text-slate-600 hover:bg-slate-100",
+          ? "text-gray-200 hover:bg-gray-700"
+          : "text-gray-600 hover:bg-gray-100",
         disabled && "opacity-40 pointer-events-none cursor-not-allowed"
       )}
       disabled={disabled}
@@ -968,8 +968,8 @@ function CompassButton({ onClick }: { onClick: () => void }) {
       >
         <path d="M12 2L16 12H12V2Z" className="fill-red-500" />
         <path d="M12 2L8 12H12V2Z" className="fill-red-300" />
-        <path d="M12 22L16 12H12V22Z" className="fill-slate-400/70" />
-        <path d="M12 22L8 12H12V22Z" className="fill-slate-400/40" />
+        <path d="M12 22L16 12H12V22Z" className="fill-gray-400/70" />
+        <path d="M12 22L8 12H12V22Z" className="fill-gray-400/40" />
       </svg>
     </ControlButton>
   );

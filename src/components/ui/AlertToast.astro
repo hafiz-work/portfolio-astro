@@ -11,7 +11,7 @@ const alertId = id;
 >
   <div
     data-alert-panel
-    class="min-w-[280px] max-w-[360px] rounded-lg border border-slate-200 bg-white px-5 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+    class="min-w-[280px] max-w-[360px] rounded-lg border border-gray-200 bg-white px-5 py-4 shadow-lg dark:border-gray-700 dark:bg-gray-900"
   >
     <div class="flex items-start gap-3">
       <div
@@ -21,17 +21,17 @@ const alertId = id;
         INFO
       </div>
       <div class="flex-1">
-        <p data-alert-title class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <p data-alert-title class="text-sm font-semibold text-gray-900 dark:text-gray-100">
           Notification
         </p>
-        <p data-alert-message class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p data-alert-message class="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Action completed.
         </p>
       </div>
       <button
         type="button"
         data-alert-close
-        class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+        class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
         aria-label="Dismiss"
       >
         <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
@@ -62,14 +62,14 @@ const alertId = id;
       warning: [
         "border-amber-400/40",
       ],
-      info: ["border-blue-400/40"],
+      info: ["border-sky-400/40"],
     };
 
     const iconVariants = {
-      success: ["border-emerald-500/40", "text-emerald-400"],
-      error: ["border-rose-500/40", "text-rose-400"],
-      warning: ["border-amber-400/40", "text-amber-300"],
-      info: ["border-blue-400/40", "text-blue-300"],
+      success: ["border-emerald-500/40", "text-emerald-600", "dark:text-emerald-400"],
+      error: ["border-rose-500/40", "text-rose-600", "dark:text-rose-400"],
+      warning: ["border-amber-400/40", "text-amber-700", "dark:text-amber-300"],
+      info: ["border-sky-400/40", "text-sky-600", "dark:text-sky-300"],
     };
 
     const allPanelClasses = Object.values(panelVariants).flat();

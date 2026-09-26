@@ -55,30 +55,30 @@ const initials = (name: string) =>
     .join("");
 
 const builderShellClass =
-  "admin-family-builder rounded-xl border border-slate-200 bg-white/70 p-4 shadow-sm shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900/30 dark:shadow-none md:p-5";
+  "admin-family-builder rounded-xl border border-gray-950/5 bg-white/70 p-4 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none md:p-5";
 const sectionCardClass =
-  "rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 md:p-5";
+  "rounded-xl border border-gray-950/5 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03] md:p-5";
 const insetPanelClass =
-  "rounded-xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-900/55";
+  "rounded-xl border border-gray-950/5 bg-gray-950/[0.025] p-4 dark:border-white/10 dark:bg-white/[0.03]";
 const inputClass =
-  "w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-100 dark:placeholder:text-slate-500";
+  "w-full rounded-lg border border-gray-950/10 bg-white px-4 py-2 text-sm text-gray-950 outline-none transition-colors placeholder:text-gray-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-gray-500";
 const monoInputClass = `${inputClass} font-mono text-xs`;
 const labelClass =
-  "block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400";
+  "block text-xs font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400";
 const eyebrowClass =
-  "text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-400";
-const headingClass = "text-slate-900 dark:text-slate-100";
-const bodyTextClass = "text-slate-600 dark:text-slate-400";
+  "text-xs font-semibold uppercase tracking-[0.16em] text-sky-700 dark:text-sky-400";
+const headingClass = "text-gray-950 dark:text-white";
+const bodyTextClass = "text-gray-600 dark:text-gray-400";
 const toolbarButtonClass =
-  "rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-cyan-400 hover:bg-cyan-50/60 hover:text-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-200 dark:hover:border-cyan-500/60 dark:hover:bg-cyan-500/10 dark:hover:text-cyan-200";
+  "rounded-lg border border-gray-950/10 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-sky-400 hover:bg-sky-500/10 hover:text-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/20 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:border-sky-400 dark:hover:bg-sky-500/10 dark:hover:text-sky-200";
 const emptyStateClass =
-  "rounded-xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400";
+  "rounded-xl border border-gray-950/5 bg-gray-950/[0.025] p-5 text-sm text-gray-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-400";
 const errorClass =
   "rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-300";
 const selectedPillClass =
-  "rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-sm font-medium text-cyan-700 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-300";
+  "rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-1 text-sm font-medium text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300";
 const canvasFrameClass =
-  "h-[70vh] min-h-[520px] rounded-xl border border-slate-200 bg-family-canvas p-3 shadow-inner shadow-slate-200/80 dark:border-slate-700 dark:shadow-none";
+  "h-[70vh] min-h-[520px] rounded-xl border border-gray-950/5 bg-family-canvas p-3 dark:border-white/10 dark:shadow-none";
 
 const relationActionStyles: Record<RelativeAction, {
   card: string;
@@ -86,9 +86,9 @@ const relationActionStyles: Record<RelativeAction, {
   compact: string;
 }> = {
   father: {
-    card: "border-blue-200 bg-blue-50/70 hover:border-blue-300 hover:bg-blue-100/70 focus:ring-blue-500/20 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:hover:bg-cyan-500/20",
-    title: "text-blue-700 dark:text-cyan-300",
-    compact: "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 focus:ring-blue-500/20 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-300 dark:hover:bg-cyan-500/20",
+    card: "border-sky-500/30 bg-sky-500/10 hover:border-sky-400 hover:bg-sky-500/10 focus:ring-sky-500/20 dark:border-sky-500/30 dark:bg-sky-500/10 dark:hover:bg-sky-500/20",
+    title: "text-sky-700 dark:text-sky-300",
+    compact: "border-sky-500/30 bg-sky-500/10 text-sky-700 hover:bg-sky-500/10 focus:ring-sky-500/20 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300 dark:hover:bg-sky-500/20",
   },
   mother: {
     card: "border-rose-200 bg-rose-50/70 hover:border-rose-300 hover:bg-rose-100/70 focus:ring-rose-500/20 dark:border-pink-500/30 dark:bg-pink-500/10 dark:hover:bg-pink-500/20",
@@ -101,9 +101,9 @@ const relationActionStyles: Record<RelativeAction, {
     compact: "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 focus:ring-amber-500/20 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20",
   },
   son: {
-    card: "border-blue-200 bg-blue-50/70 hover:border-blue-300 hover:bg-blue-100/70 focus:ring-blue-500/20 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:hover:bg-cyan-500/20",
-    title: "text-blue-700 dark:text-cyan-300",
-    compact: "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 focus:ring-blue-500/20 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-300 dark:hover:bg-cyan-500/20",
+    card: "border-sky-500/30 bg-sky-500/10 hover:border-sky-400 hover:bg-sky-500/10 focus:ring-sky-500/20 dark:border-sky-500/30 dark:bg-sky-500/10 dark:hover:bg-sky-500/20",
+    title: "text-sky-700 dark:text-sky-300",
+    compact: "border-sky-500/30 bg-sky-500/10 text-sky-700 hover:bg-sky-500/10 focus:ring-sky-500/20 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300 dark:hover:bg-sky-500/20",
   },
   daughter: {
     card: "border-rose-200 bg-rose-50/70 hover:border-rose-300 hover:bg-rose-100/70 focus:ring-rose-500/20 dark:border-pink-500/30 dark:bg-pink-500/10 dark:hover:bg-pink-500/20",
@@ -205,12 +205,12 @@ const CheckboxField = ({
         id={buttonId}
         type="button"
         onClick={() => onChange(!checked)}
-        className="group flex w-full items-center justify-between rounded-lg border border-slate-300 bg-white px-4 py-2 text-left text-slate-900 outline-none transition-colors hover:border-cyan-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-100 dark:hover:border-cyan-500/50"
+        className="group flex w-full items-center justify-between rounded-lg border border-gray-950/10 bg-white px-4 py-2 text-left text-gray-950 outline-none transition-colors hover:border-sky-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-sky-400"
       >
-        <span className="truncate text-sm text-slate-700 transition-colors group-hover:text-cyan-700 dark:text-slate-300 dark:group-hover:text-cyan-400">
+        <span className="truncate text-sm text-gray-700 transition-colors group-hover:text-sky-700 dark:text-gray-300 dark:group-hover:text-sky-400">
           {checked ? `${label}: ON` : `${label}: OFF`}
         </span>
-        <div className="flex items-center text-slate-400 transition-colors group-hover:text-cyan-600 dark:text-slate-500 dark:group-hover:text-cyan-500">
+        <div className="flex items-center text-gray-400 transition-colors group-hover:text-sky-600 dark:text-gray-500 dark:group-hover:text-sky-500">
           <svg
             className="w-4 h-4"
             fill="none"
@@ -1025,23 +1025,23 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/40">
+                <div className="rounded-lg border border-gray-950/5 bg-gray-950/[0.025] px-3 py-3 dark:border-white/10 dark:bg-white/[0.03]">
                   <div className={`text-lg font-semibold ${headingClass}`}>{stats.people}</div>
-                  <div className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <div className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     People
                   </div>
                 </div>
-                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/40">
+                <div className="rounded-lg border border-gray-950/5 bg-gray-950/[0.025] px-3 py-3 dark:border-white/10 dark:bg-white/[0.03]">
                   <div className={`text-lg font-semibold ${headingClass}`}>
                     {stats.relationships}
                   </div>
-                  <div className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <div className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     Links
                   </div>
                 </div>
-                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/40">
+                <div className="rounded-lg border border-gray-950/5 bg-gray-950/[0.025] px-3 py-3 dark:border-white/10 dark:bg-white/[0.03]">
                   <div className={`text-lg font-semibold ${headingClass}`}>{stats.living}</div>
-                  <div className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <div className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     Living
                   </div>
                 </div>
@@ -1273,7 +1273,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                       {detail.relationships.map((relationship) => (
                         <div
                           key={relationship.id}
-                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition-colors hover:border-cyan-200 hover:bg-cyan-50/50 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800/60"
+                          className="rounded-lg border border-gray-950/5 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:border-sky-500/30 hover:bg-sky-500/10 dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-white/5"
                         >
                           {buildRelationshipSummary(relationship, peopleById)}
                         </div>
@@ -1283,7 +1283,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                 </div>
               </div>
 
-              <aside className="space-y-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/35 xl:sticky xl:top-5">
+              <aside className="space-y-5 rounded-xl border border-gray-950/5 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03] xl:sticky xl:top-5">
                 {!selectedPerson ? (
                   <div className={emptyStateClass}>
                     Select a person from the chart to open the inspector.
@@ -1302,7 +1302,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-700 dark:bg-slate-800/70">
+                    <div className="flex items-center gap-3 rounded-xl border border-gray-950/5 bg-gray-950/[0.025] p-3 dark:border-white/10 dark:bg-white/[0.03]">
                       {selectedPerson.photoUrl ? (
                         <img
                           src={selectedPerson.photoUrl}
@@ -1310,12 +1310,12 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                           width={48}
                           height={48}
                           loading="lazy"
-                          className="h-12 w-12 rounded-full border border-slate-200 object-cover dark:border-slate-600"
+                          className="h-12 w-12 rounded-full border border-gray-950/5 object-cover dark:border-white/10"
                         />
                       ) : (
                         <div
                           aria-hidden="true"
-                          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-sm font-semibold text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"
+                          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-sky-500/10 text-sm font-semibold text-sky-700 dark:bg-sky-500/15 dark:text-sky-300"
                         >
                           {initials(selectedPerson.displayName)}
                         </div>
@@ -1325,10 +1325,10 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                           {selectedPerson.displayName}
                         </div>
                         <div className="mt-1 flex flex-wrap gap-2">
-                          <span className="rounded-full bg-white px-2 py-0.5 text-xs text-slate-600 ring-1 ring-slate-200 dark:bg-slate-900/60 dark:text-slate-300 dark:ring-slate-700">
+                          <span className="rounded-full bg-white px-2 py-0.5 text-xs text-gray-600 ring-1 ring-gray-950/5 dark:bg-white/5 dark:text-gray-300 dark:ring-white/10">
                             {selectedPerson.gender}
                           </span>
-                          <span className="rounded-full bg-white px-2 py-0.5 text-xs text-slate-600 ring-1 ring-slate-200 dark:bg-slate-900/60 dark:text-slate-300 dark:ring-slate-700">
+                          <span className="rounded-full bg-white px-2 py-0.5 text-xs text-gray-600 ring-1 ring-gray-950/5 dark:bg-white/5 dark:text-gray-300 dark:ring-white/10">
                             {selectedPerson.isLiving ? "Living" : "Deceased"}
                           </span>
                         </div>
