@@ -2,7 +2,7 @@
 
 Priorities: P0 = bug/vuln, P1 = perf/correctness, P2 = polish/cleanup.
 
-Fail ni senarai **kerja yang belum siap** sahaja. Item yang dah selesai dibuang - butirannya ada dalam git diff / commit sesi 2026-09-24 (CORS PATCH, validator blog/experiences/profile, rate-limit memory, audit-log route, resume tracking + retention, upload R2 peribadi + proxy media, cover image blog, viewsCount dibuang, System Logs client-side fetch) dan sesi 2026-09-26 (loader cache-friendly untuk blog/policy/projek detail, `lib/projects.ts` tinggal admin sahaja, guard tarikh `profile.astro`, stub settings dilabel, **build astro 7 dibaiki**: buang override `vite ^7` yang patahkan prerender, `@astrojs/react ^6.0.6`, declare `htmlparser2`/`domhandler`/`entities`, `map.tsx` tukar namespace import).
+Fail ni senarai **kerja yang belum siap** sahaja. Item yang dah selesai dibuang - butirannya ada dalam git diff / commit sesi 2026-09-24 (CORS PATCH, validator blog/experiences/profile, rate-limit memory, audit-log route, resume tracking + retention, upload R2 peribadi + proxy media, cover image blog, viewsCount dibuang, System Logs client-side fetch) dan sesi 2026-09-26 (loader cache-friendly untuk blog/policy/projek detail, `lib/projects.ts` tinggal admin sahaja, guard tarikh `profile.astro`, stub settings dilabel, build astro 7 dibaiki: buang override `vite ^7`, `@astrojs/react ^6.0.6`, declare `htmlparser2`/`domhandler`/`entities`, `map.tsx` namespace import + **`setWorkerUrl()` untuk worker maplibre v6**).
 
 ## P0 - Deploy & operasi
 

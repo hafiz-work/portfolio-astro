@@ -15,10 +15,18 @@ import React, {
 import * as MapLibreGL from "maplibre-gl";
 import type { PopupOptions, MarkerOptions } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+// v6 loads its worker from a real URL, and `import.meta.url` cannot see into a
+// bundler's module graph - without this the worker 404s and no tile ever loads
+// (the map renders as a bare style background). `?worker&url` (not `?url`) lets
+// Vite emit a self-contained chunk, since the dist worker imports a sibling.
+import mapLibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { createPortal } from "react-dom";
 import { X, Minus, Plus, Locate, Maximize, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+
+// One-time, before any Map is constructed (see the worker-URL import above).
+MapLibreGL.setWorkerUrl(mapLibreWorkerUrl);
 
 function getDocumentTheme(): Theme | null {
   if (typeof document === "undefined") return null;
