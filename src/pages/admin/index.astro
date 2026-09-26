@@ -2,8 +2,8 @@
 import PrivateLayout from "../../layouts/PrivateLayout.astro";
 import AdminPageHeader from "../../components/admin/AdminPageHeader.astro";
 
-// Data is fetched client-side (see <script> below): admin endpoints require the
-// httpOnly auth cookie, which an SSR fetch on Cloudflare cannot forward.
+// Data is fetched client-side (see the script block below): admin endpoints
+// require the httpOnly auth cookie, which an SSR fetch on Cloudflare cannot forward.
 const cardClass = "admin-card";
 ---
 

@@ -2,15 +2,14 @@
 
 Priorities: P0 = bug/vuln, P1 = perf/correctness, P2 = polish/cleanup.
 
-Fail ni senarai **kerja yang belum siap** sahaja. Item yang dah selesai dibuang - butirannya ada dalam git diff / commit sesi 2026-09-24 (CORS PATCH, validator blog/experiences/profile, rate-limit memory, audit-log route, resume tracking + retention, upload R2 peribadi + proxy media, cover image blog, viewsCount dibuang, System Logs client-side fetch) dan sesi 2026-09-26 (loader cache-friendly untuk blog/policy/projek detail, `lib/projects.ts` tinggal admin sahaja, guard tarikh `profile.astro`, stub settings dilabel).
+Fail ni senarai **kerja yang belum siap** sahaja. Item yang dah selesai dibuang - butirannya ada dalam git diff / commit sesi 2026-09-24 (CORS PATCH, validator blog/experiences/profile, rate-limit memory, audit-log route, resume tracking + retention, upload R2 peribadi + proxy media, cover image blog, viewsCount dibuang, System Logs client-side fetch) dan sesi 2026-09-26 (loader cache-friendly untuk blog/policy/projek detail, `lib/projects.ts` tinggal admin sahaja, guard tarikh `profile.astro`, stub settings dilabel, **build astro 7 dibaiki**: buang override `vite ^7` yang patahkan prerender, `@astrojs/react ^6.0.6`, declare `htmlparser2`/`domhandler`/`entities`, `map.tsx` tukar namespace import).
 
 ## P0 - Deploy & operasi
 
 - [ ] `npm run db:migrate:remote` **dahulu**, baru `wrangler deploy` backend. D1 prod belum ada table `resume_downloads` **dan migration 014 (kolum telegram)** - tanpa 014, `GET /owner/profile` pulang 500 dan page profile admin mati sepenuhnya.
 - [ ] Deploy frontend - semua fix sesi lepas belum naik.
-- [ ] Commit semuanya. Kerja sesi ni masih dalam staging index, belum ada commit.
+- [ ] Commit semuanya. Kerja sesi ni masih dalam staging index, belum ada commit - **`package.json` dan `package-lock.json` mesti masuk sekali** (CI guna `npm ci`, lockfile lama yang hoist `htmlparser2`/`entities`/`domhandler` ke root sebabkan build remote pecah).
 - [ ] Sahkan selepas deploy: overview 200 + `resumeDownloads` naik; klik link resume di footer → row masuk; cron `0 3 * * *` terdaftar (`wrangler deployments`/dashboard).
-- [ ] **[P0] `astro build` tak keluar output untuk deploy.** Exit 0 tapi `dist/` cuma ada `dist/server/.prerender/` (15 fail, entry `index.js` noop) - tiada `dist/client`, tiada HTML, tiada entry worker sebenar. Astro print "Could not find the prerender entry point in the build output. This is likely a bug in Astro." Dah berlaku sebelum perubahan 2026-09-26; kemungkinan dari commit `da0a410` (astro ^7.3.5 + @astrojs/cloudflare ^14.3.3). Sahkan (`wrangler deploy --dry-run`) sebelum deploy sebenar.
 
 ## Telegram (WIP - UI staged, backend plumbing siap)
 
@@ -41,7 +40,6 @@ Fail ni senarai **kerja yang belum siap** sahaja. Item yang dah selesai dibuang 
 
 - [ ] **[P2] Buang `src/data/kl-polygon.json` (37 KB)** - sifar import (hanya `fetch-kl.cjs` di root menyentuhnya).
 - [ ] **[P3] `lib/blog.ts` `getPublicPosts`/`getPublicPostBySlug` dah tak dipanggil** - public blog guna `public-content.ts`; buang supaya service tu tinggal admin sahaja.
-- [ ] **[P2] Komen `admin/index.astro:5` ada `<script>` sebagai teks** - Vite anggap ia blok script sebenar, esbuild gagal parse dan dep pre-bundling dev dilangkau. Tukar ayat komen.
 
 ## Backend (`hono-workers`)
 
