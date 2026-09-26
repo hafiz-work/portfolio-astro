@@ -65,12 +65,12 @@ const currentPath = Astro.url.pathname;
 
 <aside
   id="admin-sidebar"
-  class="fixed top-3 bottom-3 left-3 z-40 w-64 bg-white dark:bg-white/[0.03] border border-gray-950/5 dark:border-white/10 rounded-xl overflow-hidden transform -translate-x-full md:translate-x-0 transition-all duration-300 ease-in-out is-open"
+  class="fixed inset-y-0 left-0 z-40 w-72 shrink-0 md:w-64 overflow-hidden border-r border-gray-950/5 bg-canvas dark:border-white/10 dark:bg-pub-dark md:sticky md:top-0 md:z-30 md:h-dvh"
 >
   <div class="sidebar-content h-full flex flex-col">
     <!-- Header -->
     <div
-      class="sidebar-header p-6 border-b border-gray-950/5 dark:border-white/10 flex items-center justify-between"
+      class="sidebar-header flex h-14 shrink-0 items-center justify-between border-b border-gray-950/5 px-4 dark:border-white/10"
     >
       <h1
         class="sidebar-title font-mono text-base font-semibold text-gray-950 dark:text-white tracking-tight"
@@ -78,7 +78,7 @@ const currentPath = Astro.url.pathname;
       >
         <span class="inline-flex items-center gap-2">
           <Image src="/brand/logo.svg" alt="" width={24} height={24} class="h-6 w-6" />
-          hafizbahtiar<span class="text-gray-400 dark:text-gray-500">/admin</span>
+          hafizbahtiar<span class="text-gray-500 dark:text-gray-400">/admin</span>
         </span>
       </h1>
       <span
@@ -111,7 +111,7 @@ const currentPath = Astro.url.pathname;
       {
         groups.map((group) => (
           <div class="mb-4 last:mb-0">
-            <p class="nav-group-label px-3 mb-1.5 font-mono text-xs font-medium uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
+            <p class="nav-group-label px-3 mb-1.5 font-mono text-xs font-medium uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
               {group.label}
             </p>
             <div class="space-y-0.5">
@@ -163,7 +163,7 @@ const currentPath = Astro.url.pathname;
 
     <!-- User Profile Footer -->
     <div
-      class="p-4 border-t border-gray-950/5 dark:border-white/10 bg-gray-950/[0.025] dark:bg-white/5"
+      class="p-4 border-t border-gray-950/5 dark:border-white/10"
     >
       <div class="space-y-3">
         <div class="flex items-center space-x-3 px-2">
@@ -191,7 +191,7 @@ const currentPath = Astro.url.pathname;
         </div>
         <button
           id="logout-btn"
-          class="logout-btn w-full inline-flex items-center justify-center gap-2 rounded-lg border border-gray-950/10 dark:border-white/10 bg-white dark:bg-white/[0.03] px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-950/[0.025] dark:hover:bg-white/10 hover:text-gray-950 dark:hover:text-white transition-colors"
+          class="logout-btn admin-btn admin-btn-secondary w-full"
           type="button"
         >
           <svg
@@ -215,9 +215,22 @@ const currentPath = Astro.url.pathname;
 </aside>
 <style>
   #admin-sidebar {
+    transform: translateX(-100%);
     transition:
       width 300ms ease,
       transform 300ms ease;
+  }
+  :root[data-admin-sidebar="open"] #admin-sidebar {
+    transform: none;
+  }
+  @media (min-width: 768px) {
+    #admin-sidebar {
+      transform: none;
+    }
+    :root[data-admin-sidebar="closed"] #admin-sidebar {
+      width: 0;
+      border-right-width: 0;
+    }
   }
   #admin-sidebar .sidebar-content {
     transition:
@@ -263,9 +276,6 @@ const currentPath = Astro.url.pathname;
   }
   :root[data-admin-sidebar="minimized"] #admin-sidebar {
     width: 5rem;
-  }
-  :root[data-admin-sidebar="closed"] #admin-sidebar {
-    transform: translateX(-100%);
   }
   :root[data-admin-sidebar="closed"] #admin-sidebar .sidebar-content {
     opacity: 0;
