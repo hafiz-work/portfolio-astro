@@ -2,12 +2,12 @@
 import ResumeDownloadButton from "../ui/ResumeDownloadButton.astro";
 import SectionHeader from "../layout/SectionHeader.astro";
 
-// reCAPTCHA v3 (invisible, score-based). This site key is public; keep it
-// as a fallback so production contact submissions still work when build-time
-// env is absent.
-const DEFAULT_RECAPTCHA_SITE_KEY = "6Ldb8RgtAAAAAFgHmhsP9-D0KKlpbO2eIo6iE9CJ";
-const recaptchaSiteKey =
-  import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY || DEFAULT_RECAPTCHA_SITE_KEY;
+// Cloudflare Turnstile (invisible until a challenge is needed). This site key is
+// public; keep it as a fallback so production contact submissions still work
+// when build-time env is absent.
+const DEFAULT_TURNSTILE_SITE_KEY = "0x4AAAAAAFD-PSk_u7NHAF-5";
+const turnstileSiteKey =
+  import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || DEFAULT_TURNSTILE_SITE_KEY;
 ---
 
 <section id="contact" class="scroll-offset">
@@ -119,7 +119,7 @@ const recaptchaSiteKey =
           id="contact-form"
           class="space-y-4"
           novalidate
-          data-recaptcha-site-key={recaptchaSiteKey || undefined}
+          data-turnstile-site-key={turnstileSiteKey || undefined}
         >
           <div
             id="contact-status"
@@ -222,27 +222,24 @@ const recaptchaSiteKey =
           </button>
 
           {
-            recaptchaSiteKey && (
+            turnstileSiteKey && (
+              <div id="turnstile-contact" class="flex justify-center"></div>
+            )
+          }
+
+          {
+            turnstileSiteKey && (
               <p class="text-[11px]/5 text-gray-500">
-                Protected by reCAPTCHA - the Google{" "}
+                Protected by Cloudflare Turnstile - the Cloudflare{" "}
                 <a
-                  href="https://policies.google.com/privacy"
+                  href="https://www.cloudflare.com/privacypolicy/"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="underline hover:text-gray-950 dark:hover:text-white"
                 >
                   Privacy Policy
                 </a>{" "}
-                and{" "}
-                <a
-                  href="https://policies.google.com/terms"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="underline hover:text-gray-950 dark:hover:text-white"
-                >
-                  Terms of Service
-                </a>{" "}
-                apply.
+                applies.
               </p>
             )
           }
@@ -253,11 +250,12 @@ const recaptchaSiteKey =
 </section>
 
 {
-  // reCAPTCHA v3 - invisible, score-based; a token is fetched per submit.
-  recaptchaSiteKey && (
+  // Turnstile: explicit rendering, so the page keeps the widget id and can
+  // reset it between attempts (tokens are single-use).
+  turnstileSiteKey && (
     <script
       is:inline
-      src={`https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey}`}
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
       async
       defer
     />
@@ -266,6 +264,28 @@ const recaptchaSiteKey =
 
 <script>
   import { submitContactForm } from "../../lib/contact";
+
+  // Turnstile state lives at module scope so it survives the section's
+  // re-inits (astro:page-load) and one submit -> reset cycle.
+  let turnstileWidgetId: string | null = null;
+  let pendingTurnstile: ((token: string) => void) | null = null;
+
+  // A challenge that never calls back must not leave the button spinning.
+  const TURNSTILE_TIMEOUT_MS = 15_000;
+
+  const settleTurnstile = (token: string) => {
+    const resolve = pendingTurnstile;
+    pendingTurnstile = null;
+    resolve?.(token);
+  };
+
+  const resetTurnstile = () => {
+    pendingTurnstile = null;
+    const turnstile = (window as any).turnstile;
+    if (turnstileWidgetId && turnstile?.reset) {
+      turnstile.reset(turnstileWidgetId);
+    }
+  };
 
   const initContactSection = () => {
     const form = document.getElementById(
@@ -284,26 +304,80 @@ const recaptchaSiteKey =
     const charCount = document.getElementById("contact-char-count");
     if (!form || !submitBtn) return;
 
-    const recaptchaSiteKey = form.dataset.recaptchaSiteKey || "";
+    const turnstileSiteKey = form.dataset.turnstileSiteKey || "";
+    const turnstileContainer = document.getElementById("turnstile-contact");
 
-    // v3: fetch a fresh single-use token at submit time. Resolves to ""
-    // on any failure so the caller can show a clean error.
-    const executeRecaptcha = (): Promise<string> =>
+    // A View Transition replaces the container, which drops the old widget.
+    if (turnstileContainer && !turnstileContainer.querySelector("iframe")) {
+      turnstileWidgetId = null;
+    }
+
+    // Explicit render: the page keeps the widget id so each attempt can
+    // execute, then reset (tokens are single-use). The challenge is only
+    // visible when Cloudflare asks for interaction.
+    const renderTurnstile = () => {
+      const turnstile = (window as any).turnstile;
+      if (!turnstileContainer || !turnstileSiteKey || turnstileWidgetId) return;
+      if (!turnstile?.render) return;
+      turnstileWidgetId = turnstile.render(turnstileContainer, {
+        sitekey: turnstileSiteKey,
+        action: "contact",
+        execution: "execute",
+        appearance: "interaction-only",
+        callback: (token: string) => settleTurnstile(token || ""),
+        "error-callback": () => settleTurnstile(""),
+      });
+    };
+
+    // The loader is async and can land after this script, so poll briefly
+    // rather than depend on a global onload callback.
+    if (turnstileSiteKey && !turnstileWidgetId) {
+      if ((window as any).turnstile?.render) {
+        renderTurnstile();
+      } else {
+        let tries = 0;
+        const timer = setInterval(() => {
+          if ((window as any).turnstile?.render) {
+            clearInterval(timer);
+            renderTurnstile();
+          } else if (++tries > 100) {
+            clearInterval(timer);
+          }
+        }, 100);
+      }
+    }
+
+    // One token per attempt. Resolves to "" when the challenge cannot run.
+    const executeTurnstile = (): Promise<string> =>
       new Promise((resolve) => {
-        const grecaptcha = (window as any).grecaptcha;
-        if (!recaptchaSiteKey || !grecaptcha?.execute) {
+        const turnstile = (window as any).turnstile;
+        if (!turnstileSiteKey || !turnstileWidgetId || !turnstile?.execute) {
           resolve("");
           return;
         }
+
+        // A solved-but-unused response is still valid, and executing while the
+        // widget is already running never calls back - reuse, don't execute.
+        const existing = turnstile.getResponse?.(turnstileWidgetId);
+        if (existing) {
+          resolve(existing);
+          return;
+        }
+
+        let settled = false;
+        const finish = (token: string) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          resolve(token);
+        };
+        const timer = setTimeout(() => finish(""), TURNSTILE_TIMEOUT_MS);
+
+        pendingTurnstile = finish;
         try {
-          grecaptcha.ready(() => {
-            grecaptcha
-              .execute(recaptchaSiteKey, { action: "contact" })
-              .then((token: string) => resolve(token || ""))
-              .catch(() => resolve(""));
-          });
+          turnstile.execute(turnstileWidgetId);
         } catch {
-          resolve("");
+          settleTurnstile("");
         }
       });
 
@@ -353,7 +427,7 @@ const recaptchaSiteKey =
           email: string;
           message: string;
           source: string;
-          recaptchaToken?: string;
+          captchaToken?: string;
         } = {
           name: ((formData.get("name") as string) || "").trim(),
           email: ((formData.get("email") as string) || "").trim(),
@@ -384,15 +458,15 @@ const recaptchaSiteKey =
           Sending…`;
 
         try {
-          if (recaptchaSiteKey) {
-            const token = await executeRecaptcha();
+          if (turnstileSiteKey) {
+            const token = await executeTurnstile();
             if (!token) {
               showError(
                 "Couldn't run the spam check. Please reload and try again, or email me directly.",
               );
               return;
             }
-            data.recaptchaToken = token;
+            data.captchaToken = token;
           }
 
           const result = await submitContactForm(data);
@@ -413,6 +487,7 @@ const recaptchaSiteKey =
         } finally {
           submitBtn.disabled = false;
           submitBtn.innerHTML = originalContent;
+          resetTurnstile();
         }
       },
       { signal },

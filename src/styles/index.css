@@ -496,9 +496,3 @@ html[data-theme-switching]::view-transition-new(root) {
         animation: fadeInUp 0.6s ease-out forwards;
     }
 }
-
-/* reCAPTCHA v3 floating badge - hidden site-wide; the contact and login
-   forms show the required inline Google disclosure instead. */
-.grecaptcha-badge {
-    visibility: hidden !important;
-}

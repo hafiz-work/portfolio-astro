@@ -28,14 +28,14 @@ const SECURITY_HEADERS: Record<string, string> = {
     // static.cloudflareinsights.com (script) + cloudflareinsights.com
     // (beacon POST): Cloudflare Web Analytics is auto-injected by Cloudflare,
     // so the CSP must allow it or analytics silently fails.
-    // www.google.com + www.gstatic.com (script/connect) and frame-src
-    // www.google.com: Google reCAPTCHA on /login and contact.
-    "script-src 'self' 'unsafe-inline' blob: https://static.cloudflareinsights.com https://www.google.com https://www.gstatic.com",
-    "frame-src 'self' https://www.google.com",
+    // challenges.cloudflare.com: Cloudflare Turnstile on /login and the contact
+    // form - it serves the script and renders the widget inside an iframe.
+    "script-src 'self' 'unsafe-inline' blob: https://static.cloudflareinsights.com https://challenges.cloudflare.com",
+    "frame-src 'self' https://challenges.cloudflare.com",
     "worker-src 'self' blob:",
     // In dev the API runs on localhost:8787 - without this, the CSP silently
     // blocks every admin fetch during local development.
-    `connect-src 'self' https://api.hafizbahtiar.com https://cloudflareinsights.com https://www.google.com https://www.gstatic.com https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com${import.meta.env.DEV ? " http://localhost:8787" : ""
+    `connect-src 'self' https://api.hafizbahtiar.com https://cloudflareinsights.com https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com${import.meta.env.DEV ? " http://localhost:8787" : ""
     }`,
   ].join("; "),
 };

@@ -21,12 +21,12 @@ class AuthService extends ApiClient {
   async login(
     email: string,
     password: string,
-    recaptchaToken?: string,
+    captchaToken?: string,
   ): Promise<LoginResponse | null> {
     const response = await this.post<LoginResponse>('/auth/login', {
       email,
       password,
-      ...(recaptchaToken ? { recaptchaToken } : {}),
+      ...(captchaToken ? { captchaToken } : {}),
     });
     if (response) {
       // The backend sets access_token and refresh_token as httpOnly cookies.

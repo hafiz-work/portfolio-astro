@@ -12,7 +12,8 @@
 #    from many hosts (github, licdn, dbkl, qiubbx, R2).
 #  - cloudflareinsights.com (script-src static.*, connect-src apex) is
 #    Cloudflare Web Analytics - its beacon is auto-injected by Cloudflare.
-#  - www.google.com + www.gstatic.com are required by Google reCAPTCHA.
+#  - challenges.cloudflare.com (script-src + frame-src) is Cloudflare Turnstile
+#    on /login and the contact form: the api.js script plus its widget iframe.
 
 /*
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
@@ -20,4 +21,4 @@
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' blob: https://static.cloudflareinsights.com https://www.google.com https://www.gstatic.com; frame-src 'self' https://www.google.com; worker-src 'self' blob:; connect-src 'self' https://api.hafizbahtiar.com https://cloudflareinsights.com https://www.google.com https://www.gstatic.com https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' blob: https://static.cloudflareinsights.com https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; worker-src 'self' blob:; connect-src 'self' https://api.hafizbahtiar.com https://cloudflareinsights.com https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com

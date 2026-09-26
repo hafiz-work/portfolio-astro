@@ -3,11 +3,12 @@ import { Image } from "astro:assets";
 import CoreLayout from "../layouts/CoreLayout.astro";
 import Background from "../components/layout/Background.astro";
 
-// reCAPTCHA v3 (invisible, score-based). This site key is public; keep it
-// as a fallback so production login still works when build-time env is absent.
-const DEFAULT_RECAPTCHA_SITE_KEY = "6Ldb8RgtAAAAAFgHmhsP9-D0KKlpbO2eIo6iE9CJ";
-const recaptchaSiteKey =
-  import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY || DEFAULT_RECAPTCHA_SITE_KEY;
+// Cloudflare Turnstile (invisible until a challenge is needed). This site key is
+// public; keep it as a fallback so production login still works when build-time
+// env is absent.
+const DEFAULT_TURNSTILE_SITE_KEY = "0x4AAAAAAFD-PSk_u7NHAF-5";
+const turnstileSiteKey =
+  import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || DEFAULT_TURNSTILE_SITE_KEY;
 ---
 
 <CoreLayout title="Sign in | Hafiz Bahtiar">
@@ -63,7 +64,7 @@ const recaptchaSiteKey =
           class="space-y-5"
           id="login-form"
           novalidate
-          data-recaptcha-site-key={recaptchaSiteKey || undefined}
+          data-turnstile-site-key={turnstileSiteKey || undefined}
         >
           <div class="space-y-1.5">
             <label
@@ -137,27 +138,24 @@ const recaptchaSiteKey =
           </button>
 
           {
-            recaptchaSiteKey && (
+            turnstileSiteKey && (
+              <div id="turnstile-login" class="flex justify-center"></div>
+            )
+          }
+
+          {
+            turnstileSiteKey && (
               <p class="text-[11px] leading-relaxed text-center text-slate-400 dark:text-slate-500">
-                Protected by reCAPTCHA - the Google{" "}
+                Protected by Cloudflare Turnstile - the Cloudflare{" "}
                 <a
-                  href="https://policies.google.com/privacy"
+                  href="https://www.cloudflare.com/privacypolicy/"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="underline hover:text-slate-600 dark:hover:text-slate-300"
                 >
                   Privacy Policy
                 </a>{" "}
-                and{" "}
-                <a
-                  href="https://policies.google.com/terms"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="underline hover:text-slate-600 dark:hover:text-slate-300"
-                >
-                  Terms of Service
-                </a>{" "}
-                apply.
+                applies.
               </p>
             )
           }
@@ -189,11 +187,12 @@ const recaptchaSiteKey =
 </CoreLayout>
 
 {
-  // reCAPTCHA v3 - invisible, score-based; a token is fetched per submit.
-  recaptchaSiteKey && (
+  // Turnstile: explicit rendering, so the page keeps the widget id and can
+  // reset it between attempts (tokens are single-use).
+  turnstileSiteKey && (
     <script
       is:inline
-      src={`https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey}`}
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
       async
       defer
     />
@@ -211,32 +210,103 @@ const recaptchaSiteKey =
   const submitBtn = document.getElementById(
     "submit-btn",
   ) as HTMLButtonElement | null;
-  const recaptchaSiteKey = form?.dataset.recaptchaSiteKey || "";
+  const turnstileSiteKey = form?.dataset.turnstileSiteKey || "";
 
   let failedAttempts = 0;
   let lockUntil = 0;
   let submitting = false;
 
-  // v3: fetch a fresh single-use token at submit time. Resolves to ""
-  // on any failure so the caller can show a clean error.
-  const executeRecaptcha = (): Promise<string> =>
+  // The widget renders explicitly because the page stays open after a failed
+  // attempt and tokens are single-use - the id is kept so each attempt can
+  // execute, then reset. It only becomes visible if Cloudflare asks for
+  // interaction.
+  let turnstileWidgetId: string | null = null;
+  let pendingTurnstile: ((token: string) => void) | null = null;
+
+  // A challenge that never calls back must not leave the button spinning.
+  const TURNSTILE_TIMEOUT_MS = 15_000;
+
+  const settleTurnstile = (token: string) => {
+    const resolve = pendingTurnstile;
+    pendingTurnstile = null;
+    resolve?.(token);
+  };
+
+  const renderTurnstile = () => {
+    const container = document.getElementById("turnstile-login");
+    const turnstile = (window as any).turnstile;
+    if (!container || !turnstileSiteKey || turnstileWidgetId) return;
+    if (!turnstile?.render) return;
+    turnstileWidgetId = turnstile.render(container, {
+      sitekey: turnstileSiteKey,
+      action: "login",
+      execution: "execute",
+      appearance: "interaction-only",
+      callback: (token: string) => settleTurnstile(token || ""),
+      "error-callback": () => settleTurnstile(""),
+    });
+  };
+
+  // The loader is async and can land after this module runs, so poll briefly
+  // rather than depend on a global onload callback.
+  if (turnstileSiteKey) {
+    if ((window as any).turnstile?.render) {
+      renderTurnstile();
+    } else {
+      let tries = 0;
+      const timer = setInterval(() => {
+        if ((window as any).turnstile?.render) {
+          clearInterval(timer);
+          renderTurnstile();
+        } else if (++tries > 100) {
+          clearInterval(timer);
+        }
+      }, 100);
+    }
+  }
+
+  // One token per attempt. Resolves to "" when the challenge cannot run, so the
+  // caller can show a clean error.
+  const executeTurnstile = (): Promise<string> =>
     new Promise((resolve) => {
-      const grecaptcha = (window as any).grecaptcha;
-      if (!recaptchaSiteKey || !grecaptcha?.execute) {
+      const turnstile = (window as any).turnstile;
+      if (!turnstileSiteKey || !turnstileWidgetId || !turnstile?.execute) {
         resolve("");
         return;
       }
+
+      // A solved-but-unused response is still valid, and executing while the
+      // widget is already running never calls back - reuse instead of execute.
+      const existing = turnstile.getResponse?.(turnstileWidgetId);
+      if (existing) {
+        resolve(existing);
+        return;
+      }
+
+      let settled = false;
+      const finish = (token: string) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(token);
+      };
+      const timer = setTimeout(() => finish(""), TURNSTILE_TIMEOUT_MS);
+
+      pendingTurnstile = finish;
       try {
-        grecaptcha.ready(() => {
-          grecaptcha
-            .execute(recaptchaSiteKey, { action: "login" })
-            .then((token: string) => resolve(token || ""))
-            .catch(() => resolve(""));
-        });
+        turnstile.execute(turnstileWidgetId);
       } catch {
-        resolve("");
+        settleTurnstile("");
       }
     });
+
+  const resetTurnstile = () => {
+    pendingTurnstile = null;
+    const turnstile = (window as any).turnstile;
+    if (turnstileWidgetId && turnstile?.reset) {
+      turnstile.reset(turnstileWidgetId);
+    }
+  };
 
   // Toggle Password Visibility
   const togglePasswordBtn = document.getElementById("toggle-password");
@@ -366,10 +436,10 @@ const recaptchaSiteKey =
     if (statusDisplay) statusDisplay.classList.add("hidden");
 
     try {
-      let recaptchaToken = "";
-      if (recaptchaSiteKey) {
-        recaptchaToken = await executeRecaptcha();
-        if (!recaptchaToken) {
+      let captchaToken = "";
+      if (turnstileSiteKey) {
+        captchaToken = await executeTurnstile();
+        if (!captchaToken) {
           throw Object.assign(new Error("captcha"), { status: 0 });
         }
       }
@@ -377,7 +447,7 @@ const recaptchaSiteKey =
       const result = await authService.login(
         email,
         password,
-        recaptchaToken || undefined,
+        captchaToken || undefined,
       );
 
       if (result) {
@@ -411,6 +481,8 @@ const recaptchaSiteKey =
       }
 
       showStatus(friendlyError(error), "error", errorIcon);
+    } finally {
+      resetTurnstile();
     }
   });
 </script>
