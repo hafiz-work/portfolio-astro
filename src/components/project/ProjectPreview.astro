@@ -16,7 +16,9 @@ interface Props {
 
 const { slug, title, imageUrl, tags = [] } = Astro.props;
 
-const isMobile = tags.some((t) => /flutter|react.?native|mobile/i.test(t));
+const isMobile = tags.some((t) =>
+  /flutter|react.?native|mobile|android|ios|swift/i.test(t),
+);
 
 type Accent = "cyan" | "blue" | "emerald" | "amber";
 
@@ -35,7 +37,10 @@ const PALETTE: Accent[] = ["cyan", "blue", "emerald", "amber"];
 const accent = ACCENT_BY_SLUG[slug] ?? PALETTE[slug.length % PALETTE.length];
 
 // Literal class strings so Tailwind can see them.
-const accentStyles: Record<Accent, { glow: string; fill: string; soft: string }> = {
+const accentStyles: Record<
+  Accent,
+  { glow: string; fill: string; soft: string }
+> = {
   cyan: {
     glow: "bg-cyan-500/15",
     fill: "bg-cyan-500/20 border border-cyan-500/30",
@@ -62,10 +67,7 @@ const a = accentStyles[accent];
 
 <div class="absolute inset-0 bg-gray-50 dark:bg-white/[0.03] overflow-hidden">
   <!-- Dot grid + accent glow backdrop -->
-  <div
-    class="absolute inset-0 pattern"
-  >
-  </div>
+  <div class="absolute inset-0 pattern"></div>
   <div
     class={`absolute -top-10 -right-10 w-36 h-36 rounded-full blur-3xl pointer-events-none ${a.glow}`}
   >

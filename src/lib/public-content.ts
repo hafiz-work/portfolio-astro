@@ -46,6 +46,17 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 }
 
 /**
+ * Card/hero image style when a project doesn't set one. "logo" renders the
+ * image inside a composed device-frame preview, which never crops or stretches -
+ * safe for both logos and screenshots. "banner" would stretch a logo edge to edge.
+ */
+const DEFAULT_IMAGE_VARIANT = "logo" as const;
+
+/** Card image from the CMS: the Cover, else the first media item. */
+const mediaImage = (d: PublicProjectDetail | null): string | undefined =>
+    d?.cover?.url ?? d?.media.find((m) => m.url)?.url;
+
+/**
  * Apply curated copy + link sanitization to a single API project record.
  * Used by both the list and detail loaders so the public site renders one
  * consistent, trusted view of every project.
@@ -59,9 +70,9 @@ export function curateProject(project: Project): Project {
             ? {
                 title: copy.title ?? project.title,
                 description: copy.description,
-                imageVariant: copy.imageVariant ?? project.imageVariant,
             }
             : {}),
+        imageVariant: copy?.imageVariant ?? project.imageVariant ?? DEFAULT_IMAGE_VARIANT,
         ...(links
             ? {
                 githubUrl: links.githubUrl ?? project.githubUrl,
@@ -88,8 +99,24 @@ export async function getPublicProjects(): Promise<Project[]> {
     if (!data || data.length === 0)
         return sortProjects(FALLBACK_PROJECTS.map(curateProject));
 
+    // CMS projects keep their cover (Media tab) and tech (Tech Stack tab) only in
+    // the detail DTO - the list returns empty imageUrl/technologies for them. Fill
+    // those from the detail (edge-cached; only for projects missing either).
+    const enriched = await Promise.all(
+        data.map(async (p) => {
+            if (p.imageUrl && p.technologies?.length) return p;
+            const d = await fetchJson<PublicProjectDetail>(`projects/${p.slug}`);
+            if (!d) return p;
+            return {
+                ...p,
+                imageUrl: p.imageUrl || mediaImage(d) || "",
+                technologies: p.technologies?.length ? p.technologies : d.techStacks.map((t) => t.name),
+            };
+        }),
+    );
+
     // Apply curated copy + link sanitization over API records.
-    return sortProjects(data.map(curateProject));
+    return sortProjects(enriched.map(curateProject));
 }
 
 /**
@@ -108,14 +135,12 @@ export async function getPublicProjectDetail(
     const data = await fetchJson<PublicProjectDetail>(`projects/${slug}`);
     if (data) {
         const copy = PROJECT_COPY[data.slug];
-        return copy
-            ? {
-                ...data,
-                title: copy.title ?? data.title,
-                description: copy.description,
-                imageVariant: copy.imageVariant ?? data.imageVariant,
-            }
-            : data;
+        return {
+            ...data,
+            ...(copy ? { title: copy.title ?? data.title, description: copy.description } : {}),
+            imageUrl: data.imageUrl || mediaImage(data) || "",
+            imageVariant: copy?.imageVariant ?? data.imageVariant ?? DEFAULT_IMAGE_VARIANT,
+        };
     }
 
     const fb = FALLBACK_PROJECTS.find((p) => p.slug === slug);
