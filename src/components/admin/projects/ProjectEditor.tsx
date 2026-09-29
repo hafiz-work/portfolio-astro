@@ -22,8 +22,8 @@ const TABS: { id: Tab; label: string }[] = [
 const PROJECT_TYPES: ProjectType[] = ["personal", "business", "work"];
 // Card image style (imageVariant) - see ProjectCard.astro for how each renders.
 const CARD_STYLES: { value: ImageVariant; label: string }[] = [
+  { value: "logo", label: "Device-frame preview (default)" },
   { value: "banner", label: "Photo / screenshot - fills the card" },
-  { value: "logo", label: "Logo - device-frame preview" },
   { value: "width-banner", label: "Wide logo - on a white strip" },
 ];
 
@@ -43,7 +43,7 @@ const emptyBasics: BasicsForm = {
   title: "", slug: "", subtitle: "", summary: "", description: "", projectType: "personal",
   projectScope: "", year: String(new Date().getFullYear()), role: "", clientName: "",
   isPublic: true, isConfidential: false, featured: false, featuredOrder: "0",
-  imageVariant: "banner",
+  imageVariant: "logo",
 };
 
 // Links the label to a native input/textarea (click-to-focus, screen readers) and
@@ -81,7 +81,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
       description: d.description ?? "", projectType: d.projectType, projectScope: d.projectScope ?? "",
       year: String(d.year ?? new Date().getFullYear()), role: d.role ?? "", clientName: d.clientName ?? "",
       isPublic: d.isPublic !== false, isConfidential: !!d.isConfidential, featured: !!d.featured, featuredOrder: String(d.featuredOrder ?? 0),
-      imageVariant: d.imageVariant ?? "banner",
+      imageVariant: d.imageVariant ?? "logo",
     });
     const cs = {
       problem: d.problem ?? "", solution: d.solution ?? "", contribution: d.contribution ?? "",
@@ -91,23 +91,12 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
     savedCase.current = JSON.stringify(cs);
   };
 
-  // The public card reads project.imageUrl, but the list API never returns the
-  // Media-tab cover. Keep imageUrl = cover URL whenever imageUrl is empty or came
-  // from this project's own media; static paths (e.g. /images/...) are left alone.
-  const syncCardImage = async (d: AdminProjectDetail): Promise<AdminProjectDetail> => {
-    const coverUrl = d.cover?.url;
-    const fromMedia = !d.imageUrl || d.media.some((m) => m.asset?.url === d.imageUrl);
-    if (!coverUrl || coverUrl === d.imageUrl || !fromMedia || projectId == null) return d;
-    try { await cmsService.updateProject(projectId, { imageUrl: coverUrl }); return { ...d, imageUrl: coverUrl }; }
-    catch { return d; }
-  };
-
   const loadDetail = async (hydrateForms: boolean) => {
     if (projectId == null) return;
     try {
       const d = await cmsService.getProjectDetail(projectId);
       if (!d) { setNotFound(true); return; }
-      setDetail(await syncCardImage(d));
+      setDetail(d);
       if (hydrateForms) hydrate(d);
     } catch (e) { showToast({ type: "error", title: "Load failed", message: extractApiError(e).message }); }
   };
@@ -273,7 +262,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
             <Field label="Project scope"><input className="admin-input" value={basics.projectScope} onChange={(e) => setB({ projectScope: e.target.value })} /></Field>
             <Field label="Year"><input type="number" min={2000} max={2100} className="admin-input" value={basics.year} onChange={(e) => setB({ year: e.target.value })} /></Field>
             <Field label="Role"><input className="admin-input" value={basics.role} onChange={(e) => setB({ role: e.target.value })} /></Field>
-            <Field label="Card image style" hint={isCreate ? "The card uses the Cover image you add in Media after creating." : detail?.imageUrl ? "Uses the Cover image from the Media tab." : "No cover yet - add one in the Media tab (type: Cover image)."}>
+            <Field label="Card image style" hint={isCreate ? "The card uses the Cover image you add in Media after creating." : detail?.cover ? "Uses the Cover image from the Media tab." : detail?.media.length ? "No Cover set - the card uses the first image in Media." : "No image yet - add a Cover image in the Media tab."}>
               <Select value={basics.imageVariant} onChange={(v) => setB({ imageVariant: v as ImageVariant })} options={CARD_STYLES} ariaLabel="Card image style" />
             </Field>
             <Field label="Client name" hint="Hidden publicly when confidential"><input className="admin-input" value={basics.clientName} onChange={(e) => setB({ clientName: e.target.value })} /></Field>
