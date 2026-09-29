@@ -2,6 +2,7 @@
 export const prerender = false;
 import PublicLayout from "../../../layouts/PublicLayout.astro";
 import JsonLd from "../../../components/seo/JsonLd.astro";
+import Annot from "../../../components/layout/Annot.astro";
 import { getPublicPostBySlug } from "../../../lib/public-content";
 import { sanitizeRichHtml } from "../../../lib/sanitize";
 import type { BlogSection, BlogChecklist } from "../../../types/blog";
@@ -17,9 +18,9 @@ if (!post) {
 }
 
 const formatDate = (value?: string | null) => {
-  if (!value) return "-";
+  if (!value) return null;
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
+  if (Number.isNaN(date.getTime())) return null;
   return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -28,6 +29,12 @@ const formatDate = (value?: string | null) => {
 };
 
 const publishedISO = post.publishedDate ?? post.createdAt;
+const metaChips = [
+  formatDate(publishedISO),
+  post.readTimeMinutes > 0 ? `${post.readTimeMinutes} min read` : null,
+  post.category,
+].filter(Boolean) as string[];
+
 const metaDescription =
   post.excerpt ||
   "Insights on building reliable products, clean architecture, and shipping fast.";
@@ -57,6 +64,7 @@ const bodyHtml =
   sections.length === 0 && post.bodyContent
     ? sanitizeRichHtml(post.bodyContent)
     : "";
+const heroLead = post.heroText ?? post.excerpt;
 ---
 
 <PublicLayout
@@ -67,296 +75,206 @@ const bodyHtml =
   publishedTime={publishedISO ?? undefined}
 >
   <JsonLd schema={articleSchema} />
-  <div
-    class="fixed top-0 left-0 right-0 h-1.5 bg-white/90 z-50 backdrop-blur-sm"
-  >
+
+  <div class="fixed inset-x-0 top-0 z-50 h-0.5 bg-canvas/80 backdrop-blur-sm">
     <div
       id="read-progress"
-      class="h-full bg-gradient-to-r from-blue-500 via-blue-500 to-purple-500 w-0 shadow-[0_0_15px_rgba(6,182,212,0.5)] transition-all duration-150 ease-out"
+      class="h-full w-0 bg-sky-500 transition-[width] duration-150 ease-out"
     >
     </div>
   </div>
 
-  <div class="container-main space-y-10 md:space-y-12 pb-16 md:pb-24">
-    <section class="scroll-offset relative pt-12 md:pt-16">
-      <a
-        href="/blog"
-        id="back-to-blog"
-        class="btn-text mb-8 inline-flex items-center gap-1.5 group text-sm text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
-      >
-        <svg
-          class="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+  <div class="min-h-screen pb-16 md:pb-24">
+    <div class="h-10 sm:h-16"></div>
+
+    <!-- Back -->
+    <div class="line-y">
+      <div class="container-main">
+        <a
+          href="/blog"
+          class="group inline-flex items-center gap-1.5 font-mono text-xs/6 text-gray-500 transition-colors hover:text-gray-950 dark:hover:text-white"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 19l-7-7 7-7"></path>
-        </svg>
-        <span class="opacity-70 group-hover:opacity-100">cd ..</span>
-      </a>
-
-      <!-- Blog Post Container -->
-      <div id="blog-post-container">
-        <!-- Content -->
-        <div id="blog-post-content" class="space-y-10 md:space-y-12">
-          <div
-            class="rounded-xl border border-slate-200 bg-surface-code shadow-2xl overflow-hidden relative"
+          <span
+            class="transition-transform group-hover:-translate-x-0.5"
+            aria-hidden="true">&larr;</span
           >
-            <!-- IDE Tab Bar -->
-            <div
-              class="flex items-center justify-between px-4 py-3 bg-surface-code-rail border-b border-slate-200"
-            >
-              <div class="flex items-center gap-2">
-                <div class="flex gap-2 mr-4">
-                  <div
-                    class="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"
-                  >
-                  </div>
-                  <div
-                    class="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"
-                  >
-                  </div>
-                  <div
-                    class="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"
-                  >
-                  </div>
-                </div>
-                <div
-                  class="px-3 py-1 rounded-t-lg bg-surface-code border-t border-x border-slate-200 text-xs font-mono text-slate-700 flex items-center gap-2 relative top-[1px]"
-                >
-                  <span class="text-blue-400">⚛</span>
-                  <span id="post-file-slug">{post.slug}.mdx</span>
-                  <span class="ml-2 text-slate-600">x</span>
-                </div>
-              </div>
-              <div class="text-[10px] font-mono text-slate-600 hidden sm:block">
-                UTF-8
-              </div>
+          cd ../blog
+        </a>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="h-8 sm:h-12"></div>
+    {
+      metaChips.length > 0 && (
+        <div class="line-y">
+          <p class="eyebrow container-main">{metaChips.join(" · ")}</p>
+        </div>
+      )
+    }
+    <div class="line-y mt-2">
+      <h1
+        class="container-main text-4xl/[1.1] font-medium tracking-tighter text-balance text-gray-950 sm:text-6xl/[1.05] dark:text-white"
+      >
+        {post.title}
+      </h1>
+    </div>
+    {
+      heroLead && (
+        <>
+          <Annot preset="lead" class="mt-4" />
+          <div class="line-y">
+            <p class="lead container-main">{heroLead}</p>
+          </div>
+        </>
+      )
+    }
+
+    {
+      post.tags?.length > 0 && (
+        <>
+          <div class="h-8" />
+          <div class="line-y">
+            <div class="container-main flex flex-wrap gap-1.5">
+              {post.tags.map((tag: string) => (
+                <span class="tag">{tag}</span>
+              ))}
             </div>
+          </div>
+        </>
+      )
+    }
 
-            <!-- Editor Content -->
-            <div class="p-6 md:p-10 relative z-10 font-mono">
-              <div
-                class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none select-none"
-              >
-                <svg
-                  width="200"
-                  height="200"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="0.5"
-                >
-                  <path
-                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                  ></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-              </div>
-
-              <!-- Metadata Block -->
-              <div
-                id="post-metadata"
-                class="space-y-1 mb-8 text-sm text-slate-400 select-none border-l-2 border-slate-200 pl-4"
-              >
-                <div class="flex gap-4">
-                  <span class="w-6 text-gray-700 text-right">1</span>
-                  <span>---</span>
-                </div>
-                <div class="flex gap-4">
-                  <span class="w-6 text-gray-700 text-right">2</span>
-                  <span class="text-purple-400">title:</span>
-                  <span id="post-title-display" class="text-green-400"
-                    >{`"${post.title}"`}</span
-                  >
-                </div>
-                <div class="flex gap-4">
-                  <span class="w-6 text-gray-700 text-right">3</span>
-                  <span class="text-purple-400">date:</span>
-                  <span id="post-date-display" class="text-yellow-400"
-                    >{formatDate(publishedISO)}</span
-                  >
-                </div>
-                <div class="flex gap-4">
-                  <span class="w-6 text-gray-700 text-right">4</span>
-                  <span class="text-purple-400">readTime:</span>
-                  <span id="post-readtime-display" class="text-blue-400"
-                    >{
-                      post.readTimeMinutes
-                        ? `"${post.readTimeMinutes} min read"`
-                        : ""
-                    }</span
-                  >
-                </div>
-                <div class="flex gap-4">
-                  <span class="w-6 text-gray-700 text-right">5</span>
-                  <span class="text-purple-400">tags:</span>
-                  <span id="post-tags-display" class="text-slate-700"
-                    >{
-                      `[${(post.tags ?? [])
-                        .map((t: string) => `"${t}"`)
-                        .join(", ")}]`
-                    }</span
-                  >
-                </div>
-                <div class="flex gap-4">
-                  <span class="w-6 text-gray-700 text-right">6</span>
-                  <span>---</span>
-                </div>
-              </div>
-
-              <div class="pl-10 relative">
-                <div
-                  class="absolute left-0 top-0 bottom-0 w-6 flex flex-col gap-1 text-gray-700 text-sm text-right select-none font-mono opacity-50"
-                >
-                  <div>7</div><div>8</div><div>9</div><div>10</div><div>
-                    11
-                  </div><div>12</div><div>13</div><div>14</div>
-                </div>
-                <h1
-                  id="post-title"
-                  class="text-3xl md:text-5xl font-bold text-slate-900 tracking-tight mb-6 font-sans"
-                >
-                  {post.title}
-                </h1>
-                <p
-                  id="post-hero-text"
-                  class="text-lg md:text-xl text-slate-500 leading-relaxed max-w-2xl border-l-2 border-blue-500/50 pl-4 italic"
-                >
-                  {post.heroText ? `// ${post.heroText}` : "//"}
-                </p>
+    <!-- Cover (honest social/hero image; remote hosts stay untransformed) -->
+    {
+      post.coverImageUrl && (
+        <>
+          <div class="h-12 sm:h-16" />
+          <div class="line-y p-2">
+            <div class="frame">
+              <div class="frame-inner">
+                <img
+                  src={post.coverImageUrl}
+                  alt={post.title}
+                  loading="eager"
+                  decoding="async"
+                  class="h-56 w-full bg-white object-cover sm:h-80"
+                />
               </div>
             </div>
           </div>
+        </>
+      )
+    }
 
-          <section
-            id="article-content"
-            class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10"
-          >
-            <article class="space-y-8">
-              <div id="post-sections">
-                {
-                  sections.map((section: BlogSection, index: number) => (
-                    <div
-                      class="group relative pl-6 border-l-2 border-slate-200 hover:border-blue-500/50 transition-colors scroll-mt-24 py-2"
-                      id={`section-${index + 1}`}
-                    >
-                      <div class="absolute -left-[7px] top-6 w-3 h-3 rounded-full bg-surface-code border-2 border-slate-400 group-hover:border-blue-500 transition-colors" />
-                      <div class="mb-3">
-                        <div class="flex items-center gap-2 mb-1">
-                          <span class="text-blue-500/60 font-mono text-sm">
-                            0{index + 1}
-                          </span>
-                          <span class="h-px w-8 bg-slate-100 group-hover:bg-slate-200 transition-colors" />
-                        </div>
-                        <h2 class="text-2xl font-bold text-slate-800 font-sans tracking-tight group-hover:text-slate-900 transition-colors">
-                          {section.heading}
-                        </h2>
-                      </div>
-                      <p class="text-base md:text-lg text-slate-500 leading-relaxed font-sans group-hover:text-slate-700 transition-colors">
-                        {section.body}
-                      </p>
-                    </div>
-                  ))
-                }
-              </div>
-              <div id="post-body-content">
-                {
-                  bodyHtml && (
-                    <div
-                      class="rounded-2xl border border-slate-200 bg-surface-code p-6 md:p-8 text-slate-700 prose prose-invert max-w-none"
-                      set:html={bodyHtml}
+    <div class="h-12 sm:h-16"></div>
+
+    <section
+      id="article-content"
+      class="container-main grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_280px]"
+    >
+      <article class="min-w-0">
+        {
+          bodyHtml && (
+            <div
+              class="prose max-w-none prose-headings:tracking-tight prose-a:text-sky-600 dark:prose-invert dark:prose-a:text-sky-400"
+              set:html={bodyHtml}
+            />
+          )
+        }
+
+        {
+          sections.length > 0 && (
+            <div class="divide-y divide-gray-950/5 dark:divide-white/10">
+              {sections.map((section: BlogSection, index: number) => (
+                <div
+                  id={`section-${index + 1}`}
+                  class="scroll-mt-24 py-8 first:pt-0 last:pb-0"
+                >
+                  <div class="flex items-center gap-3 font-mono text-xs/6 text-sky-600 dark:text-sky-400">
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <span
+                      class="h-px w-8 bg-gray-950/10 dark:bg-white/15"
+                      aria-hidden="true"
                     />
-                  )
-                }
-              </div>
-              <div id="post-checklist">
-                {
-                  checklist.length > 0 && (
-                    <div class="mt-12 rounded-lg border border-slate-200 bg-surface-code-rail p-6 font-mono text-sm shadow-lg">
-                      <div class="flex items-center gap-2 mb-4 border-b border-slate-300 pb-3">
-                        <span class="text-yellow-400">TODO:</span>
-                        <span class="text-slate-700">
-                          Implementation Checklist
-                        </span>
-                      </div>
-                      <ul class="space-y-2">
-                        {checklist.map((item: BlogChecklist) => (
-                          <li class="flex items-start gap-3 group cursor-default">
-                            <span class="text-slate-400 font-bold group-hover:text-green-400 transition-colors">
-                              [ ]
-                            </span>
-                            <span class="text-slate-500 group-hover:text-slate-700 transition-colors">
-                              {item.itemText}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )
-                }
-              </div>
-            </article>
-            <aside id="post-minimap" class="lg:block">
-              {
-                sections.length > 0 && (
-                  <div class="sticky top-24 space-y-4 rounded-lg border border-slate-200 bg-surface-code p-4 shadow-xl">
-                    <div class="flex items-center justify-between text-xs font-mono text-slate-500 uppercase tracking-wider mb-2">
-                      <span>Minimap</span>
-                      <span id="read-percent" class="text-blue-400">
-                        0%
-                      </span>
-                    </div>
-                    <div class="relative w-full bg-slate-100 rounded h-1.5 overflow-hidden">
-                      <div
-                        id="read-progress-ghost"
-                        class="absolute top-0 left-0 h-full bg-blue-500 w-0 transition-all duration-100"
-                      />
-                    </div>
-                    <div class="pt-4 border-t border-slate-200">
-                      <div class="text-[10px] font-mono text-slate-400 mb-3 uppercase tracking-wider">
-                        Symbols
-                      </div>
-                      <ul class="space-y-1">
-                        {sections.map(
-                          (section: BlogSection, index: number) => (
-                            <li>
-                              <a
-                                href={`#section-${index + 1}`}
-                                class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-100 transition-colors group"
-                              >
-                                <span class="text-blue-500/70 text-xs font-mono group-hover:text-blue-400">
-                                  #
-                                </span>
-                                <span class="text-slate-500 text-xs font-mono truncate group-hover:text-slate-700 transition-colors">
-                                  {section.heading}
-                                </span>
-                              </a>
-                            </li>
-                          ),
-                        )}
-                      </ul>
-                    </div>
-                    <div class="pt-4 mt-2 border-t border-slate-200">
-                      <div class="flex justify-between text-[10px] font-mono text-slate-600">
-                        <span>Ln {sections.length * 15}, Col 1</span>
-                        <span>UTF-8</span>
-                      </div>
-                    </div>
                   </div>
-                )
-              }
-            </aside>
-          </section>
-        </div>
-      </div>
+                  <h2 class="mt-3 text-xl/8 font-semibold tracking-tight text-gray-950 dark:text-white">
+                    {section.heading}
+                  </h2>
+                  <p class="mt-2 max-w-2xl text-base/7 whitespace-pre-line text-gray-600 dark:text-gray-400">
+                    {section.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )
+        }
+
+        {
+          checklist.length > 0 && (
+            <div class="mt-10 rounded-2xl bg-gray-950 p-1.5 ring-1 ring-gray-950/10 dark:bg-white/[0.04] dark:ring-white/10">
+              <div class="flex items-center gap-2 px-2.5 py-2.5">
+                <span class="size-3 rounded-full bg-white/15" />
+                <span class="size-3 rounded-full bg-white/15" />
+                <span class="size-3 rounded-full bg-white/15" />
+                <span class="ml-3 rounded-md bg-white/10 px-2 py-0.5 font-mono text-[11px] text-gray-300">
+                  checklist.md
+                </span>
+              </div>
+              <div class="rounded-xl bg-white/[0.04] p-4 font-mono text-sm/6 ring-1 ring-white/5 sm:p-5">
+                <p class="text-pink-400">TODO:</p>
+                <ul class="mt-3 space-y-1.5">
+                  {checklist.map((item: BlogChecklist) => (
+                    <li class="flex items-start gap-3 text-gray-300">
+                      <span class="select-none text-gray-600">[ ]</span>
+                      <span>{item.itemText}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )
+        }
+      </article>
+
+      {
+        sections.length > 0 && (
+          <aside class="hidden lg:block">
+            <div class="sticky top-24 rounded-xl bg-white p-4 ring-1 ring-gray-950/5 dark:bg-white/[0.03] dark:ring-white/10">
+              <div class="flex items-center justify-between font-mono text-xs/6 tracking-wider text-gray-500 uppercase">
+                <span>On this page</span>
+                <span id="read-percent" class="text-sky-600 dark:text-sky-400">
+                  0%
+                </span>
+              </div>
+              <div class="relative mt-3 h-1 overflow-hidden rounded bg-gray-950/5 dark:bg-white/10">
+                <div
+                  id="read-progress-ghost"
+                  class="absolute inset-y-0 left-0 w-0 bg-sky-500 transition-[width] duration-100"
+                />
+              </div>
+              <ul class="mt-4 space-y-1 border-t border-gray-950/5 pt-4 dark:border-white/10">
+                {sections.map((section: BlogSection, index: number) => (
+                  <li>
+                    <a
+                      href={`#section-${index + 1}`}
+                      class="flex items-center gap-2 rounded-md px-2 py-1.5 font-mono text-xs text-gray-500 transition-colors hover:bg-gray-950/[0.025] hover:text-gray-950 dark:hover:bg-white/5 dark:hover:text-white"
+                    >
+                      <span
+                        class="text-sky-600 dark:text-sky-400"
+                        aria-hidden="true"
+                      >
+                        #
+                      </span>
+                      <span class="truncate">{section.heading}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </aside>
+        )
+      }
     </section>
   </div>
 </PublicLayout>
