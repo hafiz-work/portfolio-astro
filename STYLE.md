@@ -48,10 +48,14 @@ Depth via hairlines, not shadows:
 
 Same line, focused chrome - no second theme:
 
-- **Layout**: `PrivateLayout` = canvas + fixed hairline sidebar (`rounded-xl`,
-  no shadow) + a `rounded-xl` main panel (hairline ring, no shadow) + a `h-16`
-  hairline header with breadcrumbs and the theme toggle. It follows the app
-  theme (light/dark), not a locked dark mode.
+- **Layout**: `PrivateLayout` uses the public `.page-shell` (hatched gutters,
+  96rem column). Inside the column: a flat sidebar on a hairline (`border-r`,
+  sticky full-height on md+, drawer on mobile) + a `h-14` `.line-b` navbar
+  (breadcrumbs, theme toggle) + content in `.container-main` that scrolls with
+  the page. No floating cards, no inner scroll panel. Follows the app theme.
+- **Page header**: `AdminPageHeader.astro` = `SectionHeader` rows (heading row +
+  lead row on full-bleed `.line-y`, `tracking-tighter` heading, `actions` slot).
+  Every admin page uses it; the opaque sidebar hides the lines where it sits over them.
 - **Atoms**: `.admin-card` (flat panel + hairline ring), `.admin-card-title`,
   `.admin-label`, `.admin-input` (= `.field`), `.admin-help`, `.admin-error`,
   `.admin-form-actions`, `.admin-btn` / `-primary` / `-secondary` / `-danger`

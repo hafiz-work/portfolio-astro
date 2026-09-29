@@ -14,45 +14,34 @@ interface Props {
 const { title, description } = Astro.props;
 ---
 
-<CoreLayout title={title} description={description}>
+<CoreLayout
+    title={title}
+    description={description}
+    class="font-inter text-gray-950 dark:text-white"
+>
     <Background />
-    <div class="flex h-screen relative z-10 bg-canvas dark:bg-pub-dark font-inter text-gray-950 dark:text-white">
-        <!-- Sidebar -->
-        <AdminSidebar />
-
-        <!-- Main content -->
-        <main
-            class="admin-main flex-grow flex flex-col min-w-0 rounded-xl border border-gray-950/5 dark:border-white/10 bg-canvas dark:bg-white/[0.03] overflow-hidden transition-all duration-300"
-        >
-            <!-- Topbar -->
-            <AdminNavbar />
-
-            <div class="flex-grow min-h-0 p-6 overflow-y-auto">
-                <slot />
+    <!-- Same shell as PublicLayout: hatched gutter | column | hatched gutter.
+         Inside the column: flat hairline sidebar + content that scrolls with
+         the page, so admin reads as the same site as index.astro. -->
+    <div class="page-shell min-h-dvh">
+        <div class="gutter gutter-left" aria-hidden="true"></div>
+        <div class="page-col">
+            <div class="flex flex-grow">
+                <AdminSidebar />
+                <div class="flex min-w-0 flex-grow flex-col">
+                    <AdminNavbar />
+                    <main class="container-main flex-grow pt-10 pb-20">
+                        <slot />
+                    </main>
+                </div>
             </div>
-        </main>
-
-        <UnsavedChangesModal />
-        <ConfirmModal />
+        </div>
+        <div class="gutter gutter-right" aria-hidden="true"></div>
     </div>
-</CoreLayout>
 
-<style>
-    .admin-main {
-        margin: 0.75rem;
-    }
-    @media (min-width: 768px) {
-        :root[data-admin-sidebar="open"] .admin-main {
-            margin-left: calc(16rem + 1.5rem);
-        }
-        :root[data-admin-sidebar="minimized"] .admin-main {
-            margin-left: calc(5rem + 1.5rem);
-        }
-        :root[data-admin-sidebar="closed"] .admin-main {
-            margin-left: 0.75rem;
-        }
-    }
-</style>
+    <UnsavedChangesModal />
+    <ConfirmModal />
+</CoreLayout>
 
 <script>
     import { authService } from "../lib/auth";

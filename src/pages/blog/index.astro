@@ -1,117 +1,62 @@
 ---
 export const prerender = false;
-import PublicLayout from "../../layouts/PublicLayout.astro";
+import ProjectLayout from "../../layouts/ProjectLayout.astro";
+import SectionHeader from "../../components/layout/SectionHeader.astro";
+import BlogCard from "../../components/blog/BlogCard.astro";
 import { getPublicPosts } from "../../lib/public-content";
 
 // Cache-friendly public loader: never throws, degrades to the same tasteful
 // zero-state as an empty blog.
 const posts = await getPublicPosts();
 
-const formatDate = (value?: string | null) => {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
-};
+const description = posts.length
+  ? `${posts.length} notes on backend systems, Flutter, and what it actually takes to ship production software.`
+  : "Notes on backend systems, Flutter, and what it actually takes to ship production software.";
 ---
 
-<PublicLayout
+<ProjectLayout
   title="Blog | Hafiz Bahtiar"
   description="Notes on backend systems, Flutter, and shipping production software."
 >
-  <div class="container-main space-y-10 md:space-y-14 pb-16 md:pb-24">
-    <section class="scroll-offset relative pt-10 md:pt-14">
-      <div class="section-label">
-        <span class="section-index">Field Notes</span>
-        <span class="section-rule"></span>
-      </div>
-      <h1
-        class="font-display text-4xl md:text-5xl font-bold mb-4 text-slate-900 dark:text-slate-100 tracking-tight"
-      >
-        Blog
-      </h1>
-      <p
-        class="text-slate-500 dark:text-slate-400 text-lg leading-relaxed max-w-xl"
-      >
-        Notes on backend systems, Flutter, and what it actually takes to ship
-        production software.
-      </p>
-    </section>
+  <div class="h-16 sm:h-24"></div>
+  <SectionHeader
+    as="h1"
+    eyebrow="Field notes"
+    title="Blog"
+    description={description}
+  />
+  <div class="h-12"></div>
 
-    {
-      posts.length > 0 ? (
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {posts.map((post) => (
-            <a
-              href={`/blog/${post.slug}`}
-              class="group relative rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 p-6 hover:border-cyan-500/40 dark:hover:border-cyan-400/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/5 transition-all duration-300 flex flex-col"
-            >
-              <div class="flex items-center gap-2 font-mono text-[11px] text-slate-400 dark:text-slate-500 mb-3">
-                {formatDate(post.publishedDate) && (
-                  <span>{formatDate(post.publishedDate)}</span>
-                )}
-                {post.readTimeMinutes > 0 && (
-                  <>
-                    <span>·</span>
-                    <span>{post.readTimeMinutes} min read</span>
-                  </>
-                )}
-              </div>
-              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 group-hover:text-cyan-700 dark:group-hover:text-cyan-400 transition-colors leading-snug mb-2">
-                {post.title}
-              </h2>
-              <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-3">
-                {post.excerpt}
-              </p>
-              {post.tags?.length > 0 && (
-                <div class="flex flex-wrap gap-1.5 mt-4">
-                  {post.tags.slice(0, 4).map((tag) => (
-                    <span class="px-2 py-0.5 font-mono text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/70 border border-slate-200 dark:border-slate-600 rounded-md">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </a>
-          ))}
-        </div>
-      ) : (
-        <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 p-8 md:p-12 text-center">
-          <p class="font-mono text-xs tracking-[0.18em] uppercase text-cyan-600 dark:text-cyan-400 mb-3">
-            Writing in progress
-          </p>
-          <h2 class="font-display text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+  {
+    posts.length > 0 ? (
+      <div class="line-y grid grid-flow-dense grid-cols-1 gap-2 p-2 sm:grid-cols-2 lg:grid-cols-3">
+        {posts.map((post, index) => (
+          <div
+            class:list={["frame", index === 0 && "sm:col-span-2"]}
+            data-reveal
+            style={`--reveal-delay: ${(index % 3) * 70}ms`}
+          >
+            <BlogCard post={post} />
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div class="line-y p-2">
+        <div class="pattern flex h-72 flex-col items-center justify-center gap-3 text-center">
+          <p class="eyebrow">Writing in progress</p>
+          <p class="rounded-full bg-canvas px-4 py-1.5 text-base/7 font-medium text-gray-950 ring-1 ring-gray-950/10 dark:bg-pub-dark dark:text-white dark:ring-white/10">
             First posts are on the way
-          </h2>
-          <p class="text-sm md:text-base text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+          </p>
+          <p class="max-w-md px-4 text-sm/6 text-gray-500">
             I'm writing about backend architecture, Flutter, and Cloudflare
             Workers. Meanwhile, the projects say plenty.
           </p>
-          <a
-            href="/projects"
-            class="inline-flex items-center gap-1.5 mt-6 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-600/20 transition-all"
-          >
+          <a href="/projects" class="btn-pill btn-pill-primary mt-2">
             View projects
-            <svg
-              class="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
+            <span aria-hidden="true">&rarr;</span>
           </a>
         </div>
-      )
-    }
-  </div>
-</PublicLayout>
+      </div>
+    )
+  }
+</ProjectLayout>

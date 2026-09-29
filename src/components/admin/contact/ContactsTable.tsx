@@ -175,33 +175,33 @@ export const ContactsTable = () => {
                         <div className="max-h-[75vh] overflow-y-auto px-6 py-5 space-y-6">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-1">
-                                    <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">FROM</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">FROM</p>
                                     <p className="text-gray-950 dark:text-white">{selectedContact.name}</p>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">
                                         {selectedContact.email}
                                     </p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">STATUS</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">STATUS</p>
                                     <AdminBadge variant={statusBadgeVariant(selectedContact.status)} dot>
                                         {selectedContact.status.toLowerCase()}
                                     </AdminBadge>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">PHONE</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">PHONE</p>
                                     <p className="text-sm text-gray-600 dark:text-gray-300">
                                         {selectedContact.phone || "-"}
                                     </p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">RECEIVED</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">RECEIVED</p>
                                     <p className="text-sm text-gray-600 dark:text-gray-300 font-mono">
                                         {formatDate(selectedContact.createdAt)}
                                     </p>
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">MESSAGE</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">MESSAGE</p>
                                 <div className="rounded-xl border border-gray-950/5 bg-gray-950/[0.025] p-4 text-sm text-gray-700 leading-relaxed whitespace-pre-line dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-200">
                                     {selectedContact.message}
                                 </div>

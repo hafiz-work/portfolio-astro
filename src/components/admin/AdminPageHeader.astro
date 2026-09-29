@@ -11,24 +11,28 @@ interface Props {
 const { title, description } = Astro.props;
 ---
 
-<div
-  class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-6"
->
-  <div class="min-w-0">
+<!-- SectionHeader rows (index.astro): heading row + lead row, each on its
+     own full-bleed hairline. The sidebar is opaque, so the lines tuck under it. -->
+<div class="mb-10">
+  <div
+    class="line-y flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+  >
     <h1
-      class="text-xl font-medium tracking-tight text-gray-950 dark:text-white"
+      class="min-w-0 text-3xl/[1.1] font-medium tracking-tighter text-pretty text-gray-950 sm:text-4xl/[1.1] dark:text-white"
     >
       {title}
     </h1>
-    {
-      description && (
-        <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">
+    <div class="flex shrink-0 items-center gap-2 pb-1">
+      <slot name="actions" />
+    </div>
+  </div>
+  {
+    description && (
+      <div class="line-y mt-2">
+        <p class="max-w-3xl text-base/7 text-gray-600 dark:text-gray-400">
           {description}
         </p>
-      )
-    }
-  </div>
-  <div class="flex shrink-0 items-center gap-2">
-    <slot name="actions" />
-  </div>
+      </div>
+    )
+  }
 </div>

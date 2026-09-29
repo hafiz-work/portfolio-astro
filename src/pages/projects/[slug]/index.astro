@@ -5,8 +5,12 @@ import Annot from "../../../components/layout/Annot.astro";
 import { Image } from "astro:assets";
 import JsonLd from "../../../components/seo/JsonLd.astro";
 import MediaCarousel from "../../../components/project/MediaCarousel.astro";
-import { getPublicProjectDetail, getPublicProjectPolicy } from "../../../lib/public-content";
+import {
+  getPublicProjectDetail,
+  getPublicProjectPolicy,
+} from "../../../lib/public-content";
 import type { ProjectLinkType } from "../../../types/project-cms";
+import { featureIcon } from "../../../lib/feature-icons";
 
 const slug = Astro.params.slug ?? "";
 
@@ -33,11 +37,14 @@ const formatStatus = (status?: string | null) => {
 const capitalize = (s?: string | null) =>
   s ? s.charAt(0).toUpperCase() + s.slice(1) : null;
 
-const metaDescription = project.summary || project.description || "View project details.";
+const metaDescription =
+  project.summary || project.description || "View project details.";
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
 const canonical = new URL(`/projects/${project.slug}`, siteOrigin).toString();
 const coverUrl = project.cover?.url ?? project.imageUrl ?? "";
-const ogImageAbs = coverUrl ? new URL(coverUrl, siteOrigin).toString() : undefined;
+const ogImageAbs = coverUrl
+  ? new URL(coverUrl, siteOrigin).toString()
+  : undefined;
 
 // Tech chips: structured tech stacks (post-backfill) → legacy technologies → tags.
 const techChips =
@@ -50,8 +57,16 @@ const techChips =
 // Features: structured featureList → legacy features strings.
 const featureItems =
   project.featureList && project.featureList.length > 0
-    ? project.featureList.map((f) => ({ title: f.title, description: f.description }))
-    : (project.features ?? []).map((s) => ({ title: s, description: null as string | null }));
+    ? project.featureList.map((f) => ({
+        title: f.title,
+        description: f.description,
+        Icon: featureIcon(f.icon),
+      }))
+    : (project.features ?? []).map((s) => ({
+        title: s,
+        description: null as string | null,
+        Icon: featureIcon(null),
+      }));
 
 // Case-study narrative - only sections with real content render (no empty headings).
 const narrative = [
@@ -105,7 +120,9 @@ const hasLegal = !!(policy?.privacyPolicy || policy?.termsAndConditions);
 const links = project.links ?? [];
 const hasPublicLinks = links.length > 0;
 const isClientWork = project.projectType === "work";
-const contactCtaLabel = isClientWork ? "Request a walkthrough" : "Discuss this project";
+const contactCtaLabel = isClientWork
+  ? "Request a walkthrough"
+  : "Discuss this project";
 // source/case-study/contact links use the quieter secondary treatment.
 const secondaryLink = (t: ProjectLinkType) =>
   t === "source" || t === "case_study" || t === "contact" || t === "private";
@@ -142,7 +159,10 @@ const projectSchema = {
           data-astro-reload
           class="group inline-flex items-center gap-1.5 font-mono text-xs/6 text-gray-500 transition-colors hover:text-gray-950 dark:hover:text-white"
         >
-          <span class="transition-transform group-hover:-translate-x-0.5" aria-hidden="true">&larr;</span>
+          <span
+            class="transition-transform group-hover:-translate-x-0.5"
+            aria-hidden="true">&larr;</span
+          >
           cd ../projects
         </a>
       </div>
@@ -150,92 +170,148 @@ const projectSchema = {
 
     <!-- Hero -->
     <div class="h-8 sm:h-12"></div>
-    {metaChips.length > 0 && (
-      <div class="line-y">
-        <p class="eyebrow container-main">{metaChips.join(" · ")}</p>
-      </div>
-    )}
+    {
+      metaChips.length > 0 && (
+        <div class="line-y">
+          <p class="eyebrow container-main">{metaChips.join(" · ")}</p>
+        </div>
+      )
+    }
     <div class="line-y mt-2">
-      <h1 class="container-main text-4xl/[1.1] font-medium tracking-tighter text-balance text-gray-950 sm:text-6xl/[1.05] dark:text-white">
+      <h1
+        class="container-main text-4xl/[1.1] font-medium tracking-tighter text-balance text-gray-950 sm:text-6xl/[1.05] dark:text-white"
+      >
         {project.title}
       </h1>
     </div>
-    {project.subtitle && (
-      <div class="line-y mt-2">
-        <p class="container-main text-lg/8 font-medium text-gray-950 dark:text-white">{project.subtitle}</p>
-      </div>
-    )}
+    {
+      project.subtitle && (
+        <div class="line-y mt-2">
+          <p class="container-main text-lg/8 font-medium text-gray-950 dark:text-white">
+            {project.subtitle}
+          </p>
+        </div>
+      )
+    }
     <Annot preset="lead" class="mt-4" />
     <div class="line-y">
-      <p class="lead container-main">{project.summary || project.description}</p>
+      <p class="lead container-main">
+        {project.summary || project.description}
+      </p>
     </div>
 
     <div class="h-8"></div>
     <div class="line-y">
       <div class="container-main flex flex-wrap gap-3">
-        {hasPublicLinks ? (
-          links.map((link, i) => (
-            <a
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              class:list={[
-                "btn-pill",
-                !secondaryLink(link.linkType) && i === 0 ? "btn-pill-primary" : "btn-pill-ghost",
-              ]}
-            >
-              {link.label}
-              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17L17 7M17 7H7M17 7v10" />
-              </svg>
+        {
+          hasPublicLinks ? (
+            links.map((link, i) => (
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class:list={[
+                  "btn-pill",
+                  !secondaryLink(link.linkType) && i === 0
+                    ? "btn-pill-primary"
+                    : "btn-pill-ghost",
+                ]}
+              >
+                {link.label}
+                <svg
+                  class="h-3.5 w-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M7 17L17 7M17 7H7M17 7v10"
+                  />
+                </svg>
+              </a>
+            ))
+          ) : (
+            <a href="/#contact" class="btn-pill btn-pill-primary">
+              {contactCtaLabel}
+              <span aria-hidden="true">&rarr;</span>
             </a>
-          ))
-        ) : (
-          <a href="/#contact" class="btn-pill btn-pill-primary">
-            {contactCtaLabel}
-            <span aria-hidden="true">&rarr;</span>
-          </a>
-        )}
+          )
+        }
       </div>
     </div>
 
     <!-- Media: carousel when gallery media exists, else single cover/logo/placeholder -->
     <div class="h-12 sm:h-16"></div>
-    {hasGallery && (
-      <div class="line-y py-6">
-        <MediaCarousel items={galleryMedia} title={project.title} />
-      </div>
-    )}
-    {showBanner && (
-      <div class="line-y p-2">
-        <div class="frame">
-          <div class="frame-inner">
-            <Image src={coverUrl} alt={project.cover?.alt ?? project.title} width={1200} height={400} class="h-56 w-full bg-white object-contain sm:h-80" loading="eager" decoding="async" />
+    {
+      hasGallery && (
+        <div class="line-y py-6">
+          <MediaCarousel items={galleryMedia} title={project.title} />
+        </div>
+      )
+    }
+    {
+      showBanner && (
+        <div class="line-y p-2">
+          <div class="frame">
+            <div class="frame-inner">
+              <Image
+                src={coverUrl}
+                alt={project.cover?.alt ?? project.title}
+                width={1200}
+                height={400}
+                class="h-56 w-full bg-white object-contain sm:h-80"
+                loading="eager"
+                decoding="async"
+              />
+            </div>
           </div>
         </div>
-      </div>
-    )}
-    {showLogo && (
-      <div class="line-y pattern flex justify-center p-10 sm:p-14">
-        <div class="rounded-2xl bg-white p-6 ring-1 ring-gray-950/10 dark:ring-white/10">
-          <Image src={coverUrl} alt={project.cover?.alt ?? `${project.title} logo`} width={160} height={160} class="h-20 w-auto object-contain" loading="eager" />
+      )
+    }
+    {
+      showLogo && (
+        <div class="line-y pattern flex justify-center p-10 sm:p-14">
+          <div class="rounded-2xl bg-white p-6 ring-1 ring-gray-950/10 dark:ring-white/10">
+            <Image
+              src={coverUrl}
+              alt={project.cover?.alt ?? `${project.title} logo`}
+              width={160}
+              height={160}
+              class="h-20 w-auto object-contain"
+              loading="eager"
+            />
+          </div>
         </div>
-      </div>
-    )}
-    {showMediaFallback && (
-      <div class="line-y pattern flex h-48 items-center justify-center sm:h-64">
-        <span class="rounded-full bg-canvas px-3 py-1 font-mono text-xs text-gray-500 ring-1 ring-gray-950/10 dark:bg-pub-dark dark:ring-white/10">
-          media coming soon
-        </span>
-      </div>
-    )}
+      )
+    }
+    {
+      showMediaFallback && (
+        <div class="line-y pattern flex h-48 items-center justify-center sm:h-64">
+          <span class="rounded-full bg-canvas px-3 py-1 font-mono text-xs text-gray-500 ring-1 ring-gray-950/10 dark:bg-pub-dark dark:ring-white/10">
+            media coming soon
+          </span>
+        </div>
+      )
+    }
 
     <!-- Tabs -->
     <div class="h-12 sm:h-16"></div>
     <div class="line-y">
       <div class="container-main flex gap-6 overflow-x-auto" role="tablist">
-        <button class="tab-btn is-active -mb-px shrink-0 border-b py-3 text-sm/6 font-medium" role="tab" data-tab="overview">Overview</button>
-        <button class="tab-btn -mb-px shrink-0 border-b py-3 text-sm/6 font-medium" role="tab" data-tab="tech-stack">Tech stack</button>
+        <button
+          class="tab-btn is-active -mb-px shrink-0 border-b py-3 text-sm/6 font-medium"
+          role="tab"
+          data-tab="overview">Overview</button
+        >
+        <button
+          class="tab-btn -mb-px shrink-0 border-b py-3 text-sm/6 font-medium"
+          role="tab"
+          data-tab="tech-stack">Tech stack</button
+        >
       </div>
     </div>
 
@@ -243,64 +319,109 @@ const projectSchema = {
     <div id="overview" class="tab-content">
       <div class="line-b grid grid-cols-1 lg:grid-cols-3">
         <div class="space-y-10 px-4 py-10 sm:px-6 lg:col-span-2">
-          {narrative.map((s) => (
-            <div>
-              <h2 class="text-xl/8 font-semibold tracking-tight text-gray-950 dark:text-white">{s.heading}</h2>
-              <p class="mt-2 max-w-2xl text-base/7 whitespace-pre-line text-gray-600 dark:text-gray-400">{s.body}</p>
-            </div>
-          ))}
-          {customSections.map((s) => (
-            <div>
-              <h2 class="text-xl/8 font-semibold tracking-tight text-gray-950 dark:text-white">{s.title || capitalize(s.sectionType)}</h2>
-              {s.body && (
-                <p class="mt-2 max-w-2xl text-base/7 whitespace-pre-line text-gray-600 dark:text-gray-400">{s.body}</p>
-              )}
-            </div>
-          ))}
-          {featureItems.length > 0 && (
-            <div>
-              <h2 class="text-xl/8 font-semibold tracking-tight text-gray-950 dark:text-white">Features</h2>
-              <ul class="mt-4 max-w-2xl divide-y divide-gray-950/5 dark:divide-white/10">
-                {featureItems.map((feature) => (
-                  <li class="flex items-start gap-3 py-3 text-sm/6">
-                    <svg class="mt-1 h-4 w-4 shrink-0 text-sky-500 dark:text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>
-                      <span class="font-medium text-gray-950 dark:text-white">{feature.title}</span>
-                      {feature.description && <span class="block text-gray-600 dark:text-gray-400">{feature.description}</span>}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {!hasNarrative && featureItems.length === 0 && (
-            <p class="text-base/7 text-gray-600 dark:text-gray-400">{project.description}</p>
-          )}
-          {hasLegal && (
-            <div>
-              <p class="eyebrow">Legal</p>
-              <div class="mt-3 flex flex-wrap gap-3">
-                {policy?.privacyPolicy && (
-                  <a href={`/projects/${project.slug}/privacy`} class="btn-pill btn-pill-ghost">Privacy Policy</a>
-                )}
-                {policy?.termsAndConditions && (
-                  <a href={`/projects/${project.slug}/terms`} class="btn-pill btn-pill-ghost">Terms &amp; Conditions</a>
+          {
+            narrative.map((s) => (
+              <div>
+                <h2 class="text-xl/8 font-semibold tracking-tight text-gray-950 dark:text-white">
+                  {s.heading}
+                </h2>
+                <p class="mt-2 max-w-2xl text-base/7 whitespace-pre-line text-gray-600 dark:text-gray-400">
+                  {s.body}
+                </p>
+              </div>
+            ))
+          }
+          {
+            customSections.map((s) => (
+              <div>
+                <h2 class="text-xl/8 font-semibold tracking-tight text-gray-950 dark:text-white">
+                  {s.title || capitalize(s.sectionType)}
+                </h2>
+                {s.body && (
+                  <p class="mt-2 max-w-2xl text-base/7 whitespace-pre-line text-gray-600 dark:text-gray-400">
+                    {s.body}
+                  </p>
                 )}
               </div>
-            </div>
-          )}
+            ))
+          }
+          {
+            featureItems.length > 0 && (
+              <div>
+                <h2 class="text-xl/8 font-semibold tracking-tight text-gray-950 dark:text-white">
+                  Features
+                </h2>
+                <ul class="mt-4 max-w-2xl divide-y divide-gray-950/5 dark:divide-white/10">
+                  {featureItems.map((feature) => (
+                    <li class="flex items-start gap-3 py-3 text-sm/6">
+                      <feature.Icon
+                        className="mt-1 h-4 w-4 shrink-0 text-sky-500 dark:text-sky-400"
+                        aria-hidden="true"
+                      />
+                      <span>
+                        <span class="font-medium text-gray-950 dark:text-white">
+                          {feature.title}
+                        </span>
+                        {feature.description && (
+                          <span class="block text-gray-600 dark:text-gray-400">
+                            {feature.description}
+                          </span>
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
+          }
+          {
+            !hasNarrative && featureItems.length === 0 && (
+              <p class="text-base/7 text-gray-600 dark:text-gray-400">
+                {project.description}
+              </p>
+            )
+          }
+          {
+            hasLegal && (
+              <div>
+                <p class="eyebrow">Legal</p>
+                <div class="mt-3 flex flex-wrap gap-3">
+                  {policy?.privacyPolicy && (
+                    <a
+                      href={`/projects/${project.slug}/privacy`}
+                      class="btn-pill btn-pill-ghost"
+                    >
+                      Privacy Policy
+                    </a>
+                  )}
+                  {policy?.termsAndConditions && (
+                    <a
+                      href={`/projects/${project.slug}/terms`}
+                      class="btn-pill btn-pill-ghost"
+                    >
+                      Terms &amp; Conditions
+                    </a>
+                  )}
+                </div>
+              </div>
+            )
+          }
         </div>
-        <aside class="border-t border-gray-950/5 px-4 py-10 sm:px-6 lg:border-t-0 lg:border-l dark:border-white/10">
+        <aside
+          class="border-t border-gray-950/5 px-4 py-10 sm:px-6 lg:border-t-0 lg:border-l dark:border-white/10"
+        >
           <h3 class="eyebrow">Project info</h3>
           <dl class="mt-4 divide-y divide-gray-950/5 dark:divide-white/10">
-            {infoStats.map((stat) => (
-              <div class="flex items-center justify-between gap-4 py-3">
-                <dt class="text-sm/6 text-gray-500">{stat.label}</dt>
-                <dd class="text-sm/6 font-medium text-gray-950 dark:text-white">{stat.value}</dd>
-              </div>
-            ))}
+            {
+              infoStats.map((stat) => (
+                <div class="flex items-center justify-between gap-4 py-3">
+                  <dt class="text-sm/6 text-gray-500">{stat.label}</dt>
+                  <dd class="text-sm/6 font-medium text-gray-950 dark:text-white">
+                    {stat.value}
+                  </dd>
+                </div>
+              ))
+            }
           </dl>
         </aside>
       </div>
@@ -309,27 +430,43 @@ const projectSchema = {
     <!-- Tech stack tab -->
     <div id="tech-stack" class="tab-content hidden">
       <div class="line-b px-4 py-10 sm:px-6">
-        {techChips.length > 0 ? (
-          <div class="flex flex-wrap gap-2">
-            {techChips.map((tech: string) => (
-              <span class="inline-flex items-center rounded-full px-3 py-1 text-sm/6 font-medium text-gray-950 ring-1 ring-gray-950/10 ring-inset dark:text-white dark:ring-white/15">{tech}</span>
-            ))}
-          </div>
-        ) : (
-          <p class="text-sm/6 text-gray-500">No technologies listed.</p>
-        )}
+        {
+          techChips.length > 0 ? (
+            <div class="flex flex-wrap gap-2">
+              {techChips.map((tech: string) => (
+                <span class="inline-flex items-center rounded-full px-3 py-1 text-sm/6 font-medium text-gray-950 ring-1 ring-gray-950/10 ring-inset dark:text-white dark:ring-white/15">
+                  {tech}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p class="text-sm/6 text-gray-500">No technologies listed.</p>
+          )
+        }
       </div>
     </div>
   </div>
 </ProjectLayout>
 
 <style>
-  .tab-btn { color: var(--color-gray-500); border-color: transparent; }
-  .tab-btn:hover { color: var(--color-gray-950); }
-  .tab-btn.is-active { color: var(--color-gray-950); border-color: var(--color-gray-950); }
+  .tab-btn {
+    color: var(--color-gray-500);
+    border-color: transparent;
+  }
+  .tab-btn:hover {
+    color: var(--color-gray-950);
+  }
+  .tab-btn.is-active {
+    color: var(--color-gray-950);
+    border-color: var(--color-gray-950);
+  }
   :global(html.dark) .tab-btn:hover,
-  :global(html.dark) .tab-btn.is-active { color: var(--color-white); }
-  :global(html.dark) .tab-btn.is-active { border-color: var(--color-white); }
+  :global(html.dark) .tab-btn.is-active {
+    color: var(--color-white);
+  }
+  :global(html.dark) .tab-btn.is-active {
+    border-color: var(--color-white);
+  }
 </style>
 
 <script>
