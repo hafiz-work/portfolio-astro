@@ -42,7 +42,7 @@ export const TextEditor = ({
                 autolink: true,
                 linkOnPaste: true,
                 HTMLAttributes: {
-                    class: "text-sky-300 underline underline-offset-4",
+                    class: "text-sky-600 dark:text-sky-300 underline underline-offset-4",
                 },
             }),
         ],
@@ -55,7 +55,7 @@ export const TextEditor = ({
         editorProps: {
             attributes: {
                 class:
-                    "prose prose-invert prose-lg max-w-none text-gray-200 leading-relaxed focus:outline-none min-h-[220px] sm:min-h-[240px] md:min-h-[280px] lg:min-h-[320px] prose-headings:text-white prose-strong:text-white prose-a:text-sky-300 prose-a:font-medium prose-a:no-underline prose-a:hover:text-sky-200 prose-code:text-sky-300 prose-code:bg-gray-950/70 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-pre:bg-gray-950/70 prose-pre:border prose-pre:border-sky-500/30 prose-pre:overflow-x-auto prose-pre:rounded-xl prose-pre:font-mono prose-blockquote:border-sky-500/40 prose-blockquote:text-gray-300 prose-hr:border-gray-800",
+                    "prose prose-lg dark:prose-invert max-w-none text-gray-700 dark:text-gray-200 leading-relaxed focus:outline-none min-h-[220px] sm:min-h-[240px] md:min-h-[280px] lg:min-h-[320px] prose-headings:text-gray-950 dark:prose-headings:text-white prose-strong:text-gray-950 dark:prose-strong:text-white prose-a:text-sky-600 dark:prose-a:text-sky-300 prose-a:font-medium prose-a:no-underline prose-a:hover:text-sky-500 dark:prose-a:hover:text-sky-200 prose-code:text-sky-700 dark:prose-code:text-sky-300 prose-code:bg-gray-100 dark:prose-code:bg-gray-950/70 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-pre:bg-gray-950 prose-pre:text-gray-200 dark:prose-pre:bg-white/4 prose-pre:border prose-pre:border-gray-950/5 dark:prose-pre:border-white/10 prose-pre:overflow-x-auto prose-pre:rounded-xl prose-pre:font-mono prose-blockquote:border-sky-500/40 prose-blockquote:text-gray-600 dark:prose-blockquote:text-gray-300 prose-hr:border-gray-200 dark:prose-hr:border-gray-800",
             },
         },
     });
@@ -91,12 +91,13 @@ export const TextEditor = ({
         "h-8 w-8 sm:h-9 sm:w-9 grid place-items-center rounded-md border transition-colors";
     const wideButtonClass =
         "h-8 w-10 sm:h-9 sm:w-11 grid place-items-center rounded-md border transition-colors";
-    const activeClass = "text-white border-sky-400/60 bg-sky-500/20";
+    const activeClass =
+        "text-sky-700 border-sky-500/50 bg-sky-500/10 dark:text-white dark:border-sky-400/60 dark:bg-sky-500/20";
     const inactiveClass =
-        "text-gray-400 border-gray-800 hover:text-white hover:border-sky-500/40";
+        "text-gray-500 border-gray-950/10 hover:text-gray-950 hover:border-sky-500/40 dark:text-gray-400 dark:border-gray-800 dark:hover:text-white";
 
     return (
-        <div className="rounded-lg border border-sky-500/20 bg-gray-950 shadow-lg overflow-hidden">
+        <div className="rounded-lg border border-gray-950/10 bg-white overflow-hidden dark:border-white/10 dark:bg-white/5">
             {name && (
                 <textarea
                     ref={textareaRef}
@@ -108,7 +109,7 @@ export const TextEditor = ({
                 />
             )}
             {showToolbar && (
-                <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 border-b border-sky-500/20 bg-gray-950/80 px-2 sm:px-3 py-2 overflow-x-auto">
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 border-b border-gray-950/10 bg-gray-50 dark:border-white/10 dark:bg-white/5 px-2 sm:px-3 py-2 overflow-x-auto">
                     <button
                         type="button"
                         aria-label="Bold"
@@ -220,7 +221,7 @@ export const TextEditor = ({
                             <path d="M16 8l4 4-4 4" />
                         </svg>
                     </button>
-                    <div className="h-6 w-px bg-gray-800" />
+                    <div className="h-6 w-px bg-gray-200 dark:bg-gray-800" />
                     <button
                         type="button"
                         aria-label="Heading 2"
@@ -414,7 +415,7 @@ export const TextEditor = ({
                             <path d="M14 11a5 5 0 0 1 0 7l-2 2a5 5 0 1 1-7-7l2-2" />
                         </svg>
                     </button>
-                    <div className="h-6 w-px bg-gray-800" />
+                    <div className="h-6 w-px bg-gray-200 dark:bg-gray-800" />
                     <button
                         type="button"
                         aria-label="Undo"
