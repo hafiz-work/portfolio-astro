@@ -31,7 +31,9 @@ const SECURITY_HEADERS: Record<string, string> = {
     // challenges.cloudflare.com: Cloudflare Turnstile on /login and the contact
     // form - it serves the script and renders the widget inside an iframe.
     "script-src 'self' 'unsafe-inline' blob: https://static.cloudflareinsights.com https://challenges.cloudflare.com",
-    "frame-src 'self' https://challenges.cloudflare.com",
+    // youtube-nocookie.com: blog video embeds - the only host sanitizeRichHtml
+    // lets an <iframe> point at.
+    "frame-src 'self' https://challenges.cloudflare.com https://www.youtube-nocookie.com",
     "worker-src 'self' blob:",
     // In dev the API runs on localhost:8787 - without this, the CSP silently
     // blocks every admin fetch during local development.

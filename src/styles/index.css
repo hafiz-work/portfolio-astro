@@ -384,6 +384,7 @@ html[data-theme-switching]::view-transition-new(root) {
         @apply pointer-events-none float-left h-0 text-gray-400 dark:text-gray-500;
     }
 
+
     .admin-input {
         @apply block w-full rounded-lg bg-white px-3 py-2 text-sm/6 text-gray-950 outline-1 -outline-offset-1 outline-gray-950/10 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-sky-500 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500;
     }
@@ -520,4 +521,86 @@ html[data-theme-switching]::view-transition-new(root) {
         opacity: 0;
         animation: fadeInUp 0.6s ease-out forwards;
     }
+}
+
+/* Unlayered on purpose: `prose` lives in the utilities layer, which would
+   beat these from @layer components regardless of specificity. */
+/* Blog content presets - the sanitizer only allows these exact values, and
+   both the editor and blog/[slug] render inside .prose, so they match. */
+.prose [data-spacing="tight"] {
+    @apply my-2 leading-normal;
+}
+.prose [data-spacing="loose"] {
+    @apply my-8 leading-loose;
+}
+.prose [data-align="center"] {
+    @apply text-center;
+}
+.prose [data-align="right"] {
+    @apply text-right;
+}
+.prose mark {
+    @apply rounded-sm bg-amber-200/70 px-0.5 text-inherit dark:bg-amber-400/25 dark:text-amber-50;
+}
+
+.prose aside[data-callout] {
+    @apply my-6 rounded-lg border-l-4 px-4 py-0.5 [&>:first-child]:mt-3 [&>:last-child]:mb-3;
+}
+.prose aside[data-callout="info"] {
+    @apply border-sky-500 bg-sky-500/5 dark:border-sky-400 dark:bg-sky-400/10;
+}
+.prose aside[data-callout="tip"] {
+    @apply border-emerald-500 bg-emerald-500/5 dark:border-emerald-400 dark:bg-emerald-400/10;
+}
+.prose aside[data-callout="warning"] {
+    @apply border-amber-500 bg-amber-500/5 dark:border-amber-400 dark:bg-amber-400/10;
+}
+
+.prose ul[data-type="taskList"] {
+    @apply list-none pl-0;
+}
+.prose ul[data-type="taskList"] > li {
+    @apply flex items-start gap-2 pl-0;
+}
+.prose ul[data-type="taskList"] > li > label {
+    @apply mt-[0.3em] shrink-0 [&_input]:accent-sky-600;
+}
+.prose ul[data-type="taskList"] > li > div {
+    @apply flex-1 [&>p]:my-0;
+}
+
+/* Collapsible: <details> on the blog, a node view (div + toggle) in the editor. */
+.prose details,
+.prose div[data-type="details"] {
+    @apply my-6 rounded-lg border border-gray-950/10 px-4 py-2 dark:border-white/10;
+}
+.prose summary {
+    @apply cursor-pointer font-medium text-gray-950 dark:text-white;
+}
+.prose div[data-type="details"] {
+    @apply flex gap-2;
+}
+.prose div[data-type="details"] > button {
+    @apply mt-1.5 grid size-5 shrink-0 place-items-center rounded text-[0.625rem] text-gray-500 hover:bg-gray-950/5 dark:hover:bg-white/10;
+}
+.prose div[data-type="details"] > button::before {
+    content: "\25B6";
+    @apply transition-transform;
+}
+.prose div[data-type="details"].is-open > button::before {
+    @apply rotate-90;
+}
+.prose div[data-type="details"] > div {
+    @apply flex-1 [&_summary]:list-none [&_p]:my-2;
+}
+
+.prose div[data-youtube-video] iframe {
+    @apply my-6 aspect-video h-auto w-full rounded-lg;
+}
+
+.tiptap .tableWrapper {
+    @apply overflow-x-auto;
+}
+.tiptap .selectedCell {
+    @apply bg-sky-500/10;
 }

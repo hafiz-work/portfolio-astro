@@ -4,16 +4,25 @@ import { parseDocument } from "htmlparser2";
 
 const ALLOWED_TAGS = new Set([
   "a",
+  "aside",
   "blockquote",
   "br",
   "code",
+  "col",
+  "colgroup",
   "del",
+  "details",
+  "div",
   "em",
   "h2",
   "h3",
   "h4",
   "hr",
+  "iframe",
+  "input",
+  "label",
   "li",
+  "mark",
   "ol",
   "p",
   "pre",
@@ -21,6 +30,7 @@ const ALLOWED_TAGS = new Set([
   "span",
   "strong",
   "sub",
+  "summary",
   "sup",
   "table",
   "tbody",
@@ -32,7 +42,7 @@ const ALLOWED_TAGS = new Set([
   "ul",
 ]);
 
-const VOID_TAGS = new Set(["br", "hr"]);
+const VOID_TAGS = new Set(["br", "col", "hr", "input"]);
 
 const ALLOWED_ATTRS = new Map<string, Set<string>>([
   ["a", new Set(["href", "name", "target", "rel", "class"])],
@@ -43,7 +53,22 @@ const ALLOWED_ATTRS = new Map<string, Set<string>>([
   ["table", new Set(["class"])],
   ["td", new Set(["colspan", "rowspan", "class"])],
   ["th", new Set(["colspan", "rowspan", "class"])],
+  ["iframe", new Set(["src", "width", "height"])],
+  ["input", new Set(["type", "checked"])],
 ]);
+
+// Editor presets (spacing, align, callouts, task lists, details, embeds).
+// Allowed on any allowed tag, but only with these exact values - never free CSS.
+const PRESET_ATTRS: Record<string, RegExp> = {
+  "data-spacing": /^(tight|loose)$/,
+  "data-align": /^(center|right)$/,
+  "data-callout": /^(info|tip|warning)$/,
+  "data-type": /^(taskList|taskItem|detailsContent)$/,
+  "data-checked": /^(true|false)$/,
+  "data-youtube-video": /^$/,
+};
+
+const YOUTUBE_EMBED = /^https:\/\/www\.youtube-nocookie\.com\/embed\/[\w-]+(\?[\w=&%.-]*)?$/;
 
 const SAFE_HREF_PATTERN = /^(https?:|mailto:|tel:|#|\/(?!\/))/i;
 const DROPPED_CONTENT_TAGS = new Set(["script", "style"]);
@@ -56,7 +81,26 @@ const renderAttrs = (node: Element, tagName: string): string => {
     const name = rawName.toLowerCase();
     const value = rawValue.trim();
 
+    if (name in PRESET_ATTRS) {
+      if (PRESET_ATTRS[name].test(value)) {
+        attrs.push(value ? `${name}="${escapeAttribute(value)}"` : name);
+      }
+      continue;
+    }
+
     if (!allowedAttrs.has(name) || name.startsWith("on")) {
+      continue;
+    }
+
+    if (name === "src" && !YOUTUBE_EMBED.test(value)) {
+      continue;
+    }
+
+    if ((name === "width" || name === "height") && !/^\d{1,4}$/.test(value)) {
+      continue;
+    }
+
+    if (name === "type" && value !== "checkbox") {
       continue;
     }
 
@@ -73,6 +117,17 @@ const renderAttrs = (node: Element, tagName: string): string => {
 
   if (tagName === "a") {
     attrs.push('rel="noopener noreferrer"');
+  }
+
+  // Published task lists are read-only.
+  if (tagName === "input") {
+    attrs.push("disabled");
+  }
+
+  if (tagName === "iframe") {
+    attrs.push(
+      'loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"',
+    );
   }
 
   return attrs.length > 0 ? ` ${attrs.join(" ")}` : "";
@@ -97,7 +152,18 @@ const renderNode = (node: ChildNode): string => {
     return children;
   }
 
+  // An embed or checkbox that failed validation is dropped entirely.
+  if (tagName === "iframe" && !YOUTUBE_EMBED.test(node.attribs.src?.trim() ?? "")) {
+    return "";
+  }
+  if (tagName === "input" && node.attribs.type !== "checkbox") {
+    return "";
+  }
+
   const attrs = renderAttrs(node, tagName);
+  if (tagName === "iframe") {
+    return `<iframe${attrs}></iframe>`;
+  }
   if (VOID_TAGS.has(tagName)) {
     return `<${tagName}${attrs}>`;
   }
