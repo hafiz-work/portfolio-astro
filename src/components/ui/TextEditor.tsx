@@ -1,28 +1,43 @@
 import React, { useEffect, useRef, type ReactNode } from "react";
 import {
     EditorContent,
+    Extension,
+    Node,
     useEditor,
     useEditorState,
     type Editor,
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { CharacterCount, Placeholder } from "@tiptap/extensions";
+import Highlight from "@tiptap/extension-highlight";
+import Youtube from "@tiptap/extension-youtube";
+import { Details, DetailsContent, DetailsSummary } from "@tiptap/extension-details";
+import { TaskItem, TaskList } from "@tiptap/extension-list";
+import { TableKit } from "@tiptap/extension-table";
 import { marked } from "marked";
 import {
+    AlignCenter,
+    AlignLeft,
+    AlignRight,
     Bold,
     Code,
+    Highlighter,
     Italic,
     Link,
     List,
+    ListCollapse,
     ListOrdered,
+    ListTodo,
     Minus,
     Redo2,
     RemoveFormatting,
     SquareCode,
     Strikethrough,
+    Table,
     TextQuote,
     Underline,
     Undo2,
+    Youtube as YoutubeIcon,
 } from "lucide-react";
 import { sanitizeRichHtml } from "../../lib/sanitize";
 
@@ -53,6 +68,67 @@ const splitHardBreaks = (editor: Editor) => {
     for (const pos of positions.reverse()) tr.delete(pos, pos + 1).split(pos);
     editor.view.dispatch(tr.setMeta("addToHistory", false));
 };
+
+// Spacing/align are fixed presets stored as data-* (the sanitizer only lets
+// these exact values through) - styled once in index.css for editor + blog.
+const Presets = Extension.create({
+    name: "presets",
+    addGlobalAttributes() {
+        const attr = (name: string) => ({
+            default: null,
+            parseHTML: (el: HTMLElement) => el.getAttribute(`data-${name}`),
+            renderHTML: (attrs: Record<string, string | null>) =>
+                attrs[name] ? { [`data-${name}`]: attrs[name] } : {},
+        });
+        return [
+            {
+                types: ["paragraph", "heading"],
+                attributes: { spacing: attr("spacing"), align: attr("align") },
+            },
+        ];
+    },
+});
+
+const Callout = Node.create({
+    name: "callout",
+    group: "block",
+    content: "block+",
+    defining: true,
+    addAttributes() {
+        return {
+            variant: {
+                default: "info",
+                parseHTML: (el) => el.getAttribute("data-callout"),
+                renderHTML: (attrs) => ({ "data-callout": attrs.variant }),
+            },
+        };
+    },
+    parseHTML() {
+        return [{ tag: "aside[data-callout]" }];
+    },
+    renderHTML({ HTMLAttributes }) {
+        return ["aside", HTMLAttributes, 0];
+    },
+});
+
+const SPACINGS = [
+    { value: "", label: "Normal spacing" },
+    { value: "tight", label: "Tight spacing" },
+    { value: "loose", label: "Loose spacing" },
+] as const;
+
+const CALLOUTS = [
+    { value: "", label: "No callout" },
+    { value: "info", label: "Info callout" },
+    { value: "tip", label: "Tip callout" },
+    { value: "warning", label: "Warning callout" },
+] as const;
+
+const SELECT =
+    "h-8 shrink-0 cursor-pointer rounded-md bg-transparent pl-2 pr-7 text-sm font-medium text-gray-700 hover:bg-gray-950/5 focus:outline-2 focus:outline-sky-500 dark:text-gray-200 dark:hover:bg-white/10 [&>option]:bg-canvas dark:[&>option]:bg-pub-dark";
+
+const TEXT_BUTTON =
+    "h-8 shrink-0 rounded-md px-2 text-xs font-medium text-gray-600 hover:bg-gray-950/5 hover:text-gray-950 dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-white";
 
 const MOD =
     typeof navigator !== "undefined" && /Mac|iP/.test(navigator.platform)
@@ -136,6 +212,16 @@ export const TextEditor = ({
             }),
             Placeholder.configure({ placeholder }),
             CharacterCount,
+            Presets,
+            Callout,
+            Highlight,
+            TaskList,
+            TaskItem.configure({ nested: true }),
+            Details,
+            DetailsSummary,
+            DetailsContent,
+            TableKit.configure({ table: { resizable: false } }),
+            Youtube.configure({ nocookie: true, width: 640, height: 360 }),
         ],
         content: initialHtml,
         editable,
@@ -198,6 +284,21 @@ export const TextEditor = ({
                 blockquote: editor.isActive("blockquote"),
                 codeBlock: editor.isActive("codeBlock"),
                 link: editor.isActive("link"),
+                highlight: editor.isActive("highlight"),
+                taskList: editor.isActive("taskList"),
+                details: editor.isActive("details"),
+                table: editor.isActive("table"),
+                callout: editor.isActive("callout")
+                    ? (editor.getAttributes("callout").variant as string)
+                    : "",
+                spacing:
+                    (editor.getAttributes("paragraph").spacing ??
+                        editor.getAttributes("heading").spacing ??
+                        "") as string,
+                align:
+                    (editor.getAttributes("paragraph").align ??
+                        editor.getAttributes("heading").align ??
+                        "") as string,
                 block:
                     BLOCKS.find(
                         (b) =>
@@ -234,6 +335,26 @@ export const TextEditor = ({
         else chain().toggleHeading({ level: Number(value) as 2 | 3 | 4 }).run();
     };
 
+    // Applies to whichever of paragraph/heading the selection covers.
+    const setPreset = (key: "spacing" | "align", value: string) =>
+        chain()
+            .updateAttributes("paragraph", { [key]: value || null })
+            .updateAttributes("heading", { [key]: value || null })
+            .run();
+
+    const setCallout = (variant: string) => {
+        if (!variant) chain().lift("callout").run();
+        else if (editor.isActive("callout"))
+            chain().updateAttributes("callout", { variant }).run();
+        else chain().wrapIn("callout", { variant }).run();
+    };
+
+    const addVideo = () => {
+        const url = window.prompt("YouTube URL");
+        if (url && !editor.commands.setYoutubeVideo({ src: url.trim() }))
+            window.alert("That doesn't look like a YouTube link.");
+    };
+
     const editLink = () => {
         const previous = editor.getAttributes("link").href as string | undefined;
         const url = window.prompt("Link URL (leave empty to remove)", previous ?? "https://");
@@ -257,7 +378,7 @@ export const TextEditor = ({
             <div
                 role="toolbar"
                 aria-label="Formatting"
-                className="sticky top-14 z-10 flex items-center gap-0.5 overflow-x-auto rounded-t-lg border-b border-gray-950/10 bg-canvas/95 px-2 py-1.5 backdrop-blur-sm dark:border-white/10 dark:bg-pub-dark/95"
+                className="sticky top-14 z-10 flex flex-wrap items-center gap-0.5 rounded-t-lg border-b border-gray-950/10 bg-canvas/95 px-2 py-1.5 backdrop-blur-sm dark:border-white/10 dark:bg-pub-dark/95"
             >
                 <ToolButton label="Undo" shortcut={`${MOD}Z`} disabled={!state?.canUndo} onClick={() => chain().undo().run()}>
                     <Undo2 {...ICON} />
@@ -270,7 +391,7 @@ export const TextEditor = ({
                     aria-label="Text style"
                     value={state?.block ?? "p"}
                     onChange={(e) => setBlock(e.target.value)}
-                    className="h-8 shrink-0 cursor-pointer rounded-md bg-transparent pl-2 pr-7 text-sm font-medium text-gray-700 hover:bg-gray-950/5 focus:outline-2 focus:outline-sky-500 dark:text-gray-200 dark:hover:bg-white/10 [&>option]:bg-canvas dark:[&>option]:bg-pub-dark"
+                    className={SELECT}
                 >
                     {BLOCKS.map((b) => (
                         <option key={b.value} value={b.value}>
@@ -278,6 +399,27 @@ export const TextEditor = ({
                         </option>
                     ))}
                 </select>
+                <select
+                    aria-label="Line spacing"
+                    value={state?.spacing ?? ""}
+                    onChange={(e) => setPreset("spacing", e.target.value)}
+                    className={SELECT}
+                >
+                    {SPACINGS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                            {o.label}
+                        </option>
+                    ))}
+                </select>
+                <ToolButton label="Align left" active={!state?.align} onClick={() => setPreset("align", "")}>
+                    <AlignLeft {...ICON} />
+                </ToolButton>
+                <ToolButton label="Align center" active={state?.align === "center"} onClick={() => setPreset("align", "center")}>
+                    <AlignCenter {...ICON} />
+                </ToolButton>
+                <ToolButton label="Align right" active={state?.align === "right"} onClick={() => setPreset("align", "right")}>
+                    <AlignRight {...ICON} />
+                </ToolButton>
                 <Divider />
                 <ToolButton label="Bold" shortcut={`${MOD}B`} active={state?.bold} onClick={() => chain().toggleBold().run()}>
                     <Bold {...ICON} />
@@ -294,6 +436,9 @@ export const TextEditor = ({
                 <ToolButton label="Inline code" shortcut={`${MOD}E`} active={state?.code} onClick={() => chain().toggleCode().run()}>
                     <Code {...ICON} />
                 </ToolButton>
+                <ToolButton label="Highlight" shortcut={`${MOD}Shift+H`} active={state?.highlight} onClick={() => chain().toggleHighlight().run()}>
+                    <Highlighter {...ICON} />
+                </ToolButton>
                 <ToolButton label="Link" active={state?.link} onClick={editLink}>
                     <Link {...ICON} />
                 </ToolButton>
@@ -303,6 +448,9 @@ export const TextEditor = ({
                 </ToolButton>
                 <ToolButton label="Numbered list" shortcut={`${MOD}Shift+7`} active={state?.orderedList} onClick={() => chain().toggleOrderedList().run()}>
                     <ListOrdered {...ICON} />
+                </ToolButton>
+                <ToolButton label="Task list" shortcut={`${MOD}Shift+9`} active={state?.taskList} onClick={() => chain().toggleTaskList().run()}>
+                    <ListTodo {...ICON} />
                 </ToolButton>
                 <ToolButton label="Quote" shortcut={`${MOD}Shift+B`} active={state?.blockquote} onClick={() => chain().toggleBlockquote().run()}>
                     <TextQuote {...ICON} />
@@ -314,9 +462,41 @@ export const TextEditor = ({
                     <Minus {...ICON} />
                 </ToolButton>
                 <Divider />
+                <select
+                    aria-label="Callout"
+                    value={state?.callout ?? ""}
+                    onChange={(e) => setCallout(e.target.value)}
+                    className={SELECT}
+                >
+                    {CALLOUTS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                            {o.label}
+                        </option>
+                    ))}
+                </select>
+                <ToolButton label="Collapsible section" active={state?.details} onClick={() => (state?.details ? chain().unsetDetails().run() : chain().setDetails().run())}>
+                    <ListCollapse {...ICON} />
+                </ToolButton>
+                <ToolButton label="Insert table" active={state?.table} onClick={() => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>
+                    <Table {...ICON} />
+                </ToolButton>
+                <ToolButton label="YouTube video" onClick={addVideo}>
+                    <YoutubeIcon {...ICON} />
+                </ToolButton>
+                <Divider />
                 <ToolButton label="Clear formatting" onClick={() => chain().unsetAllMarks().clearNodes().run()}>
                     <RemoveFormatting {...ICON} />
                 </ToolButton>
+                {state?.table && (
+                    <div className="flex w-full flex-wrap items-center gap-0.5 border-t border-gray-950/5 pt-1 dark:border-white/10">
+                        <span className="px-2 font-mono text-xs text-gray-500 dark:text-gray-400">Table</span>
+                        <button type="button" className={TEXT_BUTTON} onMouseDown={(e) => e.preventDefault()} onClick={() => chain().addRowAfter().run()}>+ Row</button>
+                        <button type="button" className={TEXT_BUTTON} onMouseDown={(e) => e.preventDefault()} onClick={() => chain().addColumnAfter().run()}>+ Column</button>
+                        <button type="button" className={TEXT_BUTTON} onMouseDown={(e) => e.preventDefault()} onClick={() => chain().deleteRow().run()}>− Row</button>
+                        <button type="button" className={TEXT_BUTTON} onMouseDown={(e) => e.preventDefault()} onClick={() => chain().deleteColumn().run()}>− Column</button>
+                        <button type="button" className={`${TEXT_BUTTON} text-red-600 dark:text-red-400`} onMouseDown={(e) => e.preventDefault()} onClick={() => chain().deleteTable().run()}>Delete table</button>
+                    </div>
+                )}
             </div>
             <div className="px-4 py-4 md:px-6 md:py-5">
                 <EditorContent editor={editor} />
