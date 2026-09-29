@@ -12,6 +12,7 @@ interface Props {
   value?: string;
   class?: string;
   id?: string;
+  required?: boolean;
 }
 
 const {
@@ -22,15 +23,20 @@ const {
   value = "",
   class: className = "",
   id: inputId = `${name}-input`,
+  required = false,
 } = Astro.props;
 const triggerId = `${name}-trigger`;
 const labelId = `${name}-label`;
 const menuId = `${name}-menu`;
 ---
 
-<div class={`tech-dropdown-container space-y-2 ${className || "w-64"}`} data-name={name}>
+<div
+  class={`tech-dropdown-container space-y-2 ${className || "w-64"}`}
+  data-name={name}
+>
   <label
     id={labelId}
+    data-required={required || undefined}
     class="block text-sm font-medium text-gray-500 dark:text-gray-400"
     for={triggerId}
   >
@@ -155,11 +161,7 @@ const menuId = `${name}-menu`;
             menu.classList.remove("opacity-0", "scale-95");
           });
           arrow?.classList.add("rotate-180");
-          trigger.classList.add(
-            "border-sky-500",
-            "ring-2",
-            "ring-sky-500/50",
-          );
+          trigger.classList.add("border-sky-500", "ring-2", "ring-sky-500/50");
         } else {
           menu.classList.add("opacity-0", "scale-95");
           menu.classList.remove("opacity-100", "scale-100");
@@ -222,7 +224,10 @@ const menuId = `${name}-menu`;
                 matchingItem.querySelector("span")?.textContent || newLabel;
               selectedText.classList.add("text-sky-600", "dark:text-sky-400");
             } else {
-              selectedText.classList.remove("text-sky-600", "dark:text-sky-400");
+              selectedText.classList.remove(
+                "text-sky-600",
+                "dark:text-sky-400",
+              );
             }
 
             selectedText.textContent = newLabel;
