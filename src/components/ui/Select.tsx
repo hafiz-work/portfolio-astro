@@ -1,8 +1,10 @@
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 
 interface Option {
     value: string | number;
     label: string | number;
+    /** Optional leading icon, shown in the trigger and the list. */
+    icon?: ReactNode;
 }
 
 interface SelectProps {
@@ -72,8 +74,9 @@ export const Select: React.FC<SelectProps> = ({
                         : 'border-gray-300 dark:border-gray-600 hover:border-sky-500/50'
                         }`}
                 >
-                    <span className={`text-sm transition-colors truncate ${selectedOption ? 'text-sky-600 dark:text-sky-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                        {selectedOption ? selectedOption.label : placeholder}
+                    <span className={`inline-flex min-w-0 items-center gap-2 text-sm transition-colors ${selectedOption ? 'text-sky-600 dark:text-sky-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                        {selectedOption?.icon}
+                        <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
                     </span>
                     <div className="flex items-center text-gray-400 dark:text-gray-500 group-hover:text-sky-600 dark:group-hover:text-sky-500 transition-colors ml-2">
                         <svg
@@ -100,11 +103,12 @@ export const Select: React.FC<SelectProps> = ({
                                     <button
                                         type="button"
                                         onClick={() => handleSelect(option.value)}
-                                        className={`w-full text-left truncate px-4 py-2 text-sm transition-colors ${option.value === value
+                                        className={`flex w-full items-center gap-2 text-left truncate px-4 py-2 text-sm transition-colors ${option.value === value
                                             ? 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400'
                                             : 'text-gray-700 dark:text-gray-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-700 dark:hover:text-sky-400'
                                             }`}
                                     >
+                                        {option.icon}
                                         {option.label}
                                     </button>
                                 </li>

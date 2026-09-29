@@ -3,7 +3,7 @@ import { cmsService, extractApiError } from "../../../lib/projects-cms";
 import { showToast, confirmDialog } from "../../../lib/admin-ui";
 import { Select } from "../../ui/Select";
 import { AdminBadge, statusBadgeVariant } from "../../ui/admin/primitives";
-import type { AdminProjectDetail, ProjectType } from "../../../types/project-cms";
+import type { AdminProjectDetail, ImageVariant, ProjectType } from "../../../types/project-cms";
 import { SectionsManager } from "./managers/SectionsManager";
 import { FeaturesManager } from "./managers/FeaturesManager";
 import { LinksManager } from "./managers/LinksManager";
@@ -20,6 +20,12 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "publish", label: "Publish" },
 ];
 const PROJECT_TYPES: ProjectType[] = ["personal", "business", "work"];
+// Card image style (imageVariant) - see ProjectCard.astro for how each renders.
+const CARD_STYLES: { value: ImageVariant; label: string }[] = [
+  { value: "banner", label: "Photo / screenshot - fills the card" },
+  { value: "logo", label: "Logo - device-frame preview" },
+  { value: "width-banner", label: "Wide logo - on a white strip" },
+];
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
 
@@ -27,6 +33,7 @@ type BasicsForm = {
   title: string; slug: string; subtitle: string; summary: string; description: string;
   projectType: ProjectType; projectScope: string; year: string; role: string; clientName: string;
   isPublic: boolean; isConfidential: boolean; featured: boolean; featuredOrder: string;
+  imageVariant: ImageVariant;
 };
 type CaseStudyForm = {
   problem: string; solution: string; contribution: string; architectureNotes: string; resultSummary: string; fullDescription: string;
@@ -36,6 +43,7 @@ const emptyBasics: BasicsForm = {
   title: "", slug: "", subtitle: "", summary: "", description: "", projectType: "personal",
   projectScope: "", year: String(new Date().getFullYear()), role: "", clientName: "",
   isPublic: true, isConfidential: false, featured: false, featuredOrder: "0",
+  imageVariant: "banner",
 };
 
 // Links the label to a native input/textarea (click-to-focus, screen readers) and
@@ -73,6 +81,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
       description: d.description ?? "", projectType: d.projectType, projectScope: d.projectScope ?? "",
       year: String(d.year ?? new Date().getFullYear()), role: d.role ?? "", clientName: d.clientName ?? "",
       isPublic: d.isPublic !== false, isConfidential: !!d.isConfidential, featured: !!d.featured, featuredOrder: String(d.featuredOrder ?? 0),
+      imageVariant: d.imageVariant ?? "banner",
     });
     const cs = {
       problem: d.problem ?? "", solution: d.solution ?? "", contribution: d.contribution ?? "",
@@ -82,12 +91,23 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
     savedCase.current = JSON.stringify(cs);
   };
 
+  // The public card reads project.imageUrl, but the list API never returns the
+  // Media-tab cover. Keep imageUrl = cover URL whenever imageUrl is empty or came
+  // from this project's own media; static paths (e.g. /images/...) are left alone.
+  const syncCardImage = async (d: AdminProjectDetail): Promise<AdminProjectDetail> => {
+    const coverUrl = d.cover?.url;
+    const fromMedia = !d.imageUrl || d.media.some((m) => m.asset?.url === d.imageUrl);
+    if (!coverUrl || coverUrl === d.imageUrl || !fromMedia || projectId == null) return d;
+    try { await cmsService.updateProject(projectId, { imageUrl: coverUrl }); return { ...d, imageUrl: coverUrl }; }
+    catch { return d; }
+  };
+
   const loadDetail = async (hydrateForms: boolean) => {
     if (projectId == null) return;
     try {
       const d = await cmsService.getProjectDetail(projectId);
       if (!d) { setNotFound(true); return; }
-      setDetail(d);
+      setDetail(await syncCardImage(d));
       if (hydrateForms) hydrate(d);
     } catch (e) { showToast({ type: "error", title: "Load failed", message: extractApiError(e).message }); }
   };
@@ -121,7 +141,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
         subtitle: basics.subtitle || null, summary: basics.summary || null, projectScope: basics.projectScope || null,
         clientName: basics.clientName || null, year: Number(basics.year) || undefined, role: basics.role || undefined,
         isPublic: basics.isPublic, isConfidential: basics.isConfidential, featured: basics.featured,
-        featuredOrder: Number(basics.featuredOrder) || 0,
+        featuredOrder: Number(basics.featuredOrder) || 0, imageVariant: basics.imageVariant,
         // status omitted -> backend defaults to draft (not public by accident)
       });
       if (!created) throw new Error("Create failed");
@@ -143,7 +163,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
         description: basics.description, projectType: basics.projectType, projectScope: basics.projectScope || null,
         year: Number(basics.year) || undefined, role: basics.role || undefined, clientName: basics.clientName || null,
         isPublic: basics.isPublic, isConfidential: basics.isConfidential, featured: basics.featured,
-        featuredOrder: Number(basics.featuredOrder) || 0,
+        featuredOrder: Number(basics.featuredOrder) || 0, imageVariant: basics.imageVariant,
       });
       setDirty(false);
       showToast({ type: "success", title: "Basics saved" });
@@ -253,6 +273,9 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
             <Field label="Project scope"><input className="admin-input" value={basics.projectScope} onChange={(e) => setB({ projectScope: e.target.value })} /></Field>
             <Field label="Year"><input type="number" min={2000} max={2100} className="admin-input" value={basics.year} onChange={(e) => setB({ year: e.target.value })} /></Field>
             <Field label="Role"><input className="admin-input" value={basics.role} onChange={(e) => setB({ role: e.target.value })} /></Field>
+            <Field label="Card image style" hint={isCreate ? "The card uses the Cover image you add in Media after creating." : detail?.imageUrl ? "Uses the Cover image from the Media tab." : "No cover yet - add one in the Media tab (type: Cover image)."}>
+              <Select value={basics.imageVariant} onChange={(v) => setB({ imageVariant: v as ImageVariant })} options={CARD_STYLES} ariaLabel="Card image style" />
+            </Field>
             <Field label="Client name" hint="Hidden publicly when confidential"><input className="admin-input" value={basics.clientName} onChange={(e) => setB({ clientName: e.target.value })} /></Field>
             {basics.featured && <Field label="Featured order" hint="Lower shows first."><input type="number" min={0} className="admin-input" value={basics.featuredOrder} onChange={(e) => setB({ featuredOrder: e.target.value })} /></Field>}
           </div>
@@ -298,7 +321,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
 
       {/* MEDIA */}
       {!isCreate && tab === "media" && (
-        <div className="admin-card space-y-3"><h3 className="admin-card-title">Media carousel</h3><MediaManager projectId={pid} onChanged={() => void loadDetail(false)} /></div>
+        <div className="admin-card space-y-3"><h3 className="admin-card-title">Media carousel</h3><MediaManager projectId={pid} projectTitle={basics.title} onChanged={() => void loadDetail(false)} /></div>
       )}
 
       {/* TECH */}
