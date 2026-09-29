@@ -36,6 +36,7 @@ const projects = await getPublicProjects();
             description={project.description}
             imageUrl={project.imageUrl}
             imageVariant={project.imageVariant}
+            previewFrame={project.previewFrame}
             imageLoading={index < 3 ? "eager" : "lazy"}
             imageFetchPriority={index < 3 ? "high" : "auto"}
             tags={

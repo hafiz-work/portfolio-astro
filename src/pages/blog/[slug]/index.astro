@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 export const prerender = false;
 import PublicLayout from "../../../layouts/PublicLayout.astro";
 import JsonLd from "../../../components/seo/JsonLd.astro";
@@ -153,9 +154,11 @@ const heroLead = post.heroText ?? post.excerpt;
           <div class="line-y p-2">
             <div class="frame">
               <div class="frame-inner">
-                <img
+                <Image
                   src={post.coverImageUrl}
                   alt={post.title}
+                  width={1200}
+                  height={630}
                   loading="eager"
                   decoding="async"
                   class="h-56 w-full bg-white object-cover sm:h-80"

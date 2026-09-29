@@ -1,4 +1,5 @@
 ---
+import { ArrowUpRight } from "lucide-react";
 export const prerender = false;
 import ProjectLayout from "../../../layouts/ProjectLayout.astro";
 import Annot from "../../../components/layout/Annot.astro";
@@ -218,20 +219,7 @@ const projectSchema = {
                 ]}
               >
                 {link.label}
-                <svg
-                  class="h-3.5 w-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M7 17L17 7M17 7H7M17 7v10"
-                  />
-                </svg>
+                <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
               </a>
             ))
           ) : (

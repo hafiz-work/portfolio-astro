@@ -38,7 +38,7 @@ export function TechManager({ projectId, onChanged }: { projectId: number; onCha
     try {
       const created = await cmsService.createTechStack(newTech);
       setNewTech({ name: "", category: "backend" });
-      if (created) { await cmsService.attachTech(projectId, { techStackId: created.id }).catch(() => {}); }
+      if (created) { await cmsService.attachTech(projectId, { techStackId: created.id }).catch(() => { }); }
       await load(); onChanged();
       showToast({ type: "success", title: "Tech created" });
     } catch (e) { const { message, field } = extractApiError(e); showToast({ type: "error", title: field ? `Invalid ${field}` : "Create failed", message }); }
@@ -69,15 +69,17 @@ export function TechManager({ projectId, onChanged }: { projectId: number; onCha
         {attached.length === 0 && <p className="admin-help mt-1">No tech attached yet.</p>}
         <div className="mt-2 space-y-2">
           {attached.map((it, i) => (
-            <div key={it.id} className="flex items-center gap-2 rounded-lg border border-gray-950/5 dark:border-white/10 px-3 py-2">
-              <span className="font-medium text-gray-800 dark:text-gray-200">{it.tech?.name ?? `#${it.techStackId}`}</span>
+            <div key={it.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-950/5 dark:border-white/10 px-3 py-2">
+              <span className="min-w-0 break-words font-medium text-gray-800 dark:text-gray-200">{it.tech?.name ?? `#${it.techStackId}`}</span>
               {it.tech?.category && <span className="admin-help">· {it.tech.category}</span>}
-              <label className="ml-auto flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                <input type="checkbox" checked={it.isPrimary} onChange={(e) => setPrimary(it, e.target.checked)} title="Main technology - shown first" /> Primary
-              </label>
-              <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
-              <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === attached.length - 1}><ChevronDown className="h-4 w-4" /></button>
-              <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => detach(it)} aria-label="Detach"><X className="h-4 w-4" /></button>
+              <div className="ml-auto flex shrink-0 items-center gap-2">
+                <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <input type="checkbox" checked={it.isPrimary} onChange={(e) => setPrimary(it, e.target.checked)} title="Main technology - shown first" /> Primary
+                </label>
+                <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
+                <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === attached.length - 1}><ChevronDown className="h-4 w-4" /></button>
+                <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => detach(it)} aria-label="Detach"><X className="h-4 w-4" /></button>
+              </div>
             </div>
           ))}
         </div>
@@ -98,17 +100,17 @@ export function TechManager({ projectId, onChanged }: { projectId: number; onCha
       <div className="rounded-lg border border-dashed border-gray-950/10 dark:border-white/10 p-3 space-y-2">
         <span className="admin-label">Not in the library?</span>
         <div className="flex flex-wrap items-center gap-2">
-        <input className="admin-input max-w-[200px]" placeholder="New tech name" value={newTech.name}
-          onChange={(e) => setNewTech({ ...newTech, name: e.target.value })}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void createTech(); } }} aria-label="New tech name" />
-        <Select
-          className="max-w-[150px]"
-          value={newTech.category}
-          onChange={(v) => setNewTech({ ...newTech, category: v as TechCategory })}
-          options={CATEGORIES.map((c) => ({ value: c, label: c }))}
-          ariaLabel="New tech category"
-        />
-        <button type="button" className="admin-btn admin-btn-secondary" onClick={createTech}><Plus className="h-4 w-4" /> Create + attach</button>
+          <input className="admin-input max-w-[200px]" placeholder="New tech name" value={newTech.name}
+            onChange={(e) => setNewTech({ ...newTech, name: e.target.value })}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void createTech(); } }} aria-label="New tech name" />
+          <Select
+            className="max-w-[150px]"
+            value={newTech.category}
+            onChange={(v) => setNewTech({ ...newTech, category: v as TechCategory })}
+            options={CATEGORIES.map((c) => ({ value: c, label: c }))}
+            ariaLabel="New tech category"
+          />
+          <button type="button" className="admin-btn admin-btn-secondary" onClick={createTech}><Plus className="h-4 w-4" /> Create + attach</button>
         </div>
       </div>
     </div>

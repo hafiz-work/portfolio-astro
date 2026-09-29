@@ -1,55 +1,70 @@
 ---
+import {
+  Briefcase,
+  CircleUser,
+  Folder,
+  Inbox,
+  LayoutDashboard,
+  LogOut,
+  Newspaper,
+  Scale,
+  Settings,
+  Terminal,
+  TriangleAlert,
+  Users,
+  X,
+} from "lucide-react";
 import { Image } from "astro:assets";
 const links = [
   {
     text: "Dashboard",
     href: "/admin",
-    icon: '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+    icon: LayoutDashboard,
   },
   {
     text: "Projects",
     href: "/admin/projects",
-    icon: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+    icon: Folder,
   },
   {
     text: "Experiences",
     href: "/admin/experiences",
-    icon: '<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/>',
+    icon: Briefcase,
   },
   {
     text: "Family",
     href: "/admin/family",
-    icon: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    icon: Users,
   },
   {
     text: "Blog",
     href: "/admin/blog",
-    icon: '<path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/>',
+    icon: Newspaper,
   },
   {
     text: "Policies",
     href: "/admin/policies",
-    icon: '<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
+    icon: Scale,
   },
   {
     text: "Contacts",
     href: "/admin/contact",
-    icon: '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+    icon: Inbox,
   },
   {
     text: "System Logs",
     href: "/admin/system",
-    icon: '<polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/>',
+    icon: Terminal,
   },
   {
     text: "Settings",
     href: "/admin/settings",
-    icon: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    icon: Settings,
   },
   {
     text: "Profile",
     href: "/admin/profile",
-    icon: '<path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/>',
+    icon: CircleUser,
   },
 ];
 
@@ -105,19 +120,7 @@ const currentPath = Astro.url.pathname;
         aria-label="Close sidebar"
         class="md:hidden p-2 text-gray-500 dark:text-gray-400 hover:text-gray-950 dark:hover:text-gray-200 rounded-lg"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
+        <X className="h-5 w-5" />
       </button>
     </div>
 
@@ -150,23 +153,13 @@ const currentPath = Astro.url.pathname;
                     {isActive && (
                       <span class="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-sky-500 dark:bg-sky-400" />
                     )}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class:list={[
-                        "nav-icon h-[18px] w-[18px]",
+                    <link.icon
+                      className={`nav-icon h-[18px] w-[18px] ${
                         isActive
                           ? "text-sky-600 dark:text-sky-400"
-                          : "text-gray-400 group-hover:text-gray-700 dark:text-gray-500 dark:group-hover:text-gray-300",
-                      ]}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <Fragment set:html={link.icon} />
-                    </svg>
+                          : "text-gray-400 group-hover:text-gray-700 dark:text-gray-500 dark:group-hover:text-gray-300"
+                      }`}
+                    />
                     <span class="nav-label">{link.text}</span>
                   </a>
                 );
@@ -206,19 +199,7 @@ const currentPath = Astro.url.pathname;
           class="logout-btn admin-btn admin-btn-secondary w-full"
           type="button"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 11-6 0v-1m6 0H9"></path>
-          </svg>
+          <LogOut className="h-4 w-4" />
           <span class="logout-label">Logout</span>
         </button>
       </div>
@@ -370,24 +351,7 @@ const currentPath = Astro.url.pathname;
             <div
               class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-500/10 sm:mx-0 sm:h-10 sm:w-10"
             >
-              <svg
-                class="h-5 w-5 text-red-600 dark:text-red-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M12 9v3.75m0 3.75h.007v.008H12v-.008z"></path>
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M3.75 6.75h16.5M6 6.75V5.25a2.25 2.25 0 012.25-2.25h7.5A2.25 2.25 0 0118 5.25v1.5"
-                ></path>
-              </svg>
+              <TriangleAlert className="h-5 w-5 text-red-600 dark:text-red-400" strokeWidth={1.5} aria-hidden="true" />
             </div>
             <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
               <h3
