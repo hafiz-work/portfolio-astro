@@ -265,6 +265,7 @@ export interface MediaAssetInput {
   sizeBytes?: number | null;
   altText?: string | null;
   caption?: string | null;
+  storageKey?: string | null;
 }
 export interface ProjectMediaAttachInput {
   mediaAssetId: number;

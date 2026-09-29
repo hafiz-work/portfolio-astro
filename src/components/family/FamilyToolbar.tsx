@@ -1,6 +1,7 @@
 import React from "react";
 import type { PublicFamilyPerson } from "../../lib/family-privacy";
 import { PersonSearch } from "./PersonSearch";
+import { ArrowDown, Locate, Maximize, Minus, Plus, RefreshCw } from "lucide-react";
 
 export type ExplorerView = "tree" | "list";
 
@@ -83,20 +84,7 @@ export const FamilyToolbar = ({
           onClick={() => onOrientationChange(!vertical)}
           title={vertical ? "Switch to horizontal" : "Switch to vertical"}
         >
-          <svg
-            aria-hidden="true"
-            className={`h-4 w-4 transition-transform ${vertical ? "" : "rotate-90"}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M12 4v16m-6-6l6 6 6-6"
-            />
-          </svg>
+          <ArrowDown aria-hidden="true" className={`h-4 w-4 transition-transform ${vertical ? "" : "rotate-90"}`} />
         </button>
         <button
           type="button"
@@ -105,15 +93,7 @@ export const FamilyToolbar = ({
           disabled={!treeMode}
           onClick={onZoomOut}
         >
-          <svg
-            aria-hidden="true"
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeWidth="2" d="M5 12h14" />
-          </svg>
+          <Minus aria-hidden="true" className="h-4 w-4" />
         </button>
         <button
           type="button"
@@ -122,19 +102,7 @@ export const FamilyToolbar = ({
           disabled={!treeMode}
           onClick={onZoomIn}
         >
-          <svg
-            aria-hidden="true"
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeWidth="2"
-              d="M12 5v14M5 12h14"
-            />
-          </svg>
+          <Plus aria-hidden="true" className="h-4 w-4" />
         </button>
         <button
           type="button"
@@ -143,20 +111,7 @@ export const FamilyToolbar = ({
           disabled={!treeMode}
           onClick={onFit}
         >
-          <svg
-            aria-hidden="true"
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M4 8V5a1 1 0 011-1h3m8 0h3a1 1 0 011 1v3m0 8v3a1 1 0 01-1 1h-3m-8 0H5a1 1 0 01-1-1v-3"
-            />
-          </svg>
+          <Maximize aria-hidden="true" className="h-4 w-4" />
         </button>
         <button
           type="button"
@@ -165,20 +120,7 @@ export const FamilyToolbar = ({
           disabled={!treeMode}
           onClick={onResetView}
         >
-          <svg
-            aria-hidden="true"
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M4 4v6h6M20 20v-6h-6M5 19A9 9 0 0019 5"
-            />
-          </svg>
+          <RefreshCw aria-hidden="true" className="h-4 w-4" />
         </button>
         <button
           type="button"
@@ -187,20 +129,7 @@ export const FamilyToolbar = ({
           disabled={!treeMode}
           onClick={onCenterMain}
         >
-          <svg
-            aria-hidden="true"
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <circle cx="12" cy="12" r="3" strokeWidth="2" />
-            <path
-              strokeLinecap="round"
-              strokeWidth="2"
-              d="M12 2v4m0 12v4M2 12h4m12 0h4"
-            />
-          </svg>
+          <Locate aria-hidden="true" className="h-4 w-4" />
         </button>
       </div>
     </div>

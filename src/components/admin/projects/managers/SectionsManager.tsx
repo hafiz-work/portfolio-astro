@@ -74,12 +74,14 @@ export function SectionsManager({ projectId, onChanged }: { projectId: number; o
               onChange={(e) => setField(it.id, { sectionType: e.target.value })} onBlur={() => void commit(it)} aria-label="Section type" />
             <input className="admin-input flex-1 min-w-[160px]" placeholder="Title (optional)" value={it.title ?? ""}
               onChange={(e) => setField(it.id, { title: e.target.value })} onBlur={() => void commit(it)} aria-label="Section title" />
-            <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-              <input type="checkbox" checked={it.isVisible} onChange={(e) => { setField(it.id, { isVisible: e.target.checked }); void commit({ ...it, isVisible: e.target.checked }); }} /> Visible
-            </label>
-            <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
-            <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
-            <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => remove(it)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <input type="checkbox" checked={it.isVisible} onChange={(e) => { setField(it.id, { isVisible: e.target.checked }); void commit({ ...it, isVisible: e.target.checked }); }} /> Visible
+              </label>
+              <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
+              <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
+              <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => remove(it)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
+            </div>
           </div>
           <textarea className="admin-input min-h-20" placeholder="Body (plain text / HTML)" value={it.body ?? ""}
             onChange={(e) => setField(it.id, { body: e.target.value })} onBlur={() => void commit(it)} aria-label="Section body" />
