@@ -214,7 +214,7 @@ export const ProjectsCmsTable = () => {
                 disabled
                 title="Preview available after publish"
                 aria-label="Preview unavailable"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-950/5 bg-white text-gray-300 dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-600 cursor-not-allowed"
+                className="inline-flex size-8 cursor-not-allowed items-center justify-center rounded-full text-gray-300 ring-1 ring-gray-950/5 ring-inset dark:text-gray-600 dark:ring-white/10"
               >
                 <Eye className="h-4 w-4" aria-hidden="true" />
               </button>

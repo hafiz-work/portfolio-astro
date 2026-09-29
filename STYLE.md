@@ -73,6 +73,17 @@ Same line, focused chrome - no second theme:
 - **Buttons**: `.btn-pill .btn-pill-primary` (gray-950 light / gray-700 dark) and `.btn-pill .btn-pill-ghost` (inset ring). Inside admin pages use the `.admin-btn*` atoms - same pills, same palette - so the admin stays one system.
 - **Admin**: identical palette (gray ink, sky accent, emerald/red for status). Slate, blue and cyan are gone; `.admin-*` atoms carry the admin look.
 - `--pattern-fg` (`rgb(3 7 18 / .05)` light, `rgb(255 255 255 / .1)` dark) is the only line/hatch ink.
+- **One exception**: the project card's device-frame preview (`ProjectPreview.astro`) tints its glow and hero block with a blurred copy of the project's own logo, so each card carries its brand colour. Sky when there is no logo.
+
+## Icons & images
+
+- **UI icons: `lucide-react`**, everywhere. In `.astro` import and render it like any component (`<Search className="h-4 w-4" />`) - it renders static SVG, no JS. Icons a `<script>` swaps in live in `<template id="icon-*">` and get cloned (see `login.astro`); never hand-write SVG strings in scripts.
+- **Not lucide - keep the hand SVGs**, they are part of the tailwindcss.com line or a brand:
+  - footer theme switcher (tailwindcss.com's 28px system / light / dark icons),
+  - brand logos - GitHub, LinkedIn, X - as the official solid marks,
+  - the navbar Contact "Plus" `+` corner marks,
+  - the map compass needle (`map.tsx`).
+- **Images: `<Image>` from `astro:assets`** in `.astro` files (give `width`/`height` for remote URLs). Plain `<img>` only inside React islands, where `astro:assets` isn't available.
 
 ## Type
 

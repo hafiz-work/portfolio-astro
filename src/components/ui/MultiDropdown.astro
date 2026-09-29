@@ -1,5 +1,5 @@
 ---
-import { ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 interface Option {
   value: string;
   label: string;
@@ -31,7 +31,7 @@ const {
   data-name={name}
 >
   <label
-    class="block text-sm font-medium text-gray-500 dark:text-gray-400"
+    class="admin-label"
     for={inputId}
   >
     {label}
@@ -48,34 +48,34 @@ const {
 
     <button
       type="button"
-      class="dropdown-trigger w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-left text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 outline-none transition-all flex justify-between items-center group hover:border-sky-500/50"
+      class="dropdown-trigger field field-trigger"
     >
       <span
-        class="selected-text text-sm text-gray-600 dark:text-gray-300 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors truncate"
+        class="selected-text truncate text-gray-400 dark:text-gray-500"
       >
         {placeholder}
       </span>
       <div
-        class="flex items-center text-gray-400 dark:text-gray-500 group-hover:text-sky-600 dark:group-hover:text-sky-500 transition-colors"
+        class="flex shrink-0 items-center text-gray-400"
       >
         <ChevronDown className="w-4 h-4 transform transition-transform duration-200" />
       </div>
     </button>
 
     <div
-      class="dropdown-menu hidden absolute z-50 w-max min-w-full max-w-[min(92vw,28rem)] mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-xl overflow-hidden backdrop-blur-xl transform origin-top transition-all duration-200"
+      class="dropdown-menu menu max-h-60 hidden origin-top transition-all duration-200"
     >
-      <ul class="max-h-60 overflow-y-auto py-1 custom-scrollbar">
+      <ul>
         {
           options.map((option) => (
             <li>
               <button
                 type="button"
-                class="dropdown-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-700 dark:hover:text-sky-400 transition-colors flex items-center justify-between"
+                class="dropdown-item menu-item justify-between"
                 data-value={option.value}
               >
                 <span class="min-w-0 truncate">{option.label}</span>
-                <span class="indicator opacity-0 text-sky-500">✓</span>
+                <Check className="indicator h-4 w-4 shrink-0 opacity-0" />
               </button>
             </li>
           ))
@@ -85,21 +85,6 @@ const {
   </div>
 </div>
 
-<style>
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(31, 41, 55, 0.5);
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #374151;
-    border-radius: 3px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #4b5563;
-  }
-</style>
 
 <script>
   function setupMultiDropdowns() {
@@ -144,7 +129,7 @@ const {
         const placeholder = input.dataset.placeholder || "Select options";
         if (values.length === 0) {
           selectedText.textContent = placeholder;
-          selectedText.classList.remove("text-sky-600", "dark:text-sky-400");
+          selectedText.classList.add("text-gray-400", "dark:text-gray-500");
           return;
         }
         const labels = values
@@ -157,18 +142,14 @@ const {
           .filter(Boolean);
         selectedText.textContent =
           labels.length <= 2 ? labels.join(", ") : `${labels.length} selected`;
-        selectedText.classList.add("text-sky-600", "dark:text-sky-400");
+        selectedText.classList.remove("text-gray-400", "dark:text-gray-500");
       };
 
       const updateItemState = (values: string[]) => {
         container.querySelectorAll(".dropdown-item").forEach((item) => {
           const element = item as HTMLButtonElement & { dataset: DOMStringMap };
           const isActive = values.includes(String(element.dataset.value));
-          element.classList.toggle("bg-sky-500/10", isActive);
-          element.classList.toggle("text-sky-600", isActive);
-          element.classList.toggle("dark:text-sky-400", isActive);
-          element.classList.toggle("text-gray-700", !isActive);
-          element.classList.toggle("dark:text-gray-300", !isActive);
+          element.setAttribute("aria-selected", String(isActive));
           const indicator = element.querySelector(".indicator");
           indicator?.classList.toggle("opacity-100", isActive);
           indicator?.classList.toggle("opacity-0", !isActive);
@@ -184,11 +165,7 @@ const {
             menu.classList.remove("opacity-0", "scale-95");
           });
           arrow?.classList.add("rotate-180");
-          trigger.classList.add(
-            "border-sky-500",
-            "ring-2",
-            "ring-sky-500/50",
-          );
+          trigger.setAttribute("aria-expanded", "true");
         } else {
           menu.classList.add("opacity-0", "scale-95");
           menu.classList.remove("opacity-100", "scale-100");
@@ -198,11 +175,7 @@ const {
             }
           }, 200);
           arrow?.classList.remove("rotate-180");
-          trigger.classList.remove(
-            "border-sky-500",
-            "ring-2",
-            "ring-sky-500/50",
-          );
+          trigger.setAttribute("aria-expanded", "false");
         }
       };
 
