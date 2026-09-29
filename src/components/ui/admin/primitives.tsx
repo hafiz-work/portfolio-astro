@@ -18,17 +18,12 @@ export type BadgeVariant =
     | "accent";
 
 const BADGE_VARIANTS: Record<BadgeVariant, string> = {
-    neutral:
-        "bg-gray-950/[0.03] text-gray-700 border-gray-950/5 dark:bg-white/10 dark:text-gray-300 dark:border-white/10",
-    info: "bg-sky-500/10 text-sky-700 border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30",
-    success:
-        "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-    warning:
-        "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-    danger:
-        "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-    accent:
-        "bg-sky-500/10 text-sky-700 border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30",
+    neutral: "bg-gray-950/[0.03] text-gray-700 ring-gray-950/10 dark:bg-white/5 dark:text-gray-300 dark:ring-white/10",
+    info: "bg-sky-500/10 text-sky-700 ring-sky-500/25 dark:text-sky-300 dark:ring-sky-400/25",
+    success: "bg-emerald-500/10 text-emerald-700 ring-emerald-500/25 dark:text-emerald-300 dark:ring-emerald-400/25",
+    warning: "bg-amber-500/10 text-amber-700 ring-amber-500/25 dark:text-amber-300 dark:ring-amber-400/25",
+    danger: "bg-red-500/10 text-red-700 ring-red-500/25 dark:text-red-300 dark:ring-red-400/25",
+    accent: "bg-sky-500/10 text-sky-700 ring-sky-500/25 dark:text-sky-300 dark:ring-sky-400/25",
 };
 
 const BADGE_DOTS: Record<BadgeVariant, string> = {
@@ -37,7 +32,7 @@ const BADGE_DOTS: Record<BadgeVariant, string> = {
     success: "bg-emerald-500 dark:bg-emerald-400",
     warning: "bg-amber-500 dark:bg-amber-400",
     danger: "bg-red-500 dark:bg-red-400",
-    accent: "bg-sky-500/100 dark:bg-sky-400",
+    accent: "bg-sky-500 dark:bg-sky-400",
 };
 
 export function AdminBadge({
@@ -51,7 +46,7 @@ export function AdminBadge({
 }) {
     return (
         <span
-            className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium capitalize whitespace-nowrap ${BADGE_VARIANTS[variant]}`}
+            className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px]/4 font-medium capitalize whitespace-nowrap ring-1 ring-inset ${BADGE_VARIANTS[variant]}`}
         >
             {dot && (
                 <span
@@ -87,13 +82,13 @@ export const statusBadgeVariant = (status: string | null | undefined): BadgeVari
 // ── Row action buttons ────────────────────────────────────────────────────
 
 const ACTION_BASE =
-    "inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:focus-visible:ring-offset-pub-dark";
+    "inline-flex size-8 items-center justify-center rounded-full ring-1 ring-inset transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500";
 
 const ACTION_STYLES = {
     default:
-        "border-gray-950/5 bg-white text-gray-500 hover:border-gray-950/15 hover:text-gray-950 hover:bg-gray-950/[0.025] focus-visible:ring-sky-400 dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-white dark:hover:bg-white/10",
+        "text-gray-500 ring-gray-950/10 hover:bg-gray-950/[0.03] hover:text-gray-950 dark:text-gray-400 dark:ring-white/15 dark:hover:bg-white/5 dark:hover:text-white",
     danger:
-        "border-red-200 bg-white text-red-500 hover:border-red-300 hover:text-red-700 hover:bg-red-50 focus-visible:ring-red-400 dark:border-red-500/30 dark:bg-white/[0.03] dark:text-red-400 dark:hover:border-red-500/50 dark:hover:text-red-300 dark:hover:bg-red-500/10",
+        "text-red-600 ring-red-500/30 hover:bg-red-500/10 dark:text-red-400",
 };
 
 type ActionProps = {

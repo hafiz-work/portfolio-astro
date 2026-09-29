@@ -174,7 +174,7 @@ function MapThemeToggle({
       type="button"
       onClick={onCycle}
       aria-label={`Map theme: ${label}. Click to cycle.`}
-      className="flex items-center gap-1.5 rounded-full bg-white/90 border border-slate-200 px-2 py-1 sm:px-2.5 text-xs font-medium text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white transition-colors"
+      className="flex items-center gap-1.5 rounded-full bg-white/90 border border-gray-950/10 px-2 py-1 sm:px-2.5 text-xs font-medium text-gray-600 shadow-sm backdrop-blur-sm hover:bg-white transition-colors"
     >
       <Icon className="w-3.5 h-3.5 shrink-0" />
       <span className="leading-none">{label}</span>
@@ -374,24 +374,24 @@ const MapCanvas = ({
               <MarkerContent className="relative">
                 <div
                   className={`h-3 w-3 rounded-full transition-all ${isActive
-                    ? "bg-blue-400 shadow-[0_0_18px_rgba(59,130,246,0.9)] scale-125"
-                    : "bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.7)]"
+                    ? "bg-sky-400 shadow-[0_0_18px_var(--color-sky-400)] scale-125"
+                    : "bg-sky-500 shadow-[0_0_12px_var(--color-sky-500)]"
                     }`}
                 />
                 <MarkerLabel
                   className={`text-[11px] font-medium ${isActive
-                    ? resolvedTheme === "dark" ? "text-blue-200" : "text-blue-700"
-                    : resolvedTheme === "dark" ? "text-white" : "text-slate-900"
+                    ? resolvedTheme === "dark" ? "text-sky-200" : "text-sky-700"
+                    : resolvedTheme === "dark" ? "text-white" : "text-gray-950"
                     }`}
                 >
                   {marker.company}
                 </MarkerLabel>
               </MarkerContent>
               <MarkerPopup closeButton={true}>
-                <div className="text-sm font-semibold text-slate-900">
+                <div className="text-sm font-semibold text-gray-950">
                   {marker.company} ({marker.role})
                 </div>
-                <div className="text-xs text-slate-500">{marker.date}</div>
+                <div className="text-xs text-gray-500">{marker.date}</div>
               </MarkerPopup>
             </MapMarker>
           );
@@ -405,7 +405,7 @@ const MapCanvas = ({
           onClick={() => setIs3D((v) => !v)}
           aria-pressed={is3D}
           aria-label={`Buildings: ${is3D ? "3D" : "flat"}. Click to toggle.`}
-          className="flex items-center gap-1.5 rounded-full bg-white/90 border border-slate-200 px-2 py-1 sm:px-2.5 text-xs font-medium text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white transition-colors"
+          className="flex items-center gap-1.5 rounded-full bg-white/90 border border-gray-950/10 px-2 py-1 sm:px-2.5 text-xs font-medium text-gray-600 shadow-sm backdrop-blur-sm hover:bg-white transition-colors"
         >
           <Cuboid className="w-3.5 h-3.5 shrink-0" />
           <span className="leading-none">{is3D ? "3D" : "2D"}</span>
@@ -415,7 +415,7 @@ const MapCanvas = ({
           onClick={() => setShowBoundary((v) => !v)}
           aria-pressed={showBoundary}
           aria-label={`Kuala Lumpur boundary: ${showBoundary ? "shown" : "hidden"}. Click to toggle.`}
-          className={`flex items-center gap-1.5 rounded-full bg-white/90 border border-slate-200 px-2 py-1 sm:px-2.5 text-xs font-medium shadow-sm backdrop-blur-sm hover:bg-white transition-colors ${showBoundary ? "text-slate-600" : "text-slate-400 opacity-70"}`}
+          className={`flex items-center gap-1.5 rounded-full bg-white/90 border border-gray-950/10 px-2 py-1 sm:px-2.5 text-xs font-medium shadow-sm backdrop-blur-sm hover:bg-white transition-colors ${showBoundary ? "text-gray-600" : "text-gray-400 opacity-70"}`}
         >
           <Hexagon className="w-3.5 h-3.5 shrink-0" />
           <span className="leading-none">KL</span>

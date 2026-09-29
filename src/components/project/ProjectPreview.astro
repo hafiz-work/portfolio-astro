@@ -157,7 +157,7 @@ const logoSrc = typeof imageUrl === "string" ? imageUrl : imageUrl?.src;
 
   <!-- Honest label: composed preview, not a screenshot -->
   <span
-    class="absolute bottom-2 left-3 font-mono text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500"
+    class="absolute bottom-2 left-3 z-10 rounded-full bg-white/90 px-2 py-0.5 font-mono text-[10px]/4 uppercase tracking-wider text-gray-500 ring-1 ring-gray-950/5 ring-inset dark:bg-gray-950/80 dark:text-gray-400 dark:ring-white/10"
   >
     {isMobile ? "mobile app" : "web app"}
   </span>

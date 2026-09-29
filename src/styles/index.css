@@ -390,6 +390,21 @@ html[data-theme-switching]::view-transition-new(root) {
         @apply block w-full rounded-lg bg-white px-3 py-2 text-sm/6 text-gray-950 outline-1 -outline-offset-1 outline-gray-950/10 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-sky-500 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500;
     }
 
+    /* Select-like trigger (Select.tsx, Dropdown/MultiDropdown.astro): reads as
+       a .field, rings sky while its menu is open. */
+    .field-trigger {
+        @apply flex items-center justify-between gap-2 text-left aria-expanded:outline-2 aria-expanded:-outline-offset-2 aria-expanded:outline-sky-500;
+    }
+
+    /* Floating option list - floating chrome, so it's the one place with a shadow. */
+    .menu {
+        @apply absolute z-50 mt-1 w-max min-w-full max-w-[min(92vw,28rem)] overflow-y-auto rounded-xl bg-white p-1 shadow-lg ring-1 ring-gray-950/10 [scrollbar-width:thin] dark:bg-gray-900 dark:ring-white/10;
+    }
+
+    .menu-item {
+        @apply flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm/6 text-gray-700 transition-colors hover:bg-gray-950/5 hover:text-gray-950 aria-selected:text-sky-600 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white dark:aria-selected:text-sky-400;
+    }
+
     .admin-help {
         @apply text-xs/5 text-gray-500 dark:text-gray-400;
     }
