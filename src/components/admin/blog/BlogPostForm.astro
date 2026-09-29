@@ -155,3 +155,33 @@ const inputClass = "admin-input";
     {submitLabel}
   </button>
 </div>
+
+<script>
+  // Slug follows the title until the user edits it by hand; clearing it resumes.
+  const slugify = (value: string) =>
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+
+  // Page scripts run once under <ClientRouter>, so wire per page load.
+  document.addEventListener("astro:page-load", () => {
+    const form = document.getElementById("blog-form") as HTMLFormElement | null;
+    const title = form?.elements.namedItem("title") as HTMLInputElement | null;
+    const slug = form?.elements.namedItem("slug") as HTMLInputElement | null;
+    if (!title || !slug) return;
+
+    // Edit page fills the title async, so snapshot it on focus, not on load.
+    let prev = "";
+    title.addEventListener("focus", () => (prev = slugify(title.value)));
+    title.addEventListener("input", () => {
+      const next = slugify(title.value);
+      if (!slug.value || slug.value === prev) {
+        slug.value = next;
+        slug.dispatchEvent(new Event("change"));
+      }
+      prev = next;
+    });
+  });
+</script>
