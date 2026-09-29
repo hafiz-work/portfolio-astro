@@ -28,7 +28,7 @@ const labelId = `${name}-label`;
 const menuId = `${name}-menu`;
 ---
 
-<div class={`tech-dropdown-container space-y-2 w-64 ${className}`} data-name={name}>
+<div class={`tech-dropdown-container space-y-2 ${className || "w-64"}`} data-name={name}>
   <label
     id={labelId}
     class="block text-sm font-medium text-gray-500 dark:text-gray-400"
