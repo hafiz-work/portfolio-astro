@@ -1,28 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ChevronUp, ChevronDown, Trash2, Plus } from "lucide-react";
+import { Check, ChevronUp, ChevronDown, Trash2, Plus } from "lucide-react";
 import { cmsService, extractApiError } from "../../../../lib/projects-cms";
 import { showToast, confirmDialog } from "../../../../lib/admin-ui";
-import { FEATURE_ICONS, featureIcon } from "../../../../lib/feature-icons";
+import { FEATURE_ICONS } from "../../../../lib/feature-icons";
+import { Select } from "../../../ui/Select";
 import type { ProjectFeature } from "../../../../types/project-cms";
 
 const snapshot = (it: ProjectFeature) => JSON.stringify([it.title, it.description ?? "", it.icon ?? "", it.isVisible]);
 
-// Native select (keyboard + mobile for free) with the chosen icon previewed beside it.
+const ICON_OPTIONS = [
+  { value: "", label: "Default (check)", icon: <Check className="h-4 w-4 shrink-0" /> },
+  ...Object.entries(FEATURE_ICONS).filter(([k]) => k !== "check").map(([k, Icon]) => ({
+    value: k, label: k.replace(/-/g, " "), icon: <Icon className="h-4 w-4 shrink-0" />,
+  })),
+];
+
 function IconSelect({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
-  const Icon = featureIcon(value);
-  return (
-    <div className="flex items-center gap-2">
-      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-sky-500/10 text-sky-600 dark:bg-sky-400/10 dark:text-sky-400" aria-hidden="true">
-        <Icon className="h-4 w-4" />
-      </span>
-      <select className="admin-input w-40" value={value} onChange={(e) => onChange(e.target.value)} aria-label={label}>
-        <option value="">Default (check)</option>
-        {Object.keys(FEATURE_ICONS).filter((k) => k !== "check").map((k) => (
-          <option key={k} value={k}>{k.replace(/-/g, " ")}</option>
-        ))}
-      </select>
-    </div>
-  );
+  return <Select className="w-48" value={value} onChange={(v) => onChange(String(v))} options={ICON_OPTIONS} ariaLabel={label} />;
 }
 
 export function FeaturesManager({ projectId, onChanged }: { projectId: number; onChanged: () => void }) {
