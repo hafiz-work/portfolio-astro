@@ -370,6 +370,20 @@ html[data-theme-switching]::view-transition-new(root) {
         @apply block text-sm/6 font-medium text-gray-950 dark:text-white;
     }
 
+    /* Required marker follows the input's own `required` - no per-field markup.
+       `data-required` covers fields the label can't see (e.g. React islands). */
+    .admin-label:has(+ :required)::after,
+    .admin-label[data-required]::after {
+        content: " *";
+        @apply text-red-600 dark:text-red-400;
+    }
+
+    /* Tiptap placeholder (TextEditor). */
+    .tiptap p.is-editor-empty:first-child::before {
+        content: attr(data-placeholder);
+        @apply pointer-events-none float-left h-0 text-gray-400 dark:text-gray-500;
+    }
+
     .admin-input {
         @apply block w-full rounded-lg bg-white px-3 py-2 text-sm/6 text-gray-950 outline-1 -outline-offset-1 outline-gray-950/10 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-sky-500 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500;
     }
