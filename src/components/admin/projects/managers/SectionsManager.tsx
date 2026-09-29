@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ChevronUp, ChevronDown, Trash2, Plus } from "lucide-react";
 import { cmsService, extractApiError } from "../../../../lib/projects-cms";
 import { showToast, confirmDialog } from "../../../../lib/admin-ui";
@@ -6,14 +6,21 @@ import type { ProjectSection } from "../../../../types/project-cms";
 
 const SECTION_TYPES = ["problem", "solution", "contribution", "architecture", "challenges", "results", "custom"];
 
+const snapshot = (it: ProjectSection) => JSON.stringify([it.sectionType, it.title ?? "", it.body ?? "", it.isVisible]);
+
 export function SectionsManager({ projectId, onChanged }: { projectId: number; onChanged: () => void }) {
   const [items, setItems] = useState<ProjectSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState({ sectionType: "problem", title: "", body: "" });
+  const saved = useRef(new Map<number, string>());
 
   const load = async () => {
     setLoading(true);
-    try { setItems(await cmsService.listSections(projectId)); }
+    try {
+      const rows = await cmsService.listSections(projectId);
+      saved.current = new Map(rows.map((r) => [r.id, snapshot(r)]));
+      setItems(rows);
+    }
     catch (e) { showToast({ type: "error", title: "Load failed", message: extractApiError(e).message }); }
     finally { setLoading(false); }
   };
@@ -30,10 +37,13 @@ export function SectionsManager({ projectId, onChanged }: { projectId: number; o
       await load(); onChanged();
     } catch (e) { showToast({ type: "error", title: "Add failed", message: extractApiError(e).message }); }
   };
-  const save = async (it: ProjectSection) => {
+  // Autosave: called on blur and on checkbox change; no-op when unchanged.
+  const commit = async (it: ProjectSection) => {
+    if (saved.current.get(it.id) === snapshot(it)) return;
     try {
       await cmsService.updateSection(it.id, { sectionType: it.sectionType, title: it.title, body: it.body, isVisible: it.isVisible });
-      showToast({ type: "success", title: "Section saved" }); onChanged();
+      saved.current.set(it.id, snapshot(it));
+      onChanged();
     } catch (e) { showToast({ type: "error", title: "Save failed", message: extractApiError(e).message }); }
   };
   const remove = async (it: ProjectSection) => {
@@ -55,26 +65,24 @@ export function SectionsManager({ projectId, onChanged }: { projectId: number; o
 
   return (
     <div className="space-y-4">
+      <p className="admin-help">Changes save automatically when you leave a field.</p>
       {items.length === 0 && <p className="admin-help">No case-study sections yet.</p>}
       {items.map((it, i) => (
         <div key={it.id} className="rounded-lg border border-gray-950/5 dark:border-white/10 p-3 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <input className={`${"admin-input"} max-w-[180px]`} value={it.sectionType} list="section-types"
-              onChange={(e) => setField(it.id, { sectionType: e.target.value })} aria-label="Section type" />
+              onChange={(e) => setField(it.id, { sectionType: e.target.value })} onBlur={() => void commit(it)} aria-label="Section type" />
             <input className="admin-input flex-1 min-w-[160px]" placeholder="Title (optional)" value={it.title ?? ""}
-              onChange={(e) => setField(it.id, { title: e.target.value })} aria-label="Section title" />
+              onChange={(e) => setField(it.id, { title: e.target.value })} onBlur={() => void commit(it)} aria-label="Section title" />
             <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-              <input type="checkbox" checked={it.isVisible} onChange={(e) => setField(it.id, { isVisible: e.target.checked })} /> Visible
+              <input type="checkbox" checked={it.isVisible} onChange={(e) => { setField(it.id, { isVisible: e.target.checked }); void commit({ ...it, isVisible: e.target.checked }); }} /> Visible
             </label>
             <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
             <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
             <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => remove(it)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
           </div>
           <textarea className="admin-input min-h-20" placeholder="Body (plain text / HTML)" value={it.body ?? ""}
-            onChange={(e) => setField(it.id, { body: e.target.value })} aria-label="Section body" />
-          <div className="flex justify-end">
-            <button type="button" className="admin-btn admin-btn-primary" onClick={() => save(it)}>Save section</button>
-          </div>
+            onChange={(e) => setField(it.id, { body: e.target.value })} onBlur={() => void commit(it)} aria-label="Section body" />
         </div>
       ))}
 

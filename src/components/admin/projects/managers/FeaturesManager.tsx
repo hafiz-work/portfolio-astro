@@ -1,17 +1,43 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ChevronUp, ChevronDown, Trash2, Plus } from "lucide-react";
 import { cmsService, extractApiError } from "../../../../lib/projects-cms";
 import { showToast, confirmDialog } from "../../../../lib/admin-ui";
+import { FEATURE_ICONS, featureIcon } from "../../../../lib/feature-icons";
 import type { ProjectFeature } from "../../../../types/project-cms";
+
+const snapshot = (it: ProjectFeature) => JSON.stringify([it.title, it.description ?? "", it.icon ?? "", it.isVisible]);
+
+// Native select (keyboard + mobile for free) with the chosen icon previewed beside it.
+function IconSelect({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
+  const Icon = featureIcon(value);
+  return (
+    <div className="flex items-center gap-2">
+      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-sky-500/10 text-sky-600 dark:bg-sky-400/10 dark:text-sky-400" aria-hidden="true">
+        <Icon className="h-4 w-4" />
+      </span>
+      <select className="admin-input w-40" value={value} onChange={(e) => onChange(e.target.value)} aria-label={label}>
+        <option value="">Default (check)</option>
+        {Object.keys(FEATURE_ICONS).filter((k) => k !== "check").map((k) => (
+          <option key={k} value={k}>{k.replace(/-/g, " ")}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 export function FeaturesManager({ projectId, onChanged }: { projectId: number; onChanged: () => void }) {
   const [items, setItems] = useState<ProjectFeature[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState({ title: "", description: "", icon: "" });
+  const saved = useRef(new Map<number, string>());
 
   const load = async () => {
     setLoading(true);
-    try { setItems(await cmsService.listFeatures(projectId)); }
+    try {
+      const rows = await cmsService.listFeatures(projectId);
+      saved.current = new Map(rows.map((r) => [r.id, snapshot(r)]));
+      setItems(rows);
+    }
     catch (e) { showToast({ type: "error", title: "Load failed", message: extractApiError(e).message }); }
     finally { setLoading(false); }
   };
@@ -20,14 +46,26 @@ export function FeaturesManager({ projectId, onChanged }: { projectId: number; o
   const setField = (id: number, patch: Partial<ProjectFeature>) =>
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
 
+  // Autosave: called on blur and on select/checkbox change; no-op when unchanged.
+  const commit = async (it: ProjectFeature) => {
+    if (saved.current.get(it.id) === snapshot(it)) return;
+    if (!it.title.trim()) { showToast({ type: "warning", title: "Feature title can't be empty" }); return; }
+    try {
+      await cmsService.updateFeature(it.id, { title: it.title, description: it.description, icon: it.icon || null, isVisible: it.isVisible });
+      saved.current.set(it.id, snapshot(it));
+      onChanged();
+    } catch (e) { showToast({ type: "error", title: "Save failed", message: extractApiError(e).message }); }
+  };
+  const change = (it: ProjectFeature, patch: Partial<ProjectFeature>) => {
+    const next = { ...it, ...patch };
+    setField(it.id, patch);
+    void commit(next);
+  };
+
   const add = async () => {
     if (!draft.title.trim()) { showToast({ type: "warning", title: "Title required" }); return; }
-    try { await cmsService.createFeature(projectId, draft); setDraft({ title: "", description: "", icon: "" }); await load(); onChanged(); }
+    try { await cmsService.createFeature(projectId, { ...draft, icon: draft.icon || null }); setDraft({ title: "", description: "", icon: "" }); await load(); onChanged(); }
     catch (e) { showToast({ type: "error", title: "Add failed", message: extractApiError(e).message }); }
-  };
-  const save = async (it: ProjectFeature) => {
-    try { await cmsService.updateFeature(it.id, { title: it.title, description: it.description, icon: it.icon, isVisible: it.isVisible }); showToast({ type: "success", title: "Feature saved" }); onChanged(); }
-    catch (e) { showToast({ type: "error", title: "Save failed", message: extractApiError(e).message }); }
   };
   const remove = async (it: ProjectFeature) => {
     if (!(await confirmDialog({ title: "Delete feature", message: `Delete "${it.title}"?`, variant: "danger", confirmText: "Delete" }))) return;
@@ -47,32 +85,31 @@ export function FeaturesManager({ projectId, onChanged }: { projectId: number; o
 
   return (
     <div className="space-y-3">
+      <p className="admin-help">Changes save automatically when you leave a field.</p>
       {items.length === 0 && <p className="admin-help">No features yet.</p>}
       {items.map((it, i) => (
         <div key={it.id} className="rounded-lg border border-gray-950/5 dark:border-white/10 p-3 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
+            <IconSelect value={it.icon ?? ""} onChange={(icon) => change(it, { icon })} label="Feature icon" />
             <input className="admin-input flex-1 min-w-[180px]" placeholder="Title" value={it.title}
-              onChange={(e) => setField(it.id, { title: e.target.value })} aria-label="Feature title" />
-            <input className="admin-input max-w-[120px]" placeholder="Icon" value={it.icon ?? ""}
-              onChange={(e) => setField(it.id, { icon: e.target.value })} aria-label="Feature icon" />
+              onChange={(e) => setField(it.id, { title: e.target.value })} onBlur={() => void commit(it)} aria-label="Feature title" />
             <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-              <input type="checkbox" checked={it.isVisible} onChange={(e) => setField(it.id, { isVisible: e.target.checked })} /> Visible
+              <input type="checkbox" checked={it.isVisible} onChange={(e) => change(it, { isVisible: e.target.checked })} /> Visible
             </label>
             <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
             <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
             <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => remove(it)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
           </div>
           <textarea className="admin-input min-h-16" placeholder="Description" value={it.description ?? ""}
-            onChange={(e) => setField(it.id, { description: e.target.value })} aria-label="Feature description" />
-          <div className="flex justify-end"><button type="button" className="admin-btn admin-btn-primary" onClick={() => save(it)}>Save feature</button></div>
+            onChange={(e) => setField(it.id, { description: e.target.value })} onBlur={() => void commit(it)} aria-label="Feature description" />
         </div>
       ))}
       <div className="rounded-lg border border-dashed border-gray-950/10 dark:border-white/10 p-3 space-y-2">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <IconSelect value={draft.icon} onChange={(icon) => setDraft({ ...draft, icon })} label="New feature icon" />
           <input className="admin-input flex-1 min-w-[180px]" placeholder="New feature title" value={draft.title}
-            onChange={(e) => setDraft({ ...draft, title: e.target.value })} aria-label="New feature title" />
-          <input className="admin-input max-w-[120px]" placeholder="Icon" value={draft.icon}
-            onChange={(e) => setDraft({ ...draft, icon: e.target.value })} aria-label="New feature icon" />
+            onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void add(); } }} aria-label="New feature title" />
         </div>
         <textarea className="admin-input min-h-14" placeholder="Description" value={draft.description}
           onChange={(e) => setDraft({ ...draft, description: e.target.value })} aria-label="New feature description" />

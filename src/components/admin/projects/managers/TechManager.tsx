@@ -11,7 +11,6 @@ export function TechManager({ projectId, onChanged }: { projectId: number; onCha
   const [all, setAll] = useState<TechStack[]>([]);
   const [attached, setAttached] = useState<ProjectTechStack[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedId, setSelectedId] = useState<string>("");
   const [newTech, setNewTech] = useState({ name: "", category: "backend" as TechCategory });
 
   const load = async () => {
@@ -27,10 +26,11 @@ export function TechManager({ projectId, onChanged }: { projectId: number; onCha
   const attachedIds = new Set(attached.map((x) => x.techStackId));
   const available = all.filter((t) => !attachedIds.has(t.id));
 
-  const attach = async () => {
-    const id = Number(selectedId);
-    if (!id) { showToast({ type: "warning", title: "Pick a tech stack" }); return; }
-    try { await cmsService.attachTech(projectId, { techStackId: id }); setSelectedId(""); await load(); onChanged(); }
+  // Picking from the list attaches straight away - no separate Attach click.
+  const attach = async (value: string | number) => {
+    const id = Number(value);
+    if (!id) return;
+    try { await cmsService.attachTech(projectId, { techStackId: id }); await load(); onChanged(); }
     catch (e) { showToast({ type: "error", title: "Attach failed", message: extractApiError(e).message }); }
   };
   const createTech = async () => {
@@ -73,7 +73,7 @@ export function TechManager({ projectId, onChanged }: { projectId: number; onCha
               <span className="font-medium text-gray-800 dark:text-gray-200">{it.tech?.name ?? `#${it.techStackId}`}</span>
               {it.tech?.category && <span className="admin-help">· {it.tech.category}</span>}
               <label className="ml-auto flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                <input type="checkbox" checked={it.isPrimary} onChange={(e) => setPrimary(it, e.target.checked)} /> Primary
+                <input type="checkbox" checked={it.isPrimary} onChange={(e) => setPrimary(it, e.target.checked)} title="Main technology - shown first" /> Primary
               </label>
               <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
               <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === attached.length - 1}><ChevronDown className="h-4 w-4" /></button>
@@ -83,21 +83,24 @@ export function TechManager({ projectId, onChanged }: { projectId: number; onCha
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="space-y-1.5">
+        <span className="admin-label">Add from library</span>
         <Select
-          className="max-w-[220px]"
-          value={selectedId}
-          onChange={(v) => setSelectedId(String(v))}
-          options={available.map((t) => ({ value: String(t.id), label: t.name }))}
-          placeholder="Attach existing tech…"
+          className="max-w-[260px]"
+          value=""
+          onChange={(v) => void attach(v)}
+          options={available.map((t) => ({ value: String(t.id), label: t.category ? `${t.name} · ${t.category}` : t.name }))}
+          placeholder={available.length ? "Pick a tech to attach…" : "Everything in the library is attached"}
           ariaLabel="Available tech stacks"
         />
-        <button type="button" className="admin-btn admin-btn-secondary" onClick={attach}><Plus className="h-4 w-4" /> Attach</button>
       </div>
 
-      <div className="rounded-lg border border-dashed border-gray-950/10 dark:border-white/10 p-3 flex flex-wrap items-center gap-2">
+      <div className="rounded-lg border border-dashed border-gray-950/10 dark:border-white/10 p-3 space-y-2">
+        <span className="admin-label">Not in the library?</span>
+        <div className="flex flex-wrap items-center gap-2">
         <input className="admin-input max-w-[200px]" placeholder="New tech name" value={newTech.name}
-          onChange={(e) => setNewTech({ ...newTech, name: e.target.value })} aria-label="New tech name" />
+          onChange={(e) => setNewTech({ ...newTech, name: e.target.value })}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void createTech(); } }} aria-label="New tech name" />
         <Select
           className="max-w-[150px]"
           value={newTech.category}
@@ -106,6 +109,7 @@ export function TechManager({ projectId, onChanged }: { projectId: number; onCha
           ariaLabel="New tech category"
         />
         <button type="button" className="admin-btn admin-btn-secondary" onClick={createTech}><Plus className="h-4 w-4" /> Create + attach</button>
+        </div>
       </div>
     </div>
   );
