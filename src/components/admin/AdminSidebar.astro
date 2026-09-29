@@ -77,17 +77,32 @@ const currentPath = Astro.url.pathname;
         aria-label="Admin dashboard"
       >
         <span class="inline-flex items-center gap-2">
-          <Image src="/brand/logo.svg" alt="" width={24} height={24} class="h-6 w-6" />
-          hafizbahtiar<span class="text-gray-500 dark:text-gray-400">/admin</span>
+          <Image
+            src="/brand/logo.svg"
+            alt=""
+            width={24}
+            height={24}
+            class="h-6 w-6"
+          />
+          hafizbahtiar<span class="text-gray-500 dark:text-gray-400"
+            >/admin</span
+          >
         </span>
       </h1>
       <span
         class="sidebar-mark font-mono text-xl font-semibold text-gray-950 dark:text-white tracking-tight"
         aria-hidden="true"
-        ><Image src="/brand/logo.svg" alt="" width={28} height={28} class="h-7 w-7" /></span
+        ><Image
+          src="/brand/logo.svg"
+          alt=""
+          width={28}
+          height={28}
+          class="h-7 w-7"
+        /></span
       >
       <button
         id="close-sidebar"
+        aria-label="Close sidebar"
         class="md:hidden p-2 text-gray-500 dark:text-gray-400 hover:text-gray-950 dark:hover:text-gray-200 rounded-lg"
       >
         <svg
@@ -123,6 +138,7 @@ const currentPath = Astro.url.pathname;
                   <a
                     href={link.href}
                     aria-label={link.text}
+                    title={link.text}
                     aria-current={isActive ? "page" : undefined}
                     class:list={[
                       "nav-item relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150 group",
@@ -162,9 +178,7 @@ const currentPath = Astro.url.pathname;
     </nav>
 
     <!-- User Profile Footer -->
-    <div
-      class="p-4 border-t border-gray-950/5 dark:border-white/10"
-    >
+    <div class="p-4 border-t border-gray-950/5 dark:border-white/10">
       <div class="space-y-3">
         <div class="flex items-center space-x-3 px-2">
           <div class="relative">
@@ -179,9 +193,7 @@ const currentPath = Astro.url.pathname;
             </div>
           </div>
           <div class="user-meta flex-grow min-w-0">
-            <div
-              class="text-gray-950 dark:text-white font-medium truncate"
-            >
+            <div class="text-gray-950 dark:text-white font-medium truncate">
               Hafiz Bahtiar
             </div>
             <div class="text-gray-500 dark:text-gray-500 text-xs truncate">
@@ -351,7 +363,9 @@ const currentPath = Astro.url.pathname;
         class="relative transform overflow-hidden rounded-xl bg-white dark:bg-gray-950 ring-1 ring-gray-950/5 dark:ring-white/10 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
         id="logout-panel"
       >
-        <div class="bg-white dark:bg-white/[0.03] px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+        <div
+          class="bg-white dark:bg-white/[0.03] px-4 pb-4 pt-5 sm:p-6 sm:pb-4"
+        >
           <div class="sm:flex sm:items-start">
             <div
               class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-500/10 sm:mx-0 sm:h-10 sm:w-10"
@@ -514,7 +528,10 @@ const currentPath = Astro.url.pathname;
     const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
     document.documentElement.dataset.adminSidebar = state;
-    localStorage.setItem(STORAGE_KEY, state);
+    // Hidden sidebar must not take keyboard focus.
+    sidebar.inert = state === "closed";
+    // Mobile always boots closed - don't let it overwrite the desktop choice.
+    if (!isMobile) localStorage.setItem(STORAGE_KEY, state);
 
     if (state === "closed") {
       overlay.classList.add("opacity-0");
@@ -577,6 +594,16 @@ const currentPath = Astro.url.pathname;
   setupSidebar();
   document.addEventListener("astro:page-load", setupSidebar);
   document.addEventListener("astro:after-swap", setupSidebar);
+
+  document.addEventListener("keydown", (e) => {
+    if (
+      e.key === "Escape" &&
+      document.documentElement.dataset.adminSidebar === "open" &&
+      window.matchMedia("(max-width: 767px)").matches
+    ) {
+      closeSidebar();
+    }
+  });
 
   window.toggleAdminSidebar = function () {
     const currentState =

@@ -81,13 +81,6 @@ const statusOptions = [
     registry?.["blog-alert"]?.show(options);
   };
 
-  const slugify = (value: string) =>
-    value
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)+/g, "");
-
   const fieldLabels: Record<string, string> = {
     title: "Title",
     slug: "Slug",
@@ -124,28 +117,6 @@ const statusOptions = [
     }
     return { message, field };
   };
-
-  let lastGeneratedSlug = "";
-
-  const titleInput = form?.elements.namedItem(
-    "title",
-  ) as HTMLInputElement | null;
-  const slugInput = form?.elements.namedItem("slug") as HTMLInputElement | null;
-
-  if (titleInput && slugInput) {
-    titleInput.addEventListener("input", () => {
-      const nextSlug = slugify(titleInput.value);
-      if (!slugInput.value || slugInput.value === lastGeneratedSlug) {
-        slugInput.value = nextSlug;
-        slugInput.dispatchEvent(new Event("change"));
-      }
-      lastGeneratedSlug = nextSlug;
-    });
-
-    slugInput.addEventListener("input", () => {
-      lastGeneratedSlug = slugify(titleInput.value);
-    });
-  }
 
   async function loadPost() {
     try {
@@ -190,8 +161,6 @@ const statusOptions = [
 
         loadingState?.classList.add("hidden");
         form.classList.remove("hidden");
-
-        lastGeneratedSlug = slugify(post.title);
 
         if (!formGuard) {
           formGuard = setupFormGuard(form);
