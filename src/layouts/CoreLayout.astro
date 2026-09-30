@@ -10,6 +10,8 @@ interface Props {
   type?: "website" | "article";
   publishedTime?: string;
   class?: string;
+  /** Keep this page out of search results (e.g. an empty legal page). */
+  noindex?: boolean;
 }
 
 const {
@@ -20,6 +22,7 @@ const {
   type = "website",
   publishedTime,
   class: className = "",
+  noindex = false,
 } = Astro.props;
 
 // Absolute URLs for canonical + social cards. Astro.site is set in astro.config.
@@ -35,6 +38,7 @@ const socialImageURL = new URL(image, siteOrigin);
     <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="canonical" href={canonicalURL} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
 
     <!-- Open Graph -->
     <meta property="og:type" content={type} />
@@ -148,7 +152,7 @@ const socialImageURL = new URL(image, siteOrigin);
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <script is:inline>

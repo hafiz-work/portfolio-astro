@@ -28,6 +28,7 @@ const hasPolicy = Boolean(policy?.privacyPolicy);
   description={project?.description}
   image={project?.imageUrl || undefined}
   imageAlt={project?.title}
+  noindex={!hasPolicy}
 >
   <div class="h-10 sm:h-16"></div>
   <div class="line-y">
@@ -36,25 +37,36 @@ const hasPolicy = Boolean(policy?.privacyPolicy);
         href={`/projects/${slug}`}
         class="group inline-flex items-center gap-1.5 font-mono text-xs/6 text-gray-500 transition-colors hover:text-gray-950 dark:hover:text-white"
       >
-        <span class="transition-transform group-hover:-translate-x-0.5" aria-hidden="true">&larr;</span>
+        <span
+          class="transition-transform group-hover:-translate-x-0.5"
+          aria-hidden="true">&larr;</span
+        >
         cd ../{slug}
       </a>
     </div>
   </div>
   <div class="h-8 sm:h-12"></div>
   <div class="line-y">
-    <p class="eyebrow container-main">Legal · {project ? project.title : slug}</p>
+    <p class="eyebrow container-main">
+      Legal · {project ? project.title : slug}
+    </p>
   </div>
   <div class="line-y mt-2">
-    <h1 class="container-main text-4xl/[1.1] font-medium tracking-tighter text-gray-950 sm:text-6xl/[1.05] dark:text-white">
+    <h1
+      class="container-main text-4xl/[1.1] font-medium tracking-tighter text-gray-950 sm:text-6xl/[1.05] dark:text-white"
+    >
       Privacy Policy
     </h1>
   </div>
   <div class="h-8"></div>
   <div class="line-y">
     <div class="container-main flex flex-wrap gap-3">
-      <a href={`/projects/${slug}`} class="btn-pill btn-pill-ghost">Back to project</a>
-      <a href={`/projects/${slug}/terms`} class="btn-pill btn-pill-ghost">Terms &amp; Conditions</a>
+      <a href={`/projects/${slug}`} class="btn-pill btn-pill-ghost"
+        >Back to project</a
+      >
+      <a href={`/projects/${slug}/terms`} class="btn-pill btn-pill-ghost"
+        >Terms &amp; Conditions</a
+      >
     </div>
   </div>
   <div class="h-12 sm:h-16"></div>
@@ -64,7 +76,9 @@ const hasPolicy = Boolean(policy?.privacyPolicy);
         <div class="frame">
           <div class="frame-inner p-6 sm:p-10">
             <div class="mb-6 flex items-center justify-between gap-4">
-              <span class="font-mono text-xs/6 text-gray-500">privacy_policy.md</span>
+              <span class="font-mono text-xs/6 text-gray-500">
+                privacy_policy.md
+              </span>
               <span class="tag">read-only</span>
             </div>
             <TextEditor
@@ -80,7 +94,9 @@ const hasPolicy = Boolean(policy?.privacyPolicy);
           <p class="rounded-full bg-canvas px-3 py-1 text-sm/6 font-medium text-gray-950 ring-1 ring-gray-950/10 dark:bg-pub-dark dark:text-white dark:ring-white/10">
             No privacy policy published for this project.
           </p>
-          <p class="text-xs text-gray-500">Check back later or contact the owner for details.</p>
+          <p class="text-xs text-gray-500">
+            Check back later or contact the owner for details.
+          </p>
         </div>
       )
     }
