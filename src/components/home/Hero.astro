@@ -7,8 +7,12 @@ import Annot from "../layout/Annot.astro";
 interface Props {
     projectCount: number;
     yearsExperience: number;
+    currentRole?: string | null;
+    latestProject?: string | null;
+    latestPost?: string | null;
 }
-const { projectCount, yearsExperience } = Astro.props;
+const { projectCount, yearsExperience, currentRole, latestProject, latestPost } =
+    Astro.props;
 
 // JSON "response" shown in the code window, one entry per rendered line so
 // the gutter can number them like tailwindcss.com's editor panels.
@@ -16,6 +20,12 @@ type Tok = { t: string; c?: "key" | "str" | "num" | "punct" };
 // `k` links a JSON line to the matching field in the rendered card, so
 // hovering either side highlights both (tailwind's code ↔ preview pairing).
 const stack = ["Node.js", "Hono", "Flutter", "Workers"];
+// One `"key": "value",` line; long live values are clipped so the panel never scrolls.
+const clip = (v: string, max = 42) => (v.length > max ? `${v.slice(0, max - 1)}…` : v);
+const strLine = (key: string, value: string | null | undefined): { toks: Tok[] }[] =>
+    value
+        ? [{ toks: [{ t: `  "${key}"`, c: "key" }, { t: ": " }, { t: JSON.stringify(clip(value)), c: "str" }, { t: "," }] }]
+        : [];
 const lines: { k?: string; toks: Tok[] }[] = [
     { toks: [{ t: "{", c: "punct" }] },
     {
@@ -45,6 +55,7 @@ const lines: { k?: string; toks: Tok[] }[] = [
             { t: "," },
         ],
     },
+    ...strLine("current_role", currentRole),
     {
         k: "stack",
         toks: [
@@ -66,6 +77,21 @@ const lines: { k?: string; toks: Tok[] }[] = [
             { t: "," },
         ],
     },
+    ...strLine("latest_project", latestProject),
+    ...strLine("latest_post", latestPost),
+    {
+        toks: [
+            { t: '  "open_to"', c: "key" },
+            { t: ": [" },
+            { t: '"backend"', c: "str" },
+            { t: ", " },
+            { t: '"flutter"', c: "str" },
+            { t: ", " },
+            { t: '"freelance"', c: "str" },
+            { t: "]," },
+        ],
+    },
+    ...strLine("timezone", "GMT+8"),
     {
         k: "years_exp",
         toks: [

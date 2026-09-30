@@ -9,14 +9,31 @@ import SectionHeader from "../components/layout/SectionHeader.astro";
 import {
 	getPublicProjects,
 	getPublicExperiences,
+	getPublicPosts,
 } from "../lib/public-content";
 
 // Server-side data with curated fallback - this page never shows loading
 // spinners, error banners, or empty states.
-const [projects, experiences] = await Promise.all([
+const [projects, experiences, posts] = await Promise.all([
 	getPublicProjects(),
 	getPublicExperiences(),
+	getPublicPosts(),
 ]);
+
+// Live fields for the hero's `GET /v1/profile` panel - they update themselves
+// when the admin adds an experience, project or post.
+const currentJob = experiences.find((e) => e.isCurrent) ?? experiences[0];
+const currentRole = currentJob
+	? `${currentJob.role} @ ${currentJob.companyName.replace(/\s+Sdn\.?\s+Bhd\.?$|\s+Bhd\.?$/i, "")}`
+	: null;
+const latestProject =
+	projects
+		.slice()
+		.sort((a, b) => b.year - a.year || b.createdAt.localeCompare(a.createdAt))[0]?.title ?? null;
+const latestPost =
+	posts
+		.slice()
+		.sort((a, b) => (b.publishedDate ?? "").localeCompare(a.publishedDate ?? ""))[0]?.title ?? null;
 
 const FIRST_DEV_ROLE_YEAR = 2020; // Jom Dapur, Sep 2020
 const yearsExperience = Math.max(
@@ -173,7 +190,13 @@ const websiteSchema = {
 <PublicLayout>
 	<JsonLd schema={personSchema} />
 	<JsonLd schema={websiteSchema} />
-	<Hero projectCount={projects.length} yearsExperience={yearsExperience} />
+	<Hero
+		projectCount={projects.length}
+		yearsExperience={yearsExperience}
+		currentRole={currentRole}
+		latestProject={latestProject}
+		latestPost={latestPost}
+	/>
 
 	<!-- Skills Section -->
 	<section id="skills" class="scroll-offset">
