@@ -11,9 +11,10 @@ interface Props {
   type?: "website" | "article";
   publishedTime?: string;
   imageAlt?: string;
+  noindex?: boolean;
 }
 
-const { title, description, image, type, publishedTime, imageAlt } =
+const { title, description, image, type, publishedTime, imageAlt, noindex } =
   Astro.props;
 ---
 
@@ -24,6 +25,7 @@ const { title, description, image, type, publishedTime, imageAlt } =
   type={type}
   publishedTime={publishedTime}
   imageAlt={imageAlt}
+  noindex={noindex}
   class="font-inter text-gray-950 dark:text-white"
 >
   <Background />

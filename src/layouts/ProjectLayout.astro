@@ -6,12 +6,19 @@ interface Props {
   description?: string;
   image?: string;
   imageAlt?: string;
+  noindex?: boolean;
 }
 
-const { title, description, image, imageAlt } = Astro.props;
+const { title, description, image, imageAlt, noindex } = Astro.props;
 ---
 
-<PublicLayout title={title} description={description} image={image} imageAlt={imageAlt}>
+<PublicLayout
+  title={title}
+  description={description}
+  image={image}
+  imageAlt={imageAlt}
+  noindex={noindex}
+>
   <div class="min-h-screen pb-20 sm:pb-28">
     <slot />
   </div>

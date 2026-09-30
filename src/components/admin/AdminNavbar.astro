@@ -137,7 +137,6 @@ if (paths.length === 1 && paths[0] === "admin") {
             </svg>
         </button>
 
-
         <!-- Settings Quick Link -->
         <a
             href="/admin/settings"
@@ -331,8 +330,12 @@ if (paths.length === 1 && paths[0] === "admin") {
 
         // Delegated: survives first-load module races and DOM swaps - the
         // listener works no matter when (or in what order) modules loaded.
-        if (!document.documentElement.dataset.sidebarTogglesBound) {
-            document.documentElement.dataset.sidebarTogglesBound = "true";
+        // The bound flag lives on `window`: <ClientRouter> rewrites <html>'s
+        // attributes on every navigation, so a data-* flag there was lost and
+        // each visit stacked another listener - two toggles cancel out.
+        const w = window as Window & { __sidebarTogglesBound?: boolean };
+        if (!w.__sidebarTogglesBound) {
+            w.__sidebarTogglesBound = true;
             document.addEventListener("click", (event) => {
                 const target = event.target as HTMLElement;
                 if (target.closest("#toggle-sidebar")) {
