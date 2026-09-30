@@ -261,7 +261,8 @@ const currentPath = Astro.url.pathname;
     transform: translateX(6px);
     pointer-events: none;
   }
-  #admin-sidebar .nav-icon {
+  #admin-sidebar .nav-icon,
+  #admin-sidebar .logout-btn svg {
     flex-shrink: 0;
   }
   #admin-sidebar .user-meta {
@@ -311,8 +312,12 @@ const currentPath = Astro.url.pathname;
   :root[data-admin-sidebar="minimized"] #admin-sidebar .nav-icon {
     margin: 0;
   }
+  /* Collapsed: the pill's padding + label gap would squeeze the icon to ~7px. */
   :root[data-admin-sidebar="minimized"] #admin-sidebar .logout-btn {
     justify-content: center;
+    gap: 0;
+    padding-left: 0;
+    padding-right: 0;
   }
 </style>
 

@@ -41,44 +41,76 @@ if (token) {
 
 <CoreLayout
   title={success ? "Email Disahkan | MARC" : "Pengesahan Email | MARC"}
+  noindex
 >
   <Background />
   <div class="min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-sm text-center">
-      <a
-        href="/"
-        class="inline-flex" aria-label="Hafiz Bahtiar - home">
-          <Image src="/brand/wordmark.svg" alt="hafizbahtiar" width={383} height={120} loading="eager" class="h-12 w-auto" />
-        </a>
+      <a href="/" class="inline-flex" aria-label="Hafiz Bahtiar - home">
+        <Image
+          src="/brand/wordmark.svg"
+          alt="hafizbahtiar"
+          width={383}
+          height={120}
+          loading="eager"
+          class="h-12 w-auto"
+        />
+      </a>
 
-      <div
-        class="mt-8 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-black/30"
-      >
-        {
-          success ? (
-            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/10">
-              <Check className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-            </div>
-          ) : (
-            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-500/10">
-              <X className="h-6 w-6 text-red-600 dark:text-red-400" />
-            </div>
-          )
-        }
+      <div class="frame mt-8">
+        <div class="frame-inner p-6 sm:p-8">
+          {
+            success ? (
+              <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/10">
+                <svg
+                  class="h-6 w-6 text-emerald-600 dark:text-emerald-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            ) : (
+              <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-500/10">
+                <svg
+                  class="h-6 w-6 text-red-600 dark:text-red-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </div>
+            )
+          }
 
-        <h1 class="font-display text-xl font-bold text-slate-900 dark:text-slate-100">
-          {success ? "Email disahkan" : "Pengesahan gagal"}
-        </h1>
-        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          {message}
-        </p>
+          <h1
+            class="text-xl font-medium tracking-tight text-gray-950 dark:text-white"
+          >
+            {success ? "Email disahkan" : "Pengesahan gagal"}
+          </h1>
+          <p class="mt-2 text-sm/6 text-gray-600 dark:text-gray-400">
+            {message}
+          </p>
 
-        <a
-          href="/"
-          class="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-slate-900 dark:bg-slate-100 px-4 py-2.5 text-sm font-medium text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-white transition-colors"
-        >
-          Kembali ke laman utama
-        </a>
+          <a
+            href="/"
+            class="btn-pill btn-pill-primary mt-6 w-full justify-center"
+          >
+            Kembali ke laman utama
+          </a>
+        </div>
       </div>
     </div>
   </div>

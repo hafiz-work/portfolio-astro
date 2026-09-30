@@ -12,10 +12,9 @@
  */
 @theme {
     /* Typography - public site type system.
-     * Display: Bricolage Grotesque (headings), Sans: Instrument Sans (body),
-     * Mono: IBM Plex Mono (labels, stats, code accents). Loaded in CoreLayout. */
+     * Sans: Instrument Sans (body), Mono: IBM Plex Mono (labels, stats, code
+     * accents). Loaded in CoreLayout. */
     --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
-    --font-display: "Bricolage Grotesque", "Instrument Sans", ui-sans-serif, sans-serif;
     --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
     /* Public site face (tailwindcss.com uses Inter). Applied by PublicLayout
        only, so admin keeps Instrument Sans. */

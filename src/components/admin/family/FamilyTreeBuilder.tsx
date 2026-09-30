@@ -810,26 +810,34 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <input
-                type="text"
-                placeholder="Family name"
-                value={(treeForm.name as string) || ""}
-                onChange={(e) =>
-                  setTreeForm((prev) => ({ ...prev, name: e.target.value }))
-                }
-                required
-                className={inputClass}
-              />
-              <input
-                type="text"
-                placeholder="family-slug"
-                value={(treeForm.slug as string) || ""}
-                onChange={(e) =>
-                  setTreeForm((prev) => ({ ...prev, slug: e.target.value }))
-                }
-                required
-                className={inputClass}
-              />
+              <div className="space-y-2">
+                <label htmlFor="family-tree-name" className={labelClass}>Family name</label>
+                <input
+                  id="family-tree-name"
+                  type="text"
+                  placeholder="Family name"
+                  value={(treeForm.name as string) || ""}
+                  onChange={(e) =>
+                    setTreeForm((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  required
+                  className={inputClass}
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="family-tree-slug" className={labelClass}>Slug</label>
+                <input
+                  id="family-tree-slug"
+                  type="text"
+                  placeholder="family-slug"
+                  value={(treeForm.slug as string) || ""}
+                  onChange={(e) =>
+                    setTreeForm((prev) => ({ ...prev, slug: e.target.value }))
+                  }
+                  required
+                  className={inputClass}
+                />
+              </div>
             </div>
             <textarea
               rows={3}
@@ -1360,18 +1368,22 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                         </div>
 
                         <form onSubmit={handleSavePerson} className="space-y-3">
-                          <input
-                            type="text"
-                            value={personForm.displayName || ""}
-                            onChange={(e) =>
-                              setPersonForm((prev) => ({
-                                ...prev,
-                                displayName: e.target.value,
-                              }))
-                            }
-                            required
-                            className={inputClass}
-                          />
+                          <div className="space-y-2">
+                            <label htmlFor="family-person-display-name" className={labelClass}>Display name</label>
+                            <input
+                              id="family-person-display-name"
+                              type="text"
+                              value={personForm.displayName || ""}
+                              onChange={(e) =>
+                                setPersonForm((prev) => ({
+                                  ...prev,
+                                  displayName: e.target.value,
+                                }))
+                              }
+                              required
+                              className={inputClass}
+                            />
+                          </div>
                           <div className="grid grid-cols-2 gap-3">
                             <input
                               type="text"
@@ -1498,19 +1510,23 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                       </>
                     ) : (
                       <form onSubmit={handleQuickAdd} className="space-y-3">
-                        <input
-                          type="text"
-                          value={personForm.displayName || ""}
-                          onChange={(e) =>
-                            setPersonForm((prev) => ({
-                              ...prev,
-                              displayName: e.target.value,
-                            }))
-                          }
-                          required
-                          placeholder="Display Name"
-                          className={inputClass}
-                        />
+                        <div className="space-y-2">
+                          <label htmlFor="family-quick-add-display-name" className={labelClass}>Display name</label>
+                          <input
+                            id="family-quick-add-display-name"
+                            type="text"
+                            value={personForm.displayName || ""}
+                            onChange={(e) =>
+                              setPersonForm((prev) => ({
+                                ...prev,
+                                displayName: e.target.value,
+                              }))
+                            }
+                            required
+                            placeholder="Display Name"
+                            className={inputClass}
+                          />
+                        </div>
                         <div className="grid grid-cols-2 gap-3">
                           <input
                             type="text"

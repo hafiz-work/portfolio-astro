@@ -88,7 +88,7 @@ Same line, focused chrome - no second theme:
 ## Type
 
 - Public: `font-inter` (Inter), set on `<body>` by `PublicLayout`. Headings `font-medium tracking-tighter`; hero `.display` up to `text-8xl`.
-- Admin: `PrivateLayout` applies the same `font-inter`; page titles use the public heading treatment. (Legacy: `blog/index.astro` and `verify-email.astro` still use `font-display`/Bricolage - clean up when those pages are next touched.)
+- Admin: `PrivateLayout` applies the same `font-inter`; page titles use the public heading treatment.
 - `--font-mono` IBM Plex Mono - eyebrows, annotations, tags, code.
 
 ## Brand
