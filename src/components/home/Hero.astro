@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 import { Mail, MapPin } from "lucide-react";
 import ResumeDownloadButton from "../ui/ResumeDownloadButton.astro";
 import Annot from "../layout/Annot.astro";
@@ -54,6 +55,15 @@ const lines: { k?: string; toks: Tok[] }[] = [
                 { t: i < stack.length - 1 ? ", " : "" },
             ]),
             { t: "]," },
+        ],
+    },
+    {
+        k: "activity",
+        toks: [
+            { t: '  "activity"', c: "key" },
+            { t: ": " },
+            { t: '"github.com/hafizbahtiar"', c: "str" },
+            { t: "," },
         ],
     },
     {
@@ -283,6 +293,32 @@ const tokClass: Record<string, string> = {
                             }
                         </div>
 
+                        <a
+                            data-f="activity"
+                            href="https://github.com/hafizbahtiar"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="demo-field mt-4 block rounded-xl p-2 ring-1 ring-gray-950/5 ring-inset transition-colors hover:ring-gray-950/15 dark:ring-white/10 dark:hover:ring-white/20"
+                            aria-label="GitHub contributions over the last year (opens GitHub)"
+                        >
+                            <span class="font-mono text-[11px] tracking-widest text-gray-500 uppercase">
+                                Contributions · last 12 months
+                            </span>
+                            <!-- ghchart is deliberately not in image.domains (it serves SVG),
+                                 so <Image> keeps the original URL - see astro.config. -->
+                            <Image
+                                id="github-chart"
+                                src="https://ghchart.rshah.org/0ea5e9/hafizbahtiar"
+                                alt=""
+                                width={722}
+                                height={112}
+                                loading="lazy"
+                                decoding="async"
+                                referrerpolicy="no-referrer"
+                                class="mt-2 block h-auto w-full"
+                            />
+                        </a>
+
                         <dl
                             class="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-gray-950/5 ring-1 ring-gray-950/5 dark:bg-white/10 dark:ring-white/10"
                         >
@@ -325,6 +361,10 @@ const tokClass: Record<string, string> = {
 </section>
 
 <style>
+    /* The chart is served light-themed; invert it in dark mode. */
+    :global(html.dark) #github-chart {
+        filter: invert(1) hue-rotate(180deg) saturate(0.85) brightness(0.9);
+    }
     .demo-line.is-hl {
         background-color: rgb(255 255 255 / 0.07);
         box-shadow: inset 2px 0 0 var(--color-sky-400);
