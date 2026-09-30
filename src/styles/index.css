@@ -152,6 +152,9 @@ html[data-theme-switching]::view-transition-new(root) {
         height: 1px;
         background-color: var(--pattern-fg);
         pointer-events: none;
+        /* Above child backgrounds: .row-grid cells (bg-canvas) otherwise paint
+           over a wrapper's hairline, so it showed in the gutters only. */
+        z-index: 1;
     }
 
     .line-t::before,

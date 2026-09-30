@@ -29,11 +29,15 @@ const currentRole = currentJob
 const latestProject =
 	projects
 		.slice()
-		.sort((a, b) => b.year - a.year || b.createdAt.localeCompare(a.createdAt))[0]?.title ?? null;
+		.sort(
+			(a, b) => b.year - a.year || b.createdAt.localeCompare(a.createdAt),
+		)[0]?.title ?? null;
 const latestPost =
 	posts
 		.slice()
-		.sort((a, b) => (b.publishedDate ?? "").localeCompare(a.publishedDate ?? ""))[0]?.title ?? null;
+		.sort((a, b) =>
+			(b.publishedDate ?? "").localeCompare(a.publishedDate ?? ""),
+		)[0]?.title ?? null;
 
 const FIRST_DEV_ROLE_YEAR = 2020; // Jom Dapur, Sep 2020
 const yearsExperience = Math.max(
@@ -157,8 +161,16 @@ const levelStyle: Record<SkillLevel, string> = {
 
 const legend: { level: SkillLevel; label: string; dot: string }[] = [
 	{ level: "advanced", label: "Advanced", dot: "bg-sky-500 dark:bg-sky-400" },
-	{ level: "proficient", label: "Proficient", dot: "bg-gray-950 dark:bg-white" },
-	{ level: "familiar", label: "Familiar", dot: "bg-gray-300 dark:bg-gray-600" },
+	{
+		level: "proficient",
+		label: "Proficient",
+		dot: "bg-gray-950 dark:bg-white",
+	},
+	{
+		level: "familiar",
+		label: "Familiar",
+		dot: "bg-gray-300 dark:bg-gray-600",
+	},
 ];
 
 const personSchema = {
@@ -207,11 +219,15 @@ const websiteSchema = {
 			description="The tools I ship production software with, grouped by where they live in the system."
 		/>
 		<div class="line-y mt-6" data-reveal>
-			<div class="container-main flex flex-wrap items-center gap-x-5 gap-y-2">
+			<div
+				class="container-main flex flex-wrap items-center gap-x-5 gap-y-2"
+			>
 				{
 					legend.map((item) => (
 						<span class="inline-flex items-center gap-2 font-mono text-xs/6 text-gray-500 dark:text-gray-400">
-							<span class={`h-1.5 w-1.5 rounded-full ${item.dot}`} />
+							<span
+								class={`h-1.5 w-1.5 rounded-full ${item.dot}`}
+							/>
 							{item.label}
 						</span>
 					))
