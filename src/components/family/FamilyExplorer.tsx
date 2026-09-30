@@ -4,8 +4,7 @@ import type {
   PublicFamilyPerson,
   PublicFamilyTreeDetail,
 } from "../../lib/family-privacy";
-import { FamilyListView } from "./FamilyListView";
-import { FamilyToolbar, type ExplorerView } from "./FamilyToolbar";
+import { FamilyToolbar } from "./FamilyToolbar";
 import { FamilyTreeCanvas } from "./FamilyTreeCanvas";
 import { PersonDetailPanel } from "./PersonDetailPanel";
 import type { FamilyChartApi } from "../../hooks/useFamilyChart";
@@ -36,7 +35,6 @@ export const FamilyExplorer = ({
   progenyDepth,
 }: Props) => {
   const chartData = useMemo(() => buildChartData(detail), [detail]);
-  const [view, setView] = useState<ExplorerView>("tree");
   const [vertical, setVertical] = useState(true);
   const [selectedId, setSelectedId] = useState<number | null>(
     detail.tree.defaultMainPersonId ?? detail.people[0]?.id ?? null,
@@ -96,10 +94,8 @@ export const FamilyExplorer = ({
     <div className="space-y-4">
       <FamilyToolbar
         people={detail.people}
-        view={view}
         vertical={vertical}
         onSelectPerson={(person) => selectPerson(person.id, { openSheet: true })}
-        onViewChange={setView}
         onOrientationChange={(nextVertical) => {
           setVertical(nextVertical);
           apiRef.current?.setOrientation(nextVertical);
@@ -112,28 +108,18 @@ export const FamilyExplorer = ({
       />
 
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-4">
-        <div className={view === "tree" ? "h-[65vh] min-h-[420px] lg:h-[580px]" : ""}>
-          {view === "tree" ? (
-            <FamilyTreeCanvas
-              key={detail.tree.slug}
-              data={chartData}
-              mainId={selectedId !== null ? String(selectedId) : null}
-              ancestryDepth={ancestryDepth}
-              progenyDepth={progenyDepth}
-              onSelect={(id) =>
-                selectPerson(Number(id), { center: false, openSheet: true })
-              }
-              apiRefOut={apiRef}
-            />
-          ) : (
-            <FamilyListView
-              detail={detail}
-              selectedId={selectedId}
-              onSelect={(id) =>
-                selectPerson(id, { center: false, openSheet: true })
-              }
-            />
-          )}
+        <div className="h-[65vh] min-h-[420px] lg:h-[580px]">
+          <FamilyTreeCanvas
+            key={detail.tree.slug}
+            data={chartData}
+            mainId={selectedId !== null ? String(selectedId) : null}
+            ancestryDepth={ancestryDepth}
+            progenyDepth={progenyDepth}
+            onSelect={(id) =>
+              selectPerson(Number(id), { center: false, openSheet: true })
+            }
+            apiRefOut={apiRef}
+          />
         </div>
 
         <div className="hidden lg:block lg:h-[580px]">

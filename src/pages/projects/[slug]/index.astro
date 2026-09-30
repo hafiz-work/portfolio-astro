@@ -11,6 +11,7 @@ import {
 } from "../../../lib/public-content";
 import type { ProjectLinkType } from "../../../types/project-cms";
 import { featureIcon } from "../../../lib/feature-icons";
+import { sanitizeRichHtml } from "../../../lib/sanitize";
 
 const slug = Astro.params.slug ?? "";
 
@@ -71,6 +72,7 @@ const featureItems =
 // Case-study narrative - only sections with real content render (no empty headings).
 const narrative = [
   { heading: "The problem", body: project.problem },
+  { heading: "The solution", body: project.solution },
   { heading: "My contribution", body: project.contribution },
   { heading: "Architecture & decisions", body: project.architectureNotes },
   { heading: "Results & impact", body: project.resultSummary },
@@ -80,7 +82,25 @@ const customSections = (project.sections ?? []).filter(
   (s) => (s.title && s.title.trim()) || (s.body && s.body.trim()),
 );
 
-const hasNarrative = narrative.length > 0 || customSections.length > 0;
+// Admin "Full description (HTML)" - sanitized like blog bodies.
+const fullDescriptionHtml = project.fullDescription?.trim()
+  ? sanitizeRichHtml(project.fullDescription)
+  : "";
+
+// Tabs only exist when they have content; a lone Overview needs no tab bar.
+const hasCaseStudy =
+  narrative.length > 0 || customSections.length > 0 || !!fullDescriptionHtml;
+const hasTech = techChips.length > 0;
+const tabs = [
+  { id: "overview", label: "Overview" },
+  ...(hasCaseStudy ? [{ id: "case-study", label: "Case study" }] : []),
+  ...(hasTech ? [{ id: "tech-stack", label: "Tech stack" }] : []),
+];
+// The hero shows summary || description, so repeat the description only when
+// the hero used the summary, or when Overview would otherwise be empty.
+const showDescription =
+  (!!project.summary && project.summary !== project.description) ||
+  featureItems.length === 0;
 
 const metaChips = [
   project.role,
@@ -300,50 +320,40 @@ const projectSchema = {
 
     <!-- Tabs -->
     <div class="h-12 sm:h-16"></div>
-    <div class="line-y">
-      <div class="container-main flex gap-6 overflow-x-auto" role="tablist">
-        <button
-          class="tab-btn is-active -mb-px shrink-0 border-b py-3 text-sm/6 font-medium"
-          role="tab"
-          data-tab="overview">Overview</button
-        >
-        <button
-          class="tab-btn -mb-px shrink-0 border-b py-3 text-sm/6 font-medium"
-          role="tab"
-          data-tab="tech-stack">Tech stack</button
-        >
-      </div>
-    </div>
+    {
+      tabs.length > 1 && (
+        <div class="line-y">
+          <div class="container-main flex gap-6 overflow-x-auto" role="tablist">
+            {tabs.map((t, i) => (
+              <button
+                type="button"
+                class:list={[
+                  "tab-btn -mb-px shrink-0 border-b py-3 text-sm/6 font-medium",
+                  { "is-active": i === 0 },
+                ]}
+                role="tab"
+                aria-selected={i === 0 ? "true" : "false"}
+                aria-controls={t.id}
+                data-tab={t.id}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )
+    }
 
     <!-- Overview tab -->
-    <div id="overview" class="tab-content">
+    <div id="overview" class="tab-content" role="tabpanel">
       <div class="line-b grid grid-cols-1 lg:grid-cols-3">
         <div class="space-y-10 px-4 py-10 sm:px-6 lg:col-span-2">
           {
-            narrative.map((s) => (
-              <div>
-                <h2 class="text-xl/8 font-semibold tracking-tight text-gray-950 dark:text-white">
-                  {s.heading}
-                </h2>
-                <p class="mt-2 max-w-2xl text-base/7 whitespace-pre-line text-gray-600 dark:text-gray-400">
-                  {s.body}
-                </p>
-              </div>
-            ))
-          }
-          {
-            customSections.map((s) => (
-              <div>
-                <h2 class="text-xl/8 font-semibold tracking-tight text-gray-950 dark:text-white">
-                  {s.title || capitalize(s.sectionType)}
-                </h2>
-                {s.body && (
-                  <p class="mt-2 max-w-2xl text-base/7 whitespace-pre-line text-gray-600 dark:text-gray-400">
-                    {s.body}
-                  </p>
-                )}
-              </div>
-            ))
+            showDescription && (
+              <p class="max-w-2xl text-base/7 text-gray-600 dark:text-gray-400">
+                {project.description}
+              </p>
+            )
           }
           {
             featureItems.length > 0 && (
@@ -372,13 +382,6 @@ const projectSchema = {
                   ))}
                 </ul>
               </div>
-            )
-          }
-          {
-            !hasNarrative && featureItems.length === 0 && (
-              <p class="text-base/7 text-gray-600 dark:text-gray-400">
-                {project.description}
-              </p>
             )
           }
           {
@@ -427,11 +430,47 @@ const projectSchema = {
       </div>
     </div>
 
-    <!-- Tech stack tab -->
-    <div id="tech-stack" class="tab-content hidden">
-      <div class="line-b px-4 py-10 sm:px-6">
-        {
-          techChips.length > 0 ? (
+    {
+      hasCaseStudy && (
+        <div id="case-study" class="tab-content hidden" role="tabpanel">
+          <div class="line-b space-y-10 px-4 py-10 sm:px-6">
+            {narrative.map((s) => (
+              <div>
+                <h2 class="text-xl/8 font-semibold tracking-tight text-gray-950 dark:text-white">
+                  {s.heading}
+                </h2>
+                <p class="mt-2 max-w-2xl text-base/7 whitespace-pre-line text-gray-600 dark:text-gray-400">
+                  {s.body}
+                </p>
+              </div>
+            ))}
+            {customSections.map((s) => (
+              <div>
+                <h2 class="text-xl/8 font-semibold tracking-tight text-gray-950 dark:text-white">
+                  {s.title || capitalize(s.sectionType)}
+                </h2>
+                {s.body && (
+                  <p class="mt-2 max-w-2xl text-base/7 whitespace-pre-line text-gray-600 dark:text-gray-400">
+                    {s.body}
+                  </p>
+                )}
+              </div>
+            ))}
+            {fullDescriptionHtml && (
+              <div
+                class="prose max-w-2xl prose-headings:tracking-tight prose-a:text-sky-600 dark:prose-invert dark:prose-a:text-sky-400"
+                set:html={fullDescriptionHtml}
+              />
+            )}
+          </div>
+        </div>
+      )
+    }
+
+    {
+      hasTech && (
+        <div id="tech-stack" class="tab-content hidden" role="tabpanel">
+          <div class="line-b px-4 py-10 sm:px-6">
             <div class="flex flex-wrap gap-2">
               {techChips.map((tech: string) => (
                 <span class="inline-flex items-center rounded-full px-3 py-1 text-sm/6 font-medium text-gray-950 ring-1 ring-gray-950/10 ring-inset dark:text-white dark:ring-white/15">
@@ -439,12 +478,10 @@ const projectSchema = {
                 </span>
               ))}
             </div>
-          ) : (
-            <p class="text-sm/6 text-gray-500">No technologies listed.</p>
-          )
-        }
-      </div>
-    </div>
+          </div>
+        </div>
+      )
+    }
   </div>
 </ProjectLayout>
 

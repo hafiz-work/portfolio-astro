@@ -73,8 +73,8 @@ PersonDetailPanel (desktop side panel + mobile bottom sheet)
 - **URL sync:** `syncUrl()` writes `?p = globalKey || id` via `replaceState` (prefers globalKey).
 - **Chart control API** (`FamilyChartApi`, from `useFamilyChart`): `setMain`, `zoomIn`, `zoomOut`,
   `fit`, `resetView`, `centerMain`, `setOrientation` - handed to the toolbar via `apiRef`.
-- **List fallback:** `view === "list"` renders `FamilyListView` (keyboard-accessible) instead of the
-  canvas; toolbar chart controls disable in list mode.
+- **Tree only:** the public List view was removed (2026-09-30). Keyboard access to people is via
+  `PersonSearch` in the toolbar, which opens the same details panel.
 - **Reduced motion:** transition time forced to 0.
 
 ## 4. Admin vs public (module boundary)
@@ -98,7 +98,6 @@ PersonDetailPanel (desktop side panel + mobile bottom sheet)
 | `src/components/family/FamilyExplorer.tsx` | public-only | Island root: state, deep link, URL sync, selection. |
 | `src/components/family/FamilyTreeCanvas.tsx` | public-only | Wraps `useFamilyChart`; `role="application"`. |
 | `src/components/family/FamilyToolbar.tsx` | public-only | Search + view toggle + zoom/fit/reset/center/orientation (aria-labeled). |
-| `src/components/family/FamilyListView.tsx` | public-only | Keyboard-accessible list fallback. |
 | `src/components/family/PersonDetailPanel.tsx` | public-only | Desktop panel + mobile bottom sheet (dialog, Esc, focus mgmt). |
 | `src/components/family/PersonSearch.tsx` | public-only | ARIA combobox, keyboard nav. |
 | `src/components/family/FamilyTreeChart.tsx` | **shared/admin** ⚠ | Legacy chart; window-event contract; inline edit; real zoom. |

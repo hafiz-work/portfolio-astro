@@ -77,7 +77,7 @@
 - Backend migrations / seeds - schema + `global_key` source of truth.
 
 **Safer extension points:**
-- `src/components/family/PersonDetailPanel.tsx`, `FamilyListView.tsx`, `PersonSearch.tsx`,
+- `src/components/family/PersonDetailPanel.tsx`, `PersonSearch.tsx`,
   `FamilyToolbar.tsx` - presentational, public-only.
 - `src/styles/family-chart-theme.css` - visual theming (verify light/dark in devtools).
 - `src/data/family.ts` - combined-view config.

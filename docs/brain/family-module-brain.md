@@ -72,7 +72,6 @@ File: `src/pages/family/[slug]/index.astro` (`prerender = false`).
 `src/components/family/FamilyExplorer.tsx` is the **single** public island per page (✅ verified exactly one `<astro-island>` of `FamilyExplorer`).
 
 State:
-- `view`: `"tree" | "list"`.
 - `vertical`: chart orientation.
 - `selectedId`: init `detail.tree.defaultMainPersonId ?? detail.people[0]?.id ?? null`.
 - `sheetOpen`: mobile bottom-sheet visibility.
@@ -84,7 +83,8 @@ Behaviors:
 - `selectPerson(id, {center, openSheet})`: updates `selectedId`, syncs URL, optionally `apiRef.setMain()` (center), optionally opens the mobile sheet (storing focus to restore).
 - Empty state when `detail.people.length === 0`.
 
-Children: `FamilyToolbar`, `FamilyTreeCanvas` *or* `FamilyListView`, and `PersonDetailPanel`
+Children: `FamilyToolbar`, `FamilyTreeCanvas` (tree only - the public List view was removed
+2026-09-30; keyboard users reach people through `PersonSearch`), and `PersonDetailPanel`
 (desktop side panel + mobile bottom sheet).
 
 ## 5. The chart (`useFamilyChart.ts` + `FamilyTreeCanvas.tsx`)
@@ -99,7 +99,7 @@ Children: `FamilyToolbar`, `FamilyTreeCanvas` *or* `FamilyListView`, and `Person
 - **Cleanup**: sets `destroyed`, nulls refs, `onApiReady(null)`, `container.innerHTML = ""`. No `chart.destroy()` exists in the lib; clearing the container removes the SVG and its listeners.
 
 `FamilyTreeCanvas.tsx` is the thin wrapper: `role="application"` with an aria-label telling
-users to use List view for keyboard access; bridges the chart API up via `apiRefOut`.
+users to use the person search for keyboard access; bridges the chart API up via `apiRefOut`.
 
 ## 6. Chart data transform (`chart-data.ts`)
 
@@ -150,7 +150,7 @@ future privacy improvement. **Do not assume the API is privacy-safe.**
 `src/lib/family-format.ts::displayYear(value)` extracts the leading 4-digit year **textually**
 (regex), with no `Date` timezone interpretation. This fixed a real bug where
 `new Date("2022").getFullYear()` rendered `2021` for viewers west of UTC. Used by `chart-data.ts`,
-`FamilyListView.tsx`, `PersonSearch.tsx`, and `PersonDetailPanel.tsx`. The SSR `yearOnly()` in
+`PersonSearch.tsx`, and `PersonDetailPanel.tsx`. The SSR `yearOnly()` in
 `family-privacy.ts` is also regex-first for the same reason.
 
 ## 9. Merge logic & identity (`family-merge.ts` + `data/family.ts`)
