@@ -80,9 +80,11 @@ export function LinksManager({ projectId, onChanged }: { projectId: number; onCh
               onChange={(e) => setField(it.id, { label: e.target.value })} onBlur={() => void commit(it)} aria-label="Link label" />
             <input type="url" className="admin-input flex-1 min-w-[200px]" placeholder="https://…" value={it.url}
               onChange={(e) => setField(it.id, { url: e.target.value })} onBlur={() => void commit(it)} aria-label="Link URL" />
-            <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
-            <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
-            <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => remove(it)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
+              <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
+              <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => remove(it)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Select

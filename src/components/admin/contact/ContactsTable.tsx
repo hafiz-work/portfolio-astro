@@ -11,6 +11,7 @@ import {
     ViewAction,
 } from "../../ui/admin/primitives";
 import { contactService, type OwnerContact } from "../../../lib/contact";
+import { X } from "lucide-react";
 
 const formatDate = (value: string) => {
     const date = new Date(value);
@@ -156,20 +157,7 @@ export const ContactsTable = () => {
                                 className="text-gray-400 hover:text-gray-950 dark:hover:text-white transition-colors"
                                 aria-label="Close contact details"
                             >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-5 w-5"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    ></path>
-                                </svg>
+                                <X className="h-5 w-5" />
                             </button>
                         </div>
                         <div className="max-h-[75vh] overflow-y-auto px-6 py-5 space-y-6">

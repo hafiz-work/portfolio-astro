@@ -1,5 +1,6 @@
 ---
 import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
 
 /**
  * Composed preview for projects that only have a logo, not a screenshot.
@@ -10,78 +11,60 @@ import { Image } from "astro:assets";
 interface Props {
   slug: string;
   title: string;
-  imageUrl?: string;
+  imageUrl?: string | ImageMetadata;
   tags?: string[];
+  /** Chosen on the Cover media in admin; unset = guess from the tech tags. */
+  frame?: "phone" | "web";
 }
 
-const { slug, title, imageUrl, tags = [] } = Astro.props;
+const { slug, title, imageUrl, tags = [], frame } = Astro.props;
 
-const isMobile = tags.some((t) =>
-  /flutter|react.?native|mobile|android|ios|swift/i.test(t),
-);
+const isMobile =
+  frame === "phone" ||
+  (!frame &&
+    tags.some((t) =>
+      /flutter|react.?native|mobile|android|ios|swift/i.test(t),
+    ));
 
-type Accent = "cyan" | "blue" | "emerald" | "amber";
-
-// Curated accents keep repeated-logo projects (CIT / Wetrack / Fasttrack,
-// the JD family) visually distinct without turning the grid rainbow.
-const ACCENT_BY_SLUG: Record<string, Accent> = {
-  "com-invois": "blue",
-  "jom-dapur": "amber",
-  "jd-delivery": "emerald",
-  "jd-management": "cyan",
-  "sf-cit-receipt-book": "emerald",
-  "wetrack-system": "blue",
-  "fasttrack-system": "amber",
-};
-const PALETTE: Accent[] = ["cyan", "blue", "emerald", "amber"];
-const accent = ACCENT_BY_SLUG[slug] ?? PALETTE[slug.length % PALETTE.length];
-
-// Literal class strings so Tailwind can see them.
-const accentStyles: Record<
-  Accent,
-  { glow: string; fill: string; soft: string }
-> = {
-  cyan: {
-    glow: "bg-cyan-500/15",
-    fill: "bg-cyan-500/20 border border-cyan-500/30",
-    soft: "bg-cyan-500/10",
-  },
-  blue: {
-    glow: "bg-blue-500/15",
-    fill: "bg-blue-500/20 border border-blue-500/30",
-    soft: "bg-blue-500/10",
-  },
-  emerald: {
-    glow: "bg-emerald-500/15",
-    fill: "bg-emerald-500/20 border border-emerald-500/30",
-    soft: "bg-emerald-500/10",
-  },
-  amber: {
-    glow: "bg-amber-500/15",
-    fill: "bg-amber-500/20 border border-amber-500/30",
-    soft: "bg-amber-500/10",
-  },
-};
-const a = accentStyles[accent];
+// Accent = the logo's own colours: a blurred, zoomed copy of the logo tints the
+// glow and the hero block. Same <Image> size as the logo chip, so the same URL -
+// no extra download. Sky when there's no image.
+// ponytail: zoomed centre of the logo, not a true dominant-colour pick - a mostly
+// white logo gives a pale tint; compute a colour at upload if that bites.
+const logoSrc = typeof imageUrl === "string" ? imageUrl : imageUrl?.src;
 ---
 
 <div class="absolute inset-0 bg-gray-50 dark:bg-white/[0.03] overflow-hidden">
   <!-- Dot grid + accent glow backdrop -->
   <div class="absolute inset-0 pattern"></div>
   <div
-    class={`absolute -top-10 -right-10 w-36 h-36 rounded-full blur-3xl pointer-events-none ${a.glow}`}
+    class={`pointer-events-none absolute -top-10 -right-10 h-36 w-36 overflow-hidden rounded-full blur-3xl ${logoSrc ? "opacity-40" : "bg-sky-500/15"}`}
   >
+    {
+      logoSrc && (
+        <Image
+          src={logoSrc}
+          alt=""
+          width={40}
+          height={40}
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          class="h-full w-full scale-150 object-cover saturate-200"
+        />
+      )
+    }
   </div>
 
   {
     isMobile ? (
-      <div class="relative mx-auto mt-5 sm:mt-7 w-[100px] sm:w-[116px] h-full rounded-t-2xl border border-gray-200 dark:border-gray-600/80 bg-white dark:bg-gray-900 shadow-xl shadow-gray-300/40 dark:shadow-black/40 overflow-hidden group-hover:-trangray-y-1 transition-transform duration-300">
+      <div class="relative mx-auto mt-5 sm:mt-7 w-[100px] sm:w-[116px] h-full rounded-t-2xl border border-gray-200 dark:border-gray-600/80 bg-white dark:bg-gray-900 shadow-xl shadow-gray-300/40 dark:shadow-black/40 overflow-hidden group-hover:-translate-y-1 transition-transform duration-300">
         <div class="mx-auto mt-1.5 h-1 w-8 rounded-full bg-gray-200 dark:bg-gray-600" />
         <div class="p-2 space-y-1.5">
           <div class="flex items-center gap-1.5">
-            {imageUrl && (
+            {logoSrc && (
               <Image
-                src={imageUrl}
+                src={logoSrc}
                 alt={`${title} logo`}
                 width={40}
                 height={40}
@@ -92,15 +75,30 @@ const a = accentStyles[accent];
             )}
             <div class="h-1.5 w-10 rounded-full bg-gray-200 dark:bg-gray-600" />
           </div>
-          <div class={`h-7 rounded-md ${a.fill}`} />
+          <div
+            class={`h-7 relative overflow-hidden rounded-md ${logoSrc ? "opacity-60" : "bg-sky-500/15 ring-1 ring-sky-500/25 ring-inset"}`}
+          >
+            {logoSrc && (
+              <Image
+                src={logoSrc}
+                alt=""
+                width={40}
+                height={40}
+                aria-hidden="true"
+                loading="lazy"
+                decoding="async"
+                class="absolute inset-0 h-full w-full scale-[3] object-cover blur-md saturate-200"
+              />
+            )}
+          </div>
           <div class="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-700" />
           <div class="h-1.5 w-4/5 rounded-full bg-gray-100 dark:bg-gray-700" />
           <div class="h-1.5 w-3/5 rounded-full bg-gray-100 dark:bg-gray-700" />
-          <div class={`h-4 w-3/4 mx-auto rounded-full ${a.soft}`} />
+          <div class="h-4 w-3/4 mx-auto rounded-full bg-gray-100 dark:bg-gray-700" />
         </div>
       </div>
     ) : (
-      <div class="relative mx-auto mt-6 sm:mt-8 w-[80%] h-full rounded-t-xl border border-gray-200 dark:border-gray-600/80 bg-white dark:bg-gray-900 shadow-xl shadow-gray-300/40 dark:shadow-black/40 overflow-hidden group-hover:-trangray-y-1 transition-transform duration-300">
+      <div class="relative mx-auto mt-6 sm:mt-8 w-[80%] h-full rounded-t-xl border border-gray-200 dark:border-gray-600/80 bg-white dark:bg-gray-900 shadow-xl shadow-gray-300/40 dark:shadow-black/40 overflow-hidden group-hover:-translate-y-1 transition-transform duration-300">
         <div class="flex items-center gap-1.5 px-2.5 py-1.5 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
           <span class="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
           <span class="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
@@ -111,15 +109,15 @@ const a = accentStyles[accent];
         </div>
         <div class="flex h-full">
           <div class="w-1/4 border-r border-gray-100 dark:border-gray-700 p-1.5 space-y-1.5">
-            <div class={`h-1.5 w-full rounded-full ${a.soft}`} />
+            <div class="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-600" />
             <div class="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-700" />
             <div class="h-1.5 w-3/4 rounded-full bg-gray-100 dark:bg-gray-700" />
           </div>
           <div class="flex-1 p-2 space-y-1.5">
             <div class="flex items-center gap-1.5">
-              {imageUrl && (
+              {logoSrc && (
                 <Image
-                  src={imageUrl}
+                  src={logoSrc}
                   alt={`${title} logo`}
                   width={40}
                   height={40}
@@ -131,7 +129,22 @@ const a = accentStyles[accent];
               <div class="h-1.5 w-1/3 rounded-full bg-gray-200 dark:bg-gray-600" />
             </div>
             <div class="flex gap-1.5">
-              <div class={`h-6 flex-1 rounded-md ${a.fill}`} />
+              <div
+                class={`h-6 flex-1 relative overflow-hidden rounded-md ${logoSrc ? "opacity-60" : "bg-sky-500/15 ring-1 ring-sky-500/25 ring-inset"}`}
+              >
+                {logoSrc && (
+                  <Image
+                    src={logoSrc}
+                    alt=""
+                    width={40}
+                    height={40}
+                    aria-hidden="true"
+                    loading="lazy"
+                    decoding="async"
+                    class="absolute inset-0 h-full w-full scale-[3] object-cover blur-md saturate-200"
+                  />
+                )}
+              </div>
               <div class="h-6 flex-1 rounded-md bg-gray-100 dark:bg-gray-700" />
             </div>
             <div class="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-700" />
@@ -144,7 +157,7 @@ const a = accentStyles[accent];
 
   <!-- Honest label: composed preview, not a screenshot -->
   <span
-    class="absolute bottom-2 left-3 font-mono text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500"
+    class="absolute bottom-2 left-3 z-10 rounded-full bg-white/90 px-2 py-0.5 font-mono text-[10px]/4 uppercase tracking-wider text-gray-500 ring-1 ring-gray-950/5 ring-inset dark:bg-gray-950/80 dark:text-gray-400 dark:ring-white/10"
   >
     {isMobile ? "mobile app" : "web app"}
   </span>

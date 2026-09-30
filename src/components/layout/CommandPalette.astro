@@ -1,4 +1,5 @@
 ---
+import { Search } from "lucide-react";
 /**
  * ⌘K / Ctrl+K quick search (tailwindcss.com's navbar search pill).
  * Static index of pages, homepage sections and actions - no API calls, so
@@ -41,9 +42,7 @@ const groups = ["Pages", "Sections", "Actions"] as const;
       class="w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-gray-950/10 dark:bg-gray-900 dark:ring-white/10"
     >
       <div class="flex items-center gap-3 border-b border-gray-950/5 px-4 dark:border-white/10">
-        <svg class="h-5 w-5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M17 10.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z"></path>
-        </svg>
+        <Search className="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
         <input
           id="cmdk-input"
           type="text"

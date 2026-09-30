@@ -1,4 +1,5 @@
 ---
+import { Plus } from "lucide-react";
 import PrivateLayout from "../../../layouts/PrivateLayout.astro";
 import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
 import AlertToast from "../../../components/ui/AlertToast.astro";
@@ -16,18 +17,7 @@ import { ProjectsCmsTable } from "../../../components/admin/projects/ProjectsCms
         href="/admin/projects/new"
         class="admin-btn admin-btn-primary"
       >
-        <svg
-          class="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v16m8-8H4"></path>
-        </svg>
+        <Plus className="w-4 h-4" />
         New Project
       </a>
     </AdminPageHeader>
