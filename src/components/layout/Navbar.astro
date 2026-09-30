@@ -1,4 +1,5 @@
 ---
+import { Menu, Search, X } from "lucide-react";
 import { Image } from "astro:assets";
 import CommandPalette from "./CommandPalette.astro";
 
@@ -59,9 +60,7 @@ const corners = [
                 class="hidden items-center gap-1.5 rounded-full bg-gray-950/[0.03] px-2.5 py-1 text-gray-500 ring-1 ring-gray-950/5 ring-inset transition-colors hover:text-gray-950 md:inline-flex dark:bg-white/5 dark:text-gray-400 dark:ring-white/10 dark:hover:text-white"
                 aria-label="Search (⌘K)"
             >
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M17 10.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z"></path>
-                </svg>
+                <Search className="h-4 w-4" aria-hidden="true" />
                 <kbd class="font-sans text-xs/5" data-cmdk-kbd>⌘K</kbd>
             </button>
             <button
@@ -70,9 +69,7 @@ const corners = [
                 class="inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-950 hover:bg-gray-950/5 md:hidden dark:text-white dark:hover:bg-white/10"
                 aria-label="Search"
             >
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M17 10.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z"></path>
-                </svg>
+                <Search className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
             </button>
 
             <div class="hidden items-center gap-6 md:flex" id="navbar-default">
@@ -135,12 +132,8 @@ const corners = [
                 aria-expanded="false"
             >
                 <span class="sr-only">Open main menu</span>
-                <svg id="nav-icon-open" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5"></path>
-                </svg>
-                <svg id="nav-icon-close" class="hidden h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"></path>
-                </svg>
+                <Menu id="nav-icon-open" className="h-5 w-5" strokeWidth={1.5} />
+                <X id="nav-icon-close" className="hidden h-5 w-5" />
             </button>
         </div>
     </div>

@@ -1,4 +1,5 @@
 ---
+import { ArrowLeft, Check } from "lucide-react";
 import PrivateLayout from "../../../layouts/PrivateLayout.astro";
 import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
 import { TextEditor } from "../../../components/ui/TextEditor";
@@ -15,18 +16,7 @@ import { TextEditor } from "../../../components/ui/TextEditor";
         href="/admin/policies"
         class="admin-btn admin-btn-secondary"
       >
-        <svg
-          class="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-        </svg>
+        <ArrowLeft className="w-4 h-4" />
         Back to list
       </a>
     </AdminPageHeader>
@@ -118,18 +108,7 @@ import { TextEditor } from "../../../components/ui/TextEditor";
           type="submit"
           class="admin-btn admin-btn-primary"
         >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M5 13l4 4L19 7"></path>
-          </svg>
+          <Check className="h-4 w-4" />
           Update policy
         </button>
       </div>

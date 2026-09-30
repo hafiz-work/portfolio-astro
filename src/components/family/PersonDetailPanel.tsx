@@ -8,6 +8,7 @@ import {
   getPersonRelationshipGroups,
   getRelationKey,
 } from "../../lib/family-relationships";
+import { X } from "lucide-react";
 
 const initials = (name: string) =>
   name
@@ -178,20 +179,7 @@ export const PersonDetailPanel = ({
             aria-label="Close details"
             className="absolute right-4 top-4 rounded-md p-1 text-gray-400 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:text-gray-200"
           >
-            <svg
-              aria-hidden="true"
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X aria-hidden="true" className="h-5 w-5" />
           </button>
           {body}
         </div>

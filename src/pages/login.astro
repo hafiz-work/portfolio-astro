@@ -1,4 +1,5 @@
 ---
+import { Check, ChevronLeft, CircleCheck, CircleX, Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { Image } from "astro:assets";
 import CoreLayout from "../layouts/CoreLayout.astro";
 import SectionHeader from "../components/layout/SectionHeader.astro";
@@ -67,21 +68,18 @@ const turnstileSiteKey =
                 class="flex items-center gap-3"
               >
                 <div id="status-icon" class="shrink-0">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clip-rule="evenodd"></path>
-                  </svg>
+                  <CircleX className="h-4 w-4" />
                 </div>
                 <span id="status-text">Invalid email or password.</span>
               </div>
             </div>
+            <!-- Lucide icons the script swaps in (see icon()). -->
+            <template id="icon-error"><CircleX className="h-4 w-4" /></template>
+            <template id="icon-success"><CircleCheck className="h-4 w-4" /></template>
+            <template id="icon-spinner"><LoaderCircle className="h-4 w-4 animate-spin" /></template>
+            <template id="icon-check"><Check className="h-4 w-4" /></template>
+            <template id="icon-eye"><Eye className="h-4 w-4" /></template>
+            <template id="icon-eye-off"><EyeOff className="h-4 w-4" /></template>
 
             <div>
               <label
@@ -124,25 +122,7 @@ const turnstileSiteKey =
                   class="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-gray-400 transition-colors hover:text-gray-950 dark:text-gray-500 dark:hover:text-white"
                   aria-label="Toggle password visibility"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    ></path>
-                  </svg>
+                  <Eye className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -186,18 +166,7 @@ const turnstileSiteKey =
             class="container-main flex flex-wrap items-center gap-x-4 gap-y-3 py-5"
           >
             <a href="/" class="btn-pill btn-pill-ghost">
-              <svg
-                class="h-3.5 w-3.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"></path>
-              </svg>
+              <ChevronLeft className="h-3.5 w-3.5" />
               Back to site
             </a>
             <span class="font-mono text-xs/6 text-gray-400 dark:text-gray-500"
@@ -366,19 +335,7 @@ const turnstileSiteKey =
         passwordInput.getAttribute("type") === "password" ? "text" : "password";
       passwordInput.setAttribute("type", type);
 
-      const svg = togglePasswordBtn.querySelector("svg");
-      if (svg) {
-        if (type === "text") {
-          svg.innerHTML = `
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-          `;
-        } else {
-          svg.innerHTML = `
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          `;
-        }
-      }
+      togglePasswordBtn.innerHTML = icon(type === "text" ? "eye-off" : "eye");
     }
   });
 
@@ -410,15 +367,10 @@ const turnstileSiteKey =
     void statusDisplay.offsetWidth;
   };
 
-  const errorIcon = `
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-    </svg>`;
-
-  const successIcon = `
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-    </svg>`;
+  // Icon markup comes from the <template id="icon-*"> lucide icons in the page.
+  const icon = (name: string) => document.getElementById(`icon-${name}`)?.innerHTML ?? "";
+  const errorIcon = icon("error");
+  const successIcon = icon("success");
 
   const resetUI = () => {
     (form as HTMLFormElement)?.reset();
@@ -472,10 +424,7 @@ const turnstileSiteKey =
     submitting = true;
     if (submitBtn) {
       submitBtn.innerHTML = `
-        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
+        ${icon("spinner")}
         Signing in...
       `;
       submitBtn.disabled = true;
@@ -502,9 +451,7 @@ const turnstileSiteKey =
         failedAttempts = 0;
         if (submitBtn) {
           submitBtn.innerHTML = `
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
+            ${icon("check")}
             Signed in
           `;
         }
