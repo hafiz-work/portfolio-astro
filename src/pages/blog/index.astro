@@ -44,7 +44,7 @@ const formatDate = (value: string) =>
     {
       posts.length > 0 ? (
         <div class="mt-12 mb-46 grid grid-cols-1 lg:grid-cols-[24rem_2.5rem_minmax(0,1fr)]">
-          {posts.map((post) => {
+          {posts.map((post, i) => {
             const date = formatDate(post.publishedDate ?? post.createdAt);
             return (
               <>
@@ -78,11 +78,14 @@ const formatDate = (value: string) =>
                     </div>
                   </div>
                 </div>
-                <div class="contents divide-x divide-gray-950/5 dark:divide-white/10">
-                  <div class="h-16 max-lg:hidden" />
-                  <div class="h-16 max-lg:hidden" />
-                  <div class="h-16" />
-                </div>
+                {/* Spacer rows only between posts: the column dividers must end on a hairline. */}
+                {i < posts.length - 1 && (
+                  <div class="contents divide-x divide-gray-950/5 dark:divide-white/10">
+                    <div class="h-16 max-lg:hidden" />
+                    <div class="h-16 max-lg:hidden" />
+                    <div class="h-16" />
+                  </div>
+                )}
               </>
             );
           })}
