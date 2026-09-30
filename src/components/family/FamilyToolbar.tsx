@@ -3,14 +3,10 @@ import type { PublicFamilyPerson } from "../../lib/family-privacy";
 import { PersonSearch } from "./PersonSearch";
 import { ArrowDown, Locate, Maximize, Minus, Plus, RefreshCw } from "lucide-react";
 
-export type ExplorerView = "tree" | "list";
-
 interface Props {
   people: PublicFamilyPerson[];
-  view: ExplorerView;
   vertical: boolean;
   onSelectPerson: (person: PublicFamilyPerson) => void;
-  onViewChange: (view: ExplorerView) => void;
   onOrientationChange: (vertical: boolean) => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
@@ -22,19 +18,10 @@ interface Props {
 const iconButtonClass =
   "inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-600 ring-1 ring-gray-950/10 ring-inset hover:bg-gray-950/5 hover:text-gray-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40 dark:text-gray-300 dark:ring-white/15 dark:hover:bg-white/10 dark:hover:text-white";
 
-const segmentedButtonClass = (active: boolean) =>
-  `rounded-full px-3 py-1 text-sm/6 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
-    active
-      ? "bg-white text-gray-950 ring-1 ring-gray-950/10 dark:bg-gray-700 dark:text-white dark:ring-transparent"
-      : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-  }`;
-
 export const FamilyToolbar = ({
   people,
-  view,
   vertical,
   onSelectPerson,
-  onViewChange,
   onOrientationChange,
   onZoomIn,
   onZoomOut,
@@ -42,34 +29,9 @@ export const FamilyToolbar = ({
   onResetView,
   onCenterMain,
 }: Props) => {
-  const treeMode = view === "tree";
-
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 outline outline-gray-950/5 dark:bg-white/[0.03] dark:outline-white/10">
       <PersonSearch people={people} onSelect={onSelectPerson} />
-
-      <div
-        role="group"
-        aria-label="View mode"
-        className="flex rounded-full bg-gray-950/5 p-0.75 dark:bg-white/10"
-      >
-        <button
-          type="button"
-          className={segmentedButtonClass(treeMode)}
-          aria-pressed={treeMode}
-          onClick={() => onViewChange("tree")}
-        >
-          Tree
-        </button>
-        <button
-          type="button"
-          className={segmentedButtonClass(!treeMode)}
-          aria-pressed={!treeMode}
-          onClick={() => onViewChange("list")}
-        >
-          List
-        </button>
-      </div>
 
       <div
         role="group"
@@ -80,7 +42,6 @@ export const FamilyToolbar = ({
           type="button"
           className={iconButtonClass}
           aria-label="Toggle tree orientation"
-          disabled={!treeMode}
           onClick={() => onOrientationChange(!vertical)}
           title={vertical ? "Switch to horizontal" : "Switch to vertical"}
         >
@@ -90,7 +51,6 @@ export const FamilyToolbar = ({
           type="button"
           className={iconButtonClass}
           aria-label="Zoom out"
-          disabled={!treeMode}
           onClick={onZoomOut}
         >
           <Minus aria-hidden="true" className="h-4 w-4" />
@@ -99,7 +59,6 @@ export const FamilyToolbar = ({
           type="button"
           className={iconButtonClass}
           aria-label="Zoom in"
-          disabled={!treeMode}
           onClick={onZoomIn}
         >
           <Plus aria-hidden="true" className="h-4 w-4" />
@@ -108,7 +67,6 @@ export const FamilyToolbar = ({
           type="button"
           className={iconButtonClass}
           aria-label="Fit tree to view"
-          disabled={!treeMode}
           onClick={onFit}
         >
           <Maximize aria-hidden="true" className="h-4 w-4" />
@@ -117,7 +75,6 @@ export const FamilyToolbar = ({
           type="button"
           className={iconButtonClass}
           aria-label="Reset tree view"
-          disabled={!treeMode}
           onClick={onResetView}
         >
           <RefreshCw aria-hidden="true" className="h-4 w-4" />
@@ -126,7 +83,6 @@ export const FamilyToolbar = ({
           type="button"
           className={iconButtonClass}
           aria-label="Center on selected person"
-          disabled={!treeMode}
           onClick={onCenterMain}
         >
           <Locate aria-hidden="true" className="h-4 w-4" />
