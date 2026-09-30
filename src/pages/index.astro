@@ -1,6 +1,5 @@
 ---
 import PublicLayout from "../layouts/PublicLayout.astro";
-import { Image } from "astro:assets";
 import JsonLd from "../components/seo/JsonLd.astro";
 import Hero from "../components/home/Hero.astro";
 import ContactSection from "../components/home/ContactSection.astro";
@@ -176,44 +175,6 @@ const websiteSchema = {
 	<JsonLd schema={websiteSchema} />
 	<Hero projectCount={projects.length} yearsExperience={yearsExperience} />
 
-	<!-- GitHub Activity -->
-	<section id="github-activity" class="scroll-offset">
-		<div class="section-gap"></div>
-		<SectionHeader
-			eyebrow="Activity"
-			title="Shipping, most days."
-			description="Public GitHub contributions over the last year - the boring consistency that production software is built on."
-		>
-			<a
-				slot="action"
-				href="https://github.com/hafizbahtiar"
-				target="_blank"
-				rel="noopener noreferrer"
-				class="btn-pill btn-pill-ghost"
-			>
-				View profile
-			</a>
-		</SectionHeader>
-		<div class="h-10"></div>
-		<div class="line-y p-2" data-reveal>
-			<div class="frame">
-				<div class="frame-inner overflow-x-auto p-3 md:p-5">
-					<Image
-						src="https://ghchart.rshah.org/0ea5e9/hafizbahtiar"
-						alt="GitHub contribution chart for hafizbahtiar"
-						id="github-chart"
-						width="722"
-						height="112"
-						loading="lazy"
-						decoding="async"
-						class="block h-auto w-full min-w-[620px] transition-[filter] duration-300"
-						referrerpolicy="no-referrer"
-					/>
-				</div>
-			</div>
-		</div>
-	</section>
-
 	<!-- Skills Section -->
 	<section id="skills" class="scroll-offset">
 		<div class="section-gap"></div>
@@ -280,24 +241,3 @@ const websiteSchema = {
 
 	<ContactSection />
 </PublicLayout>
-
-<script>
-	// The GitHub chart is served light-themed; invert it in dark mode.
-	const applyChartFilter = () => {
-		const chart = document.getElementById(
-			"github-chart",
-		) as HTMLImageElement | null;
-		if (!chart) return;
-		const isDark = document.documentElement.classList.contains("dark");
-		chart.style.filter = isDark
-			? "invert(1) hue-rotate(180deg) saturate(0.85) brightness(0.9)"
-			: "none";
-	};
-
-	applyChartFilter();
-	document.addEventListener("astro:page-load", applyChartFilter);
-	document.addEventListener("astro:after-swap", applyChartFilter);
-
-	const observer = new MutationObserver(applyChartFilter);
-	observer.observe(document.documentElement, { attributeFilter: ["class"] });
-</script>
