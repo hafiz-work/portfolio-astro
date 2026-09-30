@@ -1,62 +1,106 @@
 ---
 export const prerender = false;
-import ProjectLayout from "../../layouts/ProjectLayout.astro";
-import SectionHeader from "../../components/layout/SectionHeader.astro";
-import BlogCard from "../../components/blog/BlogCard.astro";
+import PublicLayout from "../../layouts/PublicLayout.astro";
 import { getPublicPosts } from "../../lib/public-content";
 
-// Cache-friendly public loader: never throws, degrades to the same tasteful
-// zero-state as an empty blog.
-const posts = await getPublicPosts();
+// Mirrors tailwindcss.com/blog: big title + lead on hairline rows, then one
+// row per post - [date | divider | title, excerpt, read more] - with spacer
+// rows between so the column dividers run the full list.
+const posts = (await getPublicPosts())
+  .slice()
+  .sort((a, b) =>
+    (b.publishedDate ?? b.createdAt).localeCompare(
+      a.publishedDate ?? a.createdAt,
+    ),
+  );
 
-const description = posts.length
-  ? `${posts.length} notes on backend systems, Flutter, and what it actually takes to ship production software.`
-  : "Notes on backend systems, Flutter, and what it actually takes to ship production software.";
+const formatDate = (value: string) =>
+  new Date(value).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 ---
 
-<ProjectLayout
+<PublicLayout
   title="Blog | Hafiz Bahtiar"
   description="Notes on backend systems, Flutter, and shipping production software."
 >
-  <div class="h-16 sm:h-24"></div>
-  <SectionHeader
-    as="h1"
-    eyebrow="Field notes"
-    title="Blog"
-    description={description}
-  />
-  <div class="h-12"></div>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1
+        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        Latest Updates
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Notes on backend systems, Flutter, and what it takes to ship production
+        software.
+      </p>
+    </div>
 
-  {
-    posts.length > 0 ? (
-      <div class="line-y grid grid-flow-dense grid-cols-1 gap-2 p-2 sm:grid-cols-2 lg:grid-cols-3">
-        {posts.map((post, index) => (
-          <div
-            class:list={["frame", index === 0 && "sm:col-span-2"]}
-            data-reveal
-            style={`--reveal-delay: ${(index % 3) * 70}ms`}
-          >
-            <BlogCard post={post} />
-          </div>
-        ))}
-      </div>
-    ) : (
-      <div class="line-y p-2">
-        <div class="pattern flex h-72 flex-col items-center justify-center gap-3 text-center">
-          <p class="eyebrow">Writing in progress</p>
-          <p class="rounded-full bg-canvas px-4 py-1.5 text-base/7 font-medium text-gray-950 ring-1 ring-gray-950/10 dark:bg-pub-dark dark:text-white dark:ring-white/10">
-            First posts are on the way
-          </p>
-          <p class="max-w-md px-4 text-sm/6 text-gray-500">
-            I'm writing about backend architecture, Flutter, and Cloudflare
-            Workers. Meanwhile, the projects say plenty.
-          </p>
-          <a href="/projects" class="btn-pill btn-pill-primary mt-2">
-            View projects
-            <span aria-hidden="true">&rarr;</span>
-          </a>
+    {
+      posts.length > 0 ? (
+        <div class="mt-12 mb-46 grid grid-cols-1 lg:grid-cols-[24rem_2.5rem_minmax(0,1fr)]">
+          {posts.map((post) => {
+            const date = formatDate(post.publishedDate ?? post.createdAt);
+            return (
+              <>
+                <div class="line-y col-span-3 grid grid-cols-subgrid divide-x divide-gray-950/5 dark:divide-white/10">
+                  <div class="px-2 font-mono text-sm/6 font-medium tracking-widest text-gray-500 uppercase max-lg:hidden">
+                    <time datetime={post.publishedDate ?? post.createdAt}>
+                      {date}
+                    </time>
+                  </div>
+                  <div class="max-lg:hidden" />
+                  <div class="px-2">
+                    <div class="max-w-2xl">
+                      <div class="mb-4 font-mono text-sm/6 font-medium tracking-widest text-gray-500 uppercase lg:hidden">
+                        {date}
+                      </div>
+                      <a class="font-semibold" href={`/blog/${post.slug}`}>
+                        {post.title}
+                      </a>
+                      {post.excerpt && (
+                        <div class="prose-blog mt-4 line-clamp-3 leading-7">
+                          {post.excerpt}
+                        </div>
+                      )}
+                      <a
+                        class="mt-4 inline-block text-sm font-semibold text-sky-500 hover:text-sky-600 dark:text-sky-400"
+                        href={`/blog/${post.slug}`}
+                        aria-label={`Read more: ${post.title}`}
+                      >
+                        Read more
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <div class="contents divide-x divide-gray-950/5 dark:divide-white/10">
+                  <div class="h-16 max-lg:hidden" />
+                  <div class="h-16 max-lg:hidden" />
+                  <div class="h-16" />
+                </div>
+              </>
+            );
+          })}
         </div>
-      </div>
-    )
-  }
-</ProjectLayout>
+      ) : (
+        <div class="line-y mt-12 mb-46">
+          <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+            First posts are on the way. Meanwhile,{" "}
+            <a
+              href="/projects"
+              class="font-semibold text-sky-500 hover:text-sky-600 dark:text-sky-400"
+            >
+              the projects say plenty
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
+  </div>
+</PublicLayout>
