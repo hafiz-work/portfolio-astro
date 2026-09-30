@@ -71,29 +71,40 @@ export function setupFormGuard(form: HTMLFormElement) {
     }
   };
 
-  const handlePopState = async () => {
-    if (isDirty) {
-      // Re-push guard so we stay on the current page while the modal is open.
-      // This means history is now [..., original, guard(re-pushed)].
-      // When the user confirms, we call go(-2) to skip both the re-pushed guard
-      // and the original push, landing on the real previous page.
-      history.pushState({ tag: 'form-guard' }, document.title, window.location.href);
-
-      if (window.unsavedChangesModal) {
-        const confirmed = await window.unsavedChangesModal.show();
-        if (confirmed) {
-          isDirty = false;
-          window.removeEventListener('beforeunload', handleBeforeUnload);
-          history.go(-2);
-        }
-      } else {
-        if (window.confirm("You have unsaved changes. Leave?")) {
-          isDirty = false;
-          window.removeEventListener('beforeunload', handleBeforeUnload);
-          history.go(-2);
-        }
-      }
+  const confirmLeave = async () => {
+    const ok = window.unsavedChangesModal
+      ? await window.unsavedChangesModal.show()
+      : window.confirm("You have unsaved changes. Leave?");
+    if (ok) {
+      isDirty = false;
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     }
+    return ok;
+  };
+
+  // Browser Back while dirty. History is [..., page, guard] (pushed on first
+  // edit), so Back lands on `page` - same URL. With <ClientRouter> active, its
+  // own popstate listener always runs first (window listeners fire in the order
+  // they were added) and would re-render the page, wiping the form and the modal.
+  // So we take over the router's loader instead: park that transition (the next
+  // navigation aborts it), ask, then either go back for real or restore the guard.
+  const routerActive = () => !!document.querySelector('[name="astro-view-transitions-enabled"]');
+
+  const handleBeforePreparation = (e: Event) => {
+    const ev = e as Event & { navigationType?: string; loader: () => Promise<void> };
+    if (!isDirty || ev.navigationType !== 'traverse') return;
+    ev.loader = () => new Promise<void>(() => { });
+    void confirmLeave().then((ok) => {
+      if (ok) history.back();
+      else history.pushState({ tag: 'form-guard' }, document.title, window.location.href);
+    });
+  };
+
+  // Same flow for pages without <ClientRouter> (no router events fire there).
+  const handlePopState = async () => {
+    if (!isDirty || routerActive()) return;
+    history.pushState({ tag: 'form-guard' }, document.title, window.location.href);
+    if (await confirmLeave()) history.go(-2);
   };
 
   const handleLinkClick = async (e: MouseEvent) => {
@@ -106,21 +117,7 @@ export function setupFormGuard(form: HTMLFormElement) {
     if (isDirty) {
       e.preventDefault();
       e.stopPropagation();
-
-      if (window.unsavedChangesModal) {
-        const confirm = await window.unsavedChangesModal.show();
-        if (confirm) {
-          isDirty = false;
-          window.removeEventListener('beforeunload', handleBeforeUnload);
-          window.location.href = href;
-        }
-      } else {
-        if (confirm("You have unsaved changes. Leave?")) {
-          isDirty = false;
-          window.removeEventListener('beforeunload', handleBeforeUnload);
-          window.location.href = href;
-        }
-      }
+      if (await confirmLeave()) window.location.href = href;
     }
   };
 
@@ -130,6 +127,7 @@ export function setupFormGuard(form: HTMLFormElement) {
   // Also listen for keyup to catch text inputs faster if needed, but input is usually sufficient
 
   window.addEventListener('popstate', handlePopState);
+  document.addEventListener('astro:before-preparation', handleBeforePreparation);
   document.addEventListener('click', handleLinkClick, true);
 
   return {
@@ -137,6 +135,7 @@ export function setupFormGuard(form: HTMLFormElement) {
     cleanup: () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('astro:before-preparation', handleBeforePreparation);
       document.removeEventListener('click', handleLinkClick, true);
       form.removeEventListener('input', checkDirty);
       form.removeEventListener('change', checkDirty);
