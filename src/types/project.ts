@@ -10,6 +10,8 @@ export interface Project {
     fullDescription?: string;
     imageUrl: string;
     imageVariant?: ImageVariant;
+    /** Device-frame card preview: set on the Cover media in admin; unset = guess from tech. */
+    previewFrame?: "phone" | "web";
     technologies: string[]; // Array of technology names
     githubUrl: string;
     liveUrl: string;

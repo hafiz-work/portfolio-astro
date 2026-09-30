@@ -11,6 +11,7 @@ import type {
   UpdateFamilyTreePayload,
 } from "../../../types/family";
 import { FamilyTreeChart } from "./FamilyTreeChart";
+import { Minus } from "lucide-react";
 
 type BuilderMode = "new" | "edit";
 type RelationAction = "father" | "mother" | "spouse" | "son" | "daughter" | null;
@@ -56,25 +57,20 @@ const initials = (name: string) =>
 
 const builderShellClass =
   "admin-family-builder rounded-xl border border-gray-950/5 bg-white/70 p-4 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none md:p-5";
-const sectionCardClass =
-  "rounded-xl border border-gray-950/5 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03] md:p-5";
+// Admin atoms (index.css) - kept as names so the JSX below reads the same.
+const sectionCardClass = "admin-card";
 const insetPanelClass =
   "rounded-xl border border-gray-950/5 bg-gray-950/[0.025] p-4 dark:border-white/10 dark:bg-white/[0.03]";
-const inputClass =
-  "w-full rounded-lg border border-gray-950/10 bg-white px-4 py-2 text-sm text-gray-950 outline-none transition-colors placeholder:text-gray-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-gray-500";
+const inputClass = "admin-input";
 const monoInputClass = `${inputClass} font-mono text-xs`;
-const labelClass =
-  "block text-xs font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400";
-const eyebrowClass =
-  "text-xs font-semibold uppercase tracking-[0.16em] text-sky-700 dark:text-sky-400";
+const labelClass = "admin-label";
+const eyebrowClass = "eyebrow";
 const headingClass = "text-gray-950 dark:text-white";
 const bodyTextClass = "text-gray-600 dark:text-gray-400";
-const toolbarButtonClass =
-  "rounded-lg border border-gray-950/10 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-sky-400 hover:bg-sky-500/10 hover:text-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/20 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:border-sky-400 dark:hover:bg-sky-500/10 dark:hover:text-sky-200";
+const toolbarButtonClass = "admin-btn admin-btn-secondary";
 const emptyStateClass =
   "rounded-xl border border-gray-950/5 bg-gray-950/[0.025] p-5 text-sm text-gray-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-400";
-const errorClass =
-  "rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-300";
+const errorClass = "rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-700 ring-1 ring-red-500/25 ring-inset dark:text-red-300";
 const selectedPillClass =
   "rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-1 text-sm font-medium text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300";
 const canvasFrameClass =
@@ -211,19 +207,7 @@ const CheckboxField = ({
           {checked ? `${label}: ON` : `${label}: OFF`}
         </span>
         <div className="flex items-center text-gray-400 transition-colors group-hover:text-sky-600 dark:text-gray-500 dark:group-hover:text-sky-500">
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M4 12h16"
-            ></path>
-          </svg>
+          <Minus className="w-4 h-4" />
         </div>
       </button>
     </div>

@@ -56,6 +56,12 @@ const DEFAULT_IMAGE_VARIANT = "logo" as const;
 const mediaImage = (d: PublicProjectDetail | null): string | undefined =>
     d?.cover?.url ?? d?.media.find((m) => m.url)?.url;
 
+/** Frame picked on the Cover item (admin Media tab) for the card preview; "No frame" = auto. */
+const coverFrame = (d: PublicProjectDetail): Project["previewFrame"] => {
+    const f = d.media.find((m) => m.mediaType === "cover")?.deviceFrame;
+    return f === "phone" || f === "tablet" ? "phone" : f === "desktop" || f === "browser" ? "web" : undefined;
+};
+
 /**
  * Apply curated copy + link sanitization to a single API project record.
  * Used by both the list and detail loaders so the public site renders one
@@ -110,6 +116,7 @@ export async function getPublicProjects(): Promise<Project[]> {
             return {
                 ...p,
                 imageUrl: p.imageUrl || mediaImage(d) || "",
+                previewFrame: coverFrame(d),
                 technologies: p.technologies?.length ? p.technologies : d.techStacks.map((t) => t.name),
             };
         }),
