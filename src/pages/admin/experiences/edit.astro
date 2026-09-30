@@ -24,9 +24,7 @@ import AlertToast from "../../../components/ui/AlertToast.astro";
         class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-950/15 mb-4"
       >
       </div>
-      <p class="text-gray-500 dark:text-gray-400">
-        Loading experience data...
-      </p>
+      <p class="text-gray-500 dark:text-gray-400">Loading experience data...</p>
     </div>
 
     <form id="experience-form" class="space-y-8 hidden">
@@ -42,305 +40,314 @@ import AlertToast from "../../../components/ui/AlertToast.astro";
   import { ApiError } from "../../../lib/api-client";
   import { setupFormGuard } from "../../../lib/form-guard";
 
-  const form = document.getElementById("experience-form") as HTMLFormElement;
-  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
-  const loadingState = document.getElementById("loading-state");
+  // <ClientRouter> runs a page's bundled script once per session, so a
+  // second visit got a dead page (no data, no handlers). Init on every visit.
+  async function initPage() {
+    if (location.pathname.replace(/\/+$/, "") !== "/admin/experiences/edit")
+      return;
+    const form = document.getElementById("experience-form") as HTMLFormElement;
+    const submitBtn = document.getElementById(
+      "submit-btn",
+    ) as HTMLButtonElement;
+    const loadingState = document.getElementById("loading-state");
 
-  let formGuard: ReturnType<typeof setupFormGuard> | null = null;
+    let formGuard: ReturnType<typeof setupFormGuard> | null = null;
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const id = Number(urlParams.get("id"));
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = Number(urlParams.get("id"));
 
-  const showAlert = (options: {
-    type?: "success" | "error" | "warning" | "info";
-    title?: string;
-    message?: string;
-    duration?: number;
-  }) => {
-    const registry = (window as any).__uiAlerts;
-    registry?.["experience-alert"]?.show(options);
-  };
+    const showAlert = (options: {
+      type?: "success" | "error" | "warning" | "info";
+      title?: string;
+      message?: string;
+      duration?: number;
+    }) => {
+      const registry = (window as any).__uiAlerts;
+      registry?.["experience-alert"]?.show(options);
+    };
 
-  const fieldLabels: Record<string, string> = {
-    companyName: "Company",
-    role: "Role",
-    startDate: "Start Date",
-    endDate: "End Date",
-    isCurrent: "Current Company",
-    location: "Location",
-    latitude: "Latitude",
-    longitude: "Longitude",
-    projectIds: "Projects",
-    description: "Description",
-    displayOrder: "Display Order",
-  };
+    const fieldLabels: Record<string, string> = {
+      companyName: "Company",
+      role: "Role",
+      startDate: "Start Date",
+      endDate: "End Date",
+      isCurrent: "Current Company",
+      location: "Location",
+      latitude: "Latitude",
+      longitude: "Longitude",
+      projectIds: "Projects",
+      description: "Description",
+      displayOrder: "Display Order",
+    };
 
-  const formatErrorMessage = (error: unknown) => {
-    const apiError = error as ApiError & { data?: any };
-    const message =
-      apiError?.data?.error ||
-      apiError?.message ||
-      "Failed to update experience.";
-    const field = apiError?.data?.field;
-    if (field) {
-      const label = fieldLabels[field] || field;
-      return { message: `${message} (Field: ${label})`, field };
-    }
-    return { message, field };
-  };
+    const formatErrorMessage = (error: unknown) => {
+      const apiError = error as ApiError & { data?: any };
+      const message =
+        apiError?.data?.error ||
+        apiError?.message ||
+        "Failed to update experience.";
+      const field = apiError?.data?.field;
+      if (field) {
+        const label = fieldLabels[field] || field;
+        return { message: `${message} (Field: ${label})`, field };
+      }
+      return { message, field };
+    };
 
-  const normalizeNumber = (value: FormDataEntryValue) => {
-    const raw = String(value).trim();
-    if (raw === "") return undefined;
-    const parsed = Number(raw);
-    return Number.isNaN(parsed) ? undefined : parsed;
-  };
+    const normalizeNumber = (value: FormDataEntryValue) => {
+      const raw = String(value).trim();
+      if (raw === "") return undefined;
+      const parsed = Number(raw);
+      return Number.isNaN(parsed) ? undefined : parsed;
+    };
 
-  const normalizeOptionalText = (value: FormDataEntryValue) => {
-    const trimmed = String(value).trim();
-    return trimmed === "" ? null : trimmed;
-  };
+    const normalizeOptionalText = (value: FormDataEntryValue) => {
+      const trimmed = String(value).trim();
+      return trimmed === "" ? null : trimmed;
+    };
 
-  const parseJsonArray = (value: FormDataEntryValue) => {
-    const raw = String(value).trim();
-    if (!raw) return [];
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return raw
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean);
-    }
-  };
+    const parseJsonArray = (value: FormDataEntryValue) => {
+      const raw = String(value).trim();
+      if (!raw) return [];
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return raw
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+    };
 
-  const setInputValue = (name: string, value: any) => {
-    const element = form?.elements.namedItem(name) as HTMLInputElement | null;
-    if (element) {
-      element.value = value ?? "";
-      element.dispatchEvent(new Event("change"));
-    }
-  };
+    const setInputValue = (name: string, value: any) => {
+      const element = form?.elements.namedItem(name) as HTMLInputElement | null;
+      if (element) {
+        element.value = value ?? "";
+        element.dispatchEvent(new Event("change"));
+      }
+    };
 
-  const formatDateInput = (value: string | null | undefined) => {
-    if (!value) return "";
-    return String(value).slice(0, 10);
-  };
+    const formatDateInput = (value: string | null | undefined) => {
+      if (!value) return "";
+      return String(value).slice(0, 10);
+    };
 
-  const setCheckboxValue = (name: string, checked: boolean) => {
-    const element = form?.elements.namedItem(name) as HTMLInputElement | null;
-    if (element) {
-      element.checked = checked;
-      element.dispatchEvent(new Event("change"));
-    }
-  };
+    const setCheckboxValue = (name: string, checked: boolean) => {
+      const element = form?.elements.namedItem(name) as HTMLInputElement | null;
+      if (element) {
+        element.checked = checked;
+        element.dispatchEvent(new Event("change"));
+      }
+    };
 
-  const setMultiDropdownValues = (name: string, values: number[]) => {
-    const element = form?.elements.namedItem(name) as HTMLInputElement | null;
-    if (element) {
-      element.value = JSON.stringify(values);
-      element.dispatchEvent(new Event("change"));
-    }
-  };
+    const setMultiDropdownValues = (name: string, values: number[]) => {
+      const element = form?.elements.namedItem(name) as HTMLInputElement | null;
+      if (element) {
+        element.value = JSON.stringify(values);
+        element.dispatchEvent(new Event("change"));
+      }
+    };
 
-  const updateProjectOptions = async () => {
-    const container = document.querySelector(
-      '.tech-multi-dropdown-container[data-name="projectIds"]',
-    );
-    const list = container?.querySelector("ul");
-    if (!container || !list) return;
-    try {
-      const projects = await projectsService.getAdminProjects();
-      list.innerHTML = "";
-      projects.forEach((project) => {
-        const li = document.createElement("li");
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className =
-          "dropdown-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors flex items-center justify-between group";
-        button.dataset.value = String(project.id);
+    const updateProjectOptions = async () => {
+      const container = document.querySelector(
+        '.tech-multi-dropdown-container[data-name="projectIds"]',
+      );
+      const list = container?.querySelector("ul");
+      if (!container || !list) return;
+      try {
+        const projects = await projectsService.getAdminProjects();
+        list.innerHTML = "";
+        projects.forEach((project) => {
+          const li = document.createElement("li");
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className =
+            "dropdown-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors flex items-center justify-between group";
+          button.dataset.value = String(project.id);
 
-        const label = document.createElement("span");
-        label.textContent = `${project.title}`;
+          const label = document.createElement("span");
+          label.textContent = `${project.title}`;
 
-        const indicator = document.createElement("span");
-        indicator.className =
-          "indicator opacity-0 group-hover:opacity-100 text-sky-500 font-bold";
-        indicator.textContent = "_";
+          const indicator = document.createElement("span");
+          indicator.className =
+            "indicator opacity-0 group-hover:opacity-100 text-sky-500 font-bold";
+          indicator.textContent = "_";
 
-        button.append(label, indicator);
-        li.appendChild(button);
-        list.appendChild(li);
-      });
-      (window as any).setupMultiDropdowns?.();
-    } catch (error) {
-      console.error(error);
-    }
-  };
+          button.append(label, indicator);
+          li.appendChild(button);
+          list.appendChild(li);
+        });
+        (window as any).setupMultiDropdowns?.();
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
-  async function loadExperience() {
-    try {
-      if (!id || isNaN(id)) throw new Error("Invalid experience ID");
+    async function loadExperience() {
+      try {
+        if (!id || isNaN(id)) throw new Error("Invalid experience ID");
 
-      await updateProjectOptions();
-      const experience = await experiencesService.getAdminExperienceById(id);
+        await updateProjectOptions();
+        const experience = await experiencesService.getAdminExperienceById(id);
 
-      if (!experience) {
+        if (!experience) {
+          showAlert({
+            type: "error",
+            title: "Not found",
+            message: "Experience was not found.",
+          });
+          window.setTimeout(() => {
+            window.location.href = "/admin/experiences";
+          }, 900);
+          return;
+        }
+
+        setInputValue("companyName", experience.companyName);
+        setInputValue("role", experience.role);
+        setInputValue("startDate", formatDateInput(experience.startDate));
+        setInputValue("endDate", formatDateInput(experience.endDate));
+        setCheckboxValue("isCurrent", experience.isCurrent);
+        setInputValue("location", experience.location || "");
+        setInputValue("latitude", experience.latitude ?? "");
+        setInputValue("longitude", experience.longitude ?? "");
+        setMultiDropdownValues("projectIds", experience.projectIds || []);
+        setInputValue("description", experience.description || "");
+        setInputValue("displayOrder", experience.displayOrder ?? 0);
+        window.dispatchEvent(
+          new CustomEvent("experience-map:update", {
+            detail: {
+              latitude: experience.latitude ?? null,
+              longitude: experience.longitude ?? null,
+            },
+          }),
+        );
+
+        loadingState?.classList.add("hidden");
+        form?.classList.remove("hidden");
+
+        if (!formGuard) {
+          formGuard = setupFormGuard(form);
+        } else {
+          formGuard.updateInitialState();
+        }
+      } catch (error) {
+        console.error(error);
         showAlert({
           type: "error",
-          title: "Not found",
-          message: "Experience was not found.",
+          title: "Load failed",
+          message: "Failed to load experience data.",
         });
         window.setTimeout(() => {
           window.location.href = "/admin/experiences";
         }, 900);
-        return;
       }
-
-      setInputValue("companyName", experience.companyName);
-      setInputValue("role", experience.role);
-      setInputValue("startDate", formatDateInput(experience.startDate));
-      setInputValue("endDate", formatDateInput(experience.endDate));
-      setCheckboxValue("isCurrent", experience.isCurrent);
-      setInputValue("location", experience.location || "");
-      setInputValue("latitude", experience.latitude ?? "");
-      setInputValue("longitude", experience.longitude ?? "");
-      setMultiDropdownValues("projectIds", experience.projectIds || []);
-      setInputValue("description", experience.description || "");
-      setInputValue("displayOrder", experience.displayOrder ?? 0);
-      window.dispatchEvent(
-        new CustomEvent("experience-map:update", {
-          detail: {
-            latitude: experience.latitude ?? null,
-            longitude: experience.longitude ?? null,
-          },
-        }),
-      );
-
-      loadingState?.classList.add("hidden");
-      form?.classList.remove("hidden");
-
-      if (!formGuard) {
-        formGuard = setupFormGuard(form);
-      } else {
-        formGuard.updateInitialState();
-      }
-    } catch (error) {
-      console.error(error);
-      showAlert({
-        type: "error",
-        title: "Load failed",
-        message: "Failed to load experience data.",
-      });
-      window.setTimeout(() => {
-        window.location.href = "/admin/experiences";
-      }, 900);
     }
-  }
 
-  loadExperience();
+    loadExperience();
 
-  form?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!submitBtn) return;
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!submitBtn) return;
 
-    const originalContent = submitBtn.innerHTML;
-    submitBtn.innerHTML = "SAVING...";
-    submitBtn.disabled = true;
+      const originalContent = submitBtn.innerHTML;
+      submitBtn.innerHTML = "SAVING...";
+      submitBtn.disabled = true;
 
-    const formData = new FormData(form);
-    const data: any = {};
+      const formData = new FormData(form);
+      const data: any = {};
 
-    formData.forEach((value, key) => {
-      if (key === "latitude" || key === "longitude") {
-        const parsed = normalizeNumber(value);
-        if (parsed !== undefined) {
-          data[key] = parsed;
+      formData.forEach((value, key) => {
+        if (key === "latitude" || key === "longitude") {
+          const parsed = normalizeNumber(value);
+          if (parsed !== undefined) {
+            data[key] = parsed;
+          } else {
+            data[key] = null;
+          }
+          return;
+        }
+
+        if (key === "projectIds") {
+          const parsed = parseJsonArray(value)
+            .map((item) => Number(item))
+            .filter((item) => !Number.isNaN(item));
+          data.projectIds = parsed;
+          return;
+        }
+
+        if (key === "isCurrent") {
+          data.isCurrent = true;
+          return;
+        }
+
+        if (key === "displayOrder") {
+          const parsed = normalizeNumber(value);
+          if (parsed !== undefined) {
+            data.displayOrder = parsed;
+          }
+          return;
+        }
+
+        if (key === "endDate") {
+          data.endDate = normalizeOptionalText(value);
+          return;
+        }
+
+        if (key === "location" || key === "description") {
+          data[key] = normalizeOptionalText(value);
+          return;
+        }
+
+        const trimmed = String(value).trim();
+        if (trimmed !== "") {
+          data[key] = trimmed;
+        }
+      });
+
+      if (!data.endDate) {
+        data.endDate = null;
+      }
+
+      data.isCurrent = formData.has("isCurrent");
+      if (data.isCurrent) {
+        data.endDate = null;
+      }
+
+      try {
+        const result = await experiencesService.updateExperience(id, data);
+        if (result) {
+          formGuard?.updateInitialState();
+          showAlert({
+            type: "success",
+            title: "Experience updated",
+            message: "Experience updated successfully.",
+          });
+          window.setTimeout(() => {
+            window.location.href = "/admin/experiences";
+          }, 800);
         } else {
-          data[key] = null;
+          throw new Error("Failed to update experience");
         }
-        return;
-      }
-
-      if (key === "projectIds") {
-        const parsed = parseJsonArray(value)
-          .map((item) => Number(item))
-          .filter((item) => !Number.isNaN(item));
-        data.projectIds = parsed;
-        return;
-      }
-
-      if (key === "isCurrent") {
-        data.isCurrent = true;
-        return;
-      }
-
-      if (key === "displayOrder") {
-        const parsed = normalizeNumber(value);
-        if (parsed !== undefined) {
-          data.displayOrder = parsed;
+      } catch (error) {
+        console.error(error);
+        const { message, field } = formatErrorMessage(error);
+        if (field) {
+          const focusElement = form?.elements.namedItem(
+            field,
+          ) as HTMLElement | null;
+          focusElement?.focus?.();
         }
-        return;
-      }
-
-      if (key === "endDate") {
-        data.endDate = normalizeOptionalText(value);
-        return;
-      }
-
-      if (key === "location" || key === "description") {
-        data[key] = normalizeOptionalText(value);
-        return;
-      }
-
-      const trimmed = String(value).trim();
-      if (trimmed !== "") {
-        data[key] = trimmed;
+        showAlert({
+          type: "error",
+          title: "Save failed",
+          message,
+        });
+      } finally {
+        submitBtn.innerHTML = originalContent;
+        submitBtn.disabled = false;
       }
     });
-
-    if (!data.endDate) {
-      data.endDate = null;
-    }
-
-    data.isCurrent = formData.has("isCurrent");
-    if (data.isCurrent) {
-      data.endDate = null;
-    }
-
-    try {
-      const result = await experiencesService.updateExperience(id, data);
-      if (result) {
-        formGuard?.updateInitialState();
-        showAlert({
-          type: "success",
-          title: "Experience updated",
-          message: "Experience updated successfully.",
-        });
-        window.setTimeout(() => {
-          window.location.href = "/admin/experiences";
-        }, 800);
-      } else {
-        throw new Error("Failed to update experience");
-      }
-    } catch (error) {
-      console.error(error);
-      const { message, field } = formatErrorMessage(error);
-      if (field) {
-        const focusElement = form?.elements.namedItem(
-          field,
-        ) as HTMLElement | null;
-        focusElement?.focus?.();
-      }
-      showAlert({
-        type: "error",
-        title: "Save failed",
-        message,
-      });
-    } finally {
-      submitBtn.innerHTML = originalContent;
-      submitBtn.disabled = false;
-    }
-  });
+  }
+  document.addEventListener("astro:page-load", initPage);
 </script>

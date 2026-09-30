@@ -120,142 +120,151 @@ import { TextEditor } from "../../../components/ui/TextEditor";
   import { projectsService } from "../../../lib/projects";
   import { setupFormGuard } from "../../../lib/form-guard";
 
-  const form = document.getElementById("policy-form") as HTMLFormElement;
-  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
-  const loadingState = document.getElementById("loading-state");
-  const projectTitle = document.getElementById("project-title");
+  // <ClientRouter> runs a page's bundled script once per session, so a
+  // second visit got a dead page (no data, no handlers). Init on every visit.
+  async function initPage() {
+    if (location.pathname.replace(/\/+$/, "") !== "/admin/policies/edit")
+      return;
+    const form = document.getElementById("policy-form") as HTMLFormElement;
+    const submitBtn = document.getElementById(
+      "submit-btn",
+    ) as HTMLButtonElement;
+    const loadingState = document.getElementById("loading-state");
+    const projectTitle = document.getElementById("project-title");
 
-  let formGuard: ReturnType<typeof setupFormGuard> | null = null;
+    let formGuard: ReturnType<typeof setupFormGuard> | null = null;
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const projectId = Number(urlParams.get("id"));
-  const tabButtons = Array.from(
-    document.querySelectorAll<HTMLButtonElement>("[data-tab]"),
-  );
-  const tabPanels = Array.from(
-    document.querySelectorAll<HTMLElement>("[data-tab-panel]"),
-  );
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = Number(urlParams.get("id"));
+    const tabButtons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>("[data-tab]"),
+    );
+    const tabPanels = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-tab-panel]"),
+    );
 
-  const setActiveTab = (tabId: string) => {
-    tabButtons.forEach((button) => {
-      const isActive = button.dataset.tab === tabId;
-      button.setAttribute("aria-selected", String(isActive));
-      // Theme-aware active state (light + dark)
-      for (const cls of [
-        "text-sky-700",
-        "dark:text-sky-300",
-        "border-sky-500/60",
-        "bg-sky-500/10",
-      ]) {
-        button.classList.toggle(cls, isActive);
-      }
-      for (const cls of [
-        "text-gray-600",
-        "dark:text-gray-400",
-        "border-gray-950/10",
-        "dark:border-white/10",
-      ]) {
-        button.classList.toggle(cls, !isActive);
-      }
-    });
-    tabPanels.forEach((panel) => {
-      panel.classList.toggle("hidden", panel.dataset.tabPanel !== tabId);
-    });
-  };
-
-  tabButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      if (!button.dataset.tab) return;
-      setActiveTab(button.dataset.tab);
-    });
-  });
-
-  setActiveTab("privacy");
-
-  async function loadPolicy() {
-    try {
-      if (!projectId || Number.isNaN(projectId)) {
-        throw new Error("Invalid project ID");
-      }
-
-      const project = await projectsService.getAdminProjectById(projectId);
-      if (!project) {
-        alert("Project not found");
-        window.location.href = "/admin/policies";
-        return;
-      }
-
-      const policy = await projectsService
-        .getAdminProjectPolicyById(projectId)
-        .catch(() => null);
-
-      if (!form) return;
-
-      (form.elements.namedItem("projectId") as HTMLInputElement).value =
-        String(projectId);
-      const privacyField = form.elements.namedItem("privacyPolicy");
-      const termsField = form.elements.namedItem("termsAndConditions");
-      if (privacyField instanceof HTMLTextAreaElement) {
-        privacyField.value = policy?.privacyPolicy || "";
-        privacyField.dispatchEvent(new Event("change"));
-      }
-      if (termsField instanceof HTMLTextAreaElement) {
-        termsField.value = policy?.termsAndConditions || "";
-        termsField.dispatchEvent(new Event("change"));
-      }
-
-      if (projectTitle) {
-        projectTitle.textContent = `${project.title} (${project.slug})`;
-      }
-
-      loadingState?.classList.add("hidden");
-      form.classList.remove("hidden");
-
-      if (!formGuard) {
-        formGuard = setupFormGuard(form);
-      } else {
-        formGuard.updateInitialState();
-      }
-    } catch (error) {
-      alert("Failed to load policy");
-      window.location.href = "/admin/policies";
-    }
-  }
-
-  form?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!submitBtn) return;
-
-    const originalContent = submitBtn.innerHTML;
-    submitBtn.innerHTML = "SAVING...";
-    submitBtn.disabled = true;
-
-    const formData = new FormData(form);
-    const privacyPolicy = String(formData.get("privacyPolicy") || "").trim();
-    const termsAndConditions = String(
-      formData.get("termsAndConditions") || "",
-    ).trim();
-
-    try {
-      const result = await projectsService.upsertProjectPolicy(projectId, {
-        privacyPolicy: privacyPolicy || null,
-        termsAndConditions: termsAndConditions || null,
+    const setActiveTab = (tabId: string) => {
+      tabButtons.forEach((button) => {
+        const isActive = button.dataset.tab === tabId;
+        button.setAttribute("aria-selected", String(isActive));
+        // Theme-aware active state (light + dark)
+        for (const cls of [
+          "text-sky-700",
+          "dark:text-sky-300",
+          "border-sky-500/60",
+          "bg-sky-500/10",
+        ]) {
+          button.classList.toggle(cls, isActive);
+        }
+        for (const cls of [
+          "text-gray-600",
+          "dark:text-gray-400",
+          "border-gray-950/10",
+          "dark:border-white/10",
+        ]) {
+          button.classList.toggle(cls, !isActive);
+        }
       });
-      if (result) {
-        formGuard?.updateInitialState();
-        alert("Policy updated successfully!");
-        window.location.href = "/admin/policies";
-      } else {
-        throw new Error("Failed to update policy");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Failed to update policy. Please try again.");
-    } finally {
-      submitBtn.innerHTML = originalContent;
-      submitBtn.disabled = false;
-    }
-  });
+      tabPanels.forEach((panel) => {
+        panel.classList.toggle("hidden", panel.dataset.tabPanel !== tabId);
+      });
+    };
 
-  loadPolicy();
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!button.dataset.tab) return;
+        setActiveTab(button.dataset.tab);
+      });
+    });
+
+    setActiveTab("privacy");
+
+    async function loadPolicy() {
+      try {
+        if (!projectId || Number.isNaN(projectId)) {
+          throw new Error("Invalid project ID");
+        }
+
+        const project = await projectsService.getAdminProjectById(projectId);
+        if (!project) {
+          alert("Project not found");
+          window.location.href = "/admin/policies";
+          return;
+        }
+
+        const policy = await projectsService
+          .getAdminProjectPolicyById(projectId)
+          .catch(() => null);
+
+        if (!form) return;
+
+        (form.elements.namedItem("projectId") as HTMLInputElement).value =
+          String(projectId);
+        const privacyField = form.elements.namedItem("privacyPolicy");
+        const termsField = form.elements.namedItem("termsAndConditions");
+        if (privacyField instanceof HTMLTextAreaElement) {
+          privacyField.value = policy?.privacyPolicy || "";
+          privacyField.dispatchEvent(new Event("change"));
+        }
+        if (termsField instanceof HTMLTextAreaElement) {
+          termsField.value = policy?.termsAndConditions || "";
+          termsField.dispatchEvent(new Event("change"));
+        }
+
+        if (projectTitle) {
+          projectTitle.textContent = `${project.title} (${project.slug})`;
+        }
+
+        loadingState?.classList.add("hidden");
+        form.classList.remove("hidden");
+
+        if (!formGuard) {
+          formGuard = setupFormGuard(form);
+        } else {
+          formGuard.updateInitialState();
+        }
+      } catch (error) {
+        alert("Failed to load policy");
+        window.location.href = "/admin/policies";
+      }
+    }
+
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!submitBtn) return;
+
+      const originalContent = submitBtn.innerHTML;
+      submitBtn.innerHTML = "SAVING...";
+      submitBtn.disabled = true;
+
+      const formData = new FormData(form);
+      const privacyPolicy = String(formData.get("privacyPolicy") || "").trim();
+      const termsAndConditions = String(
+        formData.get("termsAndConditions") || "",
+      ).trim();
+
+      try {
+        const result = await projectsService.upsertProjectPolicy(projectId, {
+          privacyPolicy: privacyPolicy || null,
+          termsAndConditions: termsAndConditions || null,
+        });
+        if (result) {
+          formGuard?.updateInitialState();
+          alert("Policy updated successfully!");
+          window.location.href = "/admin/policies";
+        } else {
+          throw new Error("Failed to update policy");
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Failed to update policy. Please try again.");
+      } finally {
+        submitBtn.innerHTML = originalContent;
+        submitBtn.disabled = false;
+      }
+    });
+
+    loadPolicy();
+  }
+  document.addEventListener("astro:page-load", initPage);
 </script>
