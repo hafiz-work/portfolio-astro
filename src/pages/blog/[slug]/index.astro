@@ -3,46 +3,29 @@ import { Image } from "astro:assets";
 export const prerender = false;
 import PublicLayout from "../../../layouts/PublicLayout.astro";
 import JsonLd from "../../../components/seo/JsonLd.astro";
-import Annot from "../../../components/layout/Annot.astro";
 import { getPublicPostBySlug } from "../../../lib/public-content";
 import { sanitizeRichHtml } from "../../../lib/sanitize";
 import type { BlogSection, BlogChecklist } from "../../../types/blog";
 
 const slug = Astro.params.slug ?? "";
-
-// Cache-friendly public loader: returns null on 404 or an unreachable API
-// instead of throwing.
+// Cache-friendly public loader: returns null on 404 or an unreachable API.
 const post = slug ? await getPublicPostBySlug(slug) : null;
-
 if (!post) {
   return Astro.redirect("/404");
 }
 
-const formatDate = (value?: string | null) => {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
-};
-
 const publishedISO = post.publishedDate ?? post.createdAt;
-const metaChips = [
-  formatDate(publishedISO),
-  post.readTimeMinutes > 0 ? `${post.readTimeMinutes} min read` : null,
-  post.category,
-].filter(Boolean) as string[];
+const dateLabel = new Date(publishedISO).toLocaleDateString("en-US", {
+  month: "long",
+  day: "numeric",
+  year: "numeric",
+});
 
 const metaDescription =
   post.excerpt ||
   "Insights on building reliable products, clean architecture, and shipping fast.";
-
 // Per-post social card; undefined falls back to the CoreLayout default OG image.
 const ogImage = post.coverImageUrl ?? undefined;
-
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
 const canonical = new URL(`/blog/${post.slug}`, siteOrigin).toString();
 
@@ -59,15 +42,18 @@ const articleSchema = {
   keywords: (post.tags ?? []).join(", "),
 };
 
-const sections = post.sections ?? [];
-const checklist = post.checklist ?? [];
+const sections: BlogSection[] = post.sections ?? [];
+const checklist: BlogChecklist[] = post.checklist ?? [];
 const bodyHtml =
   sections.length === 0 && post.bodyContent
     ? sanitizeRichHtml(post.bodyContent)
     : "";
-const heroLead = post.heroText ?? post.excerpt;
 ---
 
+<!--
+  Mirrors tailwindcss.com/blog/[post]: [22rem sidebar | 2.5rem divider | article].
+  Row 1: date + title (right). Row 2: author (left), article (right).
+-->
 <PublicLayout
   title={`${post.title} - Hafiz Bahtiar`}
   description={metaDescription}
@@ -77,264 +63,109 @@ const heroLead = post.heroText ?? post.excerpt;
 >
   <JsonLd schema={articleSchema} />
 
-  <div class="fixed inset-x-0 top-0 z-50 h-0.5 bg-canvas/80 backdrop-blur-sm">
+  <div
+    class="grid grid-cols-1 xl:grid-cols-[22rem_2.5rem_auto] xl:grid-rows-[1fr_auto]"
+  >
     <div
-      id="read-progress"
-      class="h-full w-0 bg-sky-500 transition-[width] duration-150 ease-out"
+      class="col-start-2 row-span-2 row-start-1 border-x border-gray-950/5 max-xl:hidden dark:border-white/10"
     >
     </div>
-  </div>
 
-  <div class="min-h-screen pb-16 md:pb-24">
-    <div class="h-10 sm:h-16"></div>
-
-    <!-- Back -->
-    <div class="line-y">
-      <div class="container-main">
-        <a
-          href="/blog"
-          class="group inline-flex items-center gap-1.5 font-mono text-xs/6 text-gray-500 transition-colors hover:text-gray-950 dark:hover:text-white"
+    <div
+      class="max-xl:mx-auto max-xl:w-full max-xl:max-w-(--breakpoint-md) xl:col-start-3 xl:row-start-1"
+    >
+      <div
+        class="mt-16 px-4 font-mono text-sm/7 font-medium tracking-widest text-gray-500 uppercase lg:px-2"
+      >
+        <time datetime={publishedISO}>{dateLabel}</time>
+      </div>
+      <div class="line-y mb-6 px-4 lg:px-2 xl:mb-16">
+        <h1
+          class="inline-block max-w-(--breakpoint-md) text-[2.5rem]/10 tracking-tight text-pretty text-gray-950 max-lg:font-medium lg:text-6xl dark:text-gray-200"
         >
-          <span
-            class="transition-transform group-hover:-translate-x-0.5"
-            aria-hidden="true">&larr;</span
-          >
-          cd ../blog
-        </a>
+          {post.title}
+        </h1>
       </div>
     </div>
 
-    <!-- Hero -->
-    <div class="h-8 sm:h-12"></div>
-    {
-      metaChips.length > 0 && (
-        <div class="line-y">
-          <p class="eyebrow container-main">{metaChips.join(" · ")}</p>
-        </div>
-      )
-    }
-    <div class="line-y mt-2">
-      <h1
-        class="container-main text-4xl/[1.1] font-medium tracking-tighter text-balance text-gray-950 sm:text-6xl/[1.05] dark:text-white"
-      >
-        {post.title}
-      </h1>
-    </div>
-    {
-      heroLead && (
-        <>
-          <Annot preset="lead" class="mt-4" />
-          <div class="line-y">
-            <p class="lead container-main">{heroLead}</p>
-          </div>
-        </>
-      )
-    }
-
-    {
-      post.tags?.length > 0 && (
-        <>
-          <div class="h-8" />
-          <div class="line-y">
-            <div class="container-main flex flex-wrap gap-1.5">
-              {post.tags.map((tag: string) => (
-                <span class="tag">{tag}</span>
-              ))}
+    <div
+      class="max-xl:mx-auto max-xl:w-full max-xl:max-w-(--breakpoint-md) xl:col-start-1 xl:row-start-2"
+    >
+      <div class="flex flex-col gap-4">
+        <!-- At xl the hairlines run leftward only, so they stop at the divider. -->
+        <div
+          class="relative flex items-center px-4 py-2 font-medium whitespace-nowrap before:absolute before:top-0 before:right-0 before:h-px before:w-[200vw] before:bg-gray-950/5 after:absolute after:right-0 after:bottom-0 after:h-px after:w-[200vw] after:bg-gray-950/5 max-xl:before:left-[-100vw]! max-xl:after:left-[-100vw]! xl:px-2 xl:before:hidden dark:before:bg-white/10 dark:after:bg-white/10"
+        >
+          <div class="flex gap-4">
+            <span
+              class="flex size-12 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-sky-400 to-sky-600 text-base font-semibold text-white"
+              aria-hidden="true">HB</span
+            >
+            <div
+              class="flex flex-col justify-center gap-1 text-sm font-semibold"
+            >
+              <div class="text-gray-950 dark:text-white">Hafiz Bahtiar</div>
+              <div>
+                <a
+                  href="https://github.com/hafizbahtiar"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-sky-500 hover:text-sky-600 dark:text-sky-400"
+                  >@hafizbahtiar</a
+                >
+              </div>
             </div>
           </div>
-        </>
-      )
-    }
+        </div>
+      </div>
+    </div>
 
-    <!-- Cover (honest social/hero image; remote hosts stay untransformed) -->
-    {
-      post.coverImageUrl && (
-        <>
-          <div class="h-12 sm:h-16" />
-          <div class="line-y p-2">
-            <div class="frame">
-              <div class="frame-inner">
+    <div
+      class="max-xl:mx-auto max-xl:mt-16 max-xl:w-full max-xl:max-w-(--breakpoint-md) xl:col-start-3 xl:row-start-2"
+    >
+      <div class="line-y px-4 py-2 lg:px-2">
+        <article class="prose-blog max-w-(--breakpoint-md)">
+          {
+            post.coverImageUrl && (
+              <div class="relative overflow-hidden rounded-xl">
+                <div class="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-gray-950/10 ring-inset dark:ring-white/10" />
                 <Image
                   src={post.coverImageUrl}
                   alt={post.title}
-                  width={1200}
-                  height={630}
+                  width={1536}
+                  height={864}
                   loading="eager"
                   decoding="async"
-                  class="h-56 w-full bg-white object-cover sm:h-80"
+                  class="m-0! block aspect-video w-full max-w-full! bg-white object-cover"
                 />
               </div>
-            </div>
-          </div>
-        </>
-      )
-    }
-
-    <div class="h-12 sm:h-16"></div>
-
-    <section
-      id="article-content"
-      class="container-main grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_280px]"
-    >
-      <article class="min-w-0">
-        {
-          bodyHtml && (
-            <div
-              class="prose max-w-none prose-headings:tracking-tight prose-a:text-sky-600 dark:prose-invert dark:prose-a:text-sky-400"
-              set:html={bodyHtml}
-            />
-          )
-        }
-
-        {
-          sections.length > 0 && (
-            <div class="divide-y divide-gray-950/5 dark:divide-white/10">
-              {sections.map((section: BlogSection, index: number) => (
-                <div
-                  id={`section-${index + 1}`}
-                  class="scroll-mt-24 py-8 first:pt-0 last:pb-0"
-                >
-                  <div class="flex items-center gap-3 font-mono text-xs/6 text-sky-600 dark:text-sky-400">
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <span
-                      class="h-px w-8 bg-gray-950/10 dark:bg-white/15"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <h2 class="mt-3 text-xl/8 font-semibold tracking-tight text-gray-950 dark:text-white">
-                    {section.heading}
-                  </h2>
-                  <p class="mt-2 max-w-2xl text-base/7 whitespace-pre-line text-gray-600 dark:text-gray-400">
-                    {section.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )
-        }
-
-        {
-          checklist.length > 0 && (
-            <div class="mt-10 rounded-2xl bg-gray-950 p-1.5 ring-1 ring-gray-950/10 dark:bg-white/[0.04] dark:ring-white/10">
-              <div class="flex items-center gap-2 px-2.5 py-2.5">
-                <span class="size-3 rounded-full bg-white/15" />
-                <span class="size-3 rounded-full bg-white/15" />
-                <span class="size-3 rounded-full bg-white/15" />
-                <span class="ml-3 rounded-md bg-white/10 px-2 py-0.5 font-mono text-[11px] text-gray-300">
-                  checklist.md
-                </span>
-              </div>
-              <div class="rounded-xl bg-white/[0.04] p-4 font-mono text-sm/6 ring-1 ring-white/5 sm:p-5">
-                <p class="text-pink-400">TODO:</p>
-                <ul class="mt-3 space-y-1.5">
-                  {checklist.map((item: BlogChecklist) => (
-                    <li class="flex items-start gap-3 text-gray-300">
-                      <span class="select-none text-gray-600">[ ]</span>
-                      <span>{item.itemText}</span>
-                    </li>
+            )
+          }
+          {post.heroText && <p>{post.heroText}</p>}
+          {bodyHtml && <Fragment set:html={bodyHtml} />}
+          {
+            sections.map((section, index) => (
+              <>
+                <h2 id={`section-${index + 1}`}>{section.heading}</h2>
+                <p class="whitespace-pre-line">{section.body}</p>
+              </>
+            ))
+          }
+          {
+            checklist.length > 0 && (
+              <>
+                <h2 id="checklist">Checklist</h2>
+                <ul>
+                  {checklist.map((item) => (
+                    <li>{item.itemText}</li>
                   ))}
                 </ul>
-              </div>
-            </div>
-          )
-        }
-      </article>
-
-      {
-        sections.length > 0 && (
-          <aside class="hidden lg:block">
-            <div class="sticky top-24 rounded-xl bg-white p-4 ring-1 ring-gray-950/5 dark:bg-white/[0.03] dark:ring-white/10">
-              <div class="flex items-center justify-between font-mono text-xs/6 tracking-wider text-gray-500 uppercase">
-                <span>On this page</span>
-                <span id="read-percent" class="text-sky-600 dark:text-sky-400">
-                  0%
-                </span>
-              </div>
-              <div class="relative mt-3 h-1 overflow-hidden rounded bg-gray-950/5 dark:bg-white/10">
-                <div
-                  id="read-progress-ghost"
-                  class="absolute inset-y-0 left-0 w-0 bg-sky-500 transition-[width] duration-100"
-                />
-              </div>
-              <ul class="mt-4 space-y-1 border-t border-gray-950/5 pt-4 dark:border-white/10">
-                {sections.map((section: BlogSection, index: number) => (
-                  <li>
-                    <a
-                      href={`#section-${index + 1}`}
-                      class="flex items-center gap-2 rounded-md px-2 py-1.5 font-mono text-xs text-gray-500 transition-colors hover:bg-gray-950/[0.025] hover:text-gray-950 dark:hover:bg-white/5 dark:hover:text-white"
-                    >
-                      <span
-                        class="text-sky-600 dark:text-sky-400"
-                        aria-hidden="true"
-                      >
-                        #
-                      </span>
-                      <span class="truncate">{section.heading}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </aside>
-        )
-      }
-    </section>
+              </>
+            )
+          }
+        </article>
+      </div>
+      <div class="h-24 sm:h-46"></div>
+    </div>
   </div>
 </PublicLayout>
-
-<script>
-  const initReadProgress = () => {
-    const progressBar = document.getElementById("read-progress");
-    const progressGhost = document.getElementById("read-progress-ghost");
-    const progressPercent = document.getElementById("read-percent");
-    const article = document.getElementById("article-content");
-
-    if (!progressBar || !article) return;
-
-    const existingController = (window as any).__blogReadProgressController;
-    if (existingController) {
-      existingController.abort();
-    }
-
-    const controller = new AbortController();
-    (window as any).__blogReadProgressController = controller;
-    const { signal } = controller;
-
-    const updateProgress = () => {
-      const articleTop = article.getBoundingClientRect().top + window.scrollY;
-      const articleHeight = article.offsetHeight;
-      const scrollTop = window.scrollY;
-      const viewportHeight = window.innerHeight;
-      const total = Math.max(articleHeight - viewportHeight, 1);
-      const rawProgress = (scrollTop - articleTop) / total;
-      const progress = Math.min(Math.max(rawProgress, 0), 1);
-      const width = `${progress * 100}%`;
-
-      progressBar.style.width = width;
-      if (progressGhost) {
-        progressGhost.style.width = width;
-      }
-      if (progressPercent) {
-        progressPercent.textContent = `${Math.round(progress * 100)}%`;
-      }
-    };
-
-    updateProgress();
-    window.addEventListener("scroll", updateProgress, {
-      passive: true,
-      signal,
-    });
-    window.addEventListener("resize", updateProgress, { signal });
-  };
-
-  (window as any)._initBlogReadProgress = initReadProgress;
-
-  initReadProgress();
-  document.addEventListener("astro:page-load", initReadProgress);
-  document.addEventListener("astro:after-swap", initReadProgress);
-  window.addEventListener("pageshow", (event) => {
-    if (event.persisted) {
-      initReadProgress();
-    }
-  });
-</script>
