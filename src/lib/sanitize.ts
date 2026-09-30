@@ -181,6 +181,23 @@ export const sanitizeRichHtml = (html: string): string => {
   return document.children.map(renderNode).join("");
 };
 
+const BLOCK_TAGS = new Set(["p", "div", "li", "br", "h2", "h3", "h4", "blockquote", "pre", "tr", "aside", "summary"]);
+
+/**
+ * Rich-text HTML (TextEditor output) → plain text, for places that must stay
+ * inline or short (e.g. inside a <button>). Plain-text input passes through.
+ * The result is text, so render it with normal `{}` escaping - never set:html.
+ */
+export const toPlainText = (html: string): string => {
+  const walk = (node: ChildNode): string => {
+    if (isText(node)) return node.data;
+    if (!isTag(node) || DROPPED_CONTENT_TAGS.has(node.name)) return "";
+    const inner = node.children.map(walk).join("");
+    return BLOCK_TAGS.has(node.name) ? ` ${inner} ` : inner;
+  };
+  return parseDocument(html, { decodeEntities: true }).children.map(walk).join("").replace(/\s+/g, " ").trim();
+};
+
 export const serializeJsonForHtml = (value: unknown): string => {
   return JSON.stringify(value)
     .replace(/</g, "\\u003c")

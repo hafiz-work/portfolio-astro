@@ -73,64 +73,62 @@ import { TriangleAlert } from "lucide-react";
 </div>
 
 <script>
-  // Simple modal logic to be controlled externally
-  const modal = document.getElementById("unsaved-changes-modal");
-  const backdrop = document.getElementById("modal-backdrop");
-  const panel = document.getElementById("modal-panel");
-  const confirmBtn = document.getElementById("modal-confirm-btn");
-  const cancelBtn = document.getElementById("modal-cancel-btn");
+  // Controlled externally via window.unsavedChangesModal (see lib/form-guard.ts).
+  // This bundled script runs once per session, but <ClientRouter> swaps the
+  // modal markup on every navigation - so look elements up on each call instead
+  // of caching them, or show() would animate a detached node and never resolve.
+  const el = (id: string) => document.getElementById(id);
+  const HIDDEN = [
+    "opacity-0",
+    "translate-y-4",
+    "sm:translate-y-0",
+    "sm:scale-95",
+  ];
 
   let resolvePromise: ((value: boolean) => void) | null = null;
 
   function show() {
-    if (!modal || !backdrop || !panel) return Promise.resolve(false);
+    const modal = el("unsaved-changes-modal");
+    const backdrop = el("modal-backdrop");
+    const panel = el("modal-panel");
+    if (!modal || !backdrop || !panel)
+      return Promise.resolve(
+        window.confirm("You have unsaved changes. Leave?"),
+      );
 
+    resolvePromise?.(false); // a second show() supersedes a pending one
     modal.classList.remove("hidden");
-    // Animation frame for transition
     requestAnimationFrame(() => {
       backdrop.classList.remove("opacity-0");
-      panel.classList.remove(
-        "opacity-0",
-        "translate-y-4",
-        "sm:translate-y-0",
-        "sm:scale-95",
-      );
+      panel.classList.remove(...HIDDEN);
     });
-
     return new Promise<boolean>((resolve) => {
       resolvePromise = resolve;
     });
   }
 
   function hide() {
-    if (!modal || !backdrop || !panel) return;
-
-    backdrop.classList.add("opacity-0");
-    panel.classList.add(
-      "opacity-0",
-      "translate-y-4",
-      "sm:translate-y-0",
-      "sm:scale-95",
-    );
-
-    setTimeout(() => {
-      modal.classList.add("hidden");
-    }, 200); // Match transition duration
+    const modal = el("unsaved-changes-modal");
+    el("modal-backdrop")?.classList.add("opacity-0");
+    el("modal-panel")?.classList.add(...HIDDEN);
+    setTimeout(() => modal?.classList.add("hidden"), 200); // match transition
   }
 
-  confirmBtn?.addEventListener("click", () => {
+  function settle(value: boolean) {
     hide();
-    if (resolvePromise) resolvePromise(true);
+    resolvePromise?.(value);
+    resolvePromise = null;
+  }
+
+  // Delegated once: survives page swaps.
+  document.addEventListener("click", (e) => {
+    const t = e.target as HTMLElement;
+    if (t.closest("#modal-confirm-btn")) settle(true);
+    else if (t.closest("#modal-cancel-btn")) settle(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && resolvePromise) settle(false);
   });
 
-  cancelBtn?.addEventListener("click", () => {
-    hide();
-    if (resolvePromise) resolvePromise(false);
-  });
-
-  // Expose to window for the utility to use easily
-  (window as any).unsavedChangesModal = {
-    show,
-    hide,
-  };
+  (window as any).unsavedChangesModal = { show, hide };
 </script>
