@@ -4,6 +4,7 @@ import SectionHeader from "../layout/SectionHeader.astro";
 import type { Experience } from "../../types/experiences";
 import { formatDateRange } from "../../lib/public-content";
 import { KL_CENTER } from "../../lib/constants";
+import { toPlainText } from "../../lib/sanitize";
 
 interface Props {
   experiences: Experience[];
@@ -88,7 +89,7 @@ const mapCenter: [number, number] =
                 </p>
                 {exp.description && (
                   <p class="mt-1.5 text-sm/6 text-gray-600 dark:text-gray-400">
-                    {exp.description}
+                    {toPlainText(exp.description)}
                   </p>
                 )}
               </div>

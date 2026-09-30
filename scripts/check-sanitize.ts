@@ -1,6 +1,6 @@
 // Run: node scripts/check-sanitize.ts - throws if the blog allowlist leaks.
 import assert from "node:assert/strict";
-import { sanitizeRichHtml as s } from "../src/lib/sanitize.ts";
+import { sanitizeRichHtml as s, toPlainText } from "../src/lib/sanitize.ts";
 
 // Presets survive only with allowed values.
 assert.equal(s('<p data-spacing="loose" data-align="center">a</p>'), '<p data-spacing="loose" data-align="center">a</p>');
@@ -27,5 +27,10 @@ assert.equal(s('<input type="text" value="x">'), "");
 
 // Still blocked.
 assert.equal(s('<script>alert(1)</script><img src=x onerror="x()"><a href="javascript:x()">a</a>'), '<a rel="noopener noreferrer">a</a>');
+
+// Plain text for inline contexts: tags gone, entities decoded, blocks spaced.
+assert.equal(toPlainText("<p>Built <strong>mobile</strong> apps.</p><p>Second &amp; last.</p>"), "Built mobile apps. Second & last.");
+assert.equal(toPlainText("Plain text stays."), "Plain text stays.");
+assert.equal(toPlainText("<ul><li>a</li><li>b</li></ul><script>x()</script>"), "a b");
 
 console.log("sanitize: ok");
