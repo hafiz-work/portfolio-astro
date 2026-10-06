@@ -4,6 +4,7 @@ import {
   CircleUser,
   Folder,
   Inbox,
+  Layers,
   LayoutDashboard,
   LogOut,
   Newspaper,
@@ -25,6 +26,11 @@ const links = [
     text: "Projects",
     href: "/admin/projects",
     icon: Folder,
+  },
+  {
+    text: "Tech Stack",
+    href: "/admin/tech-stacks",
+    icon: Layers,
   },
   {
     text: "Experiences",
@@ -70,9 +76,9 @@ const links = [
 
 const groups = [
   { label: "Overview", items: links.slice(0, 1) },
-  { label: "Content", items: links.slice(1, 6) },
-  { label: "Inbox", items: links.slice(6, 7) },
-  { label: "System", items: links.slice(7) },
+  { label: "Content", items: links.slice(1, 7) },
+  { label: "Inbox", items: links.slice(7, 8) },
+  { label: "System", items: links.slice(8) },
 ];
 
 const currentPath = Astro.url.pathname;

@@ -1,14 +1,22 @@
 ---
 import { Image } from "astro:assets";
-import { Mail, MapPin } from "lucide-react";
 import ResumeDownloadButton from "../ui/ResumeDownloadButton.astro";
 import Annot from "../layout/Annot.astro";
 
 interface Props {
     projectCount: number;
     yearsExperience: number;
+    currentRole?: string | null;
+    latestProject?: string | null;
+    latestPost?: string | null;
 }
-const { projectCount, yearsExperience } = Astro.props;
+const {
+    projectCount,
+    yearsExperience,
+    currentRole,
+    latestProject,
+    latestPost,
+} = Astro.props;
 
 // JSON "response" shown in the code window, one entry per rendered line so
 // the gutter can number them like tailwindcss.com's editor panels.
@@ -16,6 +24,25 @@ type Tok = { t: string; c?: "key" | "str" | "num" | "punct" };
 // `k` links a JSON line to the matching field in the rendered card, so
 // hovering either side highlights both (tailwind's code ↔ preview pairing).
 const stack = ["Node.js", "Hono", "Flutter", "Workers"];
+// One `"key": "value",` line; long live values are clipped so the panel never scrolls.
+const clip = (v: string, max = 42) =>
+    v.length > max ? `${v.slice(0, max - 1)}…` : v;
+const strLine = (
+    key: string,
+    value: string | null | undefined,
+): { toks: Tok[] }[] =>
+    value
+        ? [
+              {
+                  toks: [
+                      { t: `  "${key}"`, c: "key" },
+                      { t: ": " },
+                      { t: JSON.stringify(clip(value)), c: "str" },
+                      { t: "," },
+                  ],
+              },
+          ]
+        : [];
 const lines: { k?: string; toks: Tok[] }[] = [
     { toks: [{ t: "{", c: "punct" }] },
     {
@@ -45,6 +72,7 @@ const lines: { k?: string; toks: Tok[] }[] = [
             { t: "," },
         ],
     },
+    ...strLine("current_role", currentRole),
     {
         k: "stack",
         toks: [
@@ -66,6 +94,21 @@ const lines: { k?: string; toks: Tok[] }[] = [
             { t: "," },
         ],
     },
+    ...strLine("latest_project", latestProject),
+    ...strLine("latest_post", latestPost),
+    {
+        toks: [
+            { t: '  "open_to"', c: "key" },
+            { t: ": [" },
+            { t: '"backend"', c: "str" },
+            { t: ", " },
+            { t: '"flutter"', c: "str" },
+            { t: ", " },
+            { t: '"freelance"', c: "str" },
+            { t: "]," },
+        ],
+    },
+    ...strLine("timezone", "GMT+8"),
     {
         k: "years_exp",
         toks: [
@@ -182,6 +225,26 @@ const tokClass: Record<string, string> = {
 
     <!-- Hero demo: JSON response (left) + the card it renders (right),
          overlapping like tailwindcss.com's code ↔ preview pair. -->
+    <!-- Typing demo: flag before first paint so the finished content never
+         flashes. Skipped for reduced motion and after the first play this session.
+         If the module never arms it, the 5s fallback shows the static content. -->
+    <script is:inline>
+        (function () {
+            try {
+                if (matchMedia("(prefers-reduced-motion: reduce)").matches)
+                    return;
+                if (sessionStorage.getItem("hero-typed")) return;
+            } catch (e) {
+                return;
+            }
+            var d = document.documentElement;
+            d.dataset.heroTyping = "pending";
+            setTimeout(function () {
+                if (d.dataset.heroTyping === "pending")
+                    delete d.dataset.heroTyping;
+            }, 5000);
+        })();
+    </script>
     <div class="line-y hero-stagger" style="--stagger-i: 4">
         <div
             id="hero-demo"
@@ -200,6 +263,7 @@ const tokClass: Record<string, string> = {
                             >GET /v1/profile</span
                         >
                         <span
+                            data-status
                             class="ml-auto font-mono text-[11px] text-emerald-400"
                             >200 OK</span
                         >
@@ -209,7 +273,7 @@ const tokClass: Record<string, string> = {
                     >
                         <pre
                             class="font-mono text-[12.5px]/6 text-gray-200 sm:text-sm/7"><code>{lines.map((line, i) => (
-<span class="demo-line flex" data-k={line.k}><span class="w-10 shrink-0 pr-4 text-right text-gray-600 select-none">{i + 1}</span><span class="pr-6">{line.toks.map((tok) => <span class={tok.c ? tokClass[tok.c] : ""}>{tok.t}</span>)}</span></span>))}</code></pre>
+<span class="demo-line flex" data-k={line.k}><span class="w-10 shrink-0 pr-4 text-right text-gray-600 select-none">{i + 1}</span><span class="pr-6">{line.toks.map((tok) => <span class={tok.c ? tokClass[tok.c] : ""} data-c={tok.c}>{tok.t}</span>)}</span></span>))}</code></pre>
                     </div>
                 </div>
             </div>
@@ -279,7 +343,7 @@ const tokClass: Record<string, string> = {
                                     d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
                                 ></path>
                             </svg>
-                            Kuala Lumpur, MY
+                            <span data-v>Kuala Lumpur, MY</span>
                         </p>
 
                         <div
@@ -301,7 +365,9 @@ const tokClass: Record<string, string> = {
                             class="demo-field mt-4 block rounded-xl p-2 ring-1 ring-gray-950/5 ring-inset transition-colors hover:ring-gray-950/15 dark:ring-white/10 dark:hover:ring-white/20"
                             aria-label="GitHub contributions over the last year (opens GitHub)"
                         >
-                            <span class="font-mono text-[11px] tracking-widest text-gray-500 uppercase">
+                            <span
+                                class="font-mono text-[11px] tracking-widest text-gray-500 uppercase"
+                            >
                                 Contributions · last 12 months
                             </span>
                             <!-- ghchart is deliberately not in image.domains (it serves SVG),
@@ -369,9 +435,42 @@ const tokClass: Record<string, string> = {
         background-color: rgb(255 255 255 / 0.07);
         box-shadow: inset 2px 0 0 var(--color-sky-400);
     }
+    /* Typing demo states (see the script): hidden until armed/played. */
+    :global(html[data-hero-typing]) #hero-demo .demo-line > span:last-child,
+    :global(html[data-hero-typing]) #hero-demo .demo-field {
+        visibility: hidden;
+    }
+    :global(html[data-hero-typing="running"])
+        #hero-demo
+        .demo-line
+        > span:last-child,
+    :global(html[data-hero-typing="running"]) #hero-demo .demo-field.is-on {
+        visibility: visible;
+    }
+    #hero-demo .demo-off {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    .demo-caret {
+        display: inline-block;
+        width: 0.55ch;
+        height: 1.15em;
+        margin-left: 1px;
+        vertical-align: text-bottom;
+        background: var(--color-sky-400);
+        animation: demo-blink 1s steps(1) infinite;
+    }
+    @keyframes demo-blink {
+        50% {
+            opacity: 0;
+        }
+    }
     .demo-field {
         border-radius: 0.375rem;
-        transition: outline-color 150ms;
+        transition:
+            outline-color 150ms,
+            opacity 300ms,
+            transform 300ms;
         outline: 1px dashed transparent;
         outline-offset: 3px;
     }
@@ -402,6 +501,128 @@ const tokClass: Record<string, string> = {
     };
     initHeroDemo();
     document.addEventListener("astro:page-load", initHeroDemo);
+
+    // Typing demo: the JSON types itself and the card renders what was just
+    // typed (tailwindcss.com-style). Server HTML stays complete for SEO/no-JS;
+    // this only replays it. Click the panel to skip to the end.
+    const MIRROR = new Set(["name", "role", "based_in"]); // text grows as typed
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+    const playHeroTyping = async () => {
+        const root = document.documentElement;
+        const demo = document.getElementById("hero-demo");
+        if (!demo || root.dataset.heroTyping !== "pending") return;
+        root.dataset.heroTyping = "armed"; // module loaded - cancels the 5s fallback
+
+        // Start when the panel is actually on screen.
+        await new Promise<void>((resolve) => {
+            const io = new IntersectionObserver(
+                (entries) => {
+                    if (entries.some((e) => e.isIntersecting)) {
+                        io.disconnect();
+                        resolve();
+                    }
+                },
+                { threshold: 0.3 },
+            );
+            io.observe(demo);
+        });
+        try {
+            sessionStorage.setItem("hero-typed", "1");
+        } catch {}
+
+        let skip = false;
+        demo.addEventListener("click", () => (skip = true), { once: true });
+        const wait = (ms: number) => (skip ? Promise.resolve() : sleep(ms));
+
+        const lines = [...demo.querySelectorAll<HTMLElement>(".demo-line")];
+        const toks = lines.map((l) =>
+            [
+                ...l.querySelectorAll<HTMLElement>(
+                    ":scope > span:last-child > span",
+                ),
+            ].map((el) => ({ el, full: el.textContent ?? "" })),
+        );
+        const fields = new Map(
+            [...demo.querySelectorAll<HTMLElement>("[data-f]")].map((f) => [
+                f.dataset.f!,
+                f,
+            ]),
+        );
+        const textTarget = (f: HTMLElement) =>
+            f.querySelector<HTMLElement>("[data-v]") ?? f;
+        const mirrorFull = new Map(
+            [...fields]
+                .filter(([k]) => MIRROR.has(k))
+                .map(([k, f]) => [k, textTarget(f).textContent?.trim() ?? ""]),
+        );
+        const chips = [
+            ...(fields.get("stack")?.children ?? []),
+        ] as HTMLElement[];
+        const status = demo.querySelector<HTMLElement>("[data-status]");
+        const caret = Object.assign(document.createElement("span"), {
+            className: "demo-caret",
+        });
+        caret.setAttribute("aria-hidden", "true");
+
+        // Blank everything, then show the (empty) editor.
+        toks.flat().forEach((t) => (t.el.textContent = ""));
+        fields.forEach((f) => f.classList.add("demo-off"));
+        mirrorFull.forEach(
+            (_, k) => (textTarget(fields.get(k)!).textContent = "\u200b"),
+        );
+        chips.forEach((c) => c.classList.add("demo-off"));
+        if (status) {
+            status.textContent = "…";
+            status.classList.replace("text-emerald-400", "text-gray-500");
+        }
+        root.dataset.heroTyping = "running";
+
+        const show = (f: HTMLElement | undefined) => {
+            if (!f) return;
+            f.classList.add("is-on");
+            requestAnimationFrame(() => f.classList.remove("demo-off"));
+        };
+
+        for (const [i, line] of lines.entries()) {
+            const key = line.dataset.k;
+            const field = key ? fields.get(key) : undefined;
+            let chip = 0;
+            if (key && (MIRROR.has(key) || key === "stack")) show(field);
+            for (const t of toks[i]) {
+                t.el.after(caret);
+                const isValue = t.el.dataset.c === "str"; // string token
+                const slow =
+                    isValue && key && (MIRROR.has(key) || key === "stack");
+                for (let c = 1; c <= t.full.length; c++) {
+                    t.el.textContent = t.full.slice(0, c);
+                    if (slow && key && MIRROR.has(key)) {
+                        textTarget(field!).textContent =
+                            t.full.slice(1, c).replace(/"$/, "") || "\u200b";
+                    }
+                    await wait(slow ? 26 : 7);
+                }
+                if (key === "stack" && isValue) show(chips[chip++]);
+            }
+            if (key && MIRROR.has(key))
+                textTarget(field!).textContent = mirrorFull.get(key)!;
+            if (key && !MIRROR.has(key) && key !== "stack") show(field);
+            await wait(60);
+        }
+
+        caret.remove();
+        if (status) {
+            status.textContent = "200 OK";
+            status.classList.replace("text-gray-500", "text-emerald-400");
+        }
+        fields.forEach((f) => {
+            f.classList.remove("demo-off", "is-on");
+        });
+        chips.forEach((c) => c.classList.remove("demo-off"));
+        delete root.dataset.heroTyping;
+    };
+    playHeroTyping();
+    document.addEventListener("astro:page-load", playHeroTyping);
 
     const initCopyEmail = () => {
         const btn = document.getElementById("hero-copy-email");

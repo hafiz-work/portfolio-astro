@@ -10,15 +10,15 @@ import AdminPageHeader from "../../../../components/admin/AdminPageHeader.astro"
 
 <PrivateLayout title="Maintenance Mode">
   <div class="space-y-6">
-    <AdminPageHeader title="Maintenance Mode" description="Maintenance mode and site availability">
+    <AdminPageHeader
+      title="Maintenance Mode"
+      description="Maintenance mode and site availability"
+    >
       <div slot="actions">
-        <button
-        id="save-maintenance-btn"
-        class="admin-btn admin-btn-primary"
-      >
-        <Save className="w-4 h-4" />
-        Save Changes
-      </button>
+        <button id="save-maintenance-btn" class="admin-btn admin-btn-primary">
+          <Save className="w-4 h-4" />
+          Save Changes
+        </button>
       </div>
     </AdminPageHeader>
 
@@ -63,23 +63,33 @@ import AdminPageHeader from "../../../../components/admin/AdminPageHeader.astro"
 </PrivateLayout>
 
 <script>
-  const saveBtn = document.getElementById(
-    "save-maintenance-btn",
-  ) as HTMLButtonElement | null;
+  // <ClientRouter> runs a page's bundled script once per session, so a
+  // second visit got a dead page (no data, no handlers). Init on every visit.
+  async function initPage() {
+    if (
+      location.pathname.replace(/\/+$/, "") !==
+      "/admin/settings/security/maintenance"
+    )
+      return;
+    const saveBtn = document.getElementById(
+      "save-maintenance-btn",
+    ) as HTMLButtonElement | null;
 
-  // Save Maintenance Settings
-  saveBtn?.addEventListener("click", () => {
-    if (!saveBtn) return;
-    const originalContent = saveBtn.innerHTML;
-    saveBtn.innerHTML = "SAVING...";
-    saveBtn.disabled = true;
+    // Save Maintenance Settings
+    saveBtn?.addEventListener("click", () => {
+      if (!saveBtn) return;
+      const originalContent = saveBtn.innerHTML;
+      saveBtn.innerHTML = "SAVING...";
+      saveBtn.disabled = true;
 
-    setTimeout(() => {
-      alert(
-        "Maintenance mode settings saved locally (No backend endpoint yet)",
-      );
-      saveBtn.innerHTML = originalContent;
-      saveBtn.disabled = false;
-    }, 1000);
-  });
+      setTimeout(() => {
+        alert(
+          "Maintenance mode settings saved locally (No backend endpoint yet)",
+        );
+        saveBtn.innerHTML = originalContent;
+        saveBtn.disabled = false;
+      }, 1000);
+    });
+  }
+  document.addEventListener("astro:page-load", initPage);
 </script>

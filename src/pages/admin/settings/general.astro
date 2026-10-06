@@ -12,15 +12,15 @@ import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
 
 <PrivateLayout title="General Settings">
   <div class="space-y-6">
-    <AdminPageHeader title="General Settings" description="General site configuration">
+    <AdminPageHeader
+      title="General Settings"
+      description="General site configuration"
+    >
       <div slot="actions">
-        <button
-        id="save-settings-btn"
-        class="admin-btn admin-btn-primary"
-      >
-        <Save className="w-4 h-4" />
-        Save Changes
-      </button>
+        <button id="save-settings-btn" class="admin-btn admin-btn-primary">
+          <Save className="w-4 h-4" />
+          Save Changes
+        </button>
       </div>
     </AdminPageHeader>
 
@@ -70,21 +70,28 @@ import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
 </PrivateLayout>
 
 <script>
-  const saveBtn = document.getElementById(
-    "save-settings-btn",
-  ) as HTMLButtonElement | null;
+  // <ClientRouter> runs a page's bundled script once per session, so a
+  // second visit got a dead page (no data, no handlers). Init on every visit.
+  async function initPage() {
+    if (location.pathname.replace(/\/+$/, "") !== "/admin/settings/general")
+      return;
+    const saveBtn = document.getElementById(
+      "save-settings-btn",
+    ) as HTMLButtonElement | null;
 
-  // Save General Settings (Mock implementation for now as no backend endpoint exists)
-  saveBtn?.addEventListener("click", () => {
-    if (!saveBtn) return;
-    const originalContent = saveBtn.innerHTML;
-    saveBtn.innerHTML = "SAVING...";
-    saveBtn.disabled = true;
+    // Save General Settings (Mock implementation for now as no backend endpoint exists)
+    saveBtn?.addEventListener("click", () => {
+      if (!saveBtn) return;
+      const originalContent = saveBtn.innerHTML;
+      saveBtn.innerHTML = "SAVING...";
+      saveBtn.disabled = true;
 
-    setTimeout(() => {
-      alert("Settings saved locally (No backend endpoint yet)");
-      saveBtn.innerHTML = originalContent;
-      saveBtn.disabled = false;
-    }, 1000);
-  });
+      setTimeout(() => {
+        alert("Settings saved locally (No backend endpoint yet)");
+        saveBtn.innerHTML = originalContent;
+        saveBtn.disabled = false;
+      }, 1000);
+    });
+  }
+  document.addEventListener("astro:page-load", initPage);
 </script>

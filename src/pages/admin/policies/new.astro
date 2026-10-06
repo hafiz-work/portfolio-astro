@@ -114,182 +114,190 @@ import Dropdown from "../../../components/ui/Dropdown.astro";
   import { projectsService } from "../../../lib/projects";
   import { setupFormGuard } from "../../../lib/form-guard";
 
-  const form = document.getElementById("policy-form") as HTMLFormElement;
-  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
-  const loadingState = document.getElementById("loading-state");
-  const dropdownContainer = document.querySelector(
-    '[data-name="projectId"]',
-  ) as HTMLElement | null;
-  const projectInput = dropdownContainer?.querySelector(
-    ".dropdown-input",
-  ) as HTMLInputElement | null;
-  const dropdownList = dropdownContainer?.querySelector(
-    ".dropdown-menu ul",
-  ) as HTMLUListElement | null;
+  // <ClientRouter> runs a page's bundled script once per session, so a
+  // second visit got a dead page (no data, no handlers). Init on every visit.
+  async function initPage() {
+    if (location.pathname.replace(/\/+$/, "") !== "/admin/policies/new") return;
+    const form = document.getElementById("policy-form") as HTMLFormElement;
+    const submitBtn = document.getElementById(
+      "submit-btn",
+    ) as HTMLButtonElement;
+    const loadingState = document.getElementById("loading-state");
+    const dropdownContainer = document.querySelector(
+      '[data-name="projectId"]',
+    ) as HTMLElement | null;
+    const projectInput = dropdownContainer?.querySelector(
+      ".dropdown-input",
+    ) as HTMLInputElement | null;
+    const dropdownList = dropdownContainer?.querySelector(
+      ".dropdown-menu ul",
+    ) as HTMLUListElement | null;
 
-  let formGuard: ReturnType<typeof setupFormGuard> | null = null;
+    let formGuard: ReturnType<typeof setupFormGuard> | null = null;
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const initialProjectId = Number(urlParams.get("projectId"));
-  const tabButtons = Array.from(
-    document.querySelectorAll<HTMLButtonElement>("[data-tab]"),
-  );
-  const tabPanels = Array.from(
-    document.querySelectorAll<HTMLElement>("[data-tab-panel]"),
-  );
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialProjectId = Number(urlParams.get("projectId"));
+    const tabButtons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>("[data-tab]"),
+    );
+    const tabPanels = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-tab-panel]"),
+    );
 
-  const setActiveTab = (tabId: string) => {
-    tabButtons.forEach((button) => {
-      const isActive = button.dataset.tab === tabId;
-      button.setAttribute("aria-selected", String(isActive));
-      // Theme-aware active state (light + dark)
-      for (const cls of [
-        "text-sky-700",
-        "dark:text-sky-300",
-        "border-sky-500/60",
-        "bg-sky-500/10",
-      ]) {
-        button.classList.toggle(cls, isActive);
-      }
-      for (const cls of [
-        "text-gray-600",
-        "dark:text-gray-400",
-        "border-gray-950/10",
-        "dark:border-white/10",
-      ]) {
-        button.classList.toggle(cls, !isActive);
-      }
-    });
-    tabPanels.forEach((panel) => {
-      panel.classList.toggle("hidden", panel.dataset.tabPanel !== tabId);
-    });
-  };
-
-  tabButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      if (!button.dataset.tab) return;
-      setActiveTab(button.dataset.tab);
-    });
-  });
-
-  setActiveTab("privacy");
-
-  async function loadProjects() {
-    try {
-      const projects = await projectsService.getAdminProjects();
-      // Build options with createElement/textContent so a project title
-      // containing markup (e.g. `<img onerror=…>`) cannot execute as XSS in
-      // the admin session. Mirrors the safe pattern in experiences/new.astro.
-      if (dropdownList) {
-        dropdownList.innerHTML = "";
-        projects.forEach((project) => {
-          const li = document.createElement("li");
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className =
-            "dropdown-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors flex items-center justify-between group";
-          button.dataset.value = String(project.id);
-
-          const label = document.createElement("span");
-          label.textContent = `${project.title}`;
-
-          const indicator = document.createElement("span");
-          indicator.className =
-            "opacity-0 group-hover:opacity-100 text-sky-500 font-bold";
-          indicator.textContent = "_";
-
-          button.append(label, indicator);
-          li.appendChild(button);
-          dropdownList.appendChild(li);
-        });
-      }
-
-      (window as Window & { setupDropdowns?: () => void }).setupDropdowns?.();
-
-      if (initialProjectId) {
-        if (projectInput) {
-          projectInput.value = String(initialProjectId);
-          projectInput.dispatchEvent(new Event("change"));
+    const setActiveTab = (tabId: string) => {
+      tabButtons.forEach((button) => {
+        const isActive = button.dataset.tab === tabId;
+        button.setAttribute("aria-selected", String(isActive));
+        // Theme-aware active state (light + dark)
+        for (const cls of [
+          "text-sky-700",
+          "dark:text-sky-300",
+          "border-sky-500/60",
+          "bg-sky-500/10",
+        ]) {
+          button.classList.toggle(cls, isActive);
         }
-        await loadPolicyForProject(initialProjectId);
-      }
-
-      loadingState?.classList.add("hidden");
-      form?.classList.remove("hidden");
-
-      if (form) {
-        formGuard = setupFormGuard(form);
-      }
-    } catch (error) {
-      alert("Failed to load projects");
-      loadingState?.classList.add("hidden");
-    }
-  }
-
-  async function loadPolicyForProject(projectId: number) {
-    if (!projectId) return;
-    const policy = await projectsService
-      .getAdminProjectPolicyById(projectId)
-      .catch(() => null);
-    if (!form) return;
-    const privacyField = form.elements.namedItem("privacyPolicy");
-    const termsField = form.elements.namedItem("termsAndConditions");
-    if (privacyField instanceof HTMLTextAreaElement) {
-      privacyField.value = policy?.privacyPolicy || "";
-      privacyField.dispatchEvent(new Event("change"));
-    }
-    if (termsField instanceof HTMLTextAreaElement) {
-      termsField.value = policy?.termsAndConditions || "";
-      termsField.dispatchEvent(new Event("change"));
-    }
-    formGuard?.updateInitialState();
-  }
-
-  projectInput?.addEventListener("change", async () => {
-    const selectedId = Number(projectInput.value);
-    await loadPolicyForProject(selectedId);
-  });
-
-  form?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!submitBtn) return;
-
-    const projectId = Number(projectInput?.value);
-    if (!projectId) {
-      alert("Please select a project");
-      return;
-    }
-
-    const originalContent = submitBtn.innerHTML;
-    submitBtn.innerHTML = "SAVING...";
-    submitBtn.disabled = true;
-
-    const formData = new FormData(form);
-    const privacyPolicy = String(formData.get("privacyPolicy") || "").trim();
-    const termsAndConditions = String(
-      formData.get("termsAndConditions") || "",
-    ).trim();
-
-    try {
-      const result = await projectsService.upsertProjectPolicy(projectId, {
-        privacyPolicy: privacyPolicy || null,
-        termsAndConditions: termsAndConditions || null,
+        for (const cls of [
+          "text-gray-600",
+          "dark:text-gray-400",
+          "border-gray-950/10",
+          "dark:border-white/10",
+        ]) {
+          button.classList.toggle(cls, !isActive);
+        }
       });
-      if (result) {
-        formGuard?.updateInitialState();
-        alert("Policy saved successfully!");
-        window.location.href = "/admin/policies";
-      } else {
-        throw new Error("Failed to save policy");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Failed to save policy. Please try again.");
-    } finally {
-      submitBtn.innerHTML = originalContent;
-      submitBtn.disabled = false;
-    }
-  });
+      tabPanels.forEach((panel) => {
+        panel.classList.toggle("hidden", panel.dataset.tabPanel !== tabId);
+      });
+    };
 
-  loadProjects();
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!button.dataset.tab) return;
+        setActiveTab(button.dataset.tab);
+      });
+    });
+
+    setActiveTab("privacy");
+
+    async function loadProjects() {
+      try {
+        const projects = await projectsService.getAdminProjects();
+        // Build options with createElement/textContent so a project title
+        // containing markup (e.g. `<img onerror=…>`) cannot execute as XSS in
+        // the admin session. Mirrors the safe pattern in experiences/new.astro.
+        if (dropdownList) {
+          dropdownList.innerHTML = "";
+          projects.forEach((project) => {
+            const li = document.createElement("li");
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className =
+              "dropdown-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors flex items-center justify-between group";
+            button.dataset.value = String(project.id);
+
+            const label = document.createElement("span");
+            label.textContent = `${project.title}`;
+
+            const indicator = document.createElement("span");
+            indicator.className =
+              "opacity-0 group-hover:opacity-100 text-sky-500 font-bold";
+            indicator.textContent = "_";
+
+            button.append(label, indicator);
+            li.appendChild(button);
+            dropdownList.appendChild(li);
+          });
+        }
+
+        (window as Window & { setupDropdowns?: () => void }).setupDropdowns?.();
+
+        if (initialProjectId) {
+          if (projectInput) {
+            projectInput.value = String(initialProjectId);
+            projectInput.dispatchEvent(new Event("change"));
+          }
+          await loadPolicyForProject(initialProjectId);
+        }
+
+        loadingState?.classList.add("hidden");
+        form?.classList.remove("hidden");
+
+        if (form) {
+          formGuard = setupFormGuard(form);
+        }
+      } catch (error) {
+        alert("Failed to load projects");
+        loadingState?.classList.add("hidden");
+      }
+    }
+
+    async function loadPolicyForProject(projectId: number) {
+      if (!projectId) return;
+      const policy = await projectsService
+        .getAdminProjectPolicyById(projectId)
+        .catch(() => null);
+      if (!form) return;
+      const privacyField = form.elements.namedItem("privacyPolicy");
+      const termsField = form.elements.namedItem("termsAndConditions");
+      if (privacyField instanceof HTMLTextAreaElement) {
+        privacyField.value = policy?.privacyPolicy || "";
+        privacyField.dispatchEvent(new Event("change"));
+      }
+      if (termsField instanceof HTMLTextAreaElement) {
+        termsField.value = policy?.termsAndConditions || "";
+        termsField.dispatchEvent(new Event("change"));
+      }
+      formGuard?.updateInitialState();
+    }
+
+    projectInput?.addEventListener("change", async () => {
+      const selectedId = Number(projectInput.value);
+      await loadPolicyForProject(selectedId);
+    });
+
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!submitBtn) return;
+
+      const projectId = Number(projectInput?.value);
+      if (!projectId) {
+        alert("Please select a project");
+        return;
+      }
+
+      const originalContent = submitBtn.innerHTML;
+      submitBtn.innerHTML = "SAVING...";
+      submitBtn.disabled = true;
+
+      const formData = new FormData(form);
+      const privacyPolicy = String(formData.get("privacyPolicy") || "").trim();
+      const termsAndConditions = String(
+        formData.get("termsAndConditions") || "",
+      ).trim();
+
+      try {
+        const result = await projectsService.upsertProjectPolicy(projectId, {
+          privacyPolicy: privacyPolicy || null,
+          termsAndConditions: termsAndConditions || null,
+        });
+        if (result) {
+          formGuard?.updateInitialState();
+          alert("Policy saved successfully!");
+          window.location.href = "/admin/policies";
+        } else {
+          throw new Error("Failed to save policy");
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Failed to save policy. Please try again.");
+      } finally {
+        submitBtn.innerHTML = originalContent;
+        submitBtn.disabled = false;
+      }
+    });
+
+    loadProjects();
+  }
+  document.addEventListener("astro:page-load", initPage);
 </script>

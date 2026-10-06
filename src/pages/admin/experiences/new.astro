@@ -35,220 +35,229 @@ import AlertToast from "../../../components/ui/AlertToast.astro";
   import { ApiError } from "../../../lib/api-client";
   import { setupFormGuard } from "../../../lib/form-guard";
 
-  const form = document.getElementById("experience-form") as HTMLFormElement;
-  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+  // <ClientRouter> runs a page's bundled script once per session, so a
+  // second visit got a dead page (no data, no handlers). Init on every visit.
+  async function initPage() {
+    if (location.pathname.replace(/\/+$/, "") !== "/admin/experiences/new")
+      return;
+    const form = document.getElementById("experience-form") as HTMLFormElement;
+    const submitBtn = document.getElementById(
+      "submit-btn",
+    ) as HTMLButtonElement;
 
-  let formGuard: ReturnType<typeof setupFormGuard> | null = null;
+    let formGuard: ReturnType<typeof setupFormGuard> | null = null;
 
-  if (form) {
-    formGuard = setupFormGuard(form);
-  }
-
-  const showAlert = (options: {
-    type?: "success" | "error" | "warning" | "info";
-    title?: string;
-    message?: string;
-    duration?: number;
-  }) => {
-    const registry = (window as any).__uiAlerts;
-    registry?.["experience-alert"]?.show(options);
-  };
-
-  const fieldLabels: Record<string, string> = {
-    companyName: "Company",
-    role: "Role",
-    startDate: "Start Date",
-    endDate: "End Date",
-    isCurrent: "Current Company",
-    location: "Location",
-    latitude: "Latitude",
-    longitude: "Longitude",
-    projectIds: "Projects",
-    description: "Description",
-    displayOrder: "Display Order",
-  };
-
-  const formatErrorMessage = (error: unknown) => {
-    const apiError = error as ApiError & { data?: any };
-    const message =
-      apiError?.data?.error ||
-      apiError?.message ||
-      "Failed to create experience.";
-    const field = apiError?.data?.field;
-    if (field) {
-      const label = fieldLabels[field] || field;
-      return { message: `${message} (Field: ${label})`, field };
+    if (form) {
+      formGuard = setupFormGuard(form);
     }
-    return { message, field };
-  };
 
-  const normalizeNumber = (value: FormDataEntryValue) => {
-    const raw = String(value).trim();
-    if (raw === "") return undefined;
-    const parsed = Number(raw);
-    return Number.isNaN(parsed) ? undefined : parsed;
-  };
+    const showAlert = (options: {
+      type?: "success" | "error" | "warning" | "info";
+      title?: string;
+      message?: string;
+      duration?: number;
+    }) => {
+      const registry = (window as any).__uiAlerts;
+      registry?.["experience-alert"]?.show(options);
+    };
 
-  const normalizeOptionalText = (value: FormDataEntryValue) => {
-    const trimmed = String(value).trim();
-    return trimmed === "" ? null : trimmed;
-  };
+    const fieldLabels: Record<string, string> = {
+      companyName: "Company",
+      role: "Role",
+      startDate: "Start Date",
+      endDate: "End Date",
+      isCurrent: "Current Company",
+      location: "Location",
+      latitude: "Latitude",
+      longitude: "Longitude",
+      projectIds: "Projects",
+      description: "Description",
+      displayOrder: "Display Order",
+    };
 
-  const parseJsonArray = (value: FormDataEntryValue) => {
-    const raw = String(value).trim();
-    if (!raw) return [];
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return raw
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean);
-    }
-  };
-
-  const updateProjectOptions = async () => {
-    const container = document.querySelector(
-      '.tech-multi-dropdown-container[data-name="projectIds"]',
-    );
-    const list = container?.querySelector("ul");
-    if (!container || !list) return;
-    try {
-      const projects = await projectsService.getAdminProjects();
-      list.innerHTML = "";
-      projects.forEach((project) => {
-        const li = document.createElement("li");
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className =
-          "dropdown-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors flex items-center justify-between group";
-        button.dataset.value = String(project.id);
-
-        const label = document.createElement("span");
-        label.textContent = `${project.title}`;
-
-        const indicator = document.createElement("span");
-        indicator.className =
-          "indicator opacity-0 group-hover:opacity-100 text-sky-500 font-bold";
-        indicator.textContent = "_";
-
-        button.append(label, indicator);
-        li.appendChild(button);
-        list.appendChild(li);
-      });
-      (window as any).setupMultiDropdowns?.();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  updateProjectOptions();
-
-  form?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!submitBtn) return;
-
-    const originalContent = submitBtn.innerHTML;
-    submitBtn.innerHTML = "SAVING...";
-    submitBtn.disabled = true;
-
-    const formData = new FormData(form);
-    const data: any = {};
-
-    formData.forEach((value, key) => {
-      if (key === "latitude" || key === "longitude") {
-        const parsed = normalizeNumber(value);
-        if (parsed !== undefined) {
-          data[key] = parsed;
-        }
-        return;
+    const formatErrorMessage = (error: unknown) => {
+      const apiError = error as ApiError & { data?: any };
+      const message =
+        apiError?.data?.error ||
+        apiError?.message ||
+        "Failed to create experience.";
+      const field = apiError?.data?.field;
+      if (field) {
+        const label = fieldLabels[field] || field;
+        return { message: `${message} (Field: ${label})`, field };
       }
+      return { message, field };
+    };
 
-      if (key === "projectIds") {
-        const parsed = parseJsonArray(value)
-          .map((item) => Number(item))
-          .filter((item) => !Number.isNaN(item));
-        data.projectIds = parsed;
-        return;
-      }
+    const normalizeNumber = (value: FormDataEntryValue) => {
+      const raw = String(value).trim();
+      if (raw === "") return undefined;
+      const parsed = Number(raw);
+      return Number.isNaN(parsed) ? undefined : parsed;
+    };
 
-      if (key === "isCurrent") {
-        data.isCurrent = true;
-        return;
-      }
-
-      if (key === "displayOrder") {
-        const parsed = normalizeNumber(value);
-        if (parsed !== undefined) {
-          data.displayOrder = parsed;
-        }
-        return;
-      }
-
-      if (key === "endDate") {
-        const normalized = normalizeOptionalText(value);
-        if (normalized !== null) {
-          data.endDate = normalized;
-        }
-        return;
-      }
-
-      if (key === "location" || key === "description") {
-        const normalized = normalizeOptionalText(value);
-        if (normalized !== null) {
-          data[key] = normalized;
-        }
-        return;
-      }
-
+    const normalizeOptionalText = (value: FormDataEntryValue) => {
       const trimmed = String(value).trim();
-      if (trimmed !== "") {
-        data[key] = trimmed;
+      return trimmed === "" ? null : trimmed;
+    };
+
+    const parseJsonArray = (value: FormDataEntryValue) => {
+      const raw = String(value).trim();
+      if (!raw) return [];
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return raw
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+    };
+
+    const updateProjectOptions = async () => {
+      const container = document.querySelector(
+        '.tech-multi-dropdown-container[data-name="projectIds"]',
+      );
+      const list = container?.querySelector("ul");
+      if (!container || !list) return;
+      try {
+        const projects = await projectsService.getAdminProjects();
+        list.innerHTML = "";
+        projects.forEach((project) => {
+          const li = document.createElement("li");
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className =
+            "dropdown-item w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-colors flex items-center justify-between group";
+          button.dataset.value = String(project.id);
+
+          const label = document.createElement("span");
+          label.textContent = `${project.title}`;
+
+          const indicator = document.createElement("span");
+          indicator.className =
+            "indicator opacity-0 group-hover:opacity-100 text-sky-500 font-bold";
+          indicator.textContent = "_";
+
+          button.append(label, indicator);
+          li.appendChild(button);
+          list.appendChild(li);
+        });
+        (window as any).setupMultiDropdowns?.();
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    updateProjectOptions();
+
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!submitBtn) return;
+
+      const originalContent = submitBtn.innerHTML;
+      submitBtn.innerHTML = "SAVING...";
+      submitBtn.disabled = true;
+
+      const formData = new FormData(form);
+      const data: any = {};
+
+      formData.forEach((value, key) => {
+        if (key === "latitude" || key === "longitude") {
+          const parsed = normalizeNumber(value);
+          if (parsed !== undefined) {
+            data[key] = parsed;
+          }
+          return;
+        }
+
+        if (key === "projectIds") {
+          const parsed = parseJsonArray(value)
+            .map((item) => Number(item))
+            .filter((item) => !Number.isNaN(item));
+          data.projectIds = parsed;
+          return;
+        }
+
+        if (key === "isCurrent") {
+          data.isCurrent = true;
+          return;
+        }
+
+        if (key === "displayOrder") {
+          const parsed = normalizeNumber(value);
+          if (parsed !== undefined) {
+            data.displayOrder = parsed;
+          }
+          return;
+        }
+
+        if (key === "endDate") {
+          const normalized = normalizeOptionalText(value);
+          if (normalized !== null) {
+            data.endDate = normalized;
+          }
+          return;
+        }
+
+        if (key === "location" || key === "description") {
+          const normalized = normalizeOptionalText(value);
+          if (normalized !== null) {
+            data[key] = normalized;
+          }
+          return;
+        }
+
+        const trimmed = String(value).trim();
+        if (trimmed !== "") {
+          data[key] = trimmed;
+        }
+      });
+
+      if (!data.endDate) {
+        data.endDate = null;
+      }
+
+      data.isCurrent = formData.has("isCurrent");
+      if (data.isCurrent) {
+        data.endDate = null;
+      }
+
+      try {
+        const result = await experiencesService.createExperience(data);
+        if (result) {
+          formGuard?.updateInitialState();
+          showAlert({
+            type: "success",
+            title: "Experience created",
+            message: "Experience created successfully.",
+          });
+          window.setTimeout(() => {
+            window.location.href = "/admin/experiences";
+          }, 800);
+        } else {
+          throw new Error("Failed to create experience");
+        }
+      } catch (error) {
+        console.error(error);
+        const { message, field } = formatErrorMessage(error);
+        if (field) {
+          const focusElement = form?.elements.namedItem(
+            field,
+          ) as HTMLElement | null;
+          focusElement?.focus?.();
+        }
+        showAlert({
+          type: "error",
+          title: "Save failed",
+          message,
+        });
+      } finally {
+        submitBtn.innerHTML = originalContent;
+        submitBtn.disabled = false;
       }
     });
-
-    if (!data.endDate) {
-      data.endDate = null;
-    }
-
-    data.isCurrent = formData.has("isCurrent");
-    if (data.isCurrent) {
-      data.endDate = null;
-    }
-
-    try {
-      const result = await experiencesService.createExperience(data);
-      if (result) {
-        formGuard?.updateInitialState();
-        showAlert({
-          type: "success",
-          title: "Experience created",
-          message: "Experience created successfully.",
-        });
-        window.setTimeout(() => {
-          window.location.href = "/admin/experiences";
-        }, 800);
-      } else {
-        throw new Error("Failed to create experience");
-      }
-    } catch (error) {
-      console.error(error);
-      const { message, field } = formatErrorMessage(error);
-      if (field) {
-        const focusElement = form?.elements.namedItem(
-          field,
-        ) as HTMLElement | null;
-        focusElement?.focus?.();
-      }
-      showAlert({
-        type: "error",
-        title: "Save failed",
-        message,
-      });
-    } finally {
-      submitBtn.innerHTML = originalContent;
-      submitBtn.disabled = false;
-    }
-  });
+  }
+  document.addEventListener("astro:page-load", initPage);
 </script>

@@ -130,15 +130,17 @@ export function setupFormGuard(form: HTMLFormElement) {
   document.addEventListener('astro:before-preparation', handleBeforePreparation);
   document.addEventListener('click', handleLinkClick, true);
 
-  return {
-    updateInitialState,
-    cleanup: () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('popstate', handlePopState);
-      document.removeEventListener('astro:before-preparation', handleBeforePreparation);
-      document.removeEventListener('click', handleLinkClick, true);
-      form.removeEventListener('input', checkDirty);
-      form.removeEventListener('change', checkDirty);
-    }
+  const cleanup = () => {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.removeEventListener('popstate', handlePopState);
+    document.removeEventListener('astro:before-preparation', handleBeforePreparation);
+    document.removeEventListener('click', handleLinkClick, true);
+    form.removeEventListener('input', checkDirty);
+    form.removeEventListener('change', checkDirty);
   };
+  // Listeners live on window/document, which outlive a <ClientRouter> page
+  // swap - drop them when this page is replaced so revisits don't stack guards.
+  document.addEventListener('astro:before-swap', cleanup, { once: true });
+
+  return { updateInitialState, cleanup };
 }

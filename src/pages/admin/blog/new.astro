@@ -41,139 +41,147 @@ const statusOptions = [
   import { ApiError } from "../../../lib/api-client";
   import { setupFormGuard } from "../../../lib/form-guard";
 
-  const form = document.getElementById("blog-form") as HTMLFormElement;
-  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+  // <ClientRouter> runs a page's bundled script once per session, so a
+  // second visit got a dead page (no data, no handlers). Init on every visit.
+  async function initPage() {
+    if (location.pathname.replace(/\/+$/, "") !== "/admin/blog/new") return;
+    const form = document.getElementById("blog-form") as HTMLFormElement;
+    const submitBtn = document.getElementById(
+      "submit-btn",
+    ) as HTMLButtonElement;
 
-  let formGuard: ReturnType<typeof setupFormGuard> | null = null;
+    let formGuard: ReturnType<typeof setupFormGuard> | null = null;
 
-  if (form) {
-    formGuard = setupFormGuard(form);
-  }
-
-  const showAlert = (options: {
-    type?: "success" | "error" | "warning" | "info";
-    title?: string;
-    message?: string;
-    duration?: number;
-  }) => {
-    const registry = (window as any).__uiAlerts;
-    registry?.["blog-alert"]?.show(options);
-  };
-
-  const fieldLabels: Record<string, string> = {
-    title: "Title",
-    slug: "Slug",
-    excerpt: "Excerpt",
-    heroText: "Hero Statement",
-    bodyContent: "Body Content",
-    publishedDate: "Published Date",
-    tags: "Tags",
-    category: "Category",
-    status: "Status",
-    sections: "Sections",
-    "sections.heading": "Sections",
-    "sections.body": "Sections",
-    checklist: "Checklist",
-    "checklist.itemText": "Checklist",
-  };
-
-  const getFocusFieldName = (field?: string) => {
-    if (!field) return null;
-    if (field.startsWith("sections") || field.startsWith("checklist")) {
-      return "bodyContent";
+    if (form) {
+      formGuard = setupFormGuard(form);
     }
-    return field;
-  };
 
-  const formatErrorMessage = (error: unknown) => {
-    const apiError = error as ApiError & { data?: any };
-    const message =
-      apiError?.data?.error || apiError?.message || "Failed to create post.";
-    const field = apiError?.data?.field;
-    if (field) {
-      const label = fieldLabels[field] || field;
-      return { message: `${message} (Field: ${label})`, field };
-    }
-    return { message, field };
-  };
+    const showAlert = (options: {
+      type?: "success" | "error" | "warning" | "info";
+      title?: string;
+      message?: string;
+      duration?: number;
+    }) => {
+      const registry = (window as any).__uiAlerts;
+      registry?.["blog-alert"]?.show(options);
+    };
 
-  form?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!submitBtn) return;
+    const fieldLabels: Record<string, string> = {
+      title: "Title",
+      slug: "Slug",
+      excerpt: "Excerpt",
+      heroText: "Hero Statement",
+      bodyContent: "Body Content",
+      publishedDate: "Published Date",
+      tags: "Tags",
+      category: "Category",
+      status: "Status",
+      sections: "Sections",
+      "sections.heading": "Sections",
+      "sections.body": "Sections",
+      checklist: "Checklist",
+      "checklist.itemText": "Checklist",
+    };
 
-    const originalContent = submitBtn.innerHTML;
-    submitBtn.innerHTML = "SAVING...";
-    submitBtn.disabled = true;
+    const getFocusFieldName = (field?: string) => {
+      if (!field) return null;
+      if (field.startsWith("sections") || field.startsWith("checklist")) {
+        return "bodyContent";
+      }
+      return field;
+    };
 
-    const formData = new FormData(form);
-    const data: any = {};
+    const formatErrorMessage = (error: unknown) => {
+      const apiError = error as ApiError & { data?: any };
+      const message =
+        apiError?.data?.error || apiError?.message || "Failed to create post.";
+      const field = apiError?.data?.field;
+      if (field) {
+        const label = fieldLabels[field] || field;
+        return { message: `${message} (Field: ${label})`, field };
+      }
+      return { message, field };
+    };
 
-    formData.forEach((value, key) => {
-      if (key === "tags") {
-        data[key] = (value as string)
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean);
-      } else if (key === "isFeatured") {
-        data[key] = true;
-      } else if (key === "publishedDate") {
-        const dateValue = String(value).trim();
-        if (dateValue) {
-          data[key] = dateValue;
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!submitBtn) return;
+
+      const originalContent = submitBtn.innerHTML;
+      submitBtn.innerHTML = "SAVING...";
+      submitBtn.disabled = true;
+
+      const formData = new FormData(form);
+      const data: any = {};
+
+      formData.forEach((value, key) => {
+        if (key === "tags") {
+          data[key] = (value as string)
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean);
+        } else if (key === "isFeatured") {
+          data[key] = true;
+        } else if (key === "publishedDate") {
+          const dateValue = String(value).trim();
+          if (dateValue) {
+            data[key] = dateValue;
+          }
+        } else {
+          const trimmed = typeof value === "string" ? value.trim() : value;
+          if (trimmed !== "") {
+            data[key] = trimmed;
+          }
         }
-      } else {
-        const trimmed = typeof value === "string" ? value.trim() : value;
-        if (trimmed !== "") {
-          data[key] = trimmed;
+      });
+
+      if (!formData.has("isFeatured")) {
+        data.isFeatured = false;
+      }
+
+      if (!data.status) {
+        data.status = "draft";
+      }
+
+      if (data.slug && String(data.slug).trim().length === 0) {
+        delete data.slug;
+      }
+
+      try {
+        const result = await blogService.createPost(data);
+        if (result) {
+          formGuard?.updateInitialState();
+          showAlert({
+            type: "success",
+            title: "Post created",
+            message: "Blog post created successfully.",
+          });
+          window.setTimeout(() => {
+            window.location.href = "/admin/blog";
+          }, 800);
+        } else {
+          throw new Error("Failed to create post");
         }
+      } catch (error) {
+        console.error(error);
+        const { message, field } = formatErrorMessage(error);
+        const focusFieldName = getFocusFieldName(field);
+        if (focusFieldName) {
+          const focusElement = form?.elements.namedItem(
+            focusFieldName,
+          ) as HTMLElement | null;
+          focusElement?.focus?.();
+        }
+        showAlert({
+          type: "error",
+          title: "Save failed",
+          message,
+        });
+      } finally {
+        submitBtn.innerHTML = originalContent;
+        submitBtn.disabled = false;
       }
     });
-
-    if (!formData.has("isFeatured")) {
-      data.isFeatured = false;
-    }
-
-    if (!data.status) {
-      data.status = "draft";
-    }
-
-    if (data.slug && String(data.slug).trim().length === 0) {
-      delete data.slug;
-    }
-
-    try {
-      const result = await blogService.createPost(data);
-      if (result) {
-        formGuard?.updateInitialState();
-        showAlert({
-          type: "success",
-          title: "Post created",
-          message: "Blog post created successfully.",
-        });
-        window.setTimeout(() => {
-          window.location.href = "/admin/blog";
-        }, 800);
-      } else {
-        throw new Error("Failed to create post");
-      }
-    } catch (error) {
-      console.error(error);
-      const { message, field } = formatErrorMessage(error);
-      const focusFieldName = getFocusFieldName(field);
-      if (focusFieldName) {
-        const focusElement = form?.elements.namedItem(
-          focusFieldName,
-        ) as HTMLElement | null;
-        focusElement?.focus?.();
-      }
-      showAlert({
-        type: "error",
-        title: "Save failed",
-        message,
-      });
-    } finally {
-      submitBtn.innerHTML = originalContent;
-      submitBtn.disabled = false;
-    }
-  });
+  }
+  document.addEventListener("astro:page-load", initPage);
 </script>

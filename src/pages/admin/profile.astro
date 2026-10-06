@@ -296,7 +296,11 @@ const profile: any = {}; // populated client-side after page load
           />
         </div>
         <div class="flex gap-2">
-          <button type="button" id="telegram-link-btn" class="admin-btn admin-btn-primary">
+          <button
+            type="button"
+            id="telegram-link-btn"
+            class="admin-btn admin-btn-primary"
+          >
             Link
           </button>
           <button
@@ -309,7 +313,10 @@ const profile: any = {}; // populated client-side after page load
           </button>
         </div>
       </div>
-      <p id="telegram-status" class="text-sm mt-3 text-gray-500 dark:text-gray-400">
+      <p
+        id="telegram-status"
+        class="text-sm mt-3 text-gray-500 dark:text-gray-400"
+      >
         Loading…
       </p>
     </div>
@@ -321,217 +328,230 @@ const profile: any = {}; // populated client-side after page load
     import { ApiClient } from "../../lib/api-client";
     import { API_BASE_URL } from "../../lib/config";
 
-    const saveBtnBottom = document.getElementById(
-      "save-profile-btn-bottom",
-    ) as HTMLButtonElement | null;
-    const form = document.getElementById(
-      "profile-form",
-    ) as HTMLFormElement | null;
-    const avatarInput = document.querySelector(
-      'input[name="avatarUrl"]',
-    ) as HTMLInputElement | null;
-    const avatarUpload = document.getElementById(
-      "avatar-upload",
-    ) as HTMLInputElement | null;
-    const avatarImg = document.querySelector(
-      "#avatar-preview",
-    ) as HTMLImageElement | null;
+    // <ClientRouter> runs a page's bundled script once per session, so a
+    // second visit got a dead page (no data, no handlers). Init on every visit.
+    async function initPage() {
+      if (location.pathname.replace(/\/+$/, "") !== "/admin/profile") return;
+      const saveBtnBottom = document.getElementById(
+        "save-profile-btn-bottom",
+      ) as HTMLButtonElement | null;
+      const form = document.getElementById(
+        "profile-form",
+      ) as HTMLFormElement | null;
+      const avatarInput = document.querySelector(
+        'input[name="avatarUrl"]',
+      ) as HTMLInputElement | null;
+      const avatarUpload = document.getElementById(
+        "avatar-upload",
+      ) as HTMLInputElement | null;
+      const avatarImg = document.querySelector(
+        "#avatar-preview",
+      ) as HTMLImageElement | null;
 
-    function parseDate(value?: string | null): Date | null {
-      if (!value) return null;
-      const date = new Date(value);
-      return Number.isNaN(date.getTime()) ? null : date;
-    }
-
-    // Load profile data on mount
-    async function loadProfile() {
-      try {
-        const profile = await profileService.getOwnerProfile();
-        if (profile) {
-          // Update images
-          if (profile.avatarUrl && avatarImg) avatarImg.src = profile.avatarUrl;
-
-          // Update text
-          const nameDisplay = document.querySelector("h2");
-          if (nameDisplay) nameDisplay.textContent = profile.name;
-
-          const emailDisplay = document.querySelector("p.text-sky-400");
-          if (emailDisplay) emailDisplay.textContent = profile.email;
-
-          const dateDisplay = document.querySelector("p.text-gray-400");
-          if (dateDisplay) {
-            const date = parseDate(profile.createdAt);
-            dateDisplay.textContent = `Member since ${date ? date.toLocaleDateString() : "-"}`;
-          }
-
-          // Update inputs
-          const inputs = {
-            id: profile.id,
-            name: profile.name,
-            email: profile.email,
-            location: profile.location,
-            website: profile.website,
-            avatarUrl: profile.avatarUrl,
-            bio: profile.bio,
-            linkedinUrl: profile.linkedinUrl,
-            githubUrl: profile.githubUrl,
-            twitterUrl: profile.twitterUrl,
-          };
-
-          Object.entries(inputs).forEach(([key, value]) => {
-            const input = document.querySelector(`[name="${key}"]`) as
-              | HTMLInputElement
-              | HTMLTextAreaElement;
-            if (input && value) input.value = String(value);
-          });
-
-          // Telegram link state comes from the same profile payload.
-          const telegramProfile = profile as any;
-          renderTelegramStatus(telegramProfile.telegramChatId, telegramProfile.telegramLinkedAt);
-        }
-      } catch (error) {
-        console.error("Failed to load profile", error);
+      function parseDate(value?: string | null): Date | null {
+        if (!value) return null;
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? null : date;
       }
-    }
 
-    // Initial load
-    loadProfile();
-
-    // Handle URL input change
-    if (avatarInput && avatarImg) {
-      avatarInput.addEventListener("input", (e) => {
-        const url = (e.target as HTMLInputElement).value;
-        if (url) {
-          try {
-            const parsed = new URL(url);
-            if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-              avatarImg.src = url;
-            }
-          } catch {
-            // Invalid URL - skip preview update
-          }
-        }
-      });
-    }
-
-    // Handle File Upload
-    if (avatarUpload && avatarImg) {
-      avatarUpload.addEventListener("change", async (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (!file) return;
-
-        avatarUpload.disabled = true;
+      // Load profile data on mount
+      async function loadProfile() {
         try {
-          const url = await uploadImage(file);
-          avatarImg.src = url;
-          if (avatarInput) avatarInput.value = url;
+          const profile = await profileService.getOwnerProfile();
+          if (profile) {
+            // Update images
+            if (profile.avatarUrl && avatarImg)
+              avatarImg.src = profile.avatarUrl;
+
+            // Update text
+            const nameDisplay = document.querySelector("h2");
+            if (nameDisplay) nameDisplay.textContent = profile.name;
+
+            const emailDisplay = document.querySelector("p.text-sky-400");
+            if (emailDisplay) emailDisplay.textContent = profile.email;
+
+            const dateDisplay = document.querySelector("p.text-gray-400");
+            if (dateDisplay) {
+              const date = parseDate(profile.createdAt);
+              dateDisplay.textContent = `Member since ${date ? date.toLocaleDateString() : "-"}`;
+            }
+
+            // Update inputs
+            const inputs = {
+              id: profile.id,
+              name: profile.name,
+              email: profile.email,
+              location: profile.location,
+              website: profile.website,
+              avatarUrl: profile.avatarUrl,
+              bio: profile.bio,
+              linkedinUrl: profile.linkedinUrl,
+              githubUrl: profile.githubUrl,
+              twitterUrl: profile.twitterUrl,
+            };
+
+            Object.entries(inputs).forEach(([key, value]) => {
+              const input = document.querySelector(`[name="${key}"]`) as
+                | HTMLInputElement
+                | HTMLTextAreaElement;
+              if (input && value) input.value = String(value);
+            });
+
+            // Telegram link state comes from the same profile payload.
+            const telegramProfile = profile as any;
+            renderTelegramStatus(
+              telegramProfile.telegramChatId,
+              telegramProfile.telegramLinkedAt,
+            );
+          }
         } catch (error) {
-          const message =
-            error instanceof Error ? error.message : "Upload failed";
-          alert(`Upload failed: ${message}`);
+          console.error("Failed to load profile", error);
+        }
+      }
+
+      // Initial load
+      loadProfile();
+
+      // Handle URL input change
+      if (avatarInput && avatarImg) {
+        avatarInput.addEventListener("input", (e) => {
+          const url = (e.target as HTMLInputElement).value;
+          if (url) {
+            try {
+              const parsed = new URL(url);
+              if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+                avatarImg.src = url;
+              }
+            } catch {
+              // Invalid URL - skip preview update
+            }
+          }
+        });
+      }
+
+      // Handle File Upload
+      if (avatarUpload && avatarImg) {
+        avatarUpload.addEventListener("change", async (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (!file) return;
+
+          avatarUpload.disabled = true;
+          try {
+            const url = await uploadImage(file);
+            avatarImg.src = url;
+            if (avatarInput) avatarInput.value = url;
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : "Upload failed";
+            alert(`Upload failed: ${message}`);
+          } finally {
+            avatarUpload.disabled = false;
+          }
+        });
+      }
+
+      async function handleSave(e: Event) {
+        e.preventDefault();
+        if (!form) return;
+
+        const formData = new FormData(form);
+        const id = formData.get("id");
+        const data: any = {};
+
+        formData.forEach((value, key) => {
+          if (key !== "id") {
+            data[key] = value;
+          }
+        });
+
+        if (saveBtnBottom) {
+          saveBtnBottom.dataset.originalContent = saveBtnBottom.innerHTML;
+          saveBtnBottom.innerHTML = `SAVING...`;
+          saveBtnBottom.disabled = true;
+        }
+
+        try {
+          if (id) {
+            await profileService.updateProfile(Number(id), data);
+            alert("Profile updated successfully!");
+          }
+        } catch (error) {
+          console.error(error);
+          alert("Failed to update profile.");
         } finally {
-          avatarUpload.disabled = false;
+          if (saveBtnBottom && saveBtnBottom.dataset.originalContent) {
+            saveBtnBottom.innerHTML = saveBtnBottom.dataset.originalContent;
+            saveBtnBottom.disabled = false;
+          }
+        }
+      }
+
+      form?.addEventListener("submit", handleSave);
+
+      // --- Telegram ---
+      // ApiClient is instantiated here directly: the profile service has no Telegram
+      // methods yet (src/lib is outside this change).
+      const telegramApi = new ApiClient(API_BASE_URL);
+      const telegramInput = document.getElementById(
+        "telegram-chat-id",
+      ) as HTMLInputElement | null;
+      const telegramLinkBtn = document.getElementById(
+        "telegram-link-btn",
+      ) as HTMLButtonElement | null;
+      const telegramUnlinkBtn = document.getElementById(
+        "telegram-unlink-btn",
+      ) as HTMLButtonElement | null;
+      const telegramStatus = document.getElementById(
+        "telegram-status",
+      ) as HTMLParagraphElement | null;
+
+      function renderTelegramStatus(
+        chatId?: string | null,
+        linkedAt?: string | null,
+      ) {
+        if (telegramInput) telegramInput.value = chatId ? String(chatId) : "";
+        if (telegramUnlinkBtn) telegramUnlinkBtn.disabled = !chatId;
+        if (!telegramStatus) return;
+        const linked = parseDate(linkedAt);
+        telegramStatus.textContent = chatId
+          ? `Linked to chat ${chatId}${linked ? ` since ${linked.toLocaleString()}` : ""}.`
+          : "Not linked yet - message the bot to get your chat id.";
+      }
+
+      telegramLinkBtn?.addEventListener("click", async () => {
+        const chatId = telegramInput?.value.trim();
+        if (!chatId) {
+          alert("Paste your Telegram chat id first.");
+          return;
+        }
+
+        telegramLinkBtn.disabled = true;
+        try {
+          await telegramApi.put("/owner/profile/telegram", { chatId });
+          await loadProfile();
+        } catch (error) {
+          alert(
+            `Link failed: ${error instanceof Error ? error.message : "unknown error"}`,
+          );
+        } finally {
+          telegramLinkBtn.disabled = false;
+        }
+      });
+
+      telegramUnlinkBtn?.addEventListener("click", async () => {
+        telegramUnlinkBtn.disabled = true;
+        try {
+          await telegramApi.delete("/owner/profile/telegram");
+          await loadProfile();
+        } catch (error) {
+          alert(
+            `Unlink failed: ${error instanceof Error ? error.message : "unknown error"}`,
+          );
+        } finally {
+          telegramUnlinkBtn.disabled = false;
         }
       });
     }
-
-    async function handleSave(e: Event) {
-      e.preventDefault();
-      if (!form) return;
-
-      const formData = new FormData(form);
-      const id = formData.get("id");
-      const data: any = {};
-
-      formData.forEach((value, key) => {
-        if (key !== "id") {
-          data[key] = value;
-        }
-      });
-
-      if (saveBtnBottom) {
-        saveBtnBottom.dataset.originalContent = saveBtnBottom.innerHTML;
-        saveBtnBottom.innerHTML = `SAVING...`;
-        saveBtnBottom.disabled = true;
-      }
-
-      try {
-        if (id) {
-          await profileService.updateProfile(Number(id), data);
-          alert("Profile updated successfully!");
-        }
-      } catch (error) {
-        console.error(error);
-        alert("Failed to update profile.");
-      } finally {
-        if (saveBtnBottom && saveBtnBottom.dataset.originalContent) {
-          saveBtnBottom.innerHTML = saveBtnBottom.dataset.originalContent;
-          saveBtnBottom.disabled = false;
-        }
-      }
-    }
-
-    form?.addEventListener("submit", handleSave);
-
-    // --- Telegram ---
-    // ApiClient is instantiated here directly: the profile service has no Telegram
-    // methods yet (src/lib is outside this change).
-    const telegramApi = new ApiClient(API_BASE_URL);
-    const telegramInput = document.getElementById(
-      "telegram-chat-id",
-    ) as HTMLInputElement | null;
-    const telegramLinkBtn = document.getElementById(
-      "telegram-link-btn",
-    ) as HTMLButtonElement | null;
-    const telegramUnlinkBtn = document.getElementById(
-      "telegram-unlink-btn",
-    ) as HTMLButtonElement | null;
-    const telegramStatus = document.getElementById(
-      "telegram-status",
-    ) as HTMLParagraphElement | null;
-
-    function renderTelegramStatus(chatId?: string | null, linkedAt?: string | null) {
-      if (telegramInput) telegramInput.value = chatId ? String(chatId) : "";
-      if (telegramUnlinkBtn) telegramUnlinkBtn.disabled = !chatId;
-      if (!telegramStatus) return;
-      const linked = parseDate(linkedAt);
-      telegramStatus.textContent = chatId
-        ? `Linked to chat ${chatId}${linked ? ` since ${linked.toLocaleString()}` : ""}.`
-        : "Not linked yet - message the bot to get your chat id.";
-    }
-
-    telegramLinkBtn?.addEventListener("click", async () => {
-      const chatId = telegramInput?.value.trim();
-      if (!chatId) {
-        alert("Paste your Telegram chat id first.");
-        return;
-      }
-
-      telegramLinkBtn.disabled = true;
-      try {
-        await telegramApi.put("/owner/profile/telegram", { chatId });
-        await loadProfile();
-      } catch (error) {
-        alert(
-          `Link failed: ${error instanceof Error ? error.message : "unknown error"}`,
-        );
-      } finally {
-        telegramLinkBtn.disabled = false;
-      }
-    });
-
-    telegramUnlinkBtn?.addEventListener("click", async () => {
-      telegramUnlinkBtn.disabled = true;
-      try {
-        await telegramApi.delete("/owner/profile/telegram");
-        await loadProfile();
-      } catch (error) {
-        alert(
-          `Unlink failed: ${error instanceof Error ? error.message : "unknown error"}`,
-        );
-      } finally {
-        telegramUnlinkBtn.disabled = false;
-      }
-    });
+    document.addEventListener("astro:page-load", initPage);
   </script>
 </PrivateLayout>

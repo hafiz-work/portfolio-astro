@@ -152,6 +152,9 @@ html[data-theme-switching]::view-transition-new(root) {
         height: 1px;
         background-color: var(--pattern-fg);
         pointer-events: none;
+        /* Above child backgrounds: .row-grid cells (bg-canvas) otherwise paint
+           over a wrapper's hairline, so it showed in the gutters only. */
+        z-index: 1;
     }
 
     .line-t::before,
@@ -397,7 +400,10 @@ html[data-theme-switching]::view-transition-new(root) {
 
     /* Floating option list - floating chrome, so it's the one place with a shadow. */
     .menu {
-        @apply absolute z-50 mt-1 w-max min-w-full max-w-[min(92vw,28rem)] overflow-y-auto rounded-xl bg-white p-1 shadow-lg ring-1 ring-gray-950/10 [scrollbar-width:thin] dark:bg-gray-900 dark:ring-white/10;
+        @apply absolute z-50 mt-1 w-max min-w-full overflow-y-auto rounded-xl bg-white p-1 shadow-lg ring-1 ring-gray-950/10 [scrollbar-width:thin] dark:bg-gray-900 dark:ring-white/10;
+        /* Plain CSS, not max-w-[min(...)]: formatters add a space after the comma,
+           which breaks Tailwind arbitrary values. */
+        max-width: min(92vw, 28rem);
     }
 
     .menu-item {
@@ -542,90 +548,90 @@ html[data-theme-switching]::view-transition-new(root) {
    beat these from @layer components regardless of specificity. */
 /* Blog content presets - the sanitizer only allows these exact values, and
    both the editor and blog/[slug] render inside .prose, so they match. */
-.prose [data-spacing="tight"] {
+:is(.prose, .prose-blog) [data-spacing="tight"] {
     @apply my-2 leading-normal;
 }
 
-.prose [data-spacing="loose"] {
+:is(.prose, .prose-blog) [data-spacing="loose"] {
     @apply my-8 leading-loose;
 }
 
-.prose [data-align="center"] {
+:is(.prose, .prose-blog) [data-align="center"] {
     @apply text-center;
 }
 
-.prose [data-align="right"] {
+:is(.prose, .prose-blog) [data-align="right"] {
     @apply text-right;
 }
 
-.prose mark {
+:is(.prose, .prose-blog) mark {
     @apply rounded-sm bg-amber-200/70 px-0.5 text-inherit dark:bg-amber-400/25 dark:text-amber-50;
 }
 
-.prose aside[data-callout] {
+:is(.prose, .prose-blog) aside[data-callout] {
     @apply my-6 rounded-lg border-l-4 px-4 py-0.5 [&>:first-child]:mt-3 [&>:last-child]:mb-3;
 }
 
-.prose aside[data-callout="info"] {
+:is(.prose, .prose-blog) aside[data-callout="info"] {
     @apply border-sky-500 bg-sky-500/5 dark:border-sky-400 dark:bg-sky-400/10;
 }
 
-.prose aside[data-callout="tip"] {
+:is(.prose, .prose-blog) aside[data-callout="tip"] {
     @apply border-emerald-500 bg-emerald-500/5 dark:border-emerald-400 dark:bg-emerald-400/10;
 }
 
-.prose aside[data-callout="warning"] {
+:is(.prose, .prose-blog) aside[data-callout="warning"] {
     @apply border-amber-500 bg-amber-500/5 dark:border-amber-400 dark:bg-amber-400/10;
 }
 
-.prose ul[data-type="taskList"] {
+:is(.prose, .prose-blog) ul[data-type="taskList"] {
     @apply list-none pl-0;
 }
 
-.prose ul[data-type="taskList"]>li {
+:is(.prose, .prose-blog) ul[data-type="taskList"]>li {
     @apply flex items-start gap-2 pl-0;
 }
 
-.prose ul[data-type="taskList"]>li>label {
+:is(.prose, .prose-blog) ul[data-type="taskList"]>li>label {
     @apply mt-[0.3em] shrink-0 [&_input]:accent-sky-600;
 }
 
-.prose ul[data-type="taskList"]>li>div {
+:is(.prose, .prose-blog) ul[data-type="taskList"]>li>div {
     @apply flex-1 [&>p]:my-0;
 }
 
 /* Collapsible: <details> on the blog, a node view (div + toggle) in the editor. */
-.prose details,
-.prose div[data-type="details"] {
+:is(.prose, .prose-blog) details,
+:is(.prose, .prose-blog) div[data-type="details"] {
     @apply my-6 rounded-lg border border-gray-950/10 px-4 py-2 dark:border-white/10;
 }
 
-.prose summary {
+:is(.prose, .prose-blog) summary {
     @apply cursor-pointer font-medium text-gray-950 dark:text-white;
 }
 
-.prose div[data-type="details"] {
+:is(.prose, .prose-blog) div[data-type="details"] {
     @apply flex gap-2;
 }
 
-.prose div[data-type="details"]>button {
+:is(.prose, .prose-blog) div[data-type="details"]>button {
     @apply mt-1.5 grid size-5 shrink-0 place-items-center rounded text-[0.625rem] text-gray-500 hover:bg-gray-950/5 dark:hover:bg-white/10;
 }
 
-.prose div[data-type="details"]>button::before {
+:is(.prose, .prose-blog) div[data-type="details"]>button::before {
     content: "\25B6";
     @apply transition-transform;
 }
 
-.prose div[data-type="details"].is-open>button::before {
+:is(.prose, .prose-blog) div[data-type="details"].is-open>button::before {
     @apply rotate-90;
 }
 
-.prose div[data-type="details"]>div {
+:is(.prose, .prose-blog) div[data-type="details"]>div {
     @apply flex-1 [&_summary]:list-none [&_p]:my-2;
 }
 
-.prose div[data-youtube-video] iframe {
+:is(.prose, .prose-blog) div[data-youtube-video] iframe {
     @apply my-6 aspect-video h-auto w-full rounded-lg;
 }
 
@@ -635,4 +641,216 @@ html[data-theme-switching]::view-transition-new(root) {
 
 .tiptap .selectedCell {
     @apply bg-sky-500/10;
+}
+
+/* Blog article typography - mirrors tailwindcss.com's own `.prose` (not the
+   typography plugin, which the rest of the site uses as `.prose`). Kept as a
+   separate class so the two never fight. Values copied from their stylesheet. */
+.prose-blog {
+    --pb-color: var(--color-gray-700);
+    --pb-heading: var(--color-gray-950);
+    --pb-marker: color-mix(in oklab, var(--color-gray-700) 25%, transparent);
+    --pb-hr: color-mix(in oklab, var(--color-gray-950) 5%, transparent);
+    --pb-quote: var(--color-gray-300);
+    --pb-th: var(--color-gray-300);
+    --pb-td: var(--color-gray-200);
+    color: var(--pb-color);
+    font-size: var(--text-sm);
+    line-height: 2;
+}
+
+.dark .prose-blog {
+    --pb-color: var(--color-gray-300);
+    --pb-heading: var(--color-white);
+    --pb-marker: color-mix(in oklab, var(--color-gray-300) 35%, transparent);
+    --pb-hr: color-mix(in oklab, var(--color-white) 10%, transparent);
+    --pb-quote: var(--color-gray-600);
+    --pb-th: var(--color-gray-600);
+    --pb-td: var(--color-gray-700);
+}
+
+.prose-blog>*+* {
+    margin-top: calc(var(--spacing) * 6);
+}
+
+.prose-blog> :first-child {
+    margin-top: 0;
+}
+
+.prose-blog h2 {
+    margin-top: calc(var(--spacing) * 20);
+    font-size: var(--text-lg);
+    line-height: 1.55556;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: -0.025em;
+    color: var(--pb-heading);
+}
+
+.prose-blog h3 {
+    margin-top: calc(var(--spacing) * 16);
+    font-size: var(--text-base);
+    line-height: 1.55556;
+    font-weight: var(--font-weight-semibold);
+    color: var(--pb-heading);
+}
+
+.prose-blog h2+h3 {
+    margin-top: calc(var(--spacing) * 6);
+}
+
+.prose-blog h4 {
+    margin-top: calc(var(--spacing) * 12);
+    font-weight: var(--font-weight-semibold);
+    color: var(--pb-heading);
+}
+
+.prose-blog :is(h2, h3, h4) {
+    scroll-margin-top: calc(var(--spacing) * 18);
+}
+
+.prose-blog :is(ul, ol) {
+    padding-left: calc(var(--spacing) * 6);
+}
+
+.prose-blog ul {
+    list-style-type: square;
+}
+
+.prose-blog ol {
+    list-style-type: decimal;
+}
+
+.prose-blog li {
+    padding-left: calc(var(--spacing) * 3);
+}
+
+.prose-blog li+li {
+    margin-top: calc(var(--spacing) * 4);
+}
+
+.prose-blog ul>li::marker {
+    color: var(--pb-marker);
+}
+
+.prose-blog ol>li::marker {
+    color: var(--pb-heading);
+    font-weight: 600;
+}
+
+.prose-blog a:not(:is(h2, h3, h4) *) {
+    color: var(--pb-heading);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: underline 1px var(--color-sky-400);
+    text-underline-offset: 3px;
+}
+
+.prose-blog a:hover {
+    text-decoration-thickness: 2px;
+}
+
+.prose-blog strong {
+    color: var(--pb-heading);
+    font-weight: var(--font-weight-semibold);
+}
+
+.prose-blog code {
+    font-family: var(--font-mono);
+    font-weight: var(--font-weight-medium);
+    font-variant-ligatures: none;
+    color: var(--pb-heading);
+}
+
+.prose-blog :not(pre)>code::before,
+.prose-blog :not(pre)>code::after {
+    content: "`";
+}
+
+/* Code windows stay dark in both themes (STYLE.md). */
+.prose-blog pre {
+    margin-top: calc(var(--spacing) * 4);
+    margin-bottom: calc(var(--spacing) * 10);
+    overflow-x: auto;
+    border-radius: var(--radius-xl);
+    padding: calc(var(--spacing) * 4);
+    background: var(--color-gray-950);
+    outline: 1px solid color-mix(in oklab, var(--color-white) 10%, transparent);
+    outline-offset: -1px;
+}
+
+.prose-blog pre code {
+    color: var(--color-gray-200);
+    font-size: var(--text-sm);
+    line-height: 2;
+}
+
+.prose-blog hr {
+    border-color: var(--pb-hr);
+    margin-block: calc(var(--spacing) * 16);
+}
+
+.prose-blog hr+h2 {
+    margin-top: calc(var(--spacing) * 16);
+}
+
+/* Editor leaves empty <p></p> for blank lines - don't render them as gaps. */
+.prose-blog p:empty {
+    display: none;
+}
+
+.prose-blog blockquote {
+    border-inline-start: 0.25rem solid var(--pb-quote);
+    padding-inline-start: calc(var(--spacing) * 4);
+    font-style: italic;
+}
+
+.prose-blog blockquote p:first-of-type::before {
+    content: open-quote;
+}
+
+.prose-blog blockquote p:last-of-type::after {
+    content: close-quote;
+}
+
+.prose-blog table {
+    width: 100%;
+    margin-block: 2em;
+    font-size: var(--text-sm);
+    line-height: 1.4;
+}
+
+.prose-blog thead {
+    border-bottom: 1px solid var(--pb-th);
+}
+
+.prose-blog th {
+    color: var(--pb-heading);
+    font-weight: 600;
+    text-align: start;
+    padding: 0 0.6em 0.8em;
+}
+
+.prose-blog tbody tr {
+    border-bottom: 1px solid var(--pb-td);
+}
+
+.prose-blog tbody tr:last-child {
+    border-bottom-width: 0;
+}
+
+.prose-blog td {
+    padding: 0.8em 0.6em;
+    vertical-align: baseline;
+}
+
+.prose-blog :is(th, td):first-child {
+    padding-inline-start: 0;
+}
+
+.prose-blog :is(th, td):last-child {
+    padding-inline-end: 0;
+}
+
+.prose-blog img {
+    margin-inline: calc(var(--spacing) * -4);
+    max-width: calc(100% + calc(var(--spacing) * 8));
 }
