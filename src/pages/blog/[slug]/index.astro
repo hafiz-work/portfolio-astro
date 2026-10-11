@@ -31,6 +31,8 @@ const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
 const canonical = new URL(`/blog/${post.slug}`, siteOrigin).toString();
 const ogImageAbs = new URL(ogImage ?? "/og-default.png", siteOrigin).toString();
 
+// Same entity as the homepage Person (src/pages/index.astro, @id …/#person).
+const OWNER = { "@type": "Person", "@id": "https://hafizbahtiar.com/#person", name: "Hafiz Bahtiar", url: "https://hafizbahtiar.com/" };
 const articleSchema = {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
@@ -41,15 +43,9 @@ const articleSchema = {
   dateModified: post.updatedAt ?? publishedISO,
   author: post.authorName
     ? { "@type": "Person", name: post.authorName }
-    : { "@type": "Person", name: "Hafiz Bahtiar", url: siteOrigin.toString() },
-  publisher: {
-    "@type": "Organization",
-    name: "Hafiz Bahtiar",
-    logo: {
-      "@type": "ImageObject",
-      url: new URL("/favicons/favicon-512x512.png", siteOrigin).toString(),
-    },
-  },
+    : OWNER,
+  // The site belongs to a person, not an organisation: same entity as the homepage.
+  publisher: OWNER,
   mainEntityOfPage: canonical,
   keywords: (post.tags ?? []).join(", "),
 };
