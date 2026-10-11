@@ -388,7 +388,7 @@ const MapCanvas = ({
                 </MarkerLabel>
               </MarkerContent>
               <MarkerPopup closeButton={true}>
-                <div className="text-sm font-semibold text-gray-950">
+                <div className="text-sm font-semibold">
                   {marker.company} ({marker.role})
                 </div>
                 <div className="text-xs text-gray-500">{marker.date}</div>

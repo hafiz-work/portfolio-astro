@@ -15,6 +15,13 @@ const apps = [
     tags: ["JAKIM e-solat", "Paparan Masjid", "60 zon"],
   },
   {
+    title: "Kompas Kiblat",
+    href: "/kiblat",
+    description:
+      "Arah kiblat dari lokasi anda dengan kompas telefon - dikira terus di peranti, tiada data dihantar.",
+    tags: ["GPS", "Kompas", "Tanpa API"],
+  },
+  {
     title: "Kualiti Udara (IPU)",
     href: "/ipu",
     description:
@@ -58,7 +65,9 @@ const apps = [
   />
   <div class="h-12"></div>
 
-  <div class="line-y mb-46 grid grid-cols-1 gap-2 p-2 sm:grid-cols-2 lg:grid-cols-3">
+  <div
+    class="line-y mb-46 grid grid-cols-1 gap-2 p-2 sm:grid-cols-2 lg:grid-cols-3"
+  >
     {
       apps.map((app) => (
         <a href={app.href} class="frame group block">

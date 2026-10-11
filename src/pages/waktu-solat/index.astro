@@ -95,7 +95,9 @@ const rows = day
         {dateLabel}{day && ` · ${formatHijri(day.hijri)}`}
         {
           times?.bearing && (
-            <span class="whitespace-nowrap"> · Kiblat {times.bearing}</span>
+            <span class="whitespace-nowrap">
+              {" "}· Kiblat {times.bearing} (<a href="/kiblat" class="text-sky-600 hover:underline dark:text-sky-400">kompas</a>)
+            </span>
           )
         }
       </p>

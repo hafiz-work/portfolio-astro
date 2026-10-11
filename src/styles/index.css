@@ -939,3 +939,13 @@ html[data-theme-switching]::view-transition-new(root) {
         @apply translate-x-0;
     }
 }
+
+/* ui/map.tsx popups draw their own themed card - drop MapLibre's white frame and tip. */
+.maplibregl-popup .maplibregl-popup-content {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+.maplibregl-popup .maplibregl-popup-tip {
+  display: none;
+}

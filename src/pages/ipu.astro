@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
+import PointsMap, { type MapPoint } from "../components/ui/PointsMap";
 import PublicLayout from "../layouts/PublicLayout.astro";
 import { BANDS, bandOf, getReadings, type Station } from "../lib/ipu";
 
@@ -31,7 +32,32 @@ const TONE: Record<string, string> = {
   sangat: "bg-orange-500",
   bahaya: "bg-red-600",
 };
+// Empty cells closing each state's last row, per breakpoint (2 cols sm, 3 lg):
+// hatched like the shell gutters instead of the grid's line colour.
+const fillers = (n: number) => {
+  const sm = (2 - (n % 2)) % 2;
+  const lg = (3 - (n % 3)) % 3;
+  return Array.from({ length: Math.max(sm, lg) }, (_, i) => [
+    i < sm ? "sm:block" : "sm:hidden",
+    i < lg ? "lg:block" : "lg:hidden",
+  ]);
+};
 const town = (s: Station) => s.location.split(",")[0].trim();
+const markerClass = (s: Station) => {
+  const band = bandOf(s.api);
+  if (!band) return "bg-gray-400 text-white";
+  return `${TONE[band.tone]} ${band.tone === "tidak-sihat" ? "text-gray-950" : "text-white"}`;
+};
+const points: MapPoint[] = stations.map((s) => ({
+  id: s.id,
+  lat: s.lat,
+  lng: s.lng,
+  title: town(s),
+  subtitle: `${s.place}, ${s.state}`,
+  detail: s.api == null ? "Tiada bacaan" : `IPU ${s.api} · ${bandOf(s.api)!.label}${s.pollutant ? ` · ${s.pollutant}` : ""}`,
+  badge: s.api ?? "-",
+  markerClass: markerClass(s),
+}));
 ---
 
 <PublicLayout
@@ -88,6 +114,34 @@ const town = (s: Station) => s.location.split(",")[0].trim();
             </ul>
           </div>
 
+          <div class="line-y mt-10">
+            <div role="tablist" aria-label="Paparan" class="mx-2 inline-flex gap-1 rounded-full bg-gray-950/5 p-1 dark:bg-white/10">
+              {[
+                ["peta", "Peta"],
+                ["senarai", "Senarai"],
+              ].map(([id, label], i) => (
+                <button
+                  type="button"
+                  role="tab"
+                  id={`tab-${id}`}
+                  data-tab={id}
+                  aria-controls={`panel-${id}`}
+                  aria-selected={i === 0 ? "true" : "false"}
+                  class="rounded-full px-4 py-1.5 text-sm/6 font-medium text-gray-600 aria-selected:bg-white aria-selected:text-gray-950 aria-selected:shadow-sm dark:text-gray-400 dark:aria-selected:bg-gray-950 dark:aria-selected:text-white"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div id="panel-peta" role="tabpanel" aria-labelledby="tab-peta" class="line-y mt-4">
+            <div class="h-[70vh] max-h-180 min-h-96 overflow-hidden">
+              <PointsMap client:only="react" points={points} fallbackLabel="Peta tak dapat dipapar di peranti ini" />
+            </div>
+          </div>
+
+          <div id="panel-senarai" role="tabpanel" aria-labelledby="tab-senarai" hidden>
           {states.map((state) => (
             <>
               <div class="line-y mt-10">
@@ -124,10 +178,14 @@ const town = (s: Station) => s.location.split(",")[0].trim();
                       </li>
                     );
                   })}
+                  {fillers(byState(state).length).map((cls) => (
+                    <li aria-hidden="true" class:list={["pattern hidden bg-white dark:bg-gray-950", cls]} />
+                  ))}
                 </ul>
               </div>
             </>
           ))}
+          </div>
 
           <div class="line-y mt-4">
             <p class="mx-2 max-w-3xl text-xs/5 text-gray-500 dark:text-gray-400">
@@ -197,8 +255,9 @@ const town = (s: Station) => s.location.split(",")[0].trim();
           }
           if (!best) return void (status.textContent = "Tiada stesen dijumpai.");
           stations.forEach((s) => s.toggleAttribute("data-nearest", s === best));
+          window.dispatchEvent(new CustomEvent("points-map:focus", { detail: { id: best.id.replace("stesen-", "") } }));
           status.textContent = `Stesen terdekat: ${best.dataset.name} (${Math.round(bestKm)} km)`;
-          best.scrollIntoView({ behavior: "smooth", block: "center" });
+          if (!document.getElementById("panel-senarai")?.hidden) best.scrollIntoView({ behavior: "smooth", block: "center" });
         },
         (err) =>
           (status.textContent =
@@ -207,6 +266,38 @@ const town = (s: Station) => s.location.split(",")[0].trim();
       );
     });
   };
-  initLocate();
-  document.addEventListener("astro:page-load", initLocate);
+  // Peta (default) / Senarai tabs; #senarai opens the list directly.
+  const initTabs = () => {
+    const tabs = [...document.querySelectorAll<HTMLButtonElement>("[data-tab]")];
+    if (!tabs.length || tabs[0].dataset.bound === "1") return;
+    const show = (id: string) => {
+      for (const t of tabs) {
+        const on = t.dataset.tab === id;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(`panel-${t.dataset.tab}`)!.hidden = !on;
+      }
+    };
+    for (const t of tabs) {
+      t.dataset.bound = "1";
+      t.addEventListener("click", () => {
+        show(t.dataset.tab!);
+        history.replaceState(history.state, "", t.dataset.tab === "peta" ? location.pathname : "#senarai");
+      });
+      t.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        const next = tabs[(tabs.indexOf(t) + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+        next.focus();
+        next.click();
+      });
+    }
+    show(location.hash === "#senarai" ? "senarai" : "peta");
+  };
+
+  const init = () => {
+    initTabs();
+    initLocate();
+  };
+  init();
+  document.addEventListener("astro:page-load", init);
 </script>

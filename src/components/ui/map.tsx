@@ -158,6 +158,8 @@ type MapProps = {
   onViewportChange?: (viewport: MapViewport) => void;
   /** Fired once when the map has loaded its initial style and is ready for layer operations. */
   onLoad?: () => void;
+  /** Text shown in place of the map when WebGL is unavailable. */
+  fallbackLabel?: string;
 } & Omit<MapLibreGL.MapOptions, "container" | "style">;
 
 type MapRef = MapLibreGL.Map;
@@ -182,6 +184,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     viewport,
     onViewportChange,
     onLoad,
+    fallbackLabel = "Kuala Lumpur, Malaysia",
     ...props
   },
   ref
@@ -344,7 +347,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
         {initFailed ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400 dark:text-gray-500">
             <MapPin className="w-5 h-5" aria-hidden="true" />
-            <span className="text-xs font-medium">Kuala Lumpur, Malaysia</span>
+            <span className="text-xs font-medium">{fallbackLabel}</span>
           </div>
         ) : (
           !isLoaded && <DefaultLoader />
@@ -603,7 +606,7 @@ function MarkerPopup({
   return createPortal(
     <div
       className={cn(
-        "relative rounded-md border p-3 shadow-md animate-in fade-in-0 zoom-in-95",
+        "relative rounded-md border border-gray-950/10 bg-white p-3 text-gray-950 shadow-md animate-in fade-in-0 zoom-in-95 dark:border-white/10 dark:bg-gray-900 dark:text-white",
         className
       )}
     >
@@ -689,7 +692,7 @@ function MarkerTooltip({
   return createPortal(
     <div
       className={cn(
-        "rounded-md px-2 py-1 text-xs shadow-md animate-in fade-in-0 zoom-in-95",
+        "rounded-md bg-gray-950 px-2 py-1 text-xs text-white shadow-md animate-in fade-in-0 zoom-in-95 dark:bg-white dark:text-gray-950",
         className
       )}
     >
@@ -1044,7 +1047,7 @@ function MapPopup({
   return createPortal(
     <div
       className={cn(
-        "relative rounded-md border p-3 shadow-md animate-in fade-in-0 zoom-in-95",
+        "relative rounded-md border border-gray-950/10 bg-white p-3 text-gray-950 shadow-md animate-in fade-in-0 zoom-in-95 dark:border-white/10 dark:bg-gray-900 dark:text-white",
         className
       )}
     >
