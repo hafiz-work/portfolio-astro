@@ -1,0 +1,60 @@
+---
+export const prerender = true; // static list, no data
+import PublicLayout from "../layouts/PublicLayout.astro";
+import SectionHeader from "../components/layout/SectionHeader.astro";
+
+// Small public apps that live on this site (each under its own route). Add one
+// entry per app. Linked from the footer for now; a navbar/home section waits
+// until there are enough of them (see CLAUDE.md -> Showcase).
+const apps = [
+  {
+    title: "Waktu Solat",
+    href: "/waktu-solat",
+    description:
+      "Waktu solat hari ini untuk setiap zon JAKIM, dengan Paparan Masjid untuk skrin di masjid.",
+    tags: ["JAKIM e-solat", "Paparan Masjid", "60 zon"],
+  },
+];
+---
+
+<PublicLayout
+  title="Showcase | Hafiz Bahtiar"
+  description="Small apps built and hosted on hafizbahtiar.com - free to use."
+>
+  <div class="h-16 sm:h-24"></div>
+  <SectionHeader
+    as="h1"
+    eyebrow="Showcase"
+    title="Small apps, free to use."
+    description="Tools I built and host here. Open them, share them, put them on a screen."
+  />
+  <div class="h-12"></div>
+
+  <div class="line-y mb-46 grid grid-cols-1 gap-2 p-2 sm:grid-cols-2 lg:grid-cols-3">
+    {
+      apps.map((app) => (
+        <a href={app.href} class="frame group block">
+          <div class="frame-inner h-full p-6 transition-colors group-hover:bg-gray-50 dark:group-hover:bg-white/5">
+            <h2 class="text-xl font-medium tracking-tight text-gray-950 dark:text-white">
+              {app.title}
+              <span
+                class="ml-1 inline-block text-sky-500 transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              >
+                →
+              </span>
+            </h2>
+            <p class="mt-2 text-sm/6 text-gray-600 dark:text-gray-400">
+              {app.description}
+            </p>
+            <div class="mt-4 flex flex-wrap gap-1.5">
+              {app.tags.map((tag) => (
+                <span class="tag">{tag}</span>
+              ))}
+            </div>
+          </div>
+        </a>
+      ))
+    }
+  </div>
+</PublicLayout>

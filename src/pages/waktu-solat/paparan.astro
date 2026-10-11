@@ -1,0 +1,246 @@
+---
+export const prerender = false;
+import CoreLayout from "../../layouts/CoreLayout.astro";
+import { formatHijri, getPrayerTimes, hhmm, resolveZone, todayInMalaysia } from "../../lib/waktu-solat";
+
+// Mosque display (Paparan Masjid) for screens in a mosque: full screen, always dark, sized in vw so any TV
+// resolution fits. Clock and countdown run client-side; the page reloads itself
+// after Malaysian midnight to pick up the new day.
+const zone = resolveZone(Astro.url.searchParams.get("zone"));
+const times = await getPrayerTimes(zone.code);
+const today = todayInMalaysia();
+
+const dateLabel = new Intl.DateTimeFormat("ms-MY", {
+  timeZone: "Asia/Kuala_Lumpur",
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+}).format(new Date());
+
+// What mosque screens show: the five prayers plus Imsak and Syuruk (no Dhuha).
+const rows = times
+  ? [
+      { label: "Imsak", time: times.today.imsak, azan: false },
+      { label: "Subuh", time: times.today.fajr, azan: true },
+      { label: "Syuruk", time: times.today.syuruk, azan: false },
+      { label: "Zohor", time: times.today.dhuhr, azan: true },
+      { label: "Asar", time: times.today.asr, azan: true },
+      { label: "Maghrib", time: times.today.maghrib, azan: true },
+      { label: "Isyak", time: times.today.isha, azan: true },
+    ]
+  : [];
+---
+
+<CoreLayout
+  title={`Paparan Masjid · Waktu Solat ${zone.code} | Hafiz Bahtiar`}
+  description={`Paparan waktu solat untuk skrin masjid - ${zone.daerah}, ${zone.negeri}.`}
+  noindex
+  class="font-inter"
+>
+  <main
+    id="display"
+    data-today={today}
+    data-server-now={Date.now()}
+    data-tomorrow-subuh={times ? hhmm(times.tomorrow.fajr) : undefined}
+    class="fixed inset-0 flex flex-col overflow-hidden bg-gray-950 p-[3vw] text-white select-none"
+  >
+    <header class="flex items-start justify-between gap-[2vw]">
+      <div>
+        <p class="font-mono text-[1.3vw] tracking-widest text-sky-400 uppercase">
+          Waktu Solat · {zone.code}
+        </p>
+        <p class="mt-[0.5vw] text-[2.2vw] font-medium tracking-tight">
+          {zone.daerah}, {zone.negeri}
+        </p>
+      </div>
+      <div class="text-right">
+        <p class="text-[2.2vw] font-medium tracking-tight">{dateLabel}</p>
+        {
+          times && (
+            <p class="mt-[0.5vw] font-mono text-[1.3vw] tracking-widest text-gray-400 uppercase">
+              {formatHijri(times.today.hijri)}
+            </p>
+          )
+        }
+      </div>
+    </header>
+
+    <div class="flex flex-1 flex-col items-center justify-center">
+      <p
+        id="display-clock"
+        class="text-[15vw] leading-none font-medium tracking-tighter tabular-nums"
+      >
+        --:--:--
+      </p>
+      <p
+        id="display-next"
+        class="mt-[1.5vw] text-[3vw] font-medium tracking-tight text-sky-400 tabular-nums"
+      >
+      </p>
+    </div>
+
+    {
+      times ? (
+        <dl class="grid grid-cols-7 gap-[1vw]">
+          {rows.map((r) => (
+            <div
+              data-label={r.label}
+              data-time={hhmm(r.time)}
+              data-azan={r.azan ? "" : undefined}
+              class="rounded-[1.2vw] bg-white/5 px-[1vw] py-[1.4vw] text-center ring-1 ring-white/10 transition-colors data-next:bg-sky-500/20 data-next:ring-sky-400 data-past:opacity-40"
+            >
+              <dt class="font-mono text-[1.3vw] tracking-widest text-gray-400 uppercase">
+                {r.label}
+              </dt>
+              <dd
+                class:list={[
+                  "mt-[0.5vw] text-[3.6vw] leading-none font-medium tracking-tighter tabular-nums",
+                  !r.azan && "text-gray-400",
+                ]}
+              >
+                {hhmm(r.time)}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <p class="text-center text-[2vw] text-gray-400">
+          Waktu solat tak dapat diambil dari JAKIM. Cuba semula dalam 5 minit.
+        </p>
+      )
+    }
+
+    <p class="mt-[1.5vw] text-center font-mono text-[0.9vw] tracking-widest text-gray-600 uppercase">
+      Sumber: e-solat JAKIM · hafizbahtiar.com/waktu-solat
+    </p>
+
+    <!-- Operator controls: hidden in full screen and while the mouse is idle. -->
+    <div id="display-controls" class="absolute top-[1vw] right-[1vw] flex gap-2 transition-opacity">
+      <a
+        href={`/waktu-solat?zone=${zone.code}`}
+        class="rounded-full bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20"
+      >
+        Keluar
+      </a>
+      <button
+        id="display-fullscreen"
+        type="button"
+        class="rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600"
+      >
+        Skrin penuh
+      </button>
+    </div>
+  </main>
+</CoreLayout>
+
+<style>
+  /* Idle: hide the cursor and the operator buttons. */
+  :global(#display.is-idle),
+  :global(#display.is-idle *) {
+    cursor: none;
+  }
+  :global(#display.is-idle #display-controls),
+  :global(:fullscreen #display-controls) {
+    opacity: 0;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  const IDLE_MS = 3000;
+  const AZAN_BANNER_S = 10 * 60; // "Telah masuk waktu …" for 10 minutes
+
+  // Malaysian wall-clock time, whatever the TV's own timezone is set to.
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kuala_Lumpur",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+  const dayFmt = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur" });
+  const toSec = (hhmm: string) => {
+    const [h, m] = hhmm.split(":").map(Number);
+    return h * 3600 + m * 60;
+  };
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const span = (s: number) =>
+    `${Math.floor(s / 3600)}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
+
+  let timer = 0;
+  // Mosque screen boxes often have a wrong system clock: run on server time instead
+  // (offset taken once at load), which also stops a wrong date from reload-looping.
+  let offset = 0;
+  let wakeLock: { release(): Promise<void> } | null = null;
+
+  const initDisplay = () => {
+    const screen = document.getElementById("display");
+    if (!screen || screen.dataset.bound === "1") return;
+    screen.dataset.bound = "1";
+    clearInterval(timer);
+    offset = Number(screen.dataset.serverNow) - Date.now() || 0;
+    const clock = document.getElementById("display-clock")!;
+    const next = document.getElementById("display-next")!;
+    const cells = [...screen.querySelectorAll<HTMLElement>("[data-time]")];
+    const azan = cells.filter((c) => c.hasAttribute("data-azan"));
+
+    if (!cells.length) {
+      // JAKIM was down when the page rendered: try again in 5 minutes.
+      timer = window.setTimeout(() => location.reload(), 5 * 60 * 1000);
+      return;
+    }
+
+    const tick = () => {
+      const now = new Date(Date.now() + offset);
+      if (dayFmt.format(now) !== screen.dataset.today) return location.reload(); // new day
+      const hms = fmt.format(now);
+      clock.textContent = hms;
+      const [h, m, s] = hms.split(":").map(Number);
+      const sec = h * 3600 + m * 60 + s;
+
+      cells.forEach((c) => c.toggleAttribute("data-past", toSec(c.dataset.time!) <= sec));
+      const upcoming = azan.find((c) => toSec(c.dataset.time!) > sec);
+      cells.forEach((c) => c.toggleAttribute("data-next", c === upcoming));
+
+      const current = [...azan].reverse().find((c) => toSec(c.dataset.time!) <= sec);
+      if (current && sec - toSec(current.dataset.time!) < AZAN_BANNER_S) {
+        next.textContent = `Telah masuk waktu ${current.dataset.label}`;
+      } else if (upcoming) {
+        next.textContent = `${upcoming.dataset.label} dalam ${span(toSec(upcoming.dataset.time!) - sec)}`;
+      } else if (screen.dataset.tomorrowSubuh) {
+        next.textContent = `Subuh dalam ${span(86400 - sec + toSec(screen.dataset.tomorrowSubuh))}`;
+      }
+    };
+    tick();
+    timer = window.setInterval(tick, 1000);
+
+    // Idle cursor/controls.
+    let idle = 0;
+    const wake = () => {
+      screen.classList.remove("is-idle");
+      clearTimeout(idle);
+      idle = window.setTimeout(() => screen.classList.add("is-idle"), IDLE_MS);
+    };
+    screen.addEventListener("pointermove", wake);
+    wake();
+
+    // Full screen + keep the TV awake (Wake Lock, where the browser supports it).
+    const lock = async () => {
+      try {
+        wakeLock = await (navigator as any).wakeLock?.request("screen");
+      } catch {}
+    };
+    document.getElementById("display-fullscreen")?.addEventListener("click", () => {
+      void document.documentElement.requestFullscreen?.();
+      void lock();
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && wakeLock) void lock();
+    });
+  };
+
+  initDisplay();
+  document.addEventListener("astro:page-load", initDisplay);
+  document.addEventListener("astro:before-swap", () => clearInterval(timer));
+</script>

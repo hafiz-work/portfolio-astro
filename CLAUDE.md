@@ -90,6 +90,12 @@ The shared chart data transform lives in `src/lib/chart-data.ts`.
 
 Before public family data is passed to React islands, `src/lib/family-privacy.ts` maps backend data into a strict public DTO. It strips notes, metadata, timestamps, tree IDs, relationship IDs, relationship dates, and admin/backend fields, and sanitizes living-person birth dates to year-only strings so full living birth dates are not serialized to the browser.
 
+### Showcase (`src/pages/showcase.astro`)
+
+Small public apps hosted on the site, each under its own route, listed in the `apps` array on `/showcase` (prerendered). Linked from the footer only for now - add a navbar/home section once there are enough apps. Adding an app: build its route, add one `apps` entry.
+
+- **Waktu Solat** (`src/pages/waktu-solat/`): today's prayer times per JAKIM zone. Data from JAKIM e-solat (`src/lib/waktu-solat.ts`: one `period=month` request per zone, colo-cached 6h keyed by zone + Malaysian month; bad responses are never cached). Zones are static (`src/data/solat-zones.ts`, 60 JAKIM codes); `?zone=` is validated against that list (`resolveZone`) before reaching the upstream URL. `/waktu-solat/paparan` is the mosque display (Paparan Masjid) for screens in a mosque: own shell (no navbar/footer), clock + countdown run on server time (screen boxes often have wrong clocks), reloads after Malaysian midnight, full screen + Wake Lock button.
+
 ### `container-main`
 
 Defined in `src/styles/index.css` as `w-full px-4 sm:px-6` - row padding inside the public shell column (the column itself caps width at 96rem; gutters fill the rest). Public pages follow the tailwindcss.com line described in `STYLE.md` (gutter rails, `.line-y` hairline rows, `SectionHeader.astro`).

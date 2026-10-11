@@ -1,0 +1,193 @@
+---
+export const prerender = false;
+import TechHeading from "../../components/layout/TechHeading.astro";
+import PublicLayout from "../../layouts/PublicLayout.astro";
+import { SOLAT_ZONES } from "../../data/solat-zones";
+import { formatHijri, getPrayerTimes, hhmm, resolveZone } from "../../lib/waktu-solat";
+
+const zone = resolveZone(Astro.url.searchParams.get("zone"));
+const day = (await getPrayerTimes(zone.code))?.today ?? null;
+
+const dateLabel = new Intl.DateTimeFormat("ms-MY", {
+  timeZone: "Asia/Kuala_Lumpur",
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+}).format(new Date());
+
+// `azan` = the five prayers (the "next prayer" highlight only looks at these).
+const rows = day
+  ? [
+      { label: "Imsak", time: day.imsak, azan: false },
+      { label: "Subuh", time: day.fajr, azan: true },
+      { label: "Syuruk", time: day.syuruk, azan: false },
+      { label: "Dhuha", time: day.dhuha, azan: false },
+      { label: "Zohor", time: day.dhuhr, azan: true },
+      { label: "Asar", time: day.asr, azan: true },
+      { label: "Maghrib", time: day.maghrib, azan: true },
+      { label: "Isyak", time: day.isha, azan: true },
+    ]
+  : [];
+
+const states = [...new Set(SOLAT_ZONES.map((z) => z.negeri))];
+---
+
+<PublicLayout
+  title="Waktu Solat Malaysia Hari Ini | Hafiz Bahtiar"
+  description="Waktu solat hari ini untuk setiap zon JAKIM di Malaysia - Subuh, Zohor, Asar, Maghrib dan Isyak. Data rasmi e-solat JAKIM."
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1
+        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Waktu Solat"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Waktu solat hari ini untuk {zone.daerah}, {zone.negeri}.
+      </p>
+    </div>
+    <div class="line-y mt-4">
+      <p
+        class="mx-2 font-mono text-sm/6 tracking-widest text-gray-500 uppercase"
+      >
+        {dateLabel}{day && ` · ${formatHijri(day.hijri)}`}
+      </p>
+    </div>
+
+    <!-- Plain GET form: works without JS, and the URL (?zone=) is shareable.
+         The script only submits on change. -->
+    <div class="line-y mt-10">
+      <form method="get" class="mx-2 flex flex-wrap items-center gap-3">
+        <label for="zone" class="text-sm/6 font-medium">Zon</label>
+        <select
+          id="zone"
+          name="zone"
+          class="w-full max-w-md rounded-full bg-transparent px-4 py-2 text-sm/6 ring-1 ring-gray-950/10 ring-inset focus:ring-sky-500 focus:outline-none sm:w-auto dark:ring-white/15"
+        >
+          {
+            states.map((negeri) => (
+              <optgroup label={negeri}>
+                {SOLAT_ZONES.filter((z) => z.negeri === negeri).map((z) => (
+                  <option value={z.code} selected={z.code === zone.code}>
+                    {z.code} - {z.daerah}
+                  </option>
+                ))}
+              </optgroup>
+            ))
+          }
+        </select>
+        <noscript>
+          <button type="submit" class="btn-pill btn-pill-primary">Tukar</button>
+        </noscript>
+        <!-- Full page load: the mosque display has its own shell (no navbar/footer). -->
+        <a
+          href={`/waktu-solat/paparan?zone=${zone.code}`}
+          data-astro-reload
+          class="btn-pill btn-pill-ghost sm:ml-auto"
+        >
+          Paparan Masjid
+        </a>
+      </form>
+    </div>
+
+    {
+      day ? (
+        <div class="line-y mt-10 mb-46">
+          <dl
+            id="waktu-solat"
+            class="grid grid-cols-2 gap-px bg-gray-950/5 sm:grid-cols-4 dark:bg-white/10"
+          >
+            {rows.map((r) => (
+              <div
+                data-time={hhmm(r.time)}
+                data-azan={r.azan ? "" : undefined}
+                class="group bg-white px-4 py-6 data-next:bg-sky-500/5 sm:px-6 dark:bg-gray-950 dark:data-next:bg-sky-400/10"
+              >
+                <dt class="flex items-center gap-2 font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+                  {r.label}
+                  <span class="hidden rounded-full bg-sky-500/10 px-2 text-[10px] text-sky-700 group-data-next:inline dark:text-sky-400">
+                    Seterusnya
+                  </span>
+                </dt>
+                <dd
+                  class:list={[
+                    "mt-2 text-4xl font-medium tracking-tighter tabular-nums",
+                    r.azan
+                      ? "text-gray-950 dark:text-white"
+                      : "text-gray-400 dark:text-gray-500",
+                  ]}
+                >
+                  {hhmm(r.time)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p class="mx-2 mt-4 text-xs/5 text-gray-500 dark:text-gray-400">
+            Sumber:{" "}
+            <a
+              href="https://www.e-solat.gov.my/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+            >
+              e-solat JAKIM
+            </a>
+            . Imsak, Syuruk dan Dhuha bukan waktu azan.
+          </p>
+        </div>
+      ) : (
+        <div class="line-y mt-10 mb-46">
+          <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+            Waktu solat tak dapat diambil dari JAKIM sekarang. Cuba lagi
+            sebentar, atau semak terus di{" "}
+            <a
+              href="https://www.e-solat.gov.my/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-sky-600 hover:underline dark:text-sky-400"
+            >
+              e-solat.gov.my
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
+  </div>
+</PublicLayout>
+
+<script>
+  // Mark the next azan (Malaysian time). Re-run on every ClientRouter visit.
+  const initWaktuSolat = () => {
+    const select = document.querySelector<HTMLSelectElement>("#zone");
+    if (select && select.dataset.bound !== "1") {
+      select.dataset.bound = "1";
+      select.addEventListener("change", () => select.form?.requestSubmit());
+    }
+    const cells = document.querySelectorAll<HTMLElement>(
+      "#waktu-solat [data-azan]",
+    );
+    if (!cells.length) return;
+    const now = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Kuala_Lumpur",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).format(new Date());
+    // After Isyak the next azan is tomorrow's Subuh, which isn't on this page.
+    const next = [...cells].find((c) => (c.dataset.time ?? "") > now);
+    next?.setAttribute("data-next", "");
+  };
+
+  initWaktuSolat();
+  document.addEventListener("astro:page-load", initWaktuSolat);
+</script>

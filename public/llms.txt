@@ -10,6 +10,8 @@ Not to be confused with other people named "Hafiz Bakhtiar" (with a "k").
 - [Projects](https://hafizbahtiar.com/projects): production systems - marketplaces, government platforms, logistics tooling, offline-first mobile apps
 - [Blog](https://hafizbahtiar.com/blog): notes on backend systems, Flutter and shipping production software
 - [Quotes](https://hafizbahtiar.com/quotes): a small collection of quotes
+- [Showcase](https://hafizbahtiar.com/showcase): small free apps hosted on the site
+- [Waktu Solat](https://hafizbahtiar.com/waktu-solat): today's Malaysian prayer times per JAKIM zone, with a full-screen mosque display
 - [Resume (PDF)](https://hafizbahtiar.com/resume.pdf)
 
 ## Profiles
