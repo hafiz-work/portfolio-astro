@@ -1,0 +1,252 @@
+---
+/**
+ * Searchable select in the site's select style (.field / .field-trigger / .menu /
+ * .menu-item, same as Dropdown.astro) for long lists: optional groups, a search
+ * box, keyboard (↑ ↓ Enter Esc). Used by Waktu Solat (zones) and Kadar Tukaran.
+ *
+ * Progressive: the native <select> holds the value and is the no-JS fallback. The
+ * script hides it, shows the picker, and on pick sets the select and fires its
+ * `change` event - or, with `submitOnPick`, submits the surrounding form.
+ * Extra per-option data (e.g. a rate) goes on the native <option> via `data`.
+ */
+export interface ComboboxOption {
+  value: string;
+  label: string;
+  /** Short mono prefix shown before the label (a code: "WLY01", "USD"). */
+  hint?: string;
+  /** Group heading; options keep their order, groups appear in first-seen order. */
+  group?: string;
+  /** Extra words that should match the search (not shown). */
+  keywords?: string;
+  /** data-* attributes for the native <option>. */
+  data?: Record<string, string | number>;
+}
+
+interface Props {
+  id: string;
+  name?: string;
+  options: ComboboxOption[];
+  value: string;
+  /** Accessible name of the list ("Zon", "Mata wang"). */
+  listLabel: string;
+  searchPlaceholder?: string;
+  emptyText?: string;
+  submitOnPick?: boolean;
+  class?: string;
+}
+const {
+  id,
+  name,
+  options,
+  value,
+  listLabel,
+  searchPlaceholder = "Cari…",
+  emptyText = "Tiada padanan.",
+  submitOnPick = false,
+  class: className,
+} = Astro.props;
+
+const groups = [...new Set(options.map((o) => o.group ?? ""))];
+const selected = options.find((o) => o.value === value) ?? options[0];
+const dataAttrs = (o: ComboboxOption) =>
+  Object.fromEntries(Object.entries(o.data ?? {}).map(([k, v]) => [`data-${k}`, String(v)]));
+---
+
+<div data-combobox data-submit={submitOnPick ? "" : undefined} class:list={["relative w-full", className]}>
+  <select id={id} name={name} class="field h-10">
+    {
+      groups.map((g) => {
+        const items = options.filter((o) => (o.group ?? "") === g).map((o) => (
+          <option value={o.value} selected={o.value === selected?.value} {...dataAttrs(o)}>
+            {o.hint ? `${o.hint} - ${o.label}` : o.label}
+          </option>
+        ));
+        return g ? <optgroup label={g}>{items}</optgroup> : items;
+      })
+    }
+  </select>
+
+  <button
+    type="button"
+    id={`${id}-trigger`}
+    data-trigger
+    hidden
+    aria-haspopup="listbox"
+    aria-expanded="false"
+    aria-controls={`${id}-panel`}
+    class="field field-trigger h-10"
+  >
+    <span class="flex min-w-0 items-center gap-2" data-current>
+      {selected?.hint && <span class="font-mono text-xs text-gray-500 dark:text-gray-400">{selected.hint}</span>}
+      <span class="truncate">{selected?.label}</span>
+    </span>
+    <svg class="size-4 shrink-0 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"></path>
+    </svg>
+  </button>
+
+  <div id={`${id}-panel`} data-panel hidden class="menu w-full">
+    <input
+      type="search"
+      data-search
+      role="combobox"
+      aria-label={`Cari ${listLabel.toLowerCase()}`}
+      aria-controls={`${id}-list`}
+      aria-expanded="true"
+      aria-autocomplete="list"
+      autocomplete="off"
+      placeholder={searchPlaceholder}
+      class="field h-10"
+    />
+    <ul id={`${id}-list`} role="listbox" aria-label={listLabel} class="mt-1 max-h-72 overflow-y-auto scrollbar-thin">
+      {
+        groups.map((g) => {
+          const items = options.filter((o) => (o.group ?? "") === g).map((o) => (
+            <li
+              role="option"
+              id={`${id}-opt-${o.value}`}
+              data-value={o.value}
+              data-text={[o.hint, o.label, o.group, o.keywords].filter(Boolean).join(" ").toLowerCase()}
+              aria-selected={o.value === selected?.value ? "true" : "false"}
+              class="menu-item cursor-pointer items-start data-active:bg-gray-950/5 data-active:text-gray-950 dark:data-active:bg-white/5 dark:data-active:text-white"
+            >
+              {o.hint && (
+                <span class="w-12 shrink-0 font-mono text-xs/6 text-gray-500 dark:text-gray-400" data-hint>
+                  {o.hint}
+                </span>
+              )}
+              <span data-label>{o.label}</span>
+            </li>
+          ));
+          return g ? (
+            <li role="presentation" data-group>
+              <p class="px-2.5 pt-3 pb-1 font-mono text-[11px] tracking-widest text-gray-500 uppercase" aria-hidden="true">
+                {g}
+              </p>
+              <ul role="group" aria-label={g}>{items}</ul>
+            </li>
+          ) : (
+            items
+          );
+        })
+      }
+    </ul>
+    <p data-empty hidden class="px-2.5 py-2 text-sm/6 text-gray-500">{emptyText}</p>
+  </div>
+</div>
+
+<script>
+  type Picker = HTMLElement & { closePicker?: (focus?: boolean) => void };
+
+  const initComboboxes = () => {
+    document.querySelectorAll<Picker>("[data-combobox]").forEach((root) => {
+      if (root.dataset.bound === "1") return;
+      root.dataset.bound = "1";
+      const native = root.querySelector("select")!;
+      const trigger = root.querySelector<HTMLButtonElement>("[data-trigger]")!;
+      const current = trigger.querySelector<HTMLElement>("[data-current]")!;
+      const panel = root.querySelector<HTMLElement>("[data-panel]")!;
+      const search = root.querySelector<HTMLInputElement>("[data-search]")!;
+      const empty = root.querySelector<HTMLElement>("[data-empty]")!;
+      const options = [...root.querySelectorAll<HTMLElement>('[role="option"]')];
+      const groups = [...root.querySelectorAll<HTMLElement>("[data-group]")];
+
+      // Enhance: the native select stays as the form value, out of sight.
+      native.hidden = true;
+      trigger.hidden = false;
+      const label = document.querySelector<HTMLLabelElement>(`label[for="${native.id}"]`);
+      if (label) label.htmlFor = trigger.id;
+
+      const visible = () => options.filter((o) => !o.hidden);
+      const setActive = (el: HTMLElement | undefined) => {
+        options.forEach((o) => o.toggleAttribute("data-active", o === el));
+        if (el) {
+          search.setAttribute("aria-activedescendant", el.id);
+          el.scrollIntoView({ block: "nearest" });
+        } else search.removeAttribute("aria-activedescendant");
+      };
+      const filter = () => {
+        const q = search.value.trim().toLowerCase();
+        options.forEach((o) => (o.hidden = !!q && !o.dataset.text!.includes(q)));
+        groups.forEach((g) => (g.hidden = !g.querySelector('[role="option"]:not([hidden])')));
+        empty.hidden = visible().length > 0;
+        setActive(visible()[0]);
+      };
+      const open = () => {
+        panel.hidden = false;
+        trigger.setAttribute("aria-expanded", "true");
+        search.value = "";
+        filter();
+        setActive(options.find((o) => o.getAttribute("aria-selected") === "true"));
+        search.focus();
+      };
+      const close = (focus = true) => {
+        if (panel.hidden) return;
+        panel.hidden = true;
+        trigger.setAttribute("aria-expanded", "false");
+        if (focus) trigger.focus();
+      };
+      const pick = (o: HTMLElement | undefined) => {
+        if (!o) return;
+        close();
+        if (native.value === o.dataset.value) return;
+        native.value = o.dataset.value!;
+        options.forEach((x) => x.setAttribute("aria-selected", String(x === o)));
+        // Same hint + label in the trigger as in the list.
+        current.replaceChildren(
+          ...[o.querySelector("[data-hint]"), o.querySelector("[data-label]")]
+            .filter((el): el is Element => !!el)
+            .map((el) => {
+              const copy = el.cloneNode(true) as HTMLElement;
+              copy.classList.remove("w-12");
+              if (copy.matches("[data-label]")) copy.classList.add("truncate");
+              return copy;
+            }),
+        );
+        if (root.hasAttribute("data-submit")) native.form?.requestSubmit();
+        else native.dispatchEvent(new Event("change", { bubbles: true }));
+      };
+      root.closePicker = close;
+
+      trigger.addEventListener("click", () => (panel.hidden ? open() : close()));
+      trigger.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          e.preventDefault();
+          open();
+        }
+      });
+      search.addEventListener("input", filter);
+      search.addEventListener("keydown", (e) => {
+        const v = visible();
+        const i = v.findIndex((o) => o.hasAttribute("data-active"));
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setActive(v[Math.min(v.length - 1, i + 1)]);
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setActive(v[Math.max(0, i - 1)]);
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          pick(v[i]);
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          close();
+        } else if (e.key === "Tab") close(false);
+      });
+      options.forEach((o) => {
+        o.addEventListener("click", () => pick(o));
+        o.addEventListener("pointermove", () => setActive(o));
+      });
+    });
+  };
+
+  // One outside-click listener for every combobox on the page.
+  document.addEventListener("pointerdown", (e) => {
+    document.querySelectorAll<Picker>("[data-combobox]").forEach((root) => {
+      if (!root.contains(e.target as Node)) root.closePicker?.(false);
+    });
+  });
+
+  initComboboxes();
+  document.addEventListener("astro:page-load", initComboboxes);
+</script>

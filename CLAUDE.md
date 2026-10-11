@@ -48,6 +48,7 @@ Custom Astro components with their own inline `<script>` blocks that set up even
 - `MultiDropdown.astro` - multi-select, stores JSON array in hidden input.
 - `DateInput.astro` - styled date input.
 - `Select.tsx` - React equivalent of Dropdown for use inside React components.
+- `Combobox.astro` - searchable select for long lists (optional groups, search box, ↑ ↓ Enter Esc), same `.field-trigger`/`.menu` look. The native `<select>` keeps the value (no-JS fallback); on pick it fires `change`, or submits the form with `submitOnPick`. Per-option `data` goes onto the native `<option>`. Used by Waktu Solat (zones) and Kadar Tukaran (currencies).
 
 ### Third-party component bases
 

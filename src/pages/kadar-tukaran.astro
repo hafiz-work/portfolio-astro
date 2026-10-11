@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
+import Combobox from "../components/ui/Combobox.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
 import { CURRENCY_NAMES, getRates } from "../lib/kadar-tukaran";
 
@@ -60,16 +61,22 @@ const session = data?.session ? `${data.session.slice(0, 2)}:${data.session.slic
                 Jumlah
                 <input id="fx-amount" type="number" inputmode="decimal" min="0" step="any" value="100" class="field h-10" />
               </label>
-              <label class="grid gap-1.5 text-sm/6 font-medium">
-                Mata wang
-                <select id="fx-currency" class="field h-10">
-                  {rates.map((r) => (
-                    <option value={r.code} data-rm={perOne(r)}>
-                      {r.code} - {CURRENCY_NAMES[r.code] ?? r.code}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <div class="grid gap-1.5">
+                <label for="fx-currency" class="text-sm/6 font-medium">Mata wang</label>
+                <Combobox
+                  id="fx-currency"
+                  listLabel="Mata wang"
+                  searchPlaceholder="Cari mata wang atau kod…"
+                  emptyText="Tiada mata wang sepadan."
+                  value="USD"
+                  options={rates.map((r) => ({
+                    value: r.code,
+                    hint: r.code,
+                    label: CURRENCY_NAMES[r.code] ?? r.code,
+                    data: { rm: perOne(r) },
+                  }))}
+                />
+              </div>
               <button
                 id="fx-swap"
                 type="button"

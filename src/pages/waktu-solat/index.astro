@@ -3,7 +3,7 @@ export const prerender = false;
 import TechHeading from "../../components/layout/TechHeading.astro";
 import PublicLayout from "../../layouts/PublicLayout.astro";
 import { SOLAT_ZONES } from "../../data/solat-zones";
-import ZonePicker from "../../components/waktu-solat/ZonePicker.astro";
+import Combobox from "../../components/ui/Combobox.astro";
 import {
   formatHijri,
   getPrayerTimes,
@@ -102,11 +102,21 @@ const rows = day
     </div>
 
     <!-- Plain GET form: works without JS, and the URL (?zone=) is shareable.
-         ZonePicker submits it on pick. -->
+         The zone Combobox submits it on pick. -->
     <div class="line-y mt-10">
       <form method="get" class="mx-2 flex flex-wrap items-center gap-3">
         <label for="zone" class="text-sm/6 font-medium">Zon</label>
-        <ZonePicker zones={SOLAT_ZONES} selected={zone} />
+        <Combobox
+          id="zone"
+          name="zone"
+          class="max-w-md"
+          listLabel="Zon"
+          searchPlaceholder="Cari daerah, negeri atau kod…"
+          emptyText="Tiada zon sepadan."
+          submitOnPick
+          value={zone.code}
+          options={SOLAT_ZONES.map((z) => ({ value: z.code, hint: z.code, label: z.daerah, group: z.negeri }))}
+        />
         <noscript>
           <button type="submit" class="btn-pill btn-pill-primary">Tukar</button>
         </noscript>
