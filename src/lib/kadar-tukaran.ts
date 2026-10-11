@@ -6,6 +6,8 @@ import { getJson, withFallback } from "./fallback";
 const BNM = "https://api.bnm.gov.my/public/exchange-rate";
 const FRANKFURTER = "https://api.frankfurter.dev/v1/latest?from=MYR";
 const ER_API = "https://open.er-api.com/v6/latest/MYR";
+const BNM_OPR = "https://api.bnm.gov.my/public/opr";
+const BNM_ACCEPT = { Accept: "application/vnd.BNM.API.v1+json" };
 
 export interface Rate {
   code: string;
@@ -51,7 +53,7 @@ const FIRST = ["USD", "SGD", "EUR", "GBP", "AUD", "JPY", "CNY", "THB", "IDR", "S
 type Payload = Omit<Rates, "source" | "stale">;
 
 async function fromBnm(): Promise<Payload | null> {
-  const json = await getJson<BnmResponse>(BNM, { headers: { Accept: "application/vnd.BNM.API.v1+json" } });
+  const json = await getJson<BnmResponse>(BNM, { headers: BNM_ACCEPT });
   if (!json?.data?.length) return null;
   return {
     session: json.meta?.session ?? "",
@@ -109,4 +111,34 @@ export async function getRates(): Promise<Rates | null> {
     source: got.source,
     stale: got.stale,
   };
+}
+
+export interface Opr {
+  /** Percent, e.g. 2.75. */
+  level: number;
+  /** Percentage points at that decision (0 = unchanged). */
+  change: number;
+  /** MPC decision date, "2026-09-03". */
+  date: string;
+  stale: boolean;
+}
+
+/** Overnight Policy Rate from BNM (changes ~6 times a year), or null if unavailable. */
+export async function getOpr(): Promise<Opr | null> {
+  const got = await withFallback<Omit<Opr, "stale">>(
+    "opr",
+    [
+      {
+        name: "Bank Negara Malaysia",
+        load: async () => {
+          const d = (await getJson<{ data?: { date?: string; change_in_opr?: number; new_opr_level?: number } }>(BNM_OPR, { headers: BNM_ACCEPT }))?.data;
+          return typeof d?.new_opr_level === "number" && d.date
+            ? { level: d.new_opr_level, change: d.change_in_opr ?? 0, date: d.date }
+            : null;
+        },
+      },
+    ],
+    { freshS: 12 * 60 * 60, staleS: 60 * 24 * 60 * 60 },
+  );
+  return got ? { ...got.data, stale: got.stale } : null;
 }

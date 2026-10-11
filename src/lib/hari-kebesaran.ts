@@ -84,3 +84,70 @@ export async function getUpcomingEvents(today: string): Promise<UpcomingEvent[]>
   }
   return [...found.values()].sort((a, b) => a.daysLeft - b.daysLeft);
 }
+
+// ---- Hijri <-> Masihi converter (/tarikh-hijri): same sources, same order. ----
+
+export type Conversion =
+  | { masihi: string; hijri: string; source: "jakim" | "anggaran" }
+  | { error: string };
+
+const pad = (n: number) => String(n).padStart(2, "0");
+const hijriStr = ([y, m, d]: [number, number, number]) => `${y}-${pad(m)}-${pad(d)}`;
+/** Monotonic day-ish index of a Hijri date (months counted as 30 days). */
+const hKey = ([y, m, d]: [number, number, number]) => (y * 12 + m - 1) * 30 + d;
+// Intl's Umm al-Qura table is reliable well beyond this; keep inputs sane.
+const MASIHI_YEARS = [1900, 2100];
+const HIJRI_YEARS = [1318, 1524];
+
+/** "YYYY-MM-DD" (Masihi) -> Hijri, JAKIM takwim if it covers the date, else estimate. */
+export async function toHijri(ymd: string, today: string): Promise<Conversion> {
+  const t = Date.parse(`${ymd}T00:00:00Z`);
+  const y = Number(ymd.slice(0, 4));
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd) || Number.isNaN(t) || new Date(t).toISOString().slice(0, 10) !== ymd) {
+    return { error: "Tarikh Masihi tidak sah." };
+  }
+  if (y < MASIHI_YEARS[0] || y > MASIHI_YEARS[1]) {
+    return { error: `Tahun Masihi mesti antara ${MASIHI_YEARS[0]} dan ${MASIHI_YEARS[1]}.` };
+  }
+  const fromJakim = (await jakimYear(today.slice(0, 4)))?.get(ymd);
+  return { masihi: ymd, hijri: hijriStr(fromJakim ?? estimate(ymd)), source: fromJakim ? "jakim" : "anggaran" };
+}
+
+/** "YYYY-MM-DD" (Hijri) -> Masihi: reverse lookup in JAKIM's takwim, else search the Umm al-Qura calendar. */
+export async function toMasihi(hijri: string, today: string): Promise<Conversion> {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(hijri);
+  if (!m) return { error: "Tarikh Hijri tidak sah." };
+  const h = [Number(m[1]), Number(m[2]), Number(m[3])] as [number, number, number];
+  if (h[0] < HIJRI_YEARS[0] || h[0] > HIJRI_YEARS[1]) {
+    return { error: `Tahun Hijri mesti antara ${HIJRI_YEARS[0]} dan ${HIJRI_YEARS[1]}.` };
+  }
+  if (h[1] < 1 || h[1] > 12) return { error: "Bulan Hijri mesti antara 1 dan 12." };
+  if (h[2] < 1 || h[2] > 30) return { error: "Hari bulan Hijri mesti antara 1 dan 30." };
+  const want = hijriStr(h);
+  const noDay = { error: `Bulan ini hanya 29 hari - tiada hari ke-30.` };
+
+  const jakim = await jakimYear(today.slice(0, 4));
+  if (jakim) {
+    const rows = [...jakim];
+    const i = rows.findIndex(([, x]) => hijriStr(x) === want);
+    if (i >= 0) return { masihi: rows[i][0], hijri: want, source: "jakim" };
+    // JAKIM shows day 29 followed by day 1: a 29-day month.
+    const j = rows.findIndex(([, x]) => hijriStr(x) === hijriStr([h[0], h[1], 29]));
+    if (h[2] === 30 && j >= 0 && j + 1 < rows.length) return noDay;
+  }
+
+  // Estimate: start from the mean Hijri year/month, then walk to the exact day.
+  // 1 Muharram 1 AH = 622-07-16 (Julian) = -42521587200000 ms.
+  let t = -42_521_587_200_000 + Math.round(((h[0] - 1) * 354.367 + (h[1] - 1) * 29.5306 + h[2] - 1)) * DAY;
+  for (let n = 0; n < 10; n++) {
+    const delta = hKey(h) - hKey(estimate(new Date(t).toISOString().slice(0, 10)));
+    if (delta === 0) break;
+    t += delta * DAY;
+  }
+  // ponytail: a 30th that oscillates between 29 and 1 never converges; the ±3-day scan settles it.
+  for (let k = -3; k <= 3; k++) {
+    const ymd = new Date(t + k * DAY).toISOString().slice(0, 10);
+    if (hijriStr(estimate(ymd)) === want) return { masihi: ymd, hijri: want, source: "anggaran" };
+  }
+  return noDay;
+}

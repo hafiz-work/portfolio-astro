@@ -3,9 +3,9 @@ export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
 import Combobox from "../components/ui/Combobox.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
-import { CURRENCY_NAMES, getRates } from "../lib/kadar-tukaran";
+import { CURRENCY_NAMES, getOpr, getRates } from "../lib/kadar-tukaran";
 
-const data = await getRates();
+const [data, opr] = await Promise.all([getRates(), getOpr()]);
 const rates = (data?.rates ?? []).filter((r) => r.middle ?? r.buy ?? r.sell);
 // Where each plan (lib/kadar-tukaran) links to; open.er-api asks for this attribution.
 const SOURCE_URL: Record<string, string> = {
@@ -23,6 +23,14 @@ const updated = data?.updated
       new Date(`${data.updated.slice(0, 10)}T00:00:00Z`),
     )
   : null;
+const oprDate = opr
+  ? new Intl.DateTimeFormat("ms-MY", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" }).format(
+      new Date(`${opr.date}T00:00:00Z`),
+    )
+  : "";
+const oprChange = !opr || opr.change === 0
+  ? "tiada perubahan"
+  : `${opr.change > 0 ? "naik" : "turun"} ${Math.abs(opr.change).toFixed(2)} mata peratus`;
 const session = data?.session ? `${data.session.slice(0, 2)}:${data.session.slice(2)}` : null;
 ---
 
@@ -45,6 +53,25 @@ const session = data?.session ? `${data.session.slice(0, 2)}:${data.session.slic
           <p class="mx-2 font-mono text-sm/6 tracking-widest text-gray-500 uppercase">
             {updated}
             {session && ` · Sesi ${session}`}
+          </p>
+        </div>
+      )
+    }
+    {
+      opr && (
+        <div class="line-y mt-4">
+          <p class="mx-2 text-sm/6 text-gray-600 dark:text-gray-400">
+            <a
+              href="https://www.bnm.gov.my/monetary-stability/opr-decisions"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+            >
+              Kadar Dasar Semalaman (OPR)
+            </a>:{" "}
+            <span class="font-medium text-gray-950 tabular-nums dark:text-white">{opr.level.toFixed(2)}%</span>
+            {` · keputusan MPC ${oprDate} · ${oprChange}`}
+            {opr.stale && " (data simpanan)"}
           </p>
         </div>
       )

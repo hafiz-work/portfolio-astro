@@ -1,0 +1,290 @@
+---
+export const prerender = false;
+import TechHeading from "../components/layout/TechHeading.astro";
+import PointsMap, { type MapPoint } from "../components/ui/PointsMap";
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { BANDS, bandOf, getQuakes, type Quake } from "../lib/gempa";
+
+const data = await getQuakes();
+const quakes = data?.quakes ?? [];
+// MET times are Malaysian wall-clock stored as UTC (lib/gempa).
+const fmt = new Intl.DateTimeFormat("ms-MY", {
+  timeZone: "UTC",
+  hour: "numeric",
+  minute: "2-digit",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+const when = (q: Quake) => fmt.format(new Date(q.time));
+const mag = (q: Quake) => q.mag.toFixed(1);
+const depth = (q: Quake) => `kedalaman ${Math.round(q.depth)} km`;
+const counts = BANDS.map((b) => ({
+  ...b,
+  n: quakes.filter((q) => bandOf(q.mag).tone === b.tone).length,
+}));
+
+// Site palette (STYLE.md: no blue/slate/cyan), mild to severe.
+const TONE: Record<string, string> = {
+  kecil: "bg-sky-500 text-white",
+  sederhana: "bg-emerald-500 text-white",
+  kuat: "bg-amber-400 text-gray-950",
+  sangat: "bg-orange-500 text-white",
+  major: "bg-red-600 text-white",
+};
+// Empty cells closing the grid's last row, per breakpoint (2 cols sm, 3 lg).
+const fillers = (n: number) => {
+  const sm = (2 - (n % 2)) % 2;
+  const lg = (3 - (n % 3)) % 3;
+  return Array.from({ length: Math.max(sm, lg) }, (_, i) => [
+    i < sm ? "sm:block" : "sm:hidden",
+    i < lg ? "lg:block" : "lg:hidden",
+  ]);
+};
+const points: MapPoint[] = quakes.map((q) => ({
+  id: q.id,
+  lat: q.lat,
+  lng: q.lng,
+  title: q.location,
+  subtitle: `${when(q)} · ${depth(q)}`,
+  detail: `M${mag(q)} ${q.magType} · ${bandOf(q.mag).label}${q.distance ? ` · ${q.distance}` : ""}`,
+  badge: mag(q),
+  markerClass: TONE[bandOf(q.mag).tone],
+}));
+---
+
+<PublicLayout
+  title="Gempa Bumi Terkini - MET Malaysia | Hafiz Bahtiar"
+  description="Senarai dan peta gempa bumi terkini dari Jabatan Meteorologi Malaysia (MET Malaysia), dengan magnitud, kedalaman dan jarak dari Malaysia."
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1
+        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Gempa Bumi"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        {quakes.length || "Senarai"} gempa bumi terkini yang dilaporkan Jabatan Meteorologi
+        Malaysia, terbaru dahulu.
+      </p>
+    </div>
+    {
+      quakes.length > 0 && (
+        <div class="line-y mt-4">
+          <p class="mx-2 font-mono text-sm/6 tracking-widest text-gray-500 uppercase">
+            Terkini {when(quakes[0])}
+            {data?.stale && " · data simpanan"}
+          </p>
+        </div>
+      )
+    }
+
+    {
+      quakes.length > 0 ? (
+        <>
+          <div class="line-y mt-10">
+            <ul
+              class="mx-2 flex flex-wrap gap-x-5 gap-y-2 text-sm/6"
+              aria-label="Bilangan gempa mengikut magnitud"
+            >
+              {counts.map((b, i) => (
+                <li class="flex items-center gap-2">
+                  <span
+                    class:list={[
+                      "size-2.5 rounded-full",
+                      TONE[b.tone].split(" ")[0],
+                    ]}
+                    aria-hidden="true"
+                  />
+                  {b.label}
+                  <span class="text-gray-500 tabular-nums">
+                    {i === 0
+                      ? "<4"
+                      : b.max === Infinity
+                        ? "≥7"
+                        : `${BANDS[i - 1].max}-${b.max - 1}.9`}{" "}
+                    · {b.n}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div class="line-y mt-10">
+            <div
+              role="tablist"
+              aria-label="Paparan"
+              class="mx-2 inline-flex gap-1 rounded-full bg-gray-950/5 p-1 dark:bg-white/10"
+            >
+              {[
+                ["peta", "Peta"],
+                ["senarai", "Senarai"],
+              ].map(([id, label], i) => (
+                <button
+                  type="button"
+                  role="tab"
+                  id={`tab-${id}`}
+                  data-tab={id}
+                  aria-controls={`panel-${id}`}
+                  aria-selected={i === 0 ? "true" : "false"}
+                  class="rounded-full px-4 py-1.5 text-sm/6 font-medium text-gray-600 aria-selected:bg-white aria-selected:text-gray-950 aria-selected:shadow-sm dark:text-gray-400 dark:aria-selected:bg-gray-950 dark:aria-selected:text-white"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div
+            id="panel-peta"
+            role="tabpanel"
+            aria-labelledby="tab-peta"
+            class="line-y mt-4"
+          >
+            <div class="h-[70vh] max-h-180 min-h-96 overflow-hidden">
+              <PointsMap
+                client:only="react"
+                points={points}
+                focusZoom={5}
+                fallbackLabel="Peta tak dapat dipapar di peranti ini"
+              />
+            </div>
+          </div>
+
+          <div
+            id="panel-senarai"
+            role="tabpanel"
+            aria-labelledby="tab-senarai"
+            hidden
+          >
+            <div class="line-y mt-4">
+              <ul class="grid grid-cols-1 gap-px bg-gray-950/5 sm:grid-cols-2 lg:grid-cols-3 dark:bg-white/10">
+                {quakes.map((q) => (
+                  <li class="flex items-center gap-4 bg-white px-4 py-4 sm:px-6 dark:bg-gray-950">
+                    <span
+                      class:list={[
+                        "flex size-14 shrink-0 flex-col items-center justify-center rounded-xl text-xl/6 font-semibold tabular-nums",
+                        TONE[bandOf(q.mag).tone],
+                      ]}
+                    >
+                      {mag(q)}
+                      <span class="text-[10px]/3 font-medium opacity-80">
+                        {q.magType}
+                      </span>
+                    </span>
+                    <div class="min-w-0">
+                      <p class="truncate font-medium">{q.location}</p>
+                      <p class="text-xs/5 text-gray-600 dark:text-gray-300">
+                        {when(q)} · {depth(q)}
+                      </p>
+                      {q.distance && (
+                        <p class="truncate text-xs/5 text-gray-500 dark:text-gray-400">
+                          {q.distance}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+                {fillers(quakes.length).map((cls) => (
+                  <li
+                    aria-hidden="true"
+                    class:list={[
+                      "pattern hidden bg-white dark:bg-gray-950",
+                      cls,
+                    ]}
+                  />
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div class="line-y mt-4">
+            <p class="mx-2 max-w-3xl text-xs/5 text-gray-500 dark:text-gray-400">
+              Sumber:{" "}
+              <a
+                href="https://www.met.gov.my"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+              >
+                {data!.source}
+              </a>
+              {data!.stale &&
+                " (data simpanan - MET Malaysia tak dapat dicapai sekarang)"}
+              . Masa dalam waktu Malaysia. Jarak diukur dari bandar terdekat di
+              Malaysia (U utara, S selatan, T timur, B barat, TL timur laut, TG
+              tenggara, BD barat daya, BL barat laut).
+            </p>
+          </div>
+        </>
+      ) : (
+        <div class="line-y mt-10">
+          <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+            Senarai gempa bumi tak dapat diambil dari MET Malaysia sekarang.
+            Cuba lagi sebentar, atau semak terus di{" "}
+            <a
+              href="https://www.met.gov.my"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-sky-600 hover:underline dark:text-sky-400"
+            >
+              laman MET Malaysia
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>
+
+<script>
+  // Peta (default) / Senarai tabs; #senarai opens the list directly.
+  const initTabs = () => {
+    const tabs = [
+      ...document.querySelectorAll<HTMLButtonElement>("[data-tab]"),
+    ];
+    if (!tabs.length || tabs[0].dataset.bound === "1") return;
+    const show = (id: string) => {
+      for (const t of tabs) {
+        const on = t.dataset.tab === id;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(`panel-${t.dataset.tab}`)!.hidden = !on;
+      }
+    };
+    for (const t of tabs) {
+      t.dataset.bound = "1";
+      t.addEventListener("click", () => {
+        show(t.dataset.tab!);
+        history.replaceState(
+          history.state,
+          "",
+          t.dataset.tab === "peta" ? location.pathname : "#senarai",
+        );
+      });
+      t.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        const next =
+          tabs[
+            (tabs.indexOf(t) + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) %
+              tabs.length
+          ];
+        next.focus();
+        next.click();
+      });
+    }
+    show(location.hash === "#senarai" ? "senarai" : "peta");
+  };
+  initTabs();
+  document.addEventListener("astro:page-load", initTabs);
+</script>

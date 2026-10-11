@@ -116,7 +116,7 @@ export async function getPrayerTimes(zone: string): Promise<PrayerTimes | null> 
   };
 }
 
-const HIJRI_MONTHS = [
+export const HIJRI_MONTHS = [
   "Muharram", "Safar", "Rabiulawal", "Rabiulakhir", "Jamadilawal", "Jamadilakhir",
   "Rejab", "Syaaban", "Ramadan", "Syawal", "Zulkaedah", "Zulhijjah",
 ];
