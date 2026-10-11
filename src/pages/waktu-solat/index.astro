@@ -312,6 +312,43 @@ const rows = day
         </section>
       )
     }
+    <!-- Widget for other sites: the only route the middleware lets others iframe. -->
+    <section id="pasang">
+      <div class="line-y mt-10">
+        <div class="mx-2">
+          <p class="eyebrow">Pasang di laman anda</p>
+          <h2 class="mt-1 text-2xl font-medium tracking-tight">Widget waktu solat</h2>
+          <p class="mt-2 max-w-2xl text-sm/6 text-gray-600 dark:text-gray-400">
+            Salin kod ini ke laman masjid, surau atau syarikat anda. Waktu dikemas kini sendiri setiap hari
+            untuk zon {zone.code}. Tambah <code class="font-mono">&amp;tema=gelap</code> atau
+            <code class="font-mono">&amp;tema=terang</code> untuk tetapkan warna.
+          </p>
+        </div>
+      </div>
+      <div class="line-y mt-4">
+        <div class="mx-2 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+          <div class="grid gap-3">
+            <textarea
+              id="embed-code"
+              readonly
+              rows="4"
+              class="field resize-none font-mono text-xs/5"
+            >{`<iframe src="https://hafizbahtiar.com/waktu-solat/embed?zone=${zone.code}" title="Waktu Solat ${zone.daerah}" width="100%" height="380" style="border:0;max-width:420px" loading="lazy"></iframe>`}</textarea>
+            <div>
+              <button type="button" id="embed-copy" class="btn-pill btn-pill-ghost">Salin kod</button>
+            </div>
+          </div>
+          <iframe
+            src={`/waktu-solat/embed?zone=${zone.code}`}
+            title={`Contoh widget Waktu Solat ${zone.daerah}`}
+            width="100%"
+            height="380"
+            loading="lazy"
+            class="rounded-xl ring-1 ring-gray-950/10 dark:ring-white/10"
+          ></iframe>
+        </div>
+      </div>
+    </section>
     <div class="mb-46"></div>
   </div>
 </PublicLayout>
@@ -408,7 +445,25 @@ const rows = day
     });
   };
 
+  const initEmbedCopy = () => {
+    const btn = document.getElementById("embed-copy");
+    const code = document.getElementById("embed-code") as HTMLTextAreaElement | null;
+    if (!btn || !code || btn.dataset.bound === "1") return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(code.value);
+        btn.textContent = "Disalin";
+      } catch {
+        code.select(); // clipboard blocked: let the user copy it
+        btn.textContent = "Tekan Ctrl/Cmd+C";
+      }
+      setTimeout(() => (btn.textContent = "Salin kod"), 2000);
+    });
+  };
+
   const init = () => {
+    initEmbedCopy();
     initWaktuSolat();
     initLocate();
     initPrint();

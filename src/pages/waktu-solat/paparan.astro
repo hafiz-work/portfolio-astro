@@ -41,6 +41,8 @@ const settings = {
   peringatan: pick("peringatan", ["ya", "tidak"] as const, "ya"),
   iqamah: Math.min(30, Math.max(0, Math.trunc(Number(q.get("iqamah")) || 0))),
   masjid: (q.get("masjid") ?? "").trim().slice(0, 60),
+  // Scrolling notice; whitespace collapsed (a newline in the URL would break the ticker).
+  pengumuman: (q.get("pengumuman") ?? "").replace(/\s+/g, " ").trim().slice(0, 200),
   // Background photo per orientation (scripts/waktu-solat/backgrounds.py).
   // Missing/unknown = DEFAULT_BG; "tiada" = no photo; "gilir" = every photo in turn.
   latar: pickBg("latar", "landscape"),
@@ -261,8 +263,12 @@ const controlClass =
     </header>
 
     <div
-      class="flex flex-1 flex-col items-center justify-center portrait:flex-none portrait:py-[8vw]"
+      id="display-views"
+      class="grid flex-1 place-items-center portrait:flex-none portrait:py-[8vw]"
     >
+      <!-- Two views in one grid cell, crossfaded by the script: the clock, and
+           (when Tetapan -> Pengumuman is set) the notice. -->
+      <div data-view="clock" class="pm-view flex flex-col items-center [grid-area:1/1]">
       <p
         class="flex items-baseline gap-[calc(1.5*var(--u))] leading-none font-medium tracking-tighter tabular-nums"
       >
@@ -312,6 +318,23 @@ const controlClass =
           </figure>
         )
       }
+      </div>
+      {
+        settings.pengumuman && (
+          <div
+            data-view="notice"
+            aria-hidden="true"
+            class="pm-view pm-view-off flex max-w-[calc(80*var(--u))] flex-col items-center text-center [grid-area:1/1]"
+          >
+            <p class="rounded-full bg-(--pm-accent) px-[calc(1.5*var(--u))] py-[calc(0.4*var(--u))] font-mono text-[calc(1.2*var(--u))] font-semibold tracking-widest text-(--pm-bg) uppercase">
+              Pengumuman
+            </p>
+            <p class="mt-[calc(2*var(--u))] text-[calc(4*var(--u))] leading-tight font-medium tracking-tight text-balance">
+              {settings.pengumuman}
+            </p>
+          </div>
+        )
+      }
     </div>
 
     {
@@ -352,6 +375,7 @@ const controlClass =
         </p>
       )
     }
+
 
     <p
       class="mt-[calc(1.5*var(--u))] text-center font-mono text-[calc(0.9*var(--u))] tracking-widest text-(--pm-faint) uppercase"
@@ -410,6 +434,17 @@ const controlClass =
               placeholder="Contoh: Masjid Al-Hidayah"
               class={controlClass}
             />
+          </label>
+          <label class:list={[labelClass, "sm:col-span-2 sm:row-start-2"]}>
+            Pengumuman (bergilir dengan jam)
+            <input
+              name="pengumuman"
+              maxlength="200"
+              value={settings.pengumuman}
+              placeholder="Contoh: Kuliah Maghrib malam ini bersama Ustaz Ahmad, selepas solat Maghrib."
+              class={controlClass}
+            />
+            <span class="text-xs font-normal text-(--pm-muted)">Dipapar 10 saat selepas setiap 20 saat jam (bukan dekat waktu azan atau iqamah). Kosongkan untuk sembunyi. Maksimum 200 aksara.</span>
           </label>
           <label class={labelClass}>
             Zon
@@ -594,6 +629,20 @@ const controlClass =
     }
   }
 
+  /* Clock <-> Pengumuman views (crossfade). */
+  .pm-view {
+    transition: opacity 0.8s ease;
+  }
+  .pm-view-off {
+    opacity: 0;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pm-view {
+      transition: none;
+    }
+  }
+
   /* Idle: hide the cursor and the operator buttons. */
   :global(#display.is-idle),
   :global(#display.is-idle *) {
@@ -609,6 +658,10 @@ const controlClass =
 <script>
   const IDLE_MS = 3000;
   const AZAN_BANNER_S = 10 * 60; // "Telah masuk waktu …" for 10 minutes
+  // Pengumuman rotation (seconds). ponytail: fixed; make them Tetapan if mosques ask.
+  const CLOCK_VIEW_S = 20;
+  const NOTICE_VIEW_S = 10;
+  const HOLD_BEFORE_AZAN_S = 2 * 60;
 
   // Malaysian wall-clock time, whatever the TV's own timezone is set to.
   const fmt = new Intl.DateTimeFormat("en-GB", {
@@ -656,6 +709,26 @@ const controlClass =
     const cells = [...screen.querySelectorAll<HTMLElement>("[data-time]")];
     const azan = cells.filter((c) => c.hasAttribute("data-azan"));
 
+    // Clock CLOCK_VIEW_S, then the notice NOTICE_VIEW_S, and round again.
+    const clockView = screen.querySelector<HTMLElement>('[data-view="clock"]')!;
+    const noticeView = screen.querySelector<HTMLElement>('[data-view="notice"]');
+    let showingNotice = false;
+    let viewSec = 0;
+    const setView = (notice: boolean) => {
+      showingNotice = notice;
+      viewSec = 0;
+      clockView.classList.toggle("pm-view-off", notice);
+      clockView.setAttribute("aria-hidden", String(notice));
+      noticeView!.classList.toggle("pm-view-off", !notice);
+      noticeView!.setAttribute("aria-hidden", String(!notice));
+    };
+    const rotateViews = (hold: boolean) => {
+      if (!noticeView) return;
+      viewSec++;
+      if (showingNotice && (hold || viewSec >= NOTICE_VIEW_S)) setView(false);
+      else if (!showingNotice && !hold && viewSec >= CLOCK_VIEW_S) setView(true);
+    };
+
     const tick = () => {
       const now = new Date(Date.now() + offset);
       if (dayFmt.format(now) !== screen.dataset.today) return location.reload(); // new day
@@ -676,6 +749,9 @@ const controlClass =
         .reverse()
         .find((c) => toSec(c.dataset.time!) <= sec);
       const since = current ? sec - toSec(current.dataset.time!) : Infinity;
+      // Never cover the clock close to azan, during iqamah or its banner.
+      const soon = upcoming ? toSec(upcoming.dataset.time!) - sec <= HOLD_BEFORE_AZAN_S : false;
+      rotateViews(soon || since < iqamahS + AZAN_BANNER_S);
       // Keep the prayer that just came in highlighted through iqamah and its banner.
       const focus = since < iqamahS + AZAN_BANNER_S ? current : upcoming;
       cells.forEach((c) => c.toggleAttribute("data-next", c === focus));

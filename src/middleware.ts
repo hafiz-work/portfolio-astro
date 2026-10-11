@@ -10,6 +10,9 @@ import type { MiddlewareHandler } from "astro";
  *
  * KEEP THE Content-Security-Policy VALUE IN SYNC WITH public/_headers.
  */
+/** Routes other sites may put in an <iframe> (see the end of onRequest). */
+const EMBEDDABLE = new Set(["/waktu-solat/embed"]);
+
 const SECURITY_HEADERS: Record<string, string> = {
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
   "X-Content-Type-Options": "nosniff",
@@ -93,6 +96,15 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   if (contentType.includes("text/html")) {
     for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
       response.headers.set(name, value);
+    }
+    // The prayer-times widget is made to be iframed by other sites (mosques,
+    // companies). Only this route may be framed; everything else stays DENY.
+    if (EMBEDDABLE.has(path)) {
+      response.headers.delete("X-Frame-Options");
+      response.headers.set(
+        "Content-Security-Policy",
+        SECURITY_HEADERS["Content-Security-Policy"].replace(/frame-ancestors [^;]+/, "frame-ancestors *"),
+      );
     }
   }
 

@@ -1,0 +1,212 @@
+---
+export const prerender = false;
+import TechHeading from "../components/layout/TechHeading.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { BANDS, bandOf, getReadings, type Station } from "../lib/ipu";
+
+const data = await getReadings();
+const stations = data?.stations ?? [];
+const latest = Math.max(0, ...stations.map((s) => s.time).filter(Number.isFinite));
+const readingTime = latest
+  ? new Intl.DateTimeFormat("ms-MY", {
+      timeZone: "UTC", // APIMS times are Malaysian wall-clock stored as UTC (lib/ipu)
+      hour: "numeric",
+      minute: "2-digit",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(new Date(latest))
+  : "";
+
+const states = [...new Set(stations.map((s) => s.state))].sort((a, b) => a.localeCompare(b));
+const byState = (state: string) =>
+  stations.filter((s) => s.state === state).sort((a, b) => a.location.localeCompare(b.location));
+const counts = BANDS.map((b) => ({ ...b, n: stations.filter((s) => bandOf(s.api)?.tone === b.tone).length }));
+
+// JAS's colour scale, with the site's sky in place of JAS blue (STYLE.md: no blue).
+const TONE: Record<string, string> = {
+  baik: "bg-sky-500",
+  sederhana: "bg-emerald-500",
+  "tidak-sihat": "bg-amber-400",
+  sangat: "bg-orange-500",
+  bahaya: "bg-red-600",
+};
+const town = (s: Station) => s.location.split(",")[0].trim();
+---
+
+<PublicLayout
+  title="IPU Hari Ini - Indeks Pencemaran Udara Malaysia | Hafiz Bahtiar"
+  description="Bacaan Indeks Pencemaran Udara (IPU) terkini dari stesen Jabatan Alam Sekitar di seluruh Malaysia, dengan stesen terdekat anda."
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1 class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl">
+        <TechHeading text="Kualiti Udara" fontSize={96} fontWeight={400} box="-my-12 h-48" />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Indeks Pencemaran Udara (IPU) terkini dari {stations.length || "stesen"} stesen Jabatan Alam Sekitar.
+      </p>
+    </div>
+    {
+      readingTime && (
+        <div class="line-y mt-4">
+          <p class="mx-2 font-mono text-sm/6 tracking-widest text-gray-500 uppercase">
+            Bacaan {readingTime}
+            {data?.stale && " · data simpanan"}
+          </p>
+        </div>
+      )
+    }
+
+    {
+      stations.length > 0 ? (
+        <>
+          <div class="line-y mt-10">
+            <div class="mx-2 flex flex-wrap items-center gap-3">
+              <!-- Shown by the script where geolocation exists; distance is computed
+                   in the browser from the station list below (nothing is sent anywhere). -->
+              <button type="button" id="ipu-locate" hidden class="btn-pill btn-pill-primary">
+                Stesen terdekat saya
+              </button>
+              <p id="ipu-locate-status" class="text-sm/6 text-gray-600 empty:hidden dark:text-gray-400" aria-live="polite" />
+            </div>
+          </div>
+
+          <div class="line-y mt-4">
+            <ul class="mx-2 flex flex-wrap gap-x-5 gap-y-2 text-sm/6" aria-label="Bilangan stesen mengikut kategori">
+              {counts.map((b) => (
+                <li class="flex items-center gap-2">
+                  <span class:list={["size-2.5 rounded-full", TONE[b.tone]]} aria-hidden="true" />
+                  {b.label}
+                  <span class="text-gray-500 tabular-nums">
+                    {b.max === Infinity ? ">300" : `≤${b.max}`} · {b.n} stesen
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {states.map((state) => (
+            <>
+              <div class="line-y mt-10">
+                <p class="eyebrow mx-2">{state}</p>
+              </div>
+              <div class="line-y mt-4">
+                <ul class="grid grid-cols-1 gap-px bg-gray-950/5 sm:grid-cols-2 lg:grid-cols-3 dark:bg-white/10">
+                  {byState(state).map((s) => {
+                    const band = bandOf(s.api);
+                    return (
+                      <li
+                        id={`stesen-${s.id}`}
+                        data-lat={s.lat}
+                        data-lng={s.lng}
+                        data-name={town(s)}
+                        class="scroll-offset flex items-center gap-4 bg-white px-4 py-4 data-nearest:bg-sky-500/5 data-nearest:ring-2 data-nearest:ring-sky-500 data-nearest:ring-inset sm:px-6 dark:bg-gray-950 dark:data-nearest:bg-sky-400/10"
+                      >
+                        <span
+                          class:list={[
+                            "flex size-14 shrink-0 items-center justify-center rounded-xl text-xl font-semibold tabular-nums",
+                            band ? [TONE[band.tone], band.tone === "tidak-sihat" ? "text-gray-950" : "text-white"] : "bg-gray-950/5 text-gray-500 dark:bg-white/10",
+                          ]}
+                        >
+                          {s.api ?? "-"}
+                        </span>
+                        <div class="min-w-0">
+                          <p class="truncate font-medium">{town(s)}</p>
+                          <p class="truncate text-xs/5 text-gray-500 dark:text-gray-400">{s.place}</p>
+                          <p class="text-xs/5 text-gray-600 dark:text-gray-300">
+                            {band ? band.label : "Tiada bacaan"}
+                            {s.pollutant && <span class="text-gray-500"> · {s.pollutant}</span>}
+                          </p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </>
+          ))}
+
+          <div class="line-y mt-4">
+            <p class="mx-2 max-w-3xl text-xs/5 text-gray-500 dark:text-gray-400">
+              Sumber:{" "}
+              <a
+                href="https://eqms.doe.gov.my/APIMS/main"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+              >
+                {data!.source}
+              </a>
+              {data!.stale && " (data simpanan - JAS tak dapat dicapai sekarang)"}. Bacaan dikemas kini setiap jam.
+              Kategori ikut julat IPU JAS: 0-50 Baik, 51-100 Sederhana, 101-200 Tidak sihat, 201-300 Sangat
+              tidak sihat, lebih 300 Berbahaya.
+            </p>
+          </div>
+        </>
+      ) : (
+        <div class="line-y mt-10">
+          <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+            Bacaan IPU tak dapat diambil dari Jabatan Alam Sekitar sekarang. Cuba lagi sebentar, atau semak terus di{" "}
+            <a
+              href="https://eqms.doe.gov.my/APIMS/main"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-sky-600 hover:underline dark:text-sky-400"
+            >
+              APIMS JAS
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>
+
+<script>
+  // Nearest station: the browser's location vs every station's coordinates,
+  // haversine distance, all on the device.
+  const distanceKm = (aLat: number, aLng: number, bLat: number, bLng: number) => {
+    const r = (d: number) => (d * Math.PI) / 180;
+    const h =
+      Math.sin(r(bLat - aLat) / 2) ** 2 +
+      Math.cos(r(aLat)) * Math.cos(r(bLat)) * Math.sin(r(bLng - aLng) / 2) ** 2;
+    return 2 * 6371 * Math.asin(Math.sqrt(h));
+  };
+
+  const initLocate = () => {
+    const btn = document.getElementById("ipu-locate");
+    const status = document.getElementById("ipu-locate-status");
+    if (!btn || !status || !("geolocation" in navigator) || btn.dataset.bound === "1") return;
+    btn.dataset.bound = "1";
+    btn.hidden = false;
+    const stations = [...document.querySelectorAll<HTMLElement>("[data-lat][data-lng]")];
+    btn.addEventListener("click", () => {
+      status.textContent = "Mencari lokasi…";
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => {
+          let best: HTMLElement | null = null;
+          let bestKm = Infinity;
+          for (const s of stations) {
+            const km = distanceKm(coords.latitude, coords.longitude, Number(s.dataset.lat), Number(s.dataset.lng));
+            if (km < bestKm) [best, bestKm] = [s, km];
+          }
+          if (!best) return void (status.textContent = "Tiada stesen dijumpai.");
+          stations.forEach((s) => s.toggleAttribute("data-nearest", s === best));
+          status.textContent = `Stesen terdekat: ${best.dataset.name} (${Math.round(bestKm)} km)`;
+          best.scrollIntoView({ behavior: "smooth", block: "center" });
+        },
+        (err) =>
+          (status.textContent =
+            err.code === err.PERMISSION_DENIED ? "Akses lokasi ditolak." : "Lokasi tak dapat dikesan."),
+        { timeout: 10000, maximumAge: 10 * 60 * 1000 },
+      );
+    });
+  };
+  initLocate();
+  document.addEventListener("astro:page-load", initLocate);
+</script>

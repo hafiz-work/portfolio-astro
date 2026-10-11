@@ -1,58 +1,63 @@
 # Ideas - Showcase apps
 
-Small public apps for `/showcase`, same pattern as Waktu Solat: official data, useful
-to people in Malaysia, searched often, cheap to run (one cached fetch). Each app gets
-its own top-level route and one entry in the `apps` array (`src/pages/showcase.astro`).
-See CLAUDE.md -> Showcase.
+Small public apps for `/showcase`, same pattern as the ones already live (Waktu Solat,
+Harga Minyak, Kadar Tukaran, Kiraan Detik): official Malaysian data first, a fallback
+chain through `src/lib/fallback.ts`, useful to people in Malaysia, cheap to run. Each
+app gets its own top-level route and one entry in the `apps` array
+(`src/pages/showcase.astro`). See CLAUDE.md -> Showcase.
 
-Recommended order: **1** first (most searched, data verified, small), **4** any time.
+Data sources below were checked on 2026-10-11. Done and removed: IPU (`/ipu`), Widget Waktu Solat (`/waktu-solat/embed`). Next recommended: **2**.
 
-## 1. Harga Minyak Minggu Ini - `/harga-minyak` - DONE (2026-10-11)
+## 2. Harga Emas Kijang Emas - `/harga-emas`
 
-- Fallback: plan B is the same dataset as a CSV on `storage.data.gov.my`. History is a 12-week table, not a chart (add one if wanted).
-
-- **Data:** `api.data.gov.my` dataset `fuelprice` - verified 2026-10-11:
-  `https://api.data.gov.my/data-catalogue?id=fuelprice&sort=-date&limit=1`
-  → RON95 4.67, RON97 5.15, diesel 5.27, BUDI95 1.99, diesel Sabah/Sarawak 2.15 (2026-10-08).
-- **Why:** updated every Wednesday, searched every week ("harga minyak minggu ini").
-- **Scope:** this week vs last week (up/down), a few months of history as a chart.
-- **Effort:** small - one page, one fetch, cache until the next Wednesday.
-
-## 2. Kadar Tukaran Wang - `/kadar-tukaran` - DONE (2026-10-11)
-
-- **Data:** Bank Negara Malaysia open API - verified 2026-10-11:
-  `https://api.bnm.gov.my/public/exchange-rate/USD`
-  (header `Accept: application/vnd.BNM.API.v1+json`) → USD sell 4.096 / buy 4.071 (2026-10-09).
-- **Why:** official BNM rates, not estimates.
-- **Scope:** rate table + RM ↔ currency converter.
+- **Data:** Bank Negara Malaysia open API, verified:
+  `https://api.bnm.gov.my/public/kijang-emas` (header `Accept: application/vnd.BNM.API.v1+json`)
+  → 1 oz buy RM 17,301 / sell RM 18,001, ½ oz, ¼ oz (2026-10-09).
+- **Why:** official buy/sell prices; also the input #6 (zakat) needs.
+- **Scope:** today's prices per size, price per gram, change from the previous day.
+- **Fallback:** stored copy (no other official Kijang Emas source).
 - **Effort:** small.
 
-## 3. Kiraan detik Ramadan / Syawal / Hari Raya Haji - DONE as `/kiraan-detik` (2026-10-11)
+## 4. Kompas Kiblat (telefon) - `/kiblat`
 
-- JAKIM has no takwim for next year yet (e-solat `NO_RECORD` for 2027 in Oct 2026), so dates beyond the current year are Umm al-Qura estimates (±1 day), labelled on the page.
+- **Data:** bearing from GPS (great-circle to the Kaabah) - no API; JAKIM's zone bearing
+  (already fetched) as a cross-check.
+- **Why:** practical on a phone; reuses the location flow.
+- **Scope:** compass needle from `DeviceOrientationEvent` (iOS needs a permission tap);
+  fall back to showing the bearing in degrees when there is no compass.
+- **Effort:** small-medium (sensor quirks across iOS/Android).
 
-- **Data:** Hijri date per day from JAKIM e-solat `period=year` (already used by Waktu Solat).
-- **Why:** reuses data we already fetch; the countdown can also go on Paparan Masjid.
-- **Effort:** small.
+## 5. Mod Ramadan di Paparan Masjid
 
-## 4. Pengumuman di Paparan Masjid
+- **Data:** none new - Hijri month from the takwim we already have.
+- **Why:** in Ramadan, mosques highlight Imsak (sahur ends) and Maghrib (berbuka).
+- **Scope:** during Ramadan, the countdown targets Imsak/Maghrib and the cards say
+  "Sahur berakhir" / "Berbuka"; automatic, with a Tetapan switch to turn it off.
+- **Effort:** small (seasonal - worth doing before Ramadan 1448, ~Feb 2027).
 
-- **Data:** none - a text setting in the URL, like the other Tetapan.
-- **Why:** mosques need a scrolling notice ("Kuliah Maghrib malam ini…").
-- **Effort:** very small (Paparan Masjid enhancement, not a new app).
+## 6. Kalkulator Zakat
 
-## 5. Kalkulator Zakat
-
-- **Data:** gold price - BNM has a Kijang Emas API (**not verified yet**).
+- **Data:** gold price from #2 (Kijang Emas) for nisab.
 - **Why:** searched often.
 - **Effort:** medium.
 - **Caution:** nisab and calculation methods differ per state zakat authority. Must follow
   each state's official source - a wrong number here is a religious matter, not a typo.
+  Build #2 first.
+
+## Small additions (no new page)
+
+- **OPR on Kadar Tukaran** - BNM `https://api.bnm.gov.my/public/opr` (verified: 2.75%,
+  2026-09-03). One line under the rates.
+- **Cuaca hari ini on Paparan Masjid** - MET forecast via `api.data.gov.my/weather/forecast/`
+  (verified earlier). Needs a JAKIM zone -> MET location mapping.
+- **Graf Harga Minyak** - a chart for the 12-week table (load the dataviz skill first).
 
 ## Considered, not recommended
 
+- **Paras air / banjir (JPS)** - publicinfobanjir.water.gov.my has no documented API;
+  scraping it would break silently, and wrong flood data is dangerous.
+- **Harga barang (PriceCatcher, KPDN)** - very large dataset; needs real storage and
+  search, not a small showcase app.
 - **Kalkulator KWSP / PCB** - rules change often; high risk of wrong numbers.
-- **Generic developer tools** (JSON formatter, URL shortener) - plentiful elsewhere; don't
-  set the portfolio apart.
-- **Cuti umum** - `api.data.gov.my` `public_holidays` returned 404 (2026-10-11); holidays
-  also differ per state.
+- **Cuti umum** - `api.data.gov.my` `public_holidays` returns 404; holidays differ per state.
+- **Generic developer tools** (JSON formatter, URL shortener) - don't set the portfolio apart.
