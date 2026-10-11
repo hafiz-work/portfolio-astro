@@ -34,7 +34,7 @@ import PublicLayout from "../layouts/PublicLayout.astro";
     </div>
 
     <div class="line-y mt-6">
-      <Alert variant="info" title="Sebelum mula" class="mx-2 max-w-3xl">
+      <Alert variant="info" title="Sebelum mula" class="mx-2">
         <ul>
           <li><strong>Hidupkan Lokasi (GPS)</strong> pada telefon anda.</li>
           <li>
@@ -155,7 +155,7 @@ import PublicLayout from "../layouts/PublicLayout.astro";
 
     <!-- Shown by the script for the matching location error (or a denied permission). -->
     <div class="line-y mt-4 hidden" id="kiblat-help">
-      <div data-help="denied" hidden class="mx-2 max-w-3xl">
+      <div data-help="denied" hidden class="mx-2">
         <Alert variant="warning" title="Lokasi disekat untuk laman ini">
           <p>
             Benarkan lokasi untuk hafizbahtiar.com, kemudian muat semula
@@ -184,7 +184,7 @@ import PublicLayout from "../layouts/PublicLayout.astro";
           </p>
         </Alert>
       </div>
-      <div data-help="off" hidden class="mx-2 max-w-3xl">
+      <div data-help="off" hidden class="mx-2">
         <Alert variant="warning" title="Lokasi tak dapat dikesan">
           <ul>
             <li>
@@ -226,7 +226,7 @@ import PublicLayout from "../layouts/PublicLayout.astro";
       </p>
     </div>
     <div class="line-y mt-6">
-      <Disclaimer class="mx-2 max-w-3xl" sources={[]}>
+      <Disclaimer class="mx-2" sources={[]}>
         <Fragment
           set:html={`Arah kiblat ialah <strong>anggaran</strong> berdasarkan GPS dan kompas telefon, yang boleh tersasar. Untuk pembinaan atau pengukuran masjid dan surau, rujuk pihak berkuasa agama negeri.`}
         />

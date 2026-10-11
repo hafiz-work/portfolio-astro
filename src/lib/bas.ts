@@ -34,6 +34,8 @@ export interface BusPosition {
   lng: number;
   /** Route riders know ("300"); "-" when the feed sends none. */
   route: string;
+  /** GTFS route_id ("U3000") - names the route-line file public/data/bas/<feed>/<routeId>.json. */
+  routeId: string;
   routeName: string;
   plate: string;
   /** Unix seconds of the position. */
@@ -72,6 +74,7 @@ export async function getPositions(feed: FeedId): Promise<Positions | null> {
                 lat: Math.round(v.lat * 1e5) / 1e5,
                 lng: Math.round(v.lng * 1e5) / 1e5,
                 route: short || v.routeId || "-",
+                routeId: v.routeId,
                 routeName: long,
                 plate: v.plate || v.label,
                 at: v.timestamp,

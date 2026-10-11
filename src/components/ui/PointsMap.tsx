@@ -27,7 +27,12 @@ export type MapPoint = {
   badge?: string | number;
   /** Tailwind classes for the marker's colour, e.g. "bg-sky-500 text-white". */
   markerClass?: string;
+  /** Data-driven colour (hex, e.g. a rail line's official colour) - overrides markerClass's background. */
+  color?: string;
 };
+
+/** A line: [lng, lat] points, optionally with its own colour (default sky). */
+export type MapLine = [number, number][] | { coordinates: [number, number][]; color?: string; width?: number };
 
 type PointsMapProps = {
   points: MapPoint[];
@@ -36,8 +41,8 @@ type PointsMapProps = {
   fallbackLabel?: string;
   /** Zoom used when a point is selected (default 11). */
   focusZoom?: number;
-  /** Lines to draw, each a list of [lng, lat] (e.g. a route or a bearing). */
-  lines?: [number, number][][];
+  /** Lines to draw (a route, a bearing, a rail line). */
+  lines?: MapLine[];
 };
 
 export const POINTS_MAP_FOCUS = "points-map:focus";
@@ -55,7 +60,7 @@ export default function PointsMap({
   const selected = points.find((p) => p.id === selectedId) ?? null;
 
   const bounds = useMemo(() => {
-    const all = [...points.map((p) => [p.lng, p.lat]), ...lines.flat()];
+    const all = [...points.map((p) => [p.lng, p.lat]), ...lines.flatMap((l) => (Array.isArray(l) ? l : l.coordinates))];
     if (!all.length) return null;
     const lngs = all.map((c) => c[0]);
     const lats = all.map((c) => c[1]);
@@ -99,9 +104,19 @@ export default function PointsMap({
       fitBoundsOptions={{ padding: 40 }}
     >
       <MapControls position="top-right" showZoom showLocate showFullscreen />
-      {lines.map((coordinates, i) => (
-        <MapRoute key={i} coordinates={coordinates} color="#0ea5e9" width={3} opacity={0.9} interactive={false} />
-      ))}
+      {lines.map((l, i) => {
+        const line = Array.isArray(l) ? { coordinates: l } : l;
+        return (
+          <MapRoute
+            key={i}
+            coordinates={line.coordinates}
+            color={line.color ?? "#0ea5e9"}
+            width={line.width ?? 3}
+            opacity={0.9}
+            interactive={false}
+          />
+        );
+      })}
       {points.map((p) => (
         <MapMarker key={p.id} longitude={p.lng} latitude={p.lat} onClick={() => select(p.id)}>
           <MarkerContent>
@@ -115,6 +130,7 @@ export default function PointsMap({
                 p.markerClass ?? "bg-sky-500 text-white",
                 p.id === selectedId && "scale-125",
               )}
+              style={p.color ? { backgroundColor: p.color, color: "#fff" } : undefined}
             >
               {p.badge}
             </button>
