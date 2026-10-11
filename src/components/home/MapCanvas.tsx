@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Clock, Sun, Moon, Cuboid, Hexagon } from "lucide-react";
+import { Cuboid, Hexagon } from "lucide-react";
+import { MapThemeToggle, useMapTheme } from "@/components/ui/MapThemeToggle";
 import type { Polygon } from "geojson";
 import {
   Map as MapComponent,
@@ -92,96 +93,6 @@ function syncBuildingsLayer(map: MapRef, enabled: boolean, theme: "light" | "dar
   );
 }
 
-// ─── Theme logic ─────────────────────────────────────────────────────────────
-
-type MapThemePreference = "auto" | "light" | "dark";
-
-const MAP_THEME_KEY = "map-theme";
-const PREFERENCE_CYCLE: MapThemePreference[] = ["auto", "light", "dark"];
-
-function getTimeTheme(): "light" | "dark" {
-  const h = new Date().getHours();
-  return h >= 6 && h < 18 ? "light" : "dark";
-}
-
-// Priority 1: .dark/.light class on <html> - follows the app's global toggle.
-// Priority 2: time of day (6 am–6 pm = light) - first-visit fallback when no
-//             app theme class has been set yet.
-function getAppTheme(): "light" | "dark" {
-  if (typeof document === "undefined") return getTimeTheme();
-  if (document.documentElement.classList.contains("dark")) return "dark";
-  if (document.documentElement.classList.contains("light")) return "light";
-  return getTimeTheme();
-}
-
-function readStoredPreference(): MapThemePreference {
-  try {
-    const v = localStorage.getItem(MAP_THEME_KEY);
-    if (v === "light" || v === "dark" || v === "auto") return v;
-  } catch { }
-  return "auto";
-}
-
-function useMapTheme() {
-  const [autoTheme, setAutoTheme] = useState<"light" | "dark">(getAppTheme);
-
-  useEffect(() => {
-    // React immediately to the app-wide dark/light toggle.
-    const observer = new MutationObserver(() => setAutoTheme(getAppTheme()));
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    // Re-evaluate the time fallback every minute - only matters when the app
-    // hasn't set an explicit theme class (e.g. first visit with no preference).
-    const interval = setInterval(() => setAutoTheme(getAppTheme()), 60_000);
-
-    return () => {
-      observer.disconnect();
-      clearInterval(interval);
-    };
-  }, []);
-
-  const [preference, setPreferenceState] = useState<MapThemePreference>(readStoredPreference);
-  const setPreference = (p: MapThemePreference) => {
-    setPreferenceState(p);
-    try { localStorage.setItem(MAP_THEME_KEY, p); } catch { }
-  };
-
-  const resolvedTheme: "light" | "dark" = preference === "auto" ? autoTheme : preference;
-  return { resolvedTheme, preference, setPreference };
-}
-
-// ─── Theme toggle button ─────────────────────────────────────────────────────
-
-const PREF_META: Record<MapThemePreference, { label: string; Icon: React.FC<{ className?: string }> }> = {
-  auto: { label: "Auto", Icon: ({ className }) => <Clock className={className} /> },
-  light: { label: "Day", Icon: ({ className }) => <Sun className={className} /> },
-  dark: { label: "Night", Icon: ({ className }) => <Moon className={className} /> },
-};
-
-function MapThemeToggle({
-  preference,
-  onCycle,
-}: {
-  preference: MapThemePreference;
-  onCycle: () => void;
-}) {
-  const { label, Icon } = PREF_META[preference];
-  return (
-    <button
-      type="button"
-      onClick={onCycle}
-      aria-label={`Map theme: ${label}. Click to cycle.`}
-      className="flex items-center gap-1.5 rounded-full bg-white/90 border border-gray-950/10 px-2 py-1 sm:px-2.5 text-xs font-medium text-gray-600 shadow-sm backdrop-blur-sm hover:bg-white transition-colors"
-    >
-      <Icon className="w-3.5 h-3.5 shrink-0" />
-      <span className="leading-none">{label}</span>
-    </button>
-  );
-}
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
 const MapCanvas = ({
@@ -200,7 +111,7 @@ const MapCanvas = ({
   const [centerState, setCenterState] = useState<[number, number]>(center);
   const [is3D, setIs3D] = useState(false);
   const [showBoundary, setShowBoundary] = useState(true);
-  const { resolvedTheme, preference, setPreference } = useMapTheme();
+  const { resolvedTheme, preference, cycle } = useMapTheme();
 
   const updateMarkers = (nextMarkers: MapMarkerData[]) => {
     markersRef.current = nextMarkers;
@@ -305,13 +216,6 @@ const MapCanvas = ({
     };
   }, []);
 
-  const cyclePreference = () => {
-    const next =
-      PREFERENCE_CYCLE[
-      (PREFERENCE_CYCLE.indexOf(preference) + 1) % PREFERENCE_CYCLE.length
-      ];
-    setPreference(next);
-  };
 
   // Tilt the camera and (un)extrude buildings. `styledata` re-applies the layer
   // after a theme switch, which loads a fresh style.
@@ -399,7 +303,7 @@ const MapCanvas = ({
       </MapComponent>
 
       <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2">
-        <MapThemeToggle preference={preference} onCycle={cyclePreference} />
+        <MapThemeToggle preference={preference} onCycle={cycle} />
         <button
           type="button"
           onClick={() => setIs3D((v) => !v)}

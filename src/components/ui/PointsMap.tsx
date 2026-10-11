@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Map, MapControls, MapMarker, MapPopup, MapRoute, MarkerContent, type MapRef } from "./map";
 import { cn } from "@/lib/utils";
+import { MapThemeToggle, useMapTheme } from "./MapThemeToggle";
 
 /**
  * Interactive map of labelled points, built on `ui/map.tsx` - for any page that
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
  * - Click a point (or Tab + Enter) -> it is selected, flown to and gets a popup.
  * - Other scripts can select a point: dispatch `points-map:focus` on window with
  *   `{ detail: { id } }` (e.g. a "nearest to me" button outside the map).
+ * - Auto / Terang / Gelap map theme pill (bottom-left), shared with the home map.
  * - Optional `lines` ([lng, lat][] each) are drawn under the points and fitted too.
  */
 export type MapPoint = {
@@ -48,6 +50,7 @@ export default function PointsMap({
   lines = [],
 }: PointsMapProps) {
   const mapRef = useRef<MapRef | null>(null);
+  const { resolvedTheme, preference, cycle } = useMapTheme();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = points.find((p) => p.id === selectedId) ?? null;
 
@@ -86,8 +89,10 @@ export default function PointsMap({
   }, []);
 
   return (
+    <div className="relative h-full w-full">
     <Map
       ref={mapRef}
+      theme={resolvedTheme}
       className={className}
       fallbackLabel={fallbackLabel}
       bounds={bounds ?? undefined}
@@ -132,5 +137,7 @@ export default function PointsMap({
         </MapPopup>
       )}
     </Map>
+    <MapThemeToggle lang="ms" preference={preference} onCycle={cycle} className="absolute bottom-3 left-3 z-10" />
+    </div>
   );
 }
