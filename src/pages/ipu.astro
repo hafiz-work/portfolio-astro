@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
+import Combobox from "../components/ui/Combobox.astro";
 import PointsMap, { type MapPoint } from "../components/ui/PointsMap";
 import PublicLayout from "../layouts/PublicLayout.astro";
 import { BANDS, bandOf, getReadings, type Station } from "../lib/ipu";
@@ -42,6 +43,9 @@ const fillers = (n: number) => {
     i < lg ? "lg:block" : "lg:hidden",
   ]);
 };
+const embedDefault = stations.find((s) => s.state === "WP Kuala Lumpur") ?? stations[0];
+const embedCode = (id: string) =>
+  `<iframe src="https://hafizbahtiar.com/ipu/embed?stesen=${id}" title="Kualiti udara (IPU)" width="100%" height="190" style="border:0;max-width:420px" loading="lazy"></iframe>`;
 const town = (s: Station) => s.location.split(",")[0].trim();
 const markerClass = (s: Station) => {
   const band = bandOf(s.api);
@@ -221,6 +225,55 @@ const points: MapPoint[] = stations.map((s) => ({
         </div>
       )
     }
+    {
+      embedDefault && (
+        <section id="pasang">
+          <div class="line-y mt-10">
+            <div class="mx-2">
+              <p class="eyebrow">Pasang di laman anda</p>
+              <h2 class="mt-1 text-2xl font-medium tracking-tight">Widget IPU</h2>
+              <p class="mt-2 max-w-2xl text-sm/6 text-gray-600 dark:text-gray-400">
+                Pilih stesen, kemudian salin kod ke laman sekolah, pejabat atau komuniti anda. Bacaan dikemas kini
+                sendiri. Tambah <code class="font-mono">&amp;tema=gelap</code> atau{" "}
+                <code class="font-mono">&amp;tema=terang</code> untuk tetapkan warna.
+              </p>
+            </div>
+          </div>
+          <div class="line-y mt-4">
+            <div class="mx-2 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+              <div class="grid gap-3">
+                <label for="ipu-embed-stesen" class="text-sm/6 font-medium">Stesen</label>
+                <Combobox
+                  id="ipu-embed-stesen"
+                  listLabel="Stesen"
+                  searchPlaceholder="Cari bandar atau negeri…"
+                  emptyText="Tiada stesen sepadan."
+                  value={embedDefault.id}
+                  options={states.flatMap((state) =>
+                    byState(state).map((s) => ({ value: s.id, label: town(s), group: state, keywords: s.place })),
+                  )}
+                />
+                <textarea id="ipu-embed-code" readonly rows="4" class="field resize-none font-mono text-xs/5">{embedCode(embedDefault.id)}</textarea>
+                <div>
+                  <button type="button" id="ipu-embed-copy" class="btn-pill btn-pill-ghost">
+                    Salin kod
+                  </button>
+                </div>
+              </div>
+              <iframe
+                id="ipu-embed-preview"
+                src={`/ipu/embed?stesen=${embedDefault.id}`}
+                title="Contoh widget IPU"
+                width="100%"
+                height="190"
+                loading="lazy"
+                class="rounded-xl ring-1 ring-gray-950/10 dark:ring-white/10"
+              />
+            </div>
+          </div>
+        </section>
+      )
+    }
     <div class="mb-46"></div>
   </div>
 </PublicLayout>
@@ -294,7 +347,33 @@ const points: MapPoint[] = stations.map((s) => ({
     show(location.hash === "#senarai" ? "senarai" : "peta");
   };
 
+  // Widget generator: station pick -> snippet + preview; copy button.
+  const initEmbed = () => {
+    const select = document.getElementById("ipu-embed-stesen") as HTMLSelectElement | null;
+    const code = document.getElementById("ipu-embed-code") as HTMLTextAreaElement | null;
+    const preview = document.getElementById("ipu-embed-preview") as HTMLIFrameElement | null;
+    const btn = document.getElementById("ipu-embed-copy");
+    if (!select || !code || !preview || !btn || btn.dataset.bound === "1") return;
+    btn.dataset.bound = "1";
+    code.value = code.value.trim();
+    select.addEventListener("change", () => {
+      code.value = code.value.replace(/stesen=[^"&]+/, `stesen=${encodeURIComponent(select.value)}`);
+      preview.src = `/ipu/embed?stesen=${encodeURIComponent(select.value)}`;
+    });
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(code.value);
+        btn.textContent = "Disalin";
+      } catch {
+        code.select(); // clipboard blocked: let the user copy it
+        btn.textContent = "Tekan Ctrl/Cmd+C";
+      }
+      setTimeout(() => (btn.textContent = "Salin kod"), 2000);
+    });
+  };
+
   const init = () => {
+    initEmbed();
     initTabs();
     initLocate();
   };

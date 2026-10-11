@@ -1,5 +1,6 @@
 ---
 import { Check } from "lucide-react";
+import DatePicker from "../../ui/DatePicker.astro";
 import Dropdown from "../../ui/Dropdown.astro";
 import { TextEditor } from "../../ui/TextEditor";
 
@@ -88,15 +89,10 @@ const inputClass = "admin-input";
           />
         </div>
         <div class="space-y-2">
-          <label class={labelClass} for="blog-published-date">
+          <label class={labelClass} for="blog-published-date-text">
             Published Date
           </label>
-          <input
-            id="blog-published-date"
-            type="date"
-            name="publishedDate"
-            class={inputClass}
-          />
+          <DatePicker id="blog-published-date" name="publishedDate" />
         </div>
         <div class="space-y-2">
           <label class={labelClass} for="blog-cover-image">

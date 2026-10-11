@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
+import DatePicker from "../components/ui/DatePicker.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
 import { toHijri, toMasihi } from "../lib/hari-kebesaran";
 import { formatHijri, HIJRI_MONTHS, todayInMalaysia } from "../lib/waktu-solat";
@@ -126,17 +127,8 @@ const relative =
           action="/tarikh-hijri"
           class="bg-white px-4 py-5 sm:px-6 dark:bg-gray-950"
         >
-          <label for="masihi" class="eyebrow">Masihi → Hijri</label>
-          <input
-            id="masihi"
-            name="masihi"
-            type="date"
-            required
-            min="1900-01-01"
-            max="2100-12-31"
-            value={r.masihi}
-            class="field mt-3"
-          />
+          <label for="masihi-text" class="eyebrow">Masihi → Hijri</label>
+          <DatePicker id="masihi" name="masihi" required min="1900-01-01" max="2100-12-31" value={r.masihi} class="mt-3" />
           <button type="submit" class="btn-pill btn-pill-primary mt-4"
             >Tukar ke Hijri</button
           >

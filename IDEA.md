@@ -8,7 +8,7 @@ app gets its own top-level route and one entry in the `apps` array
 
 Data sources below were checked on 2026-10-11. Done and removed: IPU (`/ipu`), Widget Waktu Solat (`/waktu-solat/embed`), Kompas Kiblat
 (`/kiblat`), Mod Ramadan (Paparan Masjid), Amaran Cuaca, Gempa Bumi, Tarikh Hijri, OPR, cuaca on
-Paparan Masjid, Graf Harga Minyak. Next recommended: **2**, **10**.
+Paparan Masjid, Graf Harga Minyak, garisan kiblat pada peta, Widget IPU. Next recommended: **2**, **10**.
 
 ## 2. Harga Emas Kijang Emas - `/harga-emas`
 
@@ -45,13 +45,6 @@ Paparan Masjid, Graf Harga Minyak. Next recommended: **2**, **10**.
 - **Scope:** the `/waktu-solat` monthly table switched to the Ramadan dates (Imsak,
   Subuh, Maghrib, Isyak columns, Hijri day), reusing "Cetak jadual". Pairs with Mod Ramadan.
 - **Effort:** small (seasonal - before ~Feb 2027).
-
-## Small additions (no new page)
-
-- **Garisan kiblat pada peta** - on `/kiblat`, a `PointsMap` with a great-circle line from
-  the user to the Kaabah (`MapRoute`), useful where the compass is unreliable.
-- **Widget IPU** - same iframe pattern as the Waktu Solat widget (add the route to
-  `EMBEDDABLE`).
 
 ## Considered, not recommended
 

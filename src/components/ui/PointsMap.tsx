@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Map, MapControls, MapMarker, MapPopup, MarkerContent, type MapRef } from "./map";
+import { Map, MapControls, MapMarker, MapPopup, MapRoute, MarkerContent, type MapRef } from "./map";
 import { cn } from "@/lib/utils";
 
 /**
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
  * - Click a point (or Tab + Enter) -> it is selected, flown to and gets a popup.
  * - Other scripts can select a point: dispatch `points-map:focus` on window with
  *   `{ detail: { id } }` (e.g. a "nearest to me" button outside the map).
+ * - Optional `lines` ([lng, lat][] each) are drawn under the points and fitted too.
  */
 export type MapPoint = {
   id: string;
@@ -33,24 +34,33 @@ type PointsMapProps = {
   fallbackLabel?: string;
   /** Zoom used when a point is selected (default 11). */
   focusZoom?: number;
+  /** Lines to draw, each a list of [lng, lat] (e.g. a route or a bearing). */
+  lines?: [number, number][][];
 };
 
 export const POINTS_MAP_FOCUS = "points-map:focus";
 
-export default function PointsMap({ points, className, fallbackLabel = "Malaysia", focusZoom = 11 }: PointsMapProps) {
+export default function PointsMap({
+  points,
+  className,
+  fallbackLabel = "Malaysia",
+  focusZoom = 11,
+  lines = [],
+}: PointsMapProps) {
   const mapRef = useRef<MapRef | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = points.find((p) => p.id === selectedId) ?? null;
 
   const bounds = useMemo(() => {
-    if (!points.length) return null;
-    const lngs = points.map((p) => p.lng);
-    const lats = points.map((p) => p.lat);
+    const all = [...points.map((p) => [p.lng, p.lat]), ...lines.flat()];
+    if (!all.length) return null;
+    const lngs = all.map((c) => c[0]);
+    const lats = all.map((c) => c[1]);
     return [
       [Math.min(...lngs), Math.min(...lats)],
       [Math.max(...lngs), Math.max(...lats)],
     ] as [[number, number], [number, number]];
-  }, [points]);
+  }, [points, lines]);
 
   const select = (id: string) => {
     const p = points.find((x) => x.id === id);
@@ -84,6 +94,9 @@ export default function PointsMap({ points, className, fallbackLabel = "Malaysia
       fitBoundsOptions={{ padding: 40 }}
     >
       <MapControls position="top-right" showZoom showLocate showFullscreen />
+      {lines.map((coordinates, i) => (
+        <MapRoute key={i} coordinates={coordinates} color="#0ea5e9" width={3} opacity={0.9} interactive={false} />
+      ))}
       {points.map((p) => (
         <MapMarker key={p.id} longitude={p.lng} latitude={p.lat} onClick={() => select(p.id)}>
           <MarkerContent>

@@ -143,6 +143,7 @@ const inputClass = "admin-input";
     if (!currentToggle || !endDateInput) return;
     if (currentToggle.checked) {
       endDateInput.value = "";
+      endDateInput.dispatchEvent(new Event("change")); // DatePicker clears its text box
       endDateInput.disabled = true;
     } else {
       endDateInput.disabled = false;

@@ -1,5 +1,6 @@
 ---
 export const prerender = true;
+import KiblatMap from "../components/kiblat/KiblatMap";
 import TechHeading from "../components/layout/TechHeading.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
 
@@ -130,6 +131,12 @@ import PublicLayout from "../layouts/PublicLayout.astro";
       </div>
     </div>
 
+    <!-- Great-circle line to the Kaabah: appears after "Cari arah kiblat" finds the
+         location - for where the phone compass is unreliable. -->
+    <div class="line-y mt-4 has-[astro-island:empty]:hidden">
+      <KiblatMap client:only="react" />
+    </div>
+
     <div class="line-y mt-4">
       <p class="mx-2 max-w-3xl text-xs/5 text-gray-500 dark:text-gray-400">
         Pegang telefon rata dan jauh dari besi atau magnet, kemudian pusing
@@ -195,7 +202,8 @@ import PublicLayout from "../layouts/PublicLayout.astro";
       const heading =
         typeof o.webkitCompassHeading === "number"
           ? o.webkitCompassHeading
-          : (e.type === "deviceorientationabsolute" || o.absolute) && o.alpha != null
+          : (e.type === "deviceorientationabsolute" || o.absolute) &&
+              o.alpha != null
             ? 360 - o.alpha
             : null;
       if (heading != null) onHeading((heading + screenAngle) % 360);
@@ -235,6 +243,11 @@ import PublicLayout from "../layouts/PublicLayout.astro";
             qiblaDistanceKm(coords.latitude, coords.longitude),
           ).toLocaleString("ms-MY");
           place = `Kaabah ${km} km dari sini.`;
+          window.dispatchEvent(
+            new CustomEvent("kiblat:lokasi", {
+              detail: { lat: coords.latitude, lng: coords.longitude },
+            }),
+          );
           const noCompass = () =>
             `${place} Kompas tiada pada peranti ini - arah ditunjuk dari utara (U) di atas.`;
           bearingEl.textContent = formatBearing(qibla);

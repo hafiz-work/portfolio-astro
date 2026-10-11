@@ -11,7 +11,7 @@ import type { MiddlewareHandler } from "astro";
  * KEEP THE Content-Security-Policy VALUE IN SYNC WITH public/_headers.
  */
 /** Routes other sites may put in an <iframe> (see the end of onRequest). */
-const EMBEDDABLE = new Set(["/waktu-solat/embed"]);
+const EMBEDDABLE = new Set(["/waktu-solat/embed", "/ipu/embed"]);
 
 const SECURITY_HEADERS: Record<string, string> = {
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
