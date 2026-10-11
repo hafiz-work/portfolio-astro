@@ -1,9 +1,9 @@
-// Malaysian prayer times from JAKIM e-solat (official, unauthenticated).
-// One request returns the whole month for a zone; it is kept in the colo cache
-// keyed by zone + Malaysian month, so JAKIM sees ~1 request per zone per month
-// per location, and the month rolls over at Malaysian midnight on the 1st.
+// Malaysian prayer times. Plan A JAKIM e-solat (official), plan B the
+// api.waktusolat.app mirror of JAKIM's data, then the last good copy (lib/fallback).
+// One request returns the whole month for a zone.
 
 import { SOLAT_ZONES, type SolatZone } from "../data/solat-zones";
+import { getJson, withFallback } from "./fallback";
 
 const DEFAULT_ZONE = "WLY01"; // Kuala Lumpur, Putrajaya
 
@@ -13,12 +13,10 @@ export const resolveZone = (param: string | null): SolatZone =>
   SOLAT_ZONES.find((z) => z.code === DEFAULT_ZONE)!;
 
 const ESOLAT = "https://www.e-solat.gov.my/index.php?r=esolatApi/takwimsolat&period=month";
-const TIMEOUT_MS = 6000;
-const CACHE_S = 6 * 60 * 60;
+const WAKTUSOLAT = "https://api.waktusolat.app/v2/solat";
 
 export interface PrayerDay {
   hijri: string; // "1448-04-29"
-  date: string; // "11-Okt-2026"
   imsak: string; // "05:41:00"
   fajr: string;
   syuruk: string;
@@ -35,20 +33,45 @@ export const todayInMalaysia = () =>
 
 interface Month {
   days: PrayerDay[];
-  /** Kiblat direction for the zone, e.g. "292° 31′ 16″" (null if JAKIM omits it). */
+  /** Kiblat direction for the zone, e.g. "292° 31′ 16″" (JAKIM only; null otherwise). */
   bearing: string | null;
 }
 
 /** JAKIM sends the bearing HTML-escaped ("292&#176; 31&#8242; …"). */
 const decodeEntities = (s: string) => s.replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
 
-/** The month's rows + kiblat bearing, or null on any upstream failure (never cached). */
-async function fetchMonth(url: string): Promise<Month | null> {
-  const res = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(TIMEOUT_MS) });
-  if (!res.ok) return null;
-  const json = (await res.json()) as { status?: string; prayerTime?: PrayerDay[]; bearing?: string };
-  if (!json.status?.startsWith("OK") || !json.prayerTime?.length) return null;
+const KEYS = ["imsak", "fajr", "syuruk", "dhuha", "dhuhr", "asr", "maghrib", "isha"] as const;
+const myClock = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Asia/Kuala_Lumpur",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23",
+});
+
+/** Plan A: JAKIM e-solat - the official source. */
+async function fromJakim(zone: string): Promise<Month | null> {
+  const json = await getJson<{ status?: string; prayerTime?: PrayerDay[]; bearing?: string }>(
+    `${ESOLAT}&zone=${encodeURIComponent(zone)}`,
+  );
+  if (!json?.status?.startsWith("OK") || !json.prayerTime?.length) return null;
   return { days: json.prayerTime, bearing: json.bearing ? decodeEntities(json.bearing) : null };
+}
+
+/** Plan B: api.waktusolat.app - a mirror of JAKIM's data (Unix timestamps per prayer). */
+async function fromWaktuSolatApp(zone: string, ymd: string): Promise<Month | null> {
+  type Row = { day: number; hijri: string } & Record<(typeof KEYS)[number], number>;
+  const json = await getJson<{ prayers?: Row[] }>(
+    `${WAKTUSOLAT}/${encodeURIComponent(zone)}?year=${ymd.slice(0, 4)}&month=${Number(ymd.slice(5, 7))}`,
+  );
+  if (!json?.prayers?.length) return null;
+  const days = json.prayers
+    .sort((a, b) => a.day - b.day)
+    .map((r) => ({
+      hijri: r.hijri,
+      ...Object.fromEntries(KEYS.map((k) => [k, myClock.format(new Date(r[k] * 1000))])),
+    })) as PrayerDay[];
+  return { days, bearing: null };
 }
 
 export interface PrayerTimes {
@@ -57,38 +80,40 @@ export interface PrayerTimes {
   /** Every day of the current month (index 0 = the 1st) - for the monthly table. */
   month: PrayerDay[];
   bearing: string | null;
+  /** Which plan answered ("e-solat JAKIM", …) and whether it is the last good copy. */
+  source: string;
+  stale: boolean;
 }
 
 /**
  * Today's (and tomorrow's) times, the whole month and the kiblat bearing for a JAKIM
- * zone, or null if e-solat is down/slow. Tomorrow feeds the display countdown after
- * Isyak. `zone` must be validated by the caller.
+ * zone - JAKIM first, then the waktusolat.app mirror, then the last good copy (kept
+ * 40 days). Null only if all three fail. `zone` must be validated by the caller.
+ * Cached per zone + Malaysian month, so the month rolls over at Malaysian midnight.
  */
 export async function getPrayerTimes(zone: string): Promise<PrayerTimes | null> {
   const today = todayInMalaysia();
-  const url = `${ESOLAT}&zone=${encodeURIComponent(zone)}`;
-  // The month is in the key (not the upstream URL) so a new month misses the cache.
-  // `_v` bumps when the cached shape changes.
-  const key = new Request(`${url}&_m=${today.slice(0, 7)}&_v=2`);
-  const cache = (globalThis.caches as unknown as { default?: Cache } | undefined)?.default;
-  try {
-    const hit = await cache?.match(key);
-    const month = hit ? ((await hit.json()) as Month) : await fetchMonth(url);
-    if (!month?.days.length) return null;
-    if (!hit && cache) {
-      await cache.put(key, new Response(JSON.stringify(month), {
-        headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${CACHE_S}` },
-      }));
-    }
-    const days = month.days;
-    const i = Number(today.slice(8, 10)) - 1;
-    if (!days[i]) return null;
-    // ponytail: last day of the month uses today's row for tomorrow (Subuh moves ~1 min/day);
-    // fetch next month here if that minute ever matters.
-    return { today: days[i], tomorrow: days[i + 1] ?? days[i], month: days, bearing: month.bearing };
-  } catch {
-    return null;
-  }
+  const got = await withFallback<Month>(
+    `solat:${zone}:${today.slice(0, 7)}`,
+    [
+      { name: "e-solat JAKIM", load: () => fromJakim(zone) },
+      { name: "api.waktusolat.app (data JAKIM)", load: () => fromWaktuSolatApp(zone, today) },
+    ],
+    { freshS: 6 * 60 * 60, staleS: 40 * 24 * 60 * 60 },
+  );
+  const days = got?.data.days;
+  const i = Number(today.slice(8, 10)) - 1;
+  if (!got || !days?.[i]) return null;
+  // ponytail: last day of the month uses today's row for tomorrow (Subuh moves ~1 min/day);
+  // fetch next month here if that minute ever matters.
+  return {
+    today: days[i],
+    tomorrow: days[i + 1] ?? days[i],
+    month: days,
+    bearing: got.data.bearing,
+    source: got.source,
+    stale: got.stale,
+  };
 }
 
 const HIJRI_MONTHS = [

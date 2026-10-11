@@ -1,0 +1,188 @@
+---
+export const prerender = false;
+import TechHeading from "../components/layout/TechHeading.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { CURRENCY_NAMES, getRates } from "../lib/kadar-tukaran";
+
+const data = await getRates();
+const rates = (data?.rates ?? []).filter((r) => r.middle ?? r.buy ?? r.sell);
+// Where each plan (lib/kadar-tukaran) links to; open.er-api asks for this attribution.
+const SOURCE_URL: Record<string, string> = {
+  "Bank Negara Malaysia": "https://www.bnm.gov.my/exchange-rates",
+  "Bank Pusat Eropah (Frankfurter)": "https://frankfurter.dev/",
+  "open.er-api.com": "https://www.exchangerate-api.com",
+};
+const rm = (n: number | null) => (n == null ? "-" : n.toFixed(4));
+/** RM for one unit of the currency (BNM quotes some per 100). */
+const perOne = (r: (typeof rates)[number]) =>
+  (r.middle ?? ((r.buy ?? 0) + (r.sell ?? 0)) / 2) / r.unit;
+
+const updated = data?.updated
+  ? new Intl.DateTimeFormat("ms-MY", { day: "numeric", month: "long", year: "numeric" }).format(
+      new Date(`${data.updated.slice(0, 10)}T00:00:00Z`),
+    )
+  : null;
+const session = data?.session ? `${data.session.slice(0, 2)}:${data.session.slice(2)}` : null;
+---
+
+<PublicLayout
+  title="Kadar Tukaran Wang Hari Ini (Bank Negara Malaysia) | Hafiz Bahtiar"
+  description="Kadar pertukaran asing rasmi Bank Negara Malaysia untuk 27 mata wang, dengan penukar RM. Dikemas kini setiap sesi BNM."
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1 class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl">
+        <TechHeading text="Kadar Tukaran" fontSize={96} fontWeight={400} box="-my-12 h-48" />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">Kadar pertukaran asing rasmi Bank Negara Malaysia.</p>
+    </div>
+    {
+      updated && (
+        <div class="line-y mt-4">
+          <p class="mx-2 font-mono text-sm/6 tracking-widest text-gray-500 uppercase">
+            {updated}
+            {session && ` · Sesi ${session}`}
+          </p>
+        </div>
+      )
+    }
+
+    {
+      rates.length > 0 ? (
+        <>
+          <!-- Converter: rates are server-rendered into the options; the script
+               only does the arithmetic. Without JS the table below still works. -->
+          <div class="line-y mt-10">
+            <form id="fx" class="mx-2 grid gap-3 sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)_auto] sm:items-end">
+              <label class="grid gap-1.5 text-sm/6 font-medium">
+                Jumlah
+                <input id="fx-amount" type="number" inputmode="decimal" min="0" step="any" value="100" class="field h-10" />
+              </label>
+              <label class="grid gap-1.5 text-sm/6 font-medium">
+                Mata wang
+                <select id="fx-currency" class="field h-10">
+                  {rates.map((r) => (
+                    <option value={r.code} data-rm={perOne(r)}>
+                      {r.code} - {CURRENCY_NAMES[r.code] ?? r.code}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                id="fx-swap"
+                type="button"
+                class="btn-pill btn-pill-ghost"
+                aria-label="Tukar arah penukaran"
+              >
+                ⇄ <span id="fx-direction">ke RM</span>
+              </button>
+              <p class="text-3xl font-medium tracking-tight tabular-nums sm:col-span-3" aria-live="polite">
+                <span id="fx-result">-</span>
+              </p>
+            </form>
+          </div>
+
+          <div class="line-y mt-10 overflow-x-auto">
+            <table class="w-full min-w-xl text-left text-sm/6 tabular-nums">
+              <thead class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+                <tr class="border-b border-gray-950/5 dark:border-white/10">
+                  <th class="px-2 py-2 font-medium">Mata wang</th>
+                  <th class="px-2 py-2 font-medium">Unit</th>
+                  <th class="px-2 py-2 text-right font-medium">Beli (RM)</th>
+                  <th class="px-2 py-2 text-right font-medium">Jual (RM)</th>
+                  <th class="px-2 py-2 text-right font-medium">Tengah (RM)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rates.map((r) => (
+                  <tr class="border-b border-gray-950/5 dark:border-white/10">
+                    <td class="px-2 py-2">
+                      <span class="font-mono font-medium">{r.code}</span>
+                      <span class="ml-2 text-gray-500">{CURRENCY_NAMES[r.code] ?? ""}</span>
+                    </td>
+                    <td class="px-2 py-2 text-gray-500">{r.unit}</td>
+                    <td class="px-2 py-2 text-right">{rm(r.buy)}</td>
+                    <td class="px-2 py-2 text-right">{rm(r.sell)}</td>
+                    <td class="px-2 py-2 text-right font-medium">{rm(r.middle)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div class="line-y mt-4">
+            <p class="mx-2 text-xs/5 text-gray-500 dark:text-gray-400">
+              Sumber:{" "}
+              <a
+                href={SOURCE_URL[data!.source] ?? "https://www.bnm.gov.my/exchange-rates"}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+              >
+                {data!.source === "open.er-api.com" ? "Rates By Exchange Rate API" : data!.source}
+              </a>
+              {data!.stale && " (data simpanan - sumber tak dapat dicapai sekarang)"}
+              {data!.source !== "Bank Negara Malaysia" && " - Bank Negara tak dapat dicapai, jadi kadar ini dari sumber sandaran (kadar tengah sahaja)"}
+              . Kadar antara bank untuk rujukan - kadar di bank dan pengurup wang berbeza.
+              Penukar guna kadar tengah.
+            </p>
+          </div>
+        </>
+      ) : (
+        <div class="line-y mt-10">
+          <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+            Kadar tak dapat diambil dari Bank Negara Malaysia sekarang. Cuba lagi sebentar, atau semak
+            terus di{" "}
+            <a
+              href="https://www.bnm.gov.my/exchange-rates"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-sky-600 hover:underline dark:text-sky-400"
+            >
+              bnm.gov.my
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>
+
+<script>
+  const initFx = () => {
+    const form = document.getElementById("fx");
+    if (!form || form.dataset.bound === "1") return;
+    form.dataset.bound = "1";
+    const amount = document.getElementById("fx-amount") as HTMLInputElement;
+    const currency = document.getElementById("fx-currency") as HTMLSelectElement;
+    const direction = document.getElementById("fx-direction")!;
+    const result = document.getElementById("fx-result")!;
+    let toRm = true; // currency -> RM; swap for RM -> currency
+    const money = (n: number, code: string) =>
+      `${code} ${n.toLocaleString("ms-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    const update = () => {
+      const rmPerOne = Number(currency.selectedOptions[0]?.dataset.rm);
+      const n = Number(amount.value);
+      const code = currency.value;
+      direction.textContent = toRm ? "ke RM" : `ke ${code}`;
+      if (!rmPerOne || !Number.isFinite(n)) return void (result.textContent = "-");
+      result.textContent = toRm
+        ? `${money(n, code)} = ${money(n * rmPerOne, "RM")}`
+        : `${money(n, "RM")} = ${money(n / rmPerOne, code)}`;
+    };
+    amount.addEventListener("input", update);
+    currency.addEventListener("change", update);
+    document.getElementById("fx-swap")!.addEventListener("click", () => {
+      toRm = !toRm;
+      update();
+    });
+    form.addEventListener("submit", (e) => e.preventDefault());
+    update();
+  };
+  initFx();
+  document.addEventListener("astro:page-load", initFx);
+</script>

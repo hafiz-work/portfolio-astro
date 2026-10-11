@@ -12,6 +12,8 @@ Not to be confused with other people named "Hafiz Bakhtiar" (with a "k").
 - [Quotes](https://hafizbahtiar.com/quotes): a small collection of quotes
 - [Showcase](https://hafizbahtiar.com/showcase): small free apps hosted on the site
 - [Waktu Solat](https://hafizbahtiar.com/waktu-solat): today's Malaysian prayer times per JAKIM zone, with a full-screen mosque display
+- [Kadar Tukaran](https://hafizbahtiar.com/kadar-tukaran): official Bank Negara Malaysia exchange rates with an RM converter
+- [Kiraan Detik](https://hafizbahtiar.com/kiraan-detik): days left to Ramadan, Hari Raya and other Islamic days, per JAKIM's takwim
 - [Resume (PDF)](https://hafizbahtiar.com/resume.pdf)
 
 ## Profiles

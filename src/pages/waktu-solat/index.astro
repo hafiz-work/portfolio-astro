@@ -20,6 +20,8 @@ const [times, reminder] = await Promise.all([
   getDailyReminder(today),
 ]);
 const day = times?.today ?? null;
+// The plan that answered (lib/fallback): JAKIM, or its mirror.
+const sourceUrl = times?.source.includes("waktusolat") ? "https://waktusolat.app/" : "https://www.e-solat.gov.my/";
 
 // Monthly table (same cached month as today's times - no extra request).
 const monthLabel = new Intl.DateTimeFormat("ms-MY", {
@@ -170,14 +172,14 @@ const rows = day
           <p class="mx-2 text-xs/5 text-gray-500 dark:text-gray-400">
             Sumber:{" "}
             <a
-              href="https://www.e-solat.gov.my/"
+              href={sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               class="font-medium text-sky-600 hover:underline dark:text-sky-400"
             >
-              e-solat JAKIM
+              {times?.source}
             </a>
-            . Imsak, Syuruk dan Dhuha bukan waktu azan.
+            {times?.stale && " (data simpanan - sumber tak dapat dicapai sekarang)"}. Imsak, Syuruk dan Dhuha bukan waktu azan.
           </p>
         </div>
       ) : (
@@ -239,6 +241,7 @@ const rows = day
         <section
           id="jadual"
           data-title={`Jadual Waktu Solat ${monthLabel}`}
+          data-source={times?.source}
           data-zone={`${zone.code} · ${zone.daerah}, ${zone.negeri}${times?.bearing ? ` · Kiblat ${times.bearing}` : ""}`}
         >
           <div class="line-y mt-10">
@@ -293,7 +296,7 @@ const rows = day
           </div>
           <div class="line-y mt-4">
             <p class="mx-2 text-xs/5 text-gray-500 dark:text-gray-400">
-              Hari Jumaat ditebalkan. Sumber: e-solat JAKIM.
+              Hari Jumaat ditebalkan. Sumber: {times?.source}.
             </p>
           </div>
         </section>
@@ -388,7 +391,7 @@ const rows = day
       const zone = doc.createElement("p");
       zone.textContent = section.dataset.zone ?? "";
       const footer = doc.createElement("footer");
-      footer.textContent = "Hari Jumaat ditebalkan. Sumber: e-solat JAKIM · hafizbahtiar.com/waktu-solat";
+      footer.textContent = `Hari Jumaat ditebalkan. Sumber: ${section.dataset.source} · hafizbahtiar.com/waktu-solat`;
       doc.body.append(h1, zone, section.querySelector("table")!.cloneNode(true), footer);
       w.focus();
       w.print();
