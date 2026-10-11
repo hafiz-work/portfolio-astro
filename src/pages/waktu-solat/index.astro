@@ -133,11 +133,14 @@ const rows = day
         >
           Guna lokasi saya
         </button>
+        <a href={`/waktu-solat/imsakiah?zone=${zone.code}`} class="btn-pill btn-pill-ghost sm:ml-auto">
+          Jadual Imsakiah
+        </a>
         <!-- Full page load: the mosque display has its own shell (no navbar/footer). -->
         <a
           href={`/waktu-solat/paparan?zone=${zone.code}`}
           data-astro-reload
-          class="btn-pill btn-pill-ghost sm:ml-auto"
+          class="btn-pill btn-pill-ghost"
         >
           Paparan Masjid
         </a>
@@ -254,7 +257,7 @@ const rows = day
         <section
           id="jadual"
           data-title={`Jadual Waktu Solat ${monthLabel}`}
-          data-source={times?.source}
+          data-footer={`Hari Jumaat ditebalkan. Sumber: ${times?.source} · hafizbahtiar.com/waktu-solat`}
           data-zone={`${zone.code} · ${zone.daerah}, ${zone.negeri}${times?.bearing ? ` · Kiblat ${times.bearing}` : ""}`}
         >
           <div class="line-y mt-10">
@@ -364,6 +367,7 @@ const rows = day
 
 <script>
   import { navigate } from "astro:transitions/client";
+  import { bindPrintTable } from "../../lib/print-table";
 
   // Mark the next azan (Malaysian time). Re-run on every ClientRouter visit.
   const initWaktuSolat = () => {
@@ -416,43 +420,8 @@ const rows = day
     });
   };
 
-  // "Cetak jadual": print only the table, from a small window of its own, so the
-  // site layout (navbar, gutters, footer) never needs print rules.
-  const initPrint = () => {
-    const btn = document.getElementById("jadual-print");
-    const section = document.getElementById("jadual");
-    if (!btn || !section || btn.dataset.bound === "1") return;
-    btn.dataset.bound = "1";
-    btn.addEventListener("click", () => {
-      const w = window.open("", "_blank", "width=900,height=1000");
-      if (!w) return window.print();
-      const title = section.dataset.title ?? "Jadual Waktu Solat";
-      const doc = w.document;
-      doc.title = title;
-      const style = doc.createElement("style");
-      style.textContent = `
-        @page { size: A4 portrait; margin: 12mm; }
-        body { font: 9.5pt system-ui, sans-serif; color: #000; margin: 0; }
-        h1 { font-size: 15pt; margin: 0 0 2mm; text-transform: capitalize; }
-        p { margin: 0 0 4mm; color: #444; }
-        table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-        th, td { padding: 1.2mm 2mm; border-bottom: 0.3pt solid #ccc; text-align: left; }
-        th { font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.08em; color: #555; }
-        tr[data-friday] { font-weight: 700; }
-        span { color: #666; }
-        footer { margin-top: 4mm; font-size: 7.5pt; color: #666; }`;
-      doc.head.append(style);
-      const h1 = doc.createElement("h1");
-      h1.textContent = title;
-      const zone = doc.createElement("p");
-      zone.textContent = section.dataset.zone ?? "";
-      const footer = doc.createElement("footer");
-      footer.textContent = `Hari Jumaat ditebalkan. Sumber: ${section.dataset.source} · hafizbahtiar.com/waktu-solat`;
-      doc.body.append(h1, zone, section.querySelector("table")!.cloneNode(true), footer);
-      w.focus();
-      w.print();
-    });
-  };
+  // "Cetak jadual" (src/lib/print-table.ts).
+  const initPrint = () => bindPrintTable(document.getElementById("jadual-print"), document.getElementById("jadual"));
 
   const initEmbedCopy = () => {
     const btn = document.getElementById("embed-copy");

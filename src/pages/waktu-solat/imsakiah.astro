@@ -1,0 +1,297 @@
+---
+export const prerender = false;
+import TechHeading from "../../components/layout/TechHeading.astro";
+import Alert from "../../components/ui/Alert.astro";
+import Combobox from "../../components/ui/Combobox.astro";
+import Disclaimer from "../../components/ui/Disclaimer.astro";
+import { SOLAT_ZONES } from "../../data/solat-zones";
+import PublicLayout from "../../layouts/PublicLayout.astro";
+import { isoToDmy } from "../../lib/date-my";
+import { toHijri } from "../../lib/hari-kebesaran";
+import { getImsakiah } from "../../lib/imsakiah";
+import {
+  getPrayerTimes,
+  hhmm,
+  resolveZone,
+  todayInMalaysia,
+} from "../../lib/waktu-solat";
+
+// Jadual Imsakiah: the next (or current) Ramadan for a zone - src/lib/imsakiah.ts.
+// ?zone= (validated against JAKIM's list), ?h= Hijri year (current ±1 only).
+const q = Astro.url.searchParams;
+const zone = resolveZone(q.get("zone"));
+const today = todayInMalaysia();
+const now = await toHijri(today, today);
+const [hy, hm] = "error" in now ? [1448, 1] : now.hijri.split("-").map(Number);
+// Ramadan still to come this Hijri year, or in progress -> this year; else next year.
+const defaultYear = hm <= 9 ? hy : hy + 1;
+const asked = Number(q.get("h"));
+const hYear =
+  Number.isInteger(asked) && asked >= hy - 1 && asked <= hy + 1
+    ? asked
+    : defaultYear;
+const data = await getImsakiah(zone.code, hYear, today);
+
+const weekday = new Intl.DateTimeFormat("ms-MY", {
+  weekday: "short",
+  timeZone: "UTC",
+});
+const rows = (data?.days ?? []).map((d) => ({
+  ...d,
+  ramadanDay: Number(d.hijri.slice(8)),
+  weekday: weekday.format(new Date(`${d.date}T00:00:00Z`)),
+  friday: new Date(`${d.date}T00:00:00Z`).getUTCDay() === 5,
+}));
+const title = `Jadual Imsakiah Ramadan ${hYear}H`;
+// Imsak-to-Subuh gap as JAKIM publishes it (10 minutes in its tables), read from
+// the data rather than assumed.
+const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+// Before Ramadan's dates are published, today's (cached) times give the same gap.
+const sample = rows[0] ?? (await getPrayerTimes(zone.code))?.today;
+const gap = sample ? toMin(sample.fajr) - toMin(sample.imsak) : null;
+const daysLeft = data
+  ? Math.round((Date.parse(data.start) - Date.parse(today)) / 86_400_000)
+  : null;
+---
+
+<PublicLayout
+  title={`${title} - ${zone.daerah} | Hafiz Bahtiar`}
+  description={`Jadual imsak, sahur dan berbuka puasa Ramadan ${hYear}H untuk ${zone.daerah}, ${zone.negeri}, mengikut waktu solat JAKIM. Boleh dicetak.`}
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1
+        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Imsakiah"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Waktu imsak dan berbuka puasa sepanjang Ramadan {hYear}H, boleh dicetak.
+      </p>
+    </div>
+
+    <div class="line-y mt-6">
+      <Alert
+        variant="info"
+        title="Apa itu Jadual Imsakiah?"
+        class="mx-2 max-w-3xl"
+      >
+        <p>
+          Jadual Imsakiah ialah jadual waktu solat sepanjang bulan Ramadan,
+          disusun supaya mudah dirujuk semasa berpuasa - terutamanya waktu
+          bersahur dan berbuka.
+        </p>
+        <ul>
+          <li>
+            <strong>Imsak</strong> - waktu berjaga-jaga{
+              gap
+                ? `, ${gap} minit sebelum Subuh dalam jadual JAKIM`
+                : " sebelum Subuh"
+            }. Ia peringatan untuk menghabiskan sahur dan bersiap untuk
+            berpuasa.
+          </li>
+          <li>
+            <strong>Subuh</strong> - puasa bermula apabila masuk waktu Subuh.
+          </li>
+          <li><strong>Maghrib</strong> - waktu berbuka puasa.</li>
+        </ul>
+        <p>
+          Untuk soalan hukum berkaitan puasa, rujuk pejabat agama Islam negeri
+          anda.
+        </p>
+      </Alert>
+    </div>
+
+    <div class="line-y mt-10">
+      <form method="get" class="mx-2 flex flex-wrap items-center gap-3">
+        <label for="zone" class="text-sm/6 font-medium">Zon</label>
+        <Combobox
+          id="zone"
+          name="zone"
+          class="max-w-md"
+          listLabel="Zon"
+          searchPlaceholder="Cari daerah, negeri atau kod…"
+          emptyText="Tiada zon sepadan."
+          submitOnPick
+          value={zone.code}
+          options={SOLAT_ZONES.map((z) => ({
+            value: z.code,
+            hint: z.code,
+            label: z.daerah,
+            group: z.negeri,
+          }))}
+        />
+        {
+          hYear !== defaultYear && (
+            <input type="hidden" name="h" value={hYear} />
+          )
+        }
+        <noscript>
+          <button type="submit" class="btn-pill btn-pill-primary">Tukar</button>
+        </noscript>
+        <a
+          href={`/waktu-solat?zone=${zone.code}`}
+          class="btn-pill btn-pill-ghost sm:ml-auto">Waktu Solat hari ini</a
+        >
+      </form>
+    </div>
+
+    {
+      data && (
+        <div class="line-y mt-6">
+          <p class="mx-2 font-mono text-sm/6 tracking-widest text-gray-500 uppercase">
+            {isoToDmy(data.start)} -{" "}
+            {isoToDmy(
+              new Date(Date.parse(data.syawal) - 86_400_000)
+                .toISOString()
+                .slice(0, 10),
+            )}
+            {data.estimated && " · anggaran"}
+            {daysLeft !== null && daysLeft > 0 && ` · ${daysLeft} hari lagi`}
+          </p>
+        </div>
+      )
+    }
+
+    {
+      rows.length > 0 ? (
+        <section
+          id="imsakiah"
+          data-title={title}
+          data-zone={`${zone.code} · ${zone.daerah}, ${zone.negeri}`}
+          data-footer={`Imsak dan Maghrib (berbuka) ditebalkan. Sumber: ${data!.source} · hafizbahtiar.com/waktu-solat/imsakiah`}
+        >
+          <div class="line-y mt-6">
+            <div class="mx-2 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p class="eyebrow">{zone.code}</p>
+                <h2 class="mt-1 text-2xl font-medium tracking-tight">
+                  {zone.daerah}
+                </h2>
+              </div>
+              <button
+                type="button"
+                id="imsakiah-print"
+                class="btn-pill btn-pill-ghost"
+              >
+                Cetak jadual
+              </button>
+            </div>
+          </div>
+          <div class="line-y mt-4 overflow-x-auto">
+            <table class="w-full min-w-xl text-left text-sm/6 tabular-nums">
+              <thead class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+                <tr class="border-b border-gray-950/5 dark:border-white/10">
+                  <th class="px-2 py-2 font-medium">Ramadan</th>
+                  <th class="px-2 py-2 font-medium">Tarikh</th>
+                  <th
+                    data-key
+                    class="px-2 py-2 font-medium text-sky-600 dark:text-sky-400"
+                  >
+                    Imsak
+                  </th>
+                  <th class="px-2 py-2 font-medium">Subuh</th>
+                  <th class="px-2 py-2 font-medium">Syuruk</th>
+                  <th class="px-2 py-2 font-medium">Zohor</th>
+                  <th class="px-2 py-2 font-medium">Asar</th>
+                  <th
+                    data-key
+                    class="px-2 py-2 font-medium text-sky-600 dark:text-sky-400"
+                  >
+                    Maghrib
+                  </th>
+                  <th class="px-2 py-2 font-medium">Isyak</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr
+                    data-today={r.date === today ? "" : undefined}
+                    aria-current={r.date === today ? "date" : undefined}
+                    class="border-b border-gray-950/5 data-today:bg-sky-500/5 dark:border-white/10 dark:data-today:bg-sky-400/10"
+                  >
+                    <td class="px-2 py-1.5 font-medium">{r.ramadanDay}</td>
+                    <td class="px-2 py-1.5 whitespace-nowrap">
+                      {isoToDmy(r.date)}{" "}
+                      <span class="text-gray-500">{r.weekday}</span>
+                    </td>
+                    <td data-key class="px-2 py-1.5 font-semibold">
+                      {hhmm(r.imsak)}
+                    </td>
+                    <td class="px-2 py-1.5">{hhmm(r.fajr)}</td>
+                    <td class="px-2 py-1.5 text-gray-500">{hhmm(r.syuruk)}</td>
+                    <td class="px-2 py-1.5">{hhmm(r.dhuhr)}</td>
+                    <td class="px-2 py-1.5">{hhmm(r.asr)}</td>
+                    <td data-key class="px-2 py-1.5 font-semibold">
+                      {hhmm(r.maghrib)}
+                    </td>
+                    <td class="px-2 py-1.5">{hhmm(r.isha)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div class="line-y mt-4">
+            <p class="mx-2 text-xs/5 text-gray-500 dark:text-gray-400">
+              Imsak: waktu berhenti makan sahur. Maghrib: waktu berbuka. Sumber:{" "}
+              {data!.source}
+              {data!.stale && " (data simpanan)"}.
+            </p>
+          </div>
+        </section>
+      ) : (
+        <div class="line-y mt-6">
+          <p class="mx-2 max-w-3xl text-sm/7 text-gray-600 dark:text-gray-400">
+            {data
+              ? `JAKIM belum menerbitkan waktu solat bagi Ramadan ${hYear}H. Jadual akan dipaparkan di sini secara automatik sebaik sahaja ia diterbitkan (biasanya hujung tahun sebelumnya).`
+              : "Jadual tidak dapat diambil sekarang. Cuba lagi sebentar."}{" "}
+            <a
+              href={`?zone=${zone.code}&h=${hYear - 1}`}
+              class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+            >
+              Lihat Ramadan {hYear - 1}H
+            </a>
+          </p>
+        </div>
+      )
+    }
+
+    <div class="line-y mt-6">
+      <Disclaimer
+        class="mx-2 max-w-3xl"
+        sources={[
+          { name: "JAKIM (e-solat)", href: "https://www.e-solat.gov.my" },
+          {
+            name: "api.waktusolat.app (sandaran tidak rasmi)",
+            href: "https://api.waktusolat.app",
+          },
+        ]}
+      >
+        Tarikh <strong
+          >awal Ramadan dan Hari Raya ditentukan melalui rukyah</strong
+        > dan pengisytiharan Penyimpan Mohor Besar Raja-Raja; tarikh sebelum diterbitkan
+        JAKIM ialah anggaran. Rujukan muktamad waktu solat ialah JAKIM dan jabatan
+        agama Islam negeri.
+      </Disclaimer>
+    </div>
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>
+
+<script>
+  import { bindPrintTable } from "../../lib/print-table";
+  const init = () =>
+    bindPrintTable(
+      document.getElementById("imsakiah-print"),
+      document.getElementById("imsakiah"),
+    );
+  init();
+  document.addEventListener("astro:page-load", init);
+</script>

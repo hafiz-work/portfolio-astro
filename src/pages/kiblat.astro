@@ -2,6 +2,7 @@
 import Disclaimer from "../components/ui/Disclaimer.astro";
 export const prerender = true;
 import KiblatMap from "../components/kiblat/KiblatMap";
+import Alert from "../components/ui/Alert.astro";
 import TechHeading from "../components/layout/TechHeading.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
 
@@ -30,6 +31,26 @@ import PublicLayout from "../layouts/PublicLayout.astro";
       <p class="mx-2 text-lg">
         Arah kiblat dari lokasi anda, dengan kompas telefon.
       </p>
+    </div>
+
+    <div class="line-y mt-6">
+      <Alert variant="info" title="Sebelum mula" class="mx-2 max-w-3xl">
+        <ul>
+          <li><strong>Hidupkan Lokasi (GPS)</strong> pada telefon anda.</li>
+          <li>
+            Tekan <strong>Cari arah kiblat</strong>, kemudian pilih <strong
+              >Benarkan</strong
+            > bila pelayar meminta lokasi. "Benarkan sekali" (Allow once) pun cukup
+            - lokasi hanya dibaca <strong>sekali</strong>, tidak dijejak dan
+            tidak dihantar ke mana-mana.
+          </li>
+          <li>
+            Di iPhone, benarkan juga <strong>Gerakan &amp; Orientasi</strong> (Motion
+            &amp; Orientation) supaya kompas berfungsi.
+          </li>
+          <li>Pegang telefon rata, jauh dari besi atau magnet.</li>
+        </ul>
+      </Alert>
     </div>
 
     <div class="line-y mt-10">
@@ -129,6 +150,59 @@ import PublicLayout from "../layouts/PublicLayout.astro";
           id="kiblat-start"
           class="btn-pill btn-pill-primary">Cari arah kiblat</button
         >
+      </div>
+    </div>
+
+    <!-- Shown by the script for the matching location error (or a denied permission). -->
+    <div class="line-y mt-4 hidden" id="kiblat-help">
+      <div data-help="denied" hidden class="mx-2 max-w-3xl">
+        <Alert variant="warning" title="Lokasi disekat untuk laman ini">
+          <p>
+            Benarkan lokasi untuk hafizbahtiar.com, kemudian muat semula
+            halaman:
+          </p>
+          <ul>
+            <li>
+              <strong>iPhone (Safari):</strong> tekan <strong>aA</strong> di bar alamat
+              → Tetapan Laman Web → Lokasi → Benarkan. Atau Tetapan → Privasi &amp;
+              Keselamatan → Perkhidmatan Lokasi → Laman Web Safari → Semasa Menggunakan
+              Apl.
+            </li>
+            <li>
+              <strong>Android (Chrome):</strong> tekan ikon tetapan di sebelah alamat
+              → Kebenaran → Lokasi → Benarkan.
+            </li>
+            <li>
+              <strong>Komputer:</strong> klik ikon di sebelah alamat laman → Lokasi
+              → Benarkan.
+            </li>
+          </ul>
+          <p>
+            Tanpa lokasi, arah kiblat ikut zon JAKIM masih ada di <a
+              href="/waktu-solat">Waktu Solat</a
+            >.
+          </p>
+        </Alert>
+      </div>
+      <div data-help="off" hidden class="mx-2 max-w-3xl">
+        <Alert variant="warning" title="Lokasi tak dapat dikesan">
+          <ul>
+            <li>
+              <strong>iPhone:</strong> Tetapan → Privasi &amp; Keselamatan → Perkhidmatan
+              Lokasi → hidupkan.
+            </li>
+            <li>
+              <strong>Android:</strong> leret dari atas skrin → hidupkan <strong
+                >Lokasi</strong
+              >.
+            </li>
+            <li>
+              Di dalam bangunan, cuba dekat tingkap, kemudian tekan <strong
+                >Cari arah kiblat</strong
+              > sekali lagi.
+            </li>
+          </ul>
+        </Alert>
       </div>
     </div>
 
@@ -234,7 +308,28 @@ import PublicLayout from "../layouts/PublicLayout.astro";
       return true;
     };
 
+    // Location help: "denied" (permission) or "off" (no fix / GPS off).
+    const help = document.getElementById("kiblat-help")!;
+    const showHelp = (which: "denied" | "off" | null) => {
+      help
+        .querySelectorAll<HTMLElement>("[data-help]")
+        .forEach((h) => (h.hidden = h.dataset.help !== which));
+      help.classList.toggle("hidden", !which);
+    };
+    // Already blocked from an earlier visit: say so before the tap.
+    navigator.permissions
+      ?.query({ name: "geolocation" })
+      .then((p) => {
+        if (p.state === "denied") {
+          status.textContent =
+            "Lokasi disekat untuk laman ini - lihat cara membenarkannya di bawah.";
+          showHelp("denied");
+        }
+      })
+      .catch(() => {});
+
     btn.addEventListener("click", async () => {
+      showHelp(null);
       if (!("geolocation" in navigator))
         return void (status.textContent = "Peranti ini tak menyokong lokasi.");
       btn.disabled = true;
@@ -274,10 +369,13 @@ import PublicLayout from "../layouts/PublicLayout.astro";
         },
         (err) => {
           btn.disabled = false;
-          status.textContent =
-            err.code === err.PERMISSION_DENIED
-              ? "Akses lokasi ditolak. Arah kiblat ikut zon ada di halaman Waktu Solat."
-              : "Lokasi tak dapat dikesan. Cuba lagi.";
+          const denied = err.code === err.PERMISSION_DENIED;
+          status.textContent = denied
+            ? "Akses lokasi ditolak."
+            : err.code === err.TIMEOUT
+              ? "Lokasi mengambil masa terlalu lama."
+              : "Lokasi tak dapat dikesan.";
+          showHelp(denied ? "denied" : "off");
         },
         {
           enableHighAccuracy: false,

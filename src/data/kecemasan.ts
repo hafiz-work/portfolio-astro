@@ -167,5 +167,13 @@ export const KECEMASAN: Group[] = [
   },
 ];
 
-/** "1-800-88-0000" / "03-7627 2929" -> "1800880000" / "0376272929" for tel: links. */
+/** "1-800-88-0000" / "03-7627 2929" -> "1800880000" / "0376272929". */
 export const dialString = (n: string) => n.replace(/[^\d+]/g, "");
+
+/** tel: href. Ordinary lines (leading 0) in +60 form so they also dial from a
+ *  foreign SIM; short codes (999, 997, 15999) and 1-800 toll-free stay as is -
+ *  they only work inside Malaysia anyway. */
+export const telHref = (n: string) => {
+  const d = dialString(n);
+  return `tel:${/^0\d{8,}$/.test(d) ? `+60${d.slice(1)}` : d}`;
+};

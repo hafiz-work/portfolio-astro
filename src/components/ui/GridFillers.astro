@@ -1,0 +1,29 @@
+---
+/**
+ * Hatched empty cells that close the last row of a `grid-cols-1 sm:grid-cols-2
+ * lg:grid-cols-3` card grid drawn with `gap-px` + a background line colour -
+ * so the gap shows the shell's hatch (`.pattern`) instead of a grey block.
+ * Put it as the grid's last child: <GridFillers count={items.length} />
+ */
+interface Props {
+  count: number;
+  /** "li" inside a <ul>, "div" otherwise. */
+  as?: "li" | "div";
+}
+const { count, as: Tag = "li" } = Astro.props;
+const sm = (2 - (count % 2)) % 2;
+const lg = (3 - (count % 3)) % 3;
+const cells = Array.from({ length: Math.max(sm, lg) }, (_, i) => [
+  i < sm ? "sm:block" : "sm:hidden",
+  i < lg ? "lg:block" : "lg:hidden",
+]);
+---
+
+{
+  cells.map((cls) => (
+    <Tag
+      aria-hidden="true"
+      class:list={["pattern hidden bg-white dark:bg-gray-950", cls]}
+    />
+  ))
+}

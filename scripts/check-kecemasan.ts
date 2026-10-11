@@ -1,6 +1,6 @@
 // bun scripts/check-kecemasan.ts - every emergency number has an official https
 // source, a sane dial string, and was verified in the last 6 months.
-import { KECEMASAN, dialString } from "../src/data/kecemasan";
+import { KECEMASAN, dialString, telHref } from "../src/data/kecemasan";
 
 const MAX_AGE_DAYS = 183;
 const today = Date.parse(new Date().toISOString().slice(0, 10));
@@ -24,6 +24,9 @@ for (const g of KECEMASAN) {
   }
 }
 if (dialString("1-800-88-0000") !== "1800880000" || dialString("03-7627 2929") !== "0376272929") errors.push("dialString");
+for (const [n, want] of [["999", "tel:999"], ["15999", "tel:15999"], ["1-800-88-0000", "tel:1800880000"], ["03-7627 2929", "tel:+60376272929"], ["088-232440", "tel:+6088232440"]]) {
+  if (telHref(n) !== want) errors.push(`telHref(${n}) = ${telHref(n)}, want ${want}`);
+}
 
 if (errors.length) {
   console.error(errors.join("\n"));

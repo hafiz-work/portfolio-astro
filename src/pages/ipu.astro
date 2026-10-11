@@ -1,6 +1,7 @@
 ---
 import Disclaimer from "../components/ui/Disclaimer.astro";
 export const prerender = false;
+import GridFillers from "../components/ui/GridFillers.astro";
 import TechHeading from "../components/layout/TechHeading.astro";
 import Combobox from "../components/ui/Combobox.astro";
 import PointsMap, { type MapPoint } from "../components/ui/PointsMap";
@@ -33,16 +34,6 @@ const TONE: Record<string, string> = {
   "tidak-sihat": "bg-amber-400",
   sangat: "bg-orange-500",
   bahaya: "bg-red-600",
-};
-// Empty cells closing each state's last row, per breakpoint (2 cols sm, 3 lg):
-// hatched like the shell gutters instead of the grid's line colour.
-const fillers = (n: number) => {
-  const sm = (2 - (n % 2)) % 2;
-  const lg = (3 - (n % 3)) % 3;
-  return Array.from({ length: Math.max(sm, lg) }, (_, i) => [
-    i < sm ? "sm:block" : "sm:hidden",
-    i < lg ? "lg:block" : "lg:hidden",
-  ]);
 };
 const embedDefault = stations.find((s) => s.state === "WP Kuala Lumpur") ?? stations[0];
 const embedCode = (id: string) =>
@@ -183,9 +174,7 @@ const points: MapPoint[] = stations.map((s) => ({
                       </li>
                     );
                   })}
-                  {fillers(byState(state).length).map((cls) => (
-                    <li aria-hidden="true" class:list={["pattern hidden bg-white dark:bg-gray-950", cls]} />
-                  ))}
+                  <GridFillers count={byState(state).length} />
                 </ul>
               </div>
             </>

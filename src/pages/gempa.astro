@@ -1,6 +1,7 @@
 ---
 import Disclaimer from "../components/ui/Disclaimer.astro";
 export const prerender = false;
+import GridFillers from "../components/ui/GridFillers.astro";
 import TechHeading from "../components/layout/TechHeading.astro";
 import PointsMap, { type MapPoint } from "../components/ui/PointsMap";
 import PublicLayout from "../layouts/PublicLayout.astro";
@@ -32,15 +33,6 @@ const TONE: Record<string, string> = {
   kuat: "bg-amber-400 text-gray-950",
   sangat: "bg-orange-500 text-white",
   major: "bg-red-600 text-white",
-};
-// Empty cells closing the grid's last row, per breakpoint (2 cols sm, 3 lg).
-const fillers = (n: number) => {
-  const sm = (2 - (n % 2)) % 2;
-  const lg = (3 - (n % 3)) % 3;
-  return Array.from({ length: Math.max(sm, lg) }, (_, i) => [
-    i < sm ? "sm:block" : "sm:hidden",
-    i < lg ? "lg:block" : "lg:hidden",
-  ]);
 };
 const points: MapPoint[] = quakes.map((q) => ({
   id: q.id,
@@ -194,15 +186,7 @@ const points: MapPoint[] = quakes.map((q) => ({
                     </div>
                   </li>
                 ))}
-                {fillers(quakes.length).map((cls) => (
-                  <li
-                    aria-hidden="true"
-                    class:list={[
-                      "pattern hidden bg-white dark:bg-gray-950",
-                      cls,
-                    ]}
-                  />
-                ))}
+                <GridFillers count={quakes.length} />
               </ul>
             </div>
           </div>
