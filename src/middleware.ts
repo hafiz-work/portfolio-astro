@@ -17,7 +17,8 @@ const SECURITY_HEADERS: Record<string, string> = {
   // client:only styles (prepareForClientOnlyComponents); DENY would hang navigation.
   "X-Frame-Options": import.meta.env.DEV ? "SAMEORIGIN" : "DENY",
   "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+  // geolocation=(self): /waktu-solat "Guna lokasi saya" (still asks the user first).
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(self)",
   "Content-Security-Policy": [
     "default-src 'self'",
     "base-uri 'self'",
@@ -37,11 +38,12 @@ const SECURITY_HEADERS: Record<string, string> = {
     // lets an <iframe> point at.
     "frame-src 'self' https://challenges.cloudflare.com https://www.youtube-nocookie.com",
     "worker-src 'self' blob:",
+    // api.waktusolat.app: /waktu-solat "Guna lokasi saya" (GPS -> JAKIM zone).
     // github-contributions-api.jogruber.de: contact-section GitHub card,
     // fetched only when a visitor opens the card.
     // In dev the API runs on localhost:8787 - without this, the CSP silently
     // blocks every admin fetch during local development.
-    `connect-src 'self' https://api.hafizbahtiar.com https://cloudflareinsights.com https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com https://github-contributions-api.jogruber.de${import.meta.env.DEV ? " http://localhost:8787" : ""
+    `connect-src 'self' https://api.hafizbahtiar.com https://api.waktusolat.app https://cloudflareinsights.com https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com https://github-contributions-api.jogruber.de${import.meta.env.DEV ? " http://localhost:8787" : ""
     }`,
   ].join("; "),
 };

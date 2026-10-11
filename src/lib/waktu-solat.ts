@@ -33,38 +33,59 @@ export interface PrayerDay {
 export const todayInMalaysia = () =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur" }).format(new Date());
 
-/** The month's rows, or null on any upstream failure (never cached). */
-async function fetchMonth(url: string): Promise<PrayerDay[] | null> {
+interface Month {
+  days: PrayerDay[];
+  /** Kiblat direction for the zone, e.g. "292° 31′ 16″" (null if JAKIM omits it). */
+  bearing: string | null;
+}
+
+/** JAKIM sends the bearing HTML-escaped ("292&#176; 31&#8242; …"). */
+const decodeEntities = (s: string) => s.replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
+
+/** The month's rows + kiblat bearing, or null on any upstream failure (never cached). */
+async function fetchMonth(url: string): Promise<Month | null> {
   const res = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(TIMEOUT_MS) });
   if (!res.ok) return null;
-  const json = (await res.json()) as { status?: string; prayerTime?: PrayerDay[] };
-  return json.status?.startsWith("OK") && json.prayerTime?.length ? json.prayerTime : null;
+  const json = (await res.json()) as { status?: string; prayerTime?: PrayerDay[]; bearing?: string };
+  if (!json.status?.startsWith("OK") || !json.prayerTime?.length) return null;
+  return { days: json.prayerTime, bearing: json.bearing ? decodeEntities(json.bearing) : null };
+}
+
+export interface PrayerTimes {
+  today: PrayerDay;
+  tomorrow: PrayerDay;
+  /** Every day of the current month (index 0 = the 1st) - for the monthly table. */
+  month: PrayerDay[];
+  bearing: string | null;
 }
 
 /**
- * Today's (and tomorrow's) times for a JAKIM zone, or null if e-solat is down/slow.
- * Tomorrow feeds the TV countdown after Isyak. `zone` must be validated by the caller.
+ * Today's (and tomorrow's) times, the whole month and the kiblat bearing for a JAKIM
+ * zone, or null if e-solat is down/slow. Tomorrow feeds the display countdown after
+ * Isyak. `zone` must be validated by the caller.
  */
-export async function getPrayerTimes(zone: string): Promise<{ today: PrayerDay; tomorrow: PrayerDay } | null> {
+export async function getPrayerTimes(zone: string): Promise<PrayerTimes | null> {
   const today = todayInMalaysia();
   const url = `${ESOLAT}&zone=${encodeURIComponent(zone)}`;
   // The month is in the key (not the upstream URL) so a new month misses the cache.
-  const key = new Request(`${url}&_m=${today.slice(0, 7)}`);
+  // `_v` bumps when the cached shape changes.
+  const key = new Request(`${url}&_m=${today.slice(0, 7)}&_v=2`);
   const cache = (globalThis.caches as unknown as { default?: Cache } | undefined)?.default;
   try {
     const hit = await cache?.match(key);
-    const days = hit ? ((await hit.json()) as PrayerDay[]) : await fetchMonth(url);
-    if (!days?.length) return null;
+    const month = hit ? ((await hit.json()) as Month) : await fetchMonth(url);
+    if (!month?.days.length) return null;
     if (!hit && cache) {
-      await cache.put(key, new Response(JSON.stringify(days), {
+      await cache.put(key, new Response(JSON.stringify(month), {
         headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${CACHE_S}` },
       }));
     }
+    const days = month.days;
     const i = Number(today.slice(8, 10)) - 1;
     if (!days[i]) return null;
     // ponytail: last day of the month uses today's row for tomorrow (Subuh moves ~1 min/day);
     // fetch next month here if that minute ever matters.
-    return { today: days[i], tomorrow: days[i + 1] ?? days[i] };
+    return { today: days[i], tomorrow: days[i + 1] ?? days[i], month: days, bearing: month.bearing };
   } catch {
     return null;
   }

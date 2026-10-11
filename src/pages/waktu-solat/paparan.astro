@@ -2,8 +2,15 @@
 export const prerender = false;
 import CoreLayout from "../../layouts/CoreLayout.astro";
 import { SOLAT_ZONES } from "../../data/solat-zones";
-import { formatHijri, getPrayerTimes, hhmm, resolveZone, todayInMalaysia } from "../../lib/waktu-solat";
+import {
+  formatHijri,
+  getPrayerTimes,
+  hhmm,
+  resolveZone,
+  todayInMalaysia,
+} from "../../lib/waktu-solat";
 import { getDailyReminder } from "../../lib/peringatan";
+import { PAPARAN_BACKGROUNDS } from "../../data/paparan-backgrounds";
 
 // Mosque display (Paparan Masjid): full screen, sized by --u so any screen fits.
 // Clock and countdown run client-side on server time; the page reloads itself
@@ -13,8 +20,11 @@ import { getDailyReminder } from "../../lib/peringatan";
 // per screen, nothing is lost when a TV browser clears storage, and the server
 // renders the right format on the first paint. Every value is checked here.
 const q = Astro.url.searchParams;
-const pick = <T extends string>(key: string, allowed: readonly T[], fallback: T): T =>
-  allowed.includes(q.get(key) as T) ? (q.get(key) as T) : fallback;
+const pick = <T extends string>(
+  key: string,
+  allowed: readonly T[],
+  fallback: T,
+): T => (allowed.includes(q.get(key) as T) ? (q.get(key) as T) : fallback);
 const settings = {
   jam: pick("jam", ["24", "12"] as const, "24"),
   saat: pick("saat", ["ya", "tidak"] as const, "ya"),
@@ -24,7 +34,22 @@ const settings = {
   peringatan: pick("peringatan", ["ya", "tidak"] as const, "ya"),
   iqamah: Math.min(30, Math.max(0, Math.trunc(Number(q.get("iqamah")) || 0))),
   masjid: (q.get("masjid") ?? "").trim().slice(0, 60),
+  // Background photo per orientation (scripts/waktu-solat/backgrounds.py); "" = none.
+  latar:
+    PAPARAN_BACKGROUNDS.find((b) => b.landscape && b.id === q.get("latar"))
+      ?.id ?? "",
+  latarm:
+    PAPARAN_BACKGROUNDS.find((b) => b.portrait && b.id === q.get("latarm"))
+      ?.id ?? "",
 };
+const bgUrl = (id: string, orient: "landscape" | "portrait") =>
+  `url(/images/waktu-solat/bg/${id}-${orient}.webp)`;
+const bgStyle = [
+  settings.latar && `--pm-img-l: ${bgUrl(settings.latar, "landscape")}`,
+  settings.latarm && `--pm-img-p: ${bgUrl(settings.latarm, "portrait")}`,
+]
+  .filter(Boolean)
+  .join("; ");
 
 const zone = resolveZone(q.get("zone"));
 const today = todayInMalaysia();
@@ -35,11 +60,17 @@ const [times, reminder] = await Promise.all([
 
 // Eastern Arabic digits on request (٠١٢٣٤٥٦٧٨٩); the script does the same live.
 const digits = (s: string) =>
-  settings.angka === "arab" ? s.replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]) : s;
+  settings.angka === "arab"
+    ? s.replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)])
+    : s;
 /** "16:17" -> "16:17" or "4:17" (12-hour; the PG/PTG suffix is shown separately). */
 const showTime = (t: string) => {
   const [h, m] = hhmm(t).split(":").map(Number);
-  return digits(settings.jam === "12" ? `${h % 12 || 12}:${String(m).padStart(2, "0")}` : hhmm(t));
+  return digits(
+    settings.jam === "12"
+      ? `${h % 12 || 12}:${String(m).padStart(2, "0")}`
+      : hhmm(t),
+  );
 };
 
 const dateLabel = digits(
@@ -65,12 +96,95 @@ const PRAYERS = [
 ] as const;
 const jawi = settings.label === "jawi";
 const rows = times
-  ? PRAYERS.map((p) => ({ ...p, label: jawi ? p.jawi : p.rumi, time: times.today[p.key] }))
+  ? PRAYERS.map((p) => ({
+      ...p,
+      label: jawi ? p.jawi : p.rumi,
+      time: times.today[p.key],
+    }))
   : [];
 const states = [...new Set(SOLAT_ZONES.map((z) => z.negeri))];
 
-const fieldClass =
-  "mt-1 block w-full rounded-lg bg-(--pm-card) px-3 py-2 text-sm/6 text-(--pm-fg) outline-1 -outline-offset-1 outline-(--pm-ring) focus:outline-2 focus:outline-(--pm-accent)";
+// Tetapan form: every select comes from this list so all fields share one style.
+const none = [["", "Tiada"]];
+const selects: {
+  name: keyof typeof settings;
+  label: string;
+  options: string[][];
+}[] = [
+  {
+    name: "jam",
+    label: "Format jam",
+    options: [
+      ["24", "24 jam (16:17)"],
+      ["12", "12 jam (4:17 PTG)"],
+    ],
+  },
+  {
+    name: "saat",
+    label: "Saat pada jam",
+    options: [
+      ["ya", "Tunjuk"],
+      ["tidak", "Sembunyi"],
+    ],
+  },
+  {
+    name: "angka",
+    label: "Angka",
+    options: [
+      ["rumi", "Rumi (0-9)"],
+      ["arab", "Arab (٠-٩)"],
+    ],
+  },
+  {
+    name: "label",
+    label: "Nama waktu",
+    options: [
+      ["rumi", "Rumi (Subuh)"],
+      ["jawi", "Jawi (صبح)"],
+    ],
+  },
+  {
+    name: "tema",
+    label: "Tema",
+    options: [
+      ["gelap", "Gelap"],
+      ["terang", "Terang"],
+    ],
+  },
+  {
+    name: "peringatan",
+    label: "Ayat / hadis hari ini",
+    options: [
+      ["ya", "Tunjuk"],
+      ["tidak", "Sembunyi"],
+    ],
+  },
+  {
+    name: "latar",
+    label: "Latar - skrin melintang (TV)",
+    options: [
+      ...none,
+      ...PAPARAN_BACKGROUNDS.filter((b) => b.landscape).map((b) => [
+        b.id,
+        b.label,
+      ]),
+    ],
+  },
+  {
+    name: "latarm",
+    label: "Latar - skrin menegak (phone)",
+    options: [
+      ...none,
+      ...PAPARAN_BACKGROUNDS.filter((b) => b.portrait).map((b) => [
+        b.id,
+        b.label,
+      ]),
+    ],
+  },
+];
+const labelClass = "grid gap-1.5 text-sm font-medium";
+const controlClass =
+  "h-10 w-full rounded-lg bg-(--pm-card) px-3 text-sm text-(--pm-fg) outline-1 -outline-offset-1 outline-(--pm-ring) focus:outline-2 focus:outline-(--pm-accent)";
 ---
 
 <CoreLayout
@@ -82,6 +196,9 @@ const fieldClass =
   <main
     id="display"
     data-tema={settings.tema}
+    data-latar-l={settings.latar ? "" : undefined}
+    data-latar-p={settings.latarm ? "" : undefined}
+    style={bgStyle || undefined}
     data-jam={settings.jam}
     data-saat={settings.saat}
     data-angka={settings.angka}
@@ -92,17 +209,25 @@ const fieldClass =
     data-subuh-label={jawi ? "صبح" : "Subuh"}
     class="fixed inset-0 flex flex-col overflow-hidden bg-(--pm-bg) p-[calc(3*var(--u))] text-(--pm-fg) select-none portrait:overflow-y-auto"
   >
-    <header class="flex items-start justify-between gap-[calc(2*var(--u))] portrait:flex-col">
+    <header
+      class="flex items-start justify-between gap-[calc(2*var(--u))] portrait:flex-col"
+    >
       <div>
-        <p class="font-mono text-[calc(1.3*var(--u))] tracking-widest text-(--pm-accent) uppercase">
+        <p
+          class="font-mono text-[calc(1.3*var(--u))] tracking-widest text-(--pm-accent) uppercase"
+        >
           Waktu Solat · {zone.code}{settings.masjid && ` · ${zone.daerah}`}
         </p>
-        <p class="mt-[calc(0.5*var(--u))] text-[calc(2.2*var(--u))] font-medium tracking-tight">
+        <p
+          class="mt-[calc(0.5*var(--u))] text-[calc(2.2*var(--u))] font-medium tracking-tight"
+        >
           {settings.masjid || `${zone.daerah}, ${zone.negeri}`}
         </p>
       </div>
       <div class="text-right portrait:text-left">
-        <p class="text-[calc(2.2*var(--u))] font-medium tracking-tight">{dateLabel}</p>
+        <p class="text-[calc(2.2*var(--u))] font-medium tracking-tight">
+          {dateLabel}
+        </p>
         {
           times && (
             <p class="mt-[calc(0.5*var(--u))] font-mono text-[calc(1.3*var(--u))] tracking-widest text-(--pm-muted) uppercase">
@@ -110,13 +235,30 @@ const fieldClass =
             </p>
           )
         }
+        {
+          times?.bearing && (
+            <p class="mt-[calc(0.3*var(--u))] font-mono text-[calc(1.1*var(--u))] tracking-widest text-(--pm-faint) uppercase">
+              Kiblat {digits(times.bearing)}
+            </p>
+          )
+        }
       </div>
     </header>
 
-    <div class="flex flex-1 flex-col items-center justify-center portrait:flex-none portrait:py-[8vw]">
-      <p class="flex items-baseline gap-[calc(1.5*var(--u))] leading-none font-medium tracking-tighter tabular-nums">
-        <span id="display-clock" class="text-[calc(13*var(--u))] portrait:text-[20vw]">--:--</span>
-        <span id="display-suffix" class="text-[calc(3*var(--u))] tracking-normal text-(--pm-muted) portrait:text-[6vw]"></span>
+    <div
+      class="flex flex-1 flex-col items-center justify-center portrait:flex-none portrait:py-[8vw]"
+    >
+      <p
+        class="flex items-baseline gap-[calc(1.5*var(--u))] leading-none font-medium tracking-tighter tabular-nums"
+      >
+        <span
+          id="display-clock"
+          class="text-[calc(13*var(--u))] portrait:text-[20vw]">--:--</span
+        >
+        <span
+          id="display-suffix"
+          class="text-[calc(3*var(--u))] tracking-normal text-(--pm-muted) portrait:text-[6vw]"
+        ></span>
       </p>
       <p
         id="display-next"
@@ -127,7 +269,11 @@ const fieldClass =
         reminder && (
           <figure class="mt-[calc(2.5*var(--u))] max-w-[calc(72*var(--u))] text-center">
             {reminder.arabic && (
-              <p lang="ar" dir="rtl" class="line-clamp-2 text-[calc(2.2*var(--u))] leading-[1.8]">
+              <p
+                lang="ar"
+                dir="rtl"
+                class="line-clamp-2 text-[calc(2.2*var(--u))] leading-[1.8]"
+              >
                 {reminder.arabic}
               </p>
             )}
@@ -137,7 +283,13 @@ const fieldClass =
             <figcaption class="mt-[calc(0.6*var(--u))] font-mono text-[calc(0.9*var(--u))] tracking-widest text-(--pm-faint) uppercase">
               {reminder.kind === "ayat" ? "Ayat hari ini" : "Hadis hari ini"} ·{" "}
               {reminder.sourceAr && (
-                <span lang="ar" dir="rtl" class="font-sans tracking-normal normal-case">{reminder.sourceAr}</span>
+                <span
+                  lang="ar"
+                  dir="rtl"
+                  class="font-sans tracking-normal normal-case"
+                >
+                  {reminder.sourceAr}
+                </span>
               )}
               {reminder.sourceAr && reminder.source && " · "}
               {reminder.source}
@@ -155,13 +307,15 @@ const fieldClass =
               data-label={r.label}
               data-time={hhmm(r.time)}
               data-azan={r.azan ? "" : undefined}
-              class="rounded-[calc(1.2*var(--u))] bg-(--pm-card) px-(--u) py-[calc(1.4*var(--u))] text-center ring-1 ring-(--pm-ring) transition-colors portrait:flex portrait:items-center portrait:justify-between portrait:text-left data-next:bg-(--pm-next) data-next:ring-(--pm-accent) data-past:opacity-40"
+              class="rounded-[calc(1.2*var(--u))] bg-(--pm-card) px-(--u) py-[calc(1.4*var(--u))] text-center ring-1 backdrop-blur-md ring-(--pm-ring) transition-colors portrait:flex portrait:items-center portrait:justify-between portrait:text-left data-next:bg-(--pm-next) data-next:ring-(--pm-accent) data-past:opacity-40"
             >
               <dt
                 lang={jawi ? "ar" : undefined}
                 class:list={[
                   "text-[calc(1.3*var(--u))] text-(--pm-muted)",
-                  jawi ? "font-sans text-[calc(1.8*var(--u))]" : "font-mono tracking-widest uppercase",
+                  jawi
+                    ? "font-sans text-[calc(1.8*var(--u))]"
+                    : "font-mono tracking-widest uppercase",
                 ]}
               >
                 {r.label}
@@ -184,12 +338,17 @@ const fieldClass =
       )
     }
 
-    <p class="mt-[calc(1.5*var(--u))] text-center font-mono text-[calc(0.9*var(--u))] tracking-widest text-(--pm-faint) uppercase">
+    <p
+      class="mt-[calc(1.5*var(--u))] text-center font-mono text-[calc(0.9*var(--u))] tracking-widest text-(--pm-faint) uppercase"
+    >
       Sumber: e-solat JAKIM · hafizbahtiar.com/waktu-solat
     </p>
 
     <!-- Operator controls: hidden in full screen and while the mouse is idle. -->
-    <div id="display-controls" class="absolute top-(--u) right-(--u) flex gap-2 transition-opacity">
+    <div
+      id="display-controls"
+      class="absolute top-(--u) right-(--u) flex gap-2 transition-opacity"
+    >
       <a
         href={`/waktu-solat?zone=${zone.code}`}
         class="rounded-full bg-(--pm-card) px-4 py-2 text-sm ring-1 ring-(--pm-ring) hover:ring-(--pm-accent)"
@@ -216,102 +375,132 @@ const fieldClass =
          which is what the mosque bookmarks. -->
     <dialog
       id="display-settings"
-      class="m-auto w-lg max-w-[92vw] rounded-2xl bg-(--pm-bg) p-0 text-(--pm-fg) ring-1 ring-(--pm-ring) backdrop:bg-black/60"
+      class="m-auto max-h-[92dvh] w-2xl max-w-[92vw] rounded-2xl bg-(--pm-bg) p-0 text-(--pm-fg) ring-1 ring-(--pm-ring) backdrop:bg-black/60"
     >
-      <form method="get" class="grid gap-4 p-6">
+      <form method="get" class="grid gap-5 p-6">
         <div>
           <h2 class="text-lg font-medium tracking-tight">Tetapan paparan</h2>
           <p class="mt-1 text-sm/6 text-(--pm-muted)">
-            Disimpan dalam alamat (URL) halaman ini. Bookmark selepas simpan supaya tetapan kekal untuk skrin ini.
+            Disimpan dalam alamat (URL) halaman ini. Bookmark selepas simpan
+            supaya tetapan kekal untuk skrin ini.
           </p>
         </div>
-        <label class="text-sm font-medium">
-          Nama masjid / surau
-          <input
-            name="masjid"
-            maxlength="60"
-            value={settings.masjid}
-            placeholder="Contoh: Masjid Al-Hidayah"
-            class={fieldClass}
-          />
-        </label>
-        <label class="text-sm font-medium">
-          Zon
-          <select name="zone" class={fieldClass}>
-            {
-              states.map((negeri) => (
-                <optgroup label={negeri}>
-                  {SOLAT_ZONES.filter((z) => z.negeri === negeri).map((z) => (
-                    <option value={z.code} selected={z.code === zone.code}>
-                      {z.code} - {z.daerah}
-                    </option>
-                  ))}
-                </optgroup>
-              ))
-            }
-          </select>
-        </label>
-        <div class="grid grid-cols-2 gap-4">
-          <label class="text-sm font-medium">
-            Format jam
-            <select name="jam" class={fieldClass}>
-              <option value="24" selected={settings.jam === "24"}>24 jam (16:17)</option>
-              <option value="12" selected={settings.jam === "12"}>12 jam (4:17 PTG)</option>
-            </select>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class={labelClass}>
+            Nama masjid / surau
+            <input
+              name="masjid"
+              maxlength="60"
+              value={settings.masjid}
+              placeholder="Contoh: Masjid Al-Hidayah"
+              class={controlClass}
+            />
           </label>
-          <label class="text-sm font-medium">
-            Saat pada jam
-            <select name="saat" class={fieldClass}>
-              <option value="ya" selected={settings.saat === "ya"}>Tunjuk</option>
-              <option value="tidak" selected={settings.saat === "tidak"}>Sembunyi</option>
-            </select>
+          <label class={labelClass}>
+            Zon
+            <span class="relative">
+              <select
+                name="zone"
+                class={`${controlClass} appearance-none pr-9`}
+              >
+                {
+                  states.map((negeri) => (
+                    <optgroup label={negeri}>
+                      {SOLAT_ZONES.filter((z) => z.negeri === negeri).map(
+                        (z) => (
+                          <option
+                            value={z.code}
+                            selected={z.code === zone.code}
+                          >
+                            {z.code} - {z.daerah}
+                          </option>
+                        ),
+                      )}
+                    </optgroup>
+                  ))
+                }
+              </select>
+              <svg
+                class="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-(--pm-muted)"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                  clip-rule="evenodd"></path>
+              </svg>
+            </span>
           </label>
-          <label class="text-sm font-medium">
-            Angka
-            <select name="angka" class={fieldClass}>
-              <option value="rumi" selected={settings.angka === "rumi"}>Rumi (0-9)</option>
-              <option value="arab" selected={settings.angka === "arab"}>Arab (٠-٩)</option>
-            </select>
-          </label>
-          <label class="text-sm font-medium">
-            Nama waktu
-            <select name="label" class={fieldClass}>
-              <option value="rumi" selected={settings.label === "rumi"}>Rumi (Subuh)</option>
-              <option value="jawi" selected={settings.label === "jawi"}>Jawi (صبح)</option>
-            </select>
-          </label>
-          <label class="text-sm font-medium">
-            Tema
-            <select name="tema" class={fieldClass}>
-              <option value="gelap" selected={settings.tema === "gelap"}>Gelap</option>
-              <option value="terang" selected={settings.tema === "terang"}>Terang</option>
-            </select>
-          </label>
-          <label class="text-sm font-medium">
+          {
+            selects.map((f) => (
+              <label class={labelClass}>
+                {f.label}
+                <span class="relative">
+                  <select
+                    name={f.name}
+                    class={`${controlClass} appearance-none pr-9`}
+                  >
+                    {f.options.map(([value, text]) => (
+                      <option
+                        value={value}
+                        selected={String(settings[f.name]) === value}
+                      >
+                        {text}
+                      </option>
+                    ))}
+                  </select>
+                  <svg
+                    class="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-(--pm-muted)"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </span>
+              </label>
+            ))
+          }
+          <label class={labelClass}>
             Iqamah (minit)
             <input
               name="iqamah"
               type="number"
+              inputmode="numeric"
               min="0"
               max="30"
               step="1"
               value={settings.iqamah}
-              class={fieldClass}
+              class={controlClass}
             />
+            <span class="text-xs font-normal text-(--pm-muted)"
+              >0 = tiada kiraan detik iqamah.</span
+            >
           </label>
         </div>
-        <label class="text-sm font-medium">
-          Ayat / hadis hari ini
-          <select name="peringatan" class={fieldClass}>
-            <option value="ya" selected={settings.peringatan === "ya"}>Tunjuk</option>
-            <option value="tidak" selected={settings.peringatan === "tidak"}>Sembunyi</option>
-          </select>
-        </label>
-        <p class="text-xs/5 text-(--pm-muted)">Iqamah 0 = tiada kiraan detik iqamah selepas azan.</p>
-        <div class="flex flex-wrap items-center justify-end gap-2">
-          <a href={`?zone=${zone.code}`} class="mr-auto text-sm text-(--pm-muted) underline">Set semula</a>
-          <button type="button" data-close class="rounded-full px-4 py-2 text-sm ring-1 ring-(--pm-ring)">Batal</button>
-          <button type="submit" class="rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600">
+        <div
+          class="flex flex-wrap items-center justify-end gap-2 border-t border-(--pm-ring) pt-5"
+        >
+          <a
+            href={`?zone=${zone.code}`}
+            class="mr-auto text-sm text-(--pm-muted) underline">Set semula</a
+          >
+          <button
+            type="button"
+            data-close
+            class="h-10 rounded-full px-5 text-sm ring-1 ring-(--pm-ring)"
+            >Batal</button
+          >
+          <button
+            type="submit"
+            class="h-10 rounded-full bg-sky-500 px-5 text-sm font-medium text-white hover:bg-sky-600"
+          >
             Simpan
           </button>
         </div>
@@ -337,6 +526,9 @@ const fieldClass =
     --pm-ring: rgb(255 255 255 / 0.1);
     --pm-accent: var(--color-sky-400);
     --pm-next: rgb(14 165 233 / 0.2);
+    /* Over a background photo: keeps the text readable. */
+    --pm-overlay: rgb(3 7 18 / 0.72);
+    color-scheme: dark;
   }
   #display[data-tema="terang"] {
     --pm-bg: var(--color-white);
@@ -347,10 +539,29 @@ const fieldClass =
     --pm-ring: rgb(3 7 18 / 0.1);
     --pm-accent: var(--color-sky-600);
     --pm-next: rgb(14 165 233 / 0.12);
+    --pm-overlay: rgb(255 255 255 / 0.8);
+    color-scheme: light;
+  }
+  /* Background photo per orientation (Tetapan -> Latar). */
+  #display[data-latar-l] {
+    background-image:
+      linear-gradient(var(--pm-overlay), var(--pm-overlay)), var(--pm-img-l);
+    background-size: cover;
+    background-position: center;
   }
   @media (orientation: portrait) {
     #display {
       --u: 2.2vw;
+    }
+    /* Upright screens use only the portrait photo ("Tiada" means none here). */
+    #display[data-latar-l] {
+      background-image: none;
+    }
+    #display[data-latar-p] {
+      background-image:
+        linear-gradient(var(--pm-overlay), var(--pm-overlay)), var(--pm-img-p);
+      background-size: cover;
+      background-position: center;
     }
   }
 
@@ -378,7 +589,9 @@ const fieldClass =
     second: "2-digit",
     hourCycle: "h23",
   });
-  const dayFmt = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur" });
+  const dayFmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kuala_Lumpur",
+  });
   const toSec = (hhmm: string) => {
     const [h, m] = hhmm.split(":").map(Number);
     return h * 3600 + m * 60;
@@ -408,7 +621,9 @@ const fieldClass =
     const clock = document.getElementById("display-clock")!;
     const suffix = document.getElementById("display-suffix")!;
     const next = document.getElementById("display-next")!;
-    const settings = document.getElementById("display-settings") as HTMLDialogElement;
+    const settings = document.getElementById(
+      "display-settings",
+    ) as HTMLDialogElement;
     const cells = [...screen.querySelectorAll<HTMLElement>("[data-time]")];
     const azan = cells.filter((c) => c.hasAttribute("data-azan"));
 
@@ -418,13 +633,19 @@ const fieldClass =
       const [h, m, s] = fmt.format(now).split(":").map(Number);
       const sec = h * 3600 + m * 60 + s;
       const hour = jam === "12" ? String(h % 12 || 12) : pad(h);
-      clock.textContent = digits(`${hour}:${pad(m)}${saat === "tidak" ? "" : `:${pad(s)}`}`);
+      clock.textContent = digits(
+        `${hour}:${pad(m)}${saat === "tidak" ? "" : `:${pad(s)}`}`,
+      );
       suffix.textContent = jam === "12" ? (h < 12 ? "PG" : "PTG") : "";
       if (!cells.length) return;
 
-      cells.forEach((c) => c.toggleAttribute("data-past", toSec(c.dataset.time!) <= sec));
+      cells.forEach((c) =>
+        c.toggleAttribute("data-past", toSec(c.dataset.time!) <= sec),
+      );
       const upcoming = azan.find((c) => toSec(c.dataset.time!) > sec);
-      const current = [...azan].reverse().find((c) => toSec(c.dataset.time!) <= sec);
+      const current = [...azan]
+        .reverse()
+        .find((c) => toSec(c.dataset.time!) <= sec);
       const since = current ? sec - toSec(current.dataset.time!) : Infinity;
       // Keep the prayer that just came in highlighted through iqamah and its banner.
       const focus = since < iqamahS + AZAN_BANNER_S ? current : upcoming;
@@ -442,21 +663,29 @@ const fieldClass =
     tick();
     timer = window.setInterval(tick, 1000);
     // JAKIM was down when the page rendered: try again in 5 minutes.
-    if (!cells.length) window.setTimeout(() => location.reload(), 5 * 60 * 1000);
+    if (!cells.length)
+      window.setTimeout(() => location.reload(), 5 * 60 * 1000);
 
     // Idle cursor/controls (never while the settings dialog is open).
     let idle = 0;
     const wake = () => {
       screen.classList.remove("is-idle");
       clearTimeout(idle);
-      idle = window.setTimeout(() => !settings.open && screen.classList.add("is-idle"), IDLE_MS);
+      idle = window.setTimeout(
+        () => !settings.open && screen.classList.add("is-idle"),
+        IDLE_MS,
+      );
     };
     screen.addEventListener("pointermove", wake);
     screen.addEventListener("keydown", wake);
     wake();
 
-    document.getElementById("display-open-settings")?.addEventListener("click", () => settings.showModal());
-    settings.querySelector("[data-close]")?.addEventListener("click", () => settings.close());
+    document
+      .getElementById("display-open-settings")
+      ?.addEventListener("click", () => settings.showModal());
+    settings
+      .querySelector("[data-close]")
+      ?.addEventListener("click", () => settings.close());
 
     // Full screen + keep the TV awake (Wake Lock, where the browser supports it).
     const lock = async () => {
@@ -464,10 +693,12 @@ const fieldClass =
         wakeLock = await (navigator as any).wakeLock?.request("screen");
       } catch {}
     };
-    document.getElementById("display-fullscreen")?.addEventListener("click", () => {
-      void document.documentElement.requestFullscreen?.();
-      void lock();
-    });
+    document
+      .getElementById("display-fullscreen")
+      ?.addEventListener("click", () => {
+        void document.documentElement.requestFullscreen?.();
+        void lock();
+      });
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible" && wakeLock) void lock();
     });
