@@ -3,10 +3,22 @@ export const prerender = false;
 import TechHeading from "../../components/layout/TechHeading.astro";
 import PublicLayout from "../../layouts/PublicLayout.astro";
 import { SOLAT_ZONES } from "../../data/solat-zones";
-import { formatHijri, getPrayerTimes, hhmm, resolveZone } from "../../lib/waktu-solat";
+import ZonePicker from "../../components/waktu-solat/ZonePicker.astro";
+import {
+  formatHijri,
+  getPrayerTimes,
+  hhmm,
+  resolveZone,
+  todayInMalaysia,
+} from "../../lib/waktu-solat";
+import { getDailyReminder } from "../../lib/peringatan";
 
 const zone = resolveZone(Astro.url.searchParams.get("zone"));
-const day = (await getPrayerTimes(zone.code))?.today ?? null;
+const [times, reminder] = await Promise.all([
+  getPrayerTimes(zone.code),
+  getDailyReminder(todayInMalaysia()),
+]);
+const day = times?.today ?? null;
 
 const dateLabel = new Intl.DateTimeFormat("ms-MY", {
   timeZone: "Asia/Kuala_Lumpur",
@@ -29,8 +41,6 @@ const rows = day
       { label: "Isyak", time: day.isha, azan: true },
     ]
   : [];
-
-const states = [...new Set(SOLAT_ZONES.map((z) => z.negeri))];
 ---
 
 <PublicLayout
@@ -64,27 +74,11 @@ const states = [...new Set(SOLAT_ZONES.map((z) => z.negeri))];
     </div>
 
     <!-- Plain GET form: works without JS, and the URL (?zone=) is shareable.
-         The script only submits on change. -->
+         ZonePicker submits it on pick. -->
     <div class="line-y mt-10">
       <form method="get" class="mx-2 flex flex-wrap items-center gap-3">
         <label for="zone" class="text-sm/6 font-medium">Zon</label>
-        <select
-          id="zone"
-          name="zone"
-          class="w-full max-w-md rounded-full bg-transparent px-4 py-2 text-sm/6 ring-1 ring-gray-950/10 ring-inset focus:ring-sky-500 focus:outline-none sm:w-auto dark:ring-white/15"
-        >
-          {
-            states.map((negeri) => (
-              <optgroup label={negeri}>
-                {SOLAT_ZONES.filter((z) => z.negeri === negeri).map((z) => (
-                  <option value={z.code} selected={z.code === zone.code}>
-                    {z.code} - {z.daerah}
-                  </option>
-                ))}
-              </optgroup>
-            ))
-          }
-        </select>
+        <ZonePicker zones={SOLAT_ZONES} selected={zone} />
         <noscript>
           <button type="submit" class="btn-pill btn-pill-primary">Tukar</button>
         </noscript>
@@ -101,7 +95,7 @@ const states = [...new Set(SOLAT_ZONES.map((z) => z.negeri))];
 
     {
       day ? (
-        <div class="line-y mt-10 mb-46">
+        <div class="line-y mt-10">
           <dl
             id="waktu-solat"
             class="grid grid-cols-2 gap-px bg-gray-950/5 sm:grid-cols-4 dark:bg-white/10"
@@ -131,7 +125,9 @@ const states = [...new Set(SOLAT_ZONES.map((z) => z.negeri))];
               </div>
             ))}
           </dl>
-          <p class="mx-2 mt-4 text-xs/5 text-gray-500 dark:text-gray-400">
+        </div>
+        <div class="line-y mt-4">
+          <p class="mx-2 text-xs/5 text-gray-500 dark:text-gray-400">
             Sumber:{" "}
             <a
               href="https://www.e-solat.gov.my/"
@@ -145,7 +141,7 @@ const states = [...new Set(SOLAT_ZONES.map((z) => z.negeri))];
           </p>
         </div>
       ) : (
-        <div class="line-y mt-10 mb-46">
+        <div class="line-y mt-10">
           <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
             Waktu solat tak dapat diambil dari JAKIM sekarang. Cuba lagi
             sebentar, atau semak terus di{" "}
@@ -162,17 +158,49 @@ const states = [...new Set(SOLAT_ZONES.map((z) => z.negeri))];
         </div>
       )
     }
+    {
+      reminder && (
+        <div class="line-y mt-10">
+          <figure class="mx-2 max-w-3xl">
+            <p class="eyebrow">
+              {reminder.kind === "ayat" ? "Ayat hari ini" : "Hadis hari ini"}
+            </p>
+            {reminder.arabic && (
+              <p
+                lang="ar"
+                dir="rtl"
+                class="mt-4 text-3xl/[1.9] text-gray-950 dark:text-white"
+              >
+                {reminder.arabic}
+              </p>
+            )}
+            <blockquote class="mt-4 text-lg/8 whitespace-pre-line text-gray-700 dark:text-gray-300">
+              {reminder.text}
+            </blockquote>
+            <figcaption class="mt-3 font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+              {reminder.sourceAr && (
+                <span
+                  lang="ar"
+                  dir="rtl"
+                  class="font-sans tracking-normal normal-case"
+                >
+                  {reminder.sourceAr}
+                </span>
+              )}
+              {reminder.sourceAr && reminder.source && " · "}
+              {reminder.source}
+            </figcaption>
+          </figure>
+        </div>
+      )
+    }
+    <div class="mb-46"></div>
   </div>
 </PublicLayout>
 
 <script>
   // Mark the next azan (Malaysian time). Re-run on every ClientRouter visit.
   const initWaktuSolat = () => {
-    const select = document.querySelector<HTMLSelectElement>("#zone");
-    if (select && select.dataset.bound !== "1") {
-      select.dataset.bound = "1";
-      select.addEventListener("change", () => select.form?.requestSubmit());
-    }
     const cells = document.querySelectorAll<HTMLElement>(
       "#waktu-solat [data-azan]",
     );
