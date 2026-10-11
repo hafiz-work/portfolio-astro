@@ -1,0 +1,59 @@
+---
+/**
+ * Penafian for pages that show government / third-party data (Showcase apps).
+ * Same wording everywhere on purpose - change it here and in /penafian together.
+ *
+ *   <Disclaimer sources={[{ name: "JAKIM (e-solat)", href: "https://www.e-solat.gov.my" }]}>
+ *     Page-specific line (ibadah, kecemasan, kesihatan, kewangan…).
+ *   </Disclaimer>
+ */
+import Alert from "./Alert.astro";
+
+interface Props {
+  sources: { name: string; href: string }[];
+  class?: string;
+}
+
+const { sources, class: className } = Astro.props;
+const hasNote = Astro.slots.has("default");
+---
+
+<Alert variant="warning" title="Penafian" class={className}>
+  {
+    sources.length === 0 ? (
+      <p>
+        Maklumat di halaman ini dikira secara automatik dalam peranti anda.
+        Laman ini <strong>bukan laman rasmi</strong>.
+      </p>
+    ) : (
+      <p>
+        Maklumat di halaman ini diambil secara automatik daripada{" "}
+        {sources.map((s, i) => (
+          <>
+            {i > 0 && (i === sources.length - 1 ? " dan " : ", ")}
+            <a href={s.href} target="_blank" rel="noopener noreferrer">
+              {s.name}
+            </a>
+          </>
+        ))}
+        . Laman ini <strong>bukan laman rasmi</strong> dan tidak bergabung
+        dengan, ditaja atau disahkan oleh mana-mana agensi berkenaan.
+      </p>
+    )
+  }
+  <p>
+    Maklumat dipaparkan <strong>seadanya, tanpa sebarang jaminan</strong> tentang
+    ketepatan, kelengkapan atau ketepatan masa. Ia mungkin lewat, tidak lengkap atau
+    berbeza daripada sumber asal. Sentiasa rujuk sumber rasmi sebelum membuat sebarang
+    keputusan. Pemilik laman ini tidak bertanggungjawab atas sebarang kerugian atau
+    kerosakan akibat penggunaan maklumat ini.
+  </p>
+  {
+    hasNote && (
+      <p>
+        <slot />
+      </p>
+    )
+  }
+  <p><a href="/penafian">Baca penafian penuh</a></p>
+</Alert>

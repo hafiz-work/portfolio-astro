@@ -1,6 +1,8 @@
 ---
+import Disclaimer from "../components/ui/Disclaimer.astro";
 export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
+import Combobox from "../components/ui/Combobox.astro";
 import DatePicker from "../components/ui/DatePicker.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
 import { toHijri, toMasihi } from "../lib/hari-kebesaran";
@@ -128,7 +130,15 @@ const relative =
           class="bg-white px-4 py-5 sm:px-6 dark:bg-gray-950"
         >
           <label for="masihi-text" class="eyebrow">Masihi → Hijri</label>
-          <DatePicker id="masihi" name="masihi" required min="1900-01-01" max="2100-12-31" value={r.masihi} class="mt-3" />
+          <DatePicker
+            id="masihi"
+            name="masihi"
+            required
+            min="1900-01-01"
+            max="2100-12-31"
+            value={r.masihi}
+            class="mt-3"
+          />
           <button type="submit" class="btn-pill btn-pill-primary mt-4"
             >Tukar ke Hijri</button
           >
@@ -152,15 +162,20 @@ const relative =
               class="field"
             />
             <label class="sr-only" for="hm">Bulan</label>
-            <select id="hm" name="hm" class="field col-span-2">
-              {
-                HIJRI_MONTHS.map((name, i) => (
-                  <option value={i + 1} selected={i + 1 === rm}>
-                    {name}
-                  </option>
-                ))
-              }
-            </select>
+            <Combobox
+              id="hm"
+              name="hm"
+              class="col-span-2"
+              listLabel="Bulan Hijri"
+              searchPlaceholder="Cari bulan…"
+              emptyText="Tiada bulan sepadan."
+              value={String(rm)}
+              options={HIJRI_MONTHS.map((name, i) => ({
+                value: String(i + 1),
+                label: name,
+                hint: String(i + 1),
+              }))}
+            />
             <label class="sr-only" for="hy">Tahun</label>
             <input
               id="hy"
@@ -187,13 +202,17 @@ const relative =
       </div>
     </div>
 
-    <div class="line-y mt-4">
-      <p class="mx-2 max-w-3xl text-xs/5 text-gray-500 dark:text-gray-400">
-        Tarikh mengikut takwim JAKIM (e-solat) bagi tahun semasa. Tarikh lain
-        ialah anggaran kalendar Umm al-Qura dan boleh berbeza sehari. Awal
-        Ramadan, Syawal dan Zulhijjah ditentukan melalui rukyah dan
-        pengisytiharan rasmi.
-      </p>
+    <div class="line-y mt-6">
+      <Disclaimer
+        class="mx-2 max-w-3xl"
+        sources={[
+          { name: "JAKIM (e-solat)", href: "https://www.e-solat.gov.my" },
+        ]}
+      >
+        <Fragment
+          set:html={`Tarikh mengikut takwim JAKIM bagi tahun semasa; tarikh lain ialah <strong>anggaran</strong> kalendar Umm al-Qura dan boleh berbeza sehari. Awal Ramadan, Syawal dan Zulhijjah ditentukan melalui rukyah dan pengisytiharan rasmi.`}
+        />
+      </Disclaimer>
     </div>
     <div class="mb-46"></div>
   </div>

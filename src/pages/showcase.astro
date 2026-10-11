@@ -2,11 +2,19 @@
 export const prerender = true; // static list, no data
 import PublicLayout from "../layouts/PublicLayout.astro";
 import SectionHeader from "../components/layout/SectionHeader.astro";
+import Alert from "../components/ui/Alert.astro";
 
 // Small public apps that live on this site (each under its own route). Add one
 // entry per app. Linked from the footer for now; a navbar/home section waits
 // until there are enough of them (see CLAUDE.md -> Showcase).
 const apps = [
+  {
+    title: "Nombor Kecemasan",
+    href: "/kecemasan",
+    description:
+      "999, talian lebuh raya, NSRC 997 untuk scam, sokongan emosi dan APM negeri - tekan untuk call. Setiap nombor dari laman rasmi.",
+    tags: ["999", "Lebuh raya", "Scam"],
+  },
   {
     title: "Waktu Solat",
     href: "/waktu-solat",
@@ -85,6 +93,21 @@ const apps = [
     description="Tools I built and host here. Open them, share them, put them on a screen."
   />
   <div class="h-12"></div>
+
+  <div class="line-y">
+    <Alert variant="warning" title="Penafian" class="m-2 max-w-3xl">
+      <p>
+        Kebanyakan aplikasi di sini memaparkan data terbuka daripada agensi
+        kerajaan Malaysia (JAKIM, Bank Negara Malaysia, Jabatan Alam Sekitar,
+        MET, data.gov.my) dan pihak ketiga. Ini <strong
+          >bukan laman rasmi</strong
+        >; maklumat dipaparkan seadanya tanpa jaminan, dan sumber rasmi sentiasa
+        mengatasinya.
+      </p>
+      <p><a href="/penafian">Baca penafian penuh</a></p>
+    </Alert>
+  </div>
+  <div class="h-4"></div>
 
   <div
     class="line-y mb-46 grid grid-cols-1 gap-2 p-2 sm:grid-cols-2 lg:grid-cols-3"

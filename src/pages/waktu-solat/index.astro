@@ -1,4 +1,5 @@
 ---
+import Disclaimer from "../../components/ui/Disclaimer.astro";
 export const prerender = false;
 import TechHeading from "../../components/layout/TechHeading.astro";
 import PublicLayout from "../../layouts/PublicLayout.astro";
@@ -314,6 +315,12 @@ const rows = day
         </section>
       )
     }
+    <div class="line-y mt-6">
+      <Disclaimer class="mx-2 max-w-3xl" sources={[{ name: "JAKIM (e-solat)", href: "https://www.e-solat.gov.my" }, { name: "api.waktusolat.app (sandaran tidak rasmi)", href: "https://api.waktusolat.app" }]}>
+        <Fragment set:html={`Rujukan muktamad waktu solat ialah <strong>JAKIM dan jabatan agama Islam negeri</strong>. Ayat dan hadis hari ini diambil daripada Al Quran Cloud dan HadeethEnc.`} />
+      </Disclaimer>
+    </div>
+
     <!-- Widget for other sites: the only route the middleware lets others iframe. -->
     <section id="pasang">
       <div class="line-y mt-10">
@@ -335,7 +342,7 @@ const rows = day
               readonly
               rows="4"
               class="field resize-none font-mono text-xs/5"
-            >{`<iframe src="https://hafizbahtiar.com/waktu-solat/embed?zone=${zone.code}" title="Waktu Solat ${zone.daerah}" width="100%" height="380" style="border:0;max-width:420px" loading="lazy"></iframe>`}</textarea>
+            >{`<iframe src="https://hafizbahtiar.com/waktu-solat/embed?zone=${zone.code}" title="Waktu Solat ${zone.daerah}" width="100%" height="420" style="border:0;max-width:420px" loading="lazy"></iframe>`}</textarea>
             <div>
               <button type="button" id="embed-copy" class="btn-pill btn-pill-ghost">Salin kod</button>
             </div>
@@ -344,7 +351,7 @@ const rows = day
             src={`/waktu-solat/embed?zone=${zone.code}`}
             title={`Contoh widget Waktu Solat ${zone.daerah}`}
             width="100%"
-            height="380"
+            height="420"
             loading="lazy"
             class="rounded-xl ring-1 ring-gray-950/10 dark:ring-white/10"
           ></iframe>

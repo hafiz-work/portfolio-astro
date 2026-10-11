@@ -1,4 +1,5 @@
 ---
+import Disclaimer from "../components/ui/Disclaimer.astro";
 export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
@@ -367,6 +368,21 @@ const historyCols = FUELS.filter((f) =>
         </div>
       )
     }
+    <div class="line-y mt-6">
+      <Disclaimer
+        class="mx-2 max-w-3xl"
+        sources={[
+          {
+            name: "data.gov.my",
+            href: "https://data.gov.my/data-catalogue/fuelprice",
+          },
+        ]}
+      >
+        <Fragment
+          set:html={`Rujuk pengumuman rasmi kerajaan untuk harga terkini dan syarat kelayakan harga bersubsidi (BUDI95, SKPS, SKDS).`}
+        />
+      </Disclaimer>
+    </div>
     <div class="mb-46"></div>
   </div>
 </PublicLayout>

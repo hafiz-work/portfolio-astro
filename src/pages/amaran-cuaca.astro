@@ -1,4 +1,5 @@
 ---
+import Disclaimer from "../components/ui/Disclaimer.astro";
 export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
@@ -113,6 +114,22 @@ const metLink = "font-medium text-sky-600 hover:underline dark:text-sky-400";
         </div>
       )
     }
+    <div class="line-y mt-6">
+      <Disclaimer
+        class="mx-2 max-w-3xl"
+        sources={[
+          {
+            name: "Jabatan Meteorologi Malaysia (MET)",
+            href: "https://www.met.gov.my",
+          },
+          { name: "data.gov.my", href: "https://developer.data.gov.my" },
+        ]}
+      >
+        <Fragment
+          set:html={`Ini <strong>bukan sistem amaran kecemasan</strong> - amaran mungkin lewat atau tidak dipaparkan. Ikut arahan pihak berkuasa dan hubungi <strong>999</strong> dalam kecemasan.`}
+        />
+      </Disclaimer>
+    </div>
     <div class="mb-46"></div>
   </div>
 </PublicLayout>

@@ -1,4 +1,5 @@
 ---
+import Disclaimer from "../components/ui/Disclaimer.astro";
 export const prerender = true;
 import KiblatMap from "../components/kiblat/KiblatMap";
 import TechHeading from "../components/layout/TechHeading.astro";
@@ -149,6 +150,13 @@ import PublicLayout from "../layouts/PublicLayout.astro";
           >Waktu Solat</a
         >.
       </p>
+    </div>
+    <div class="line-y mt-6">
+      <Disclaimer class="mx-2 max-w-3xl" sources={[]}>
+        <Fragment
+          set:html={`Arah kiblat ialah <strong>anggaran</strong> berdasarkan GPS dan kompas telefon, yang boleh tersasar. Untuk pembinaan atau pengukuran masjid dan surau, rujuk pihak berkuasa agama negeri.`}
+        />
+      </Disclaimer>
     </div>
     <div class="mb-46"></div>
   </div>

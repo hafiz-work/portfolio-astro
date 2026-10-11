@@ -1,4 +1,5 @@
 ---
+import Disclaimer from "../components/ui/Disclaimer.astro";
 export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
@@ -91,12 +92,10 @@ const left = (days: number) => (days === 0 ? "Hari ini" : days === 1 ? "Esok" : 
         }
       </ul>
     </div>
-    <div class="line-y mt-4">
-      <p class="mx-2 max-w-3xl text-xs/5 text-gray-500 dark:text-gray-400">
-        Tarikh mengikut takwim JAKIM (e-solat) bila sudah diterbitkan. Selepas itu, tarikh ialah anggaran
-        kalendar Umm al-Qura dan boleh berbeza sehari. Tarikh sebenar Awal Ramadan dan Hari Raya Aidilfitri
-        ditentukan melalui rukyah dan diisytiharkan oleh Penyimpan Mohor Besar Raja-Raja.
-      </p>
+    <div class="line-y mt-6">
+      <Disclaimer class="mx-2 max-w-3xl" sources={[{ name: "JAKIM (e-solat)", href: "https://www.e-solat.gov.my" }]}>
+        <Fragment set:html={`Tarikh mengikut takwim JAKIM bila sudah diterbitkan; selepas itu ia <strong>anggaran</strong> kalendar Umm al-Qura dan boleh berbeza sehari. Tarikh sebenar Awal Ramadan dan Hari Raya ditentukan melalui rukyah dan diisytiharkan oleh Penyimpan Mohor Besar Raja-Raja.`} />
+      </Disclaimer>
     </div>
     <div class="mb-46"></div>
   </div>

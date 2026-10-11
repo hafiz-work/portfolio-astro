@@ -1,0 +1,312 @@
+---
+export const prerender = true;
+import TechHeading from "../components/layout/TechHeading.astro";
+import Alert from "../components/ui/Alert.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+
+// Full disclaimer for the Showcase apps. Each app page shows the short version
+// (src/components/ui/Disclaimer.astro) and links here - keep the two in step.
+const UPDATED = "11 Oktober 2026";
+
+const SOURCES: {
+  app: string;
+  items: { name: string; href: string; note?: string }[];
+}[] = [
+  {
+    app: "Waktu Solat, Paparan Masjid, Widget, Kiraan Detik, Tarikh Hijri",
+    items: [
+      { name: "JAKIM - e-solat", href: "https://www.e-solat.gov.my" },
+      {
+        name: "api.waktusolat.app",
+        href: "https://api.waktusolat.app",
+        note: "pihak ketiga tidak rasmi yang menyalin data JAKIM; digunakan bila e-solat tidak dapat dicapai, dan untuk menukar lokasi GPS kepada zon",
+      },
+      {
+        name: "Kalendar Umm al-Qura (dalam pelayar / Intl)",
+        href: "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat",
+        note: "anggaran sahaja",
+      },
+    ],
+  },
+  {
+    app: "Ayat dan hadis hari ini",
+    items: [
+      {
+        name: "Al Quran Cloud (terjemahan Basmeih)",
+        href: "https://alquran.cloud",
+      },
+      { name: "HadeethEnc", href: "https://hadeethenc.com" },
+    ],
+  },
+  {
+    app: "Kadar Tukaran dan OPR",
+    items: [
+      {
+        name: "Bank Negara Malaysia (API terbuka)",
+        href: "https://apikijangportal.bnm.gov.my",
+      },
+      {
+        name: "Frankfurter (kadar rujukan Bank Pusat Eropah)",
+        href: "https://frankfurter.dev",
+        note: "sandaran",
+      },
+      {
+        name: "Rates By Exchange Rate API",
+        href: "https://www.exchangerate-api.com",
+        note: "sandaran",
+      },
+    ],
+  },
+  {
+    app: "Harga Minyak",
+    items: [
+      {
+        name: "data.gov.my (set data fuelprice)",
+        href: "https://data.gov.my/data-catalogue/fuelprice",
+      },
+    ],
+  },
+  {
+    app: "Kualiti Udara (IPU)",
+    items: [
+      {
+        name: "Jabatan Alam Sekitar - APIMS",
+        href: "https://eqms.doe.gov.my/APIMS/main",
+      },
+    ],
+  },
+  {
+    app: "Amaran Cuaca, Gempa Bumi, cuaca di Paparan Masjid",
+    items: [
+      {
+        name: "Jabatan Meteorologi Malaysia (MET)",
+        href: "https://www.met.gov.my",
+      },
+      { name: "melalui data.gov.my", href: "https://developer.data.gov.my" },
+    ],
+  },
+  {
+    app: "Nombor Kecemasan",
+    items: [
+      {
+        name: "Laman rasmi setiap agensi",
+        href: "https://999.gov.my",
+        note: "sumber dan tarikh semakan dipaparkan di sebelah setiap nombor",
+      },
+    ],
+  },
+  {
+    app: "Peta",
+    items: [
+      { name: "CARTO", href: "https://carto.com/attributions" },
+      {
+        name: "OpenStreetMap contributors",
+        href: "https://www.openstreetmap.org/copyright",
+      },
+    ],
+  },
+];
+---
+
+<PublicLayout
+  title="Penafian | Hafiz Bahtiar"
+  description="Penafian bagi aplikasi Showcase di hafizbahtiar.com yang memaparkan data daripada agensi kerajaan dan pihak ketiga."
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1
+        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Penafian"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 max-w-3xl text-lg">
+        Penafian ini terpakai kepada semua aplikasi di <a
+          href="/showcase"
+          class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+          >Showcase</a
+        >, termasuk widget yang dipasang di laman lain.
+      </p>
+    </div>
+    <div class="line-y mt-4">
+      <p
+        class="mx-2 font-mono text-sm/6 tracking-widest text-gray-500 uppercase"
+      >
+        Dikemas kini {UPDATED}
+      </p>
+    </div>
+
+    <div class="line-y mt-10">
+      <Alert variant="warning" title="Ringkasnya" class="mx-2 max-w-3xl">
+        <ul>
+          <li>
+            Ini <strong>bukan laman rasmi</strong> mana-mana agensi kerajaan.
+          </li>
+          <li>
+            Data dipaparkan <strong>seadanya, tanpa jaminan</strong> - semak sumber
+            rasmi sebelum bertindak.
+          </li>
+          <li>
+            Kami <strong>tidak bertanggungjawab</strong> atas kerugian akibat penggunaan
+            maklumat di sini.
+          </li>
+          <li>
+            Dalam kecemasan, ikut arahan pihak berkuasa dan hubungi <strong
+              >999</strong
+            >.
+          </li>
+        </ul>
+      </Alert>
+    </div>
+
+    <div class="line-y mt-10">
+      <div
+        class="mx-2 max-w-3xl space-y-10 text-base/7 text-gray-700 dark:text-gray-300 [&_a]:font-medium [&_a]:text-sky-600 hover:[&_a]:underline dark:[&_a]:text-sky-400 [&_h2]:text-2xl [&_h2]:font-medium [&_h2]:tracking-tight [&_h2]:text-gray-950 dark:[&_h2]:text-white [&_p]:mt-3 [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5"
+      >
+        <section>
+          <h2>1. Bukan laman rasmi</h2>
+          <p>
+            hafizbahtiar.com ialah laman peribadi. Aplikasi di Showcase
+            memaparkan data yang diterbitkan secara terbuka oleh agensi kerajaan
+            Malaysia dan pihak ketiga (senarai di bawah). Laman ini tidak
+            bergabung dengan, ditaja, diluluskan atau disahkan oleh mana-mana
+            agensi tersebut. Nama dan pautan agensi digunakan hanya untuk
+            menyatakan sumber data.
+          </p>
+        </section>
+
+        <section>
+          <h2>2. Tiada jaminan</h2>
+          <p>
+            Semua maklumat dipaparkan "seadanya" dan "sebagaimana tersedia",
+            tanpa sebarang jaminan, nyata atau tersirat, termasuk tentang
+            ketepatan, kelengkapan, kebolehpercayaan atau ketepatan masa. Data
+            diambil secara automatik dan disimpan sementara (cache); ia mungkin
+            lewat, tidak lengkap, tersalah tafsir semasa diproses, atau berbeza
+            daripada sumber asal. Bila sumber tidak dapat dicapai, salinan
+            simpanan terakhir mungkin dipaparkan dan ditanda "data simpanan".
+            Sumber rasmi sentiasa mengatasi apa yang dipaparkan di sini.
+          </p>
+        </section>
+
+        <section>
+          <h2>3. Had tanggungjawab</h2>
+          <p>
+            Setakat yang dibenarkan oleh undang-undang, pemilik laman ini tidak
+            bertanggungjawab atas sebarang kerugian, kerosakan, kos atau
+            tuntutan - secara langsung atau tidak langsung - yang timbul
+            daripada penggunaan atau kebergantungan kepada maklumat, aplikasi
+            atau widget di laman ini, termasuk bila perkhidmatan terganggu atau
+            data tidak tepat.
+          </p>
+        </section>
+
+        <section>
+          <h2>4. Perkara khusus</h2>
+          <ul>
+            <li>
+              <strong>Ibadah (waktu solat, kiblat, tarikh Hijri).</strong> Waktu dan
+              takwim adalah daripada JAKIM, tetapi rujukan muktamad ialah JAKIM dan
+              jabatan agama Islam negeri masing-masing. Tarikh di luar takwim JAKIM
+              ialah anggaran. Awal Ramadan, Syawal dan Zulhijjah ditentukan melalui
+              rukyah dan pengisytiharan Penyimpan Mohor Besar Raja-Raja. Arah kiblat
+              dari kompas telefon ialah anggaran; untuk pembinaan atau pengukuran
+              masjid dan surau, rujuk pihak berkuasa agama negeri.
+            </li>
+            <li>
+              <strong>Cuaca, gempa bumi dan kualiti udara.</strong> Ini bukan sistem
+              amaran awal atau kecemasan. Amaran mungkin sampai lewat atau tidak dipaparkan.
+              Ikut arahan pihak berkuasa (MET, NADMA, JAS, bomba, polis) dan hubungi
+              999 dalam kecemasan. Bacaan IPU bukan nasihat perubatan.
+            </li>
+            <li>
+              <strong>Kewangan (kadar tukaran, OPR, harga minyak).</strong> Kadar
+              BNM ialah kadar rujukan, bukan kadar urus niaga bank atau pengurup wang.
+              Harga dan kadar boleh berubah; ia bukan nasihat kewangan atau pelaburan.
+            </li>
+            <li>
+              <strong>Ayat dan hadis.</strong> Teks dan terjemahan diambil daripada
+              pihak ketiga yang dinyatakan bersama setiap petikan. Untuk rujukan agama,
+              semak mushaf dan kitab yang muktamad.
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>5. Sumber data</h2>
+          {
+            SOURCES.map((g) => (
+              <div class="mt-4">
+                <p class="font-medium text-gray-950 dark:text-white">{g.app}</p>
+                <ul class="mt-1!">
+                  {g.items.map((s) => (
+                    <li>
+                      <a
+                        href={s.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {s.name}
+                      </a>
+                      {s.note && (
+                        <span class="text-gray-500 dark:text-gray-400">
+                          {" "}
+                          - {s.note}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          }
+          <p>
+            Hak cipta dan syarat penggunaan data kekal milik pembekal
+            masing-masing. Jika anda wakil agensi dan mahu data anda dipaparkan
+            secara berbeza atau dikeluarkan, sila hubungi saya melalui e-mel <a
+              href="mailto:hafiz@hafizbahtiar.com">hafiz@hafizbahtiar.com</a
+            >.
+          </p>
+        </section>
+
+        <section>
+          <h2>6. Lokasi dan privasi</h2>
+          <p>
+            Butang lokasi hanya berfungsi selepas anda membenarkannya dalam
+            pelayar. Untuk Kompas Kiblat dan stesen IPU terdekat, lokasi anda
+            diproses dalam peranti anda sahaja dan tidak dihantar ke mana-mana.
+            Untuk "Guna lokasi saya" di Waktu Solat, koordinat anda dihantar
+            terus dari pelayar ke api.waktusolat.app untuk mencari zon JAKIM;
+            laman ini tidak menyimpannya.
+          </p>
+        </section>
+
+        <section>
+          <h2>7. Widget di laman lain</h2>
+          <p>
+            Widget boleh dipasang secara percuma. Penafian ini terpakai kepada
+            widget di mana-mana laman ia dipasang. Pemilik laman yang memasang
+            widget bertanggungjawab memastikan penggunaannya sesuai untuk
+            pembaca mereka. Widget mungkin berubah atau dihentikan tanpa notis.
+          </p>
+        </section>
+
+        <section>
+          <h2>8. Perubahan</h2>
+          <p>
+            Penafian ini boleh dikemas kini dari semasa ke semasa. Tarikh kemas
+            kini terkini dinyatakan di atas. Dengan terus menggunakan aplikasi
+            di Showcase, anda dianggap menerima penafian yang terkini.
+          </p>
+        </section>
+      </div>
+    </div>
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>

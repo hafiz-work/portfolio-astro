@@ -1,4 +1,5 @@
 ---
+import Disclaimer from "../components/ui/Disclaimer.astro";
 export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
 import Combobox from "../components/ui/Combobox.astro";
@@ -45,7 +46,7 @@ const fillers = (n: number) => {
 };
 const embedDefault = stations.find((s) => s.state === "WP Kuala Lumpur") ?? stations[0];
 const embedCode = (id: string) =>
-  `<iframe src="https://hafizbahtiar.com/ipu/embed?stesen=${id}" title="Kualiti udara (IPU)" width="100%" height="190" style="border:0;max-width:420px" loading="lazy"></iframe>`;
+  `<iframe src="https://hafizbahtiar.com/ipu/embed?stesen=${id}" title="Kualiti udara (IPU)" width="100%" height="220" style="border:0;max-width:420px" loading="lazy"></iframe>`;
 const town = (s: Station) => s.location.split(",")[0].trim();
 const markerClass = (s: Station) => {
   const band = bandOf(s.api);
@@ -225,6 +226,12 @@ const points: MapPoint[] = stations.map((s) => ({
         </div>
       )
     }
+    <div class="line-y mt-6">
+      <Disclaimer class="mx-2 max-w-3xl" sources={[{ name: "Jabatan Alam Sekitar (APIMS)", href: "https://eqms.doe.gov.my/APIMS/main" }]}>
+        <Fragment set:html={`Bacaan IPU <strong>bukan nasihat perubatan</strong>. Kanak-kanak, warga emas dan pesakit asma, paru-paru atau jantung patut mengikut nasihat Kementerian Kesihatan Malaysia.`} />
+      </Disclaimer>
+    </div>
+
     {
       embedDefault && (
         <section id="pasang">
@@ -265,7 +272,7 @@ const points: MapPoint[] = stations.map((s) => ({
                 src={`/ipu/embed?stesen=${embedDefault.id}`}
                 title="Contoh widget IPU"
                 width="100%"
-                height="190"
+                height="220"
                 loading="lazy"
                 class="rounded-xl ring-1 ring-gray-950/10 dark:ring-white/10"
               />

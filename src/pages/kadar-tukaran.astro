@@ -1,4 +1,5 @@
 ---
+import Disclaimer from "../components/ui/Disclaimer.astro";
 export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
 import Combobox from "../components/ui/Combobox.astro";
@@ -181,6 +182,11 @@ const session = data?.session ? `${data.session.slice(0, 2)}:${data.session.slic
         </div>
       )
     }
+    <div class="line-y mt-6">
+      <Disclaimer class="mx-2 max-w-3xl" sources={[{ name: "Bank Negara Malaysia", href: "https://www.bnm.gov.my" }, { name: "Frankfurter (Bank Pusat Eropah)", href: "https://frankfurter.dev" }, { name: "ExchangeRate-API", href: "https://www.exchangerate-api.com" }]}>
+        <Fragment set:html={`Kadar yang dipaparkan ialah kadar rujukan, <strong>bukan kadar urus niaga</strong> bank atau pengurup wang, dan bukan nasihat kewangan.`} />
+      </Disclaimer>
+    </div>
     <div class="mb-46"></div>
   </div>
 </PublicLayout>

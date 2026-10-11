@@ -1,0 +1,94 @@
+---
+/**
+ * Static callout (shadcn's Alert, in our palette): icon + optional title + body.
+ * Not a toast - for those see AlertToast.astro.
+ *
+ *   <Alert variant="warning" title="Perhatian">Body text, <a href="…">links</a>.</Alert>
+ *
+ * `role` defaults to "note" (read in place); use "alert" only for content that
+ * appears after load and must be announced. Links and paragraphs in the body are
+ * styled for you.
+ */
+interface Props {
+  variant?: "info" | "warning" | "danger" | "success" | "neutral";
+  title?: string;
+  role?: "note" | "alert" | "status";
+  class?: string;
+}
+
+const {
+  variant = "info",
+  title,
+  role = "note",
+  class: className,
+} = Astro.props;
+
+const TONE = {
+  info: {
+    box: "bg-sky-500/5 ring-sky-500/20 dark:bg-sky-400/5 dark:ring-sky-400/20",
+    icon: "text-sky-600 dark:text-sky-400",
+  },
+  warning: {
+    box: "bg-amber-500/5 ring-amber-500/25 dark:bg-amber-400/5 dark:ring-amber-400/20",
+    icon: "text-amber-600 dark:text-amber-400",
+  },
+  danger: {
+    box: "bg-red-500/5 ring-red-500/20 dark:bg-red-400/5 dark:ring-red-400/20",
+    icon: "text-red-600 dark:text-red-400",
+  },
+  success: {
+    box: "bg-emerald-500/5 ring-emerald-500/20 dark:bg-emerald-400/5 dark:ring-emerald-400/20",
+    icon: "text-emerald-600 dark:text-emerald-400",
+  },
+  neutral: {
+    box: "bg-gray-950/2.5 ring-gray-950/10 dark:bg-white/2.5 dark:ring-white/10",
+    icon: "text-gray-500 dark:text-gray-400",
+  },
+}[variant];
+
+// Heroicons 20/solid: information-circle, exclamation-triangle, x-circle, check-circle.
+const ICON = {
+  info: "M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z",
+  neutral:
+    "M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z",
+  warning:
+    "M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z",
+  danger:
+    "M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z",
+  success:
+    "M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z",
+}[variant];
+---
+
+<div
+  role={role}
+  class:list={[
+    "grid grid-cols-[1.25rem_minmax(0,1fr)] items-start gap-x-3 rounded-xl px-4 py-3.5 text-sm/6 ring-1 ring-inset",
+    TONE.box,
+    className,
+  ]}
+>
+  <svg
+    class:list={["mt-0.5 size-5", TONE.icon]}
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path fill-rule="evenodd" d={ICON} clip-rule="evenodd"></path>
+  </svg>
+  <div class="min-w-0">
+    {
+      title && (
+        <p class="font-semibold text-gray-950 dark:text-white">{title}</p>
+      )
+    }
+    <div
+      class:list={[
+        "text-gray-700 dark:text-gray-300 [&_a]:font-medium [&_a]:text-sky-700 [&_a]:underline [&_a]:decoration-sky-500/40 [&_a]:underline-offset-2 hover:[&_a]:decoration-sky-500 dark:[&_a]:text-sky-400 [&_li]:mt-1 [&_p+p]:mt-2 [&_strong]:font-semibold [&_strong]:text-gray-950 dark:[&_strong]:text-white [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:pl-5",
+        title && "mt-1",
+      ]}
+    >
+      <slot />
+    </div>
+  </div>
+</div>
