@@ -1,0 +1,19 @@
+# Hafiz Bahtiar (hafizbahtiar.com)
+
+> Hafiz Bahtiar (also written "hafizbahtiar") is a backend and Flutter developer based in Kuala Lumpur, Malaysia, with 6+ years shipping production software: APIs on Node.js, Hono and Cloudflare Workers, and mobile apps in Flutter. hafizbahtiar.com is his personal portfolio and blog.
+
+Not to be confused with other people named "Hafiz Bakhtiar" (with a "k").
+
+## Pages
+
+- [Home](https://hafizbahtiar.com/): who he is, stack, experience, contact
+- [Projects](https://hafizbahtiar.com/projects): production systems - marketplaces, government platforms, logistics tooling, offline-first mobile apps
+- [Blog](https://hafizbahtiar.com/blog): notes on backend systems, Flutter and shipping production software
+- [Quotes](https://hafizbahtiar.com/quotes): a small collection of quotes
+- [Resume (PDF)](https://hafizbahtiar.com/resume.pdf)
+
+## Profiles
+
+- [GitHub](https://github.com/hafizbahtiar)
+- [LinkedIn](https://www.linkedin.com/in/hafizbahtiar/)
+- Email: hafiz@hafizbahtiar.com

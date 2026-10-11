@@ -27,7 +27,8 @@ const {
 
 // Absolute URLs for canonical + social cards. Astro.site is set in astro.config.
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
-const canonicalURL = new URL(Astro.url.pathname, siteOrigin);
+// No trailing slash (except "/"): /blog and /blog/ both serve, one canonical URL.
+const canonicalURL = new URL(Astro.url.pathname.replace(/(.)\/+$/, "$1"), siteOrigin);
 const socialImageURL = new URL(image, siteOrigin);
 ---
 

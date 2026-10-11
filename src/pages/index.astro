@@ -1,6 +1,7 @@
 ---
 import PublicLayout from "../layouts/PublicLayout.astro";
 import JsonLd from "../components/seo/JsonLd.astro";
+import avatar from "../assets/avatar.jpg";
 import Hero from "../components/home/Hero.astro";
 import ContactSection from "../components/home/ContactSection.astro";
 import FeaturedProjects from "../components/home/FeaturedProjects.astro";
@@ -173,35 +174,72 @@ const legend: { level: SkillLevel; label: string; dot: string }[] = [
 	},
 ];
 
-const personSchema = {
+// One graph: ProfilePage (Google's type for "about one person" pages) whose
+// mainEntity is the Person; WebSite points at the same Person by @id. The
+// alternateNames cover how people type the brand ("hafizbahtiar", the domain).
+const SITE_URL = "https://hafizbahtiar.com";
+const PERSON_ID = `${SITE_URL}/#person`;
+const homeSchema = {
 	"@context": "https://schema.org",
-	"@type": "Person",
-	name: "Hafiz Bahtiar",
-	jobTitle: "Backend & Flutter Developer",
-	description:
-		"Backend & Flutter developer building reliable APIs and production Flutter apps.",
-	url: "https://hafizbahtiar.com",
-	address: {
-		"@type": "PostalAddress",
-		addressLocality: "Kuala Lumpur",
-		addressCountry: "MY",
-	},
-	sameAs: [
-		"https://github.com/hafizbahtiar",
-		"https://www.linkedin.com/in/hafizbahtiar/",
+	"@graph": [
+		{
+			"@type": "ProfilePage",
+			"@id": `${SITE_URL}/#profile`,
+			url: `${SITE_URL}/`,
+			name: "Hafiz Bahtiar | Backend & Flutter Developer",
+			mainEntity: { "@id": PERSON_ID },
+		},
+		{
+			"@type": "Person",
+			"@id": PERSON_ID,
+			name: "Hafiz Bahtiar",
+			alternateName: ["hafizbahtiar", "hafizbahtiar.com"],
+			jobTitle: "Backend & Flutter Developer",
+			description:
+				"Backend & Flutter developer in Kuala Lumpur building reliable APIs and production Flutter apps.",
+			url: `${SITE_URL}/`,
+			image: new URL(avatar.src, SITE_URL).toString(),
+			email: "mailto:hafiz@hafizbahtiar.com",
+			address: {
+				"@type": "PostalAddress",
+				addressLocality: "Kuala Lumpur",
+				addressCountry: "MY",
+			},
+			knowsAbout: [
+				"Node.js",
+				"Hono",
+				"Cloudflare Workers",
+				"Flutter",
+				"Backend development",
+				"API design",
+			],
+			...(currentJob
+				? {
+						worksFor: {
+							"@type": "Organization",
+							name: currentJob.companyName,
+						},
+					}
+				: {}),
+			sameAs: [
+				"https://github.com/hafizbahtiar",
+				"https://www.linkedin.com/in/hafizbahtiar/",
+			],
+		},
+		{
+			"@type": "WebSite",
+			"@id": `${SITE_URL}/#website`,
+			name: "Hafiz Bahtiar",
+			alternateName: ["hafizbahtiar", "hafizbahtiar.com"],
+			url: `${SITE_URL}/`,
+			publisher: { "@id": PERSON_ID },
+		},
 	],
-};
-const websiteSchema = {
-	"@context": "https://schema.org",
-	"@type": "WebSite",
-	name: "Hafiz Bahtiar",
-	url: "https://hafizbahtiar.com",
 };
 ---
 
 <PublicLayout>
-	<JsonLd schema={personSchema} />
-	<JsonLd schema={websiteSchema} />
+	<JsonLd schema={homeSchema} />
 	<Hero
 		projectCount={projects.length}
 		yearsExperience={yearsExperience}

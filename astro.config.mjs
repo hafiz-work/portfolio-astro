@@ -27,7 +27,7 @@ const dynamicPages = [
 
 // Kept out of the sitemap: private/utility pages, /family (unlisted by design -
 // see CLAUDE.md), and per-project legal pages (thin; empty ones are noindex).
-const SITEMAP_EXCLUDE = [/\/admin/, /\/login/, /\/family(\/|$)/, /\/verify-email/, /\/(privacy|terms)\/?$/];
+const SITEMAP_EXCLUDE = [/\/admin/, /\/login/, /\/account(\/|$)/, /\/register/, /\/family(\/|$)/, /\/verify-email/, /\/(privacy|terms)\/?$/];
 
 // https://astro.build/config
 export default defineConfig({
@@ -51,6 +51,12 @@ export default defineConfig({
     sitemap({
       customPages: dynamicPages,
       filter: (page) => !SITEMAP_EXCLUDE.some((re) => re.test(page)),
+      // Same URL form as the canonical tag (CoreLayout): no trailing slash except "/".
+      serialize: (item) => {
+        const url = new URL(item.url);
+        if (url.pathname !== "/") url.pathname = url.pathname.replace(/\/+$/, "");
+        return { ...item, url: url.href };
+      },
     }),
   ],
   image: {
