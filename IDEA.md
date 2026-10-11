@@ -34,13 +34,18 @@ header comment in `src/data/kecemasan.ts`.
   each state's official source - a wrong number here is a religious matter, not a typo.
   Build #2 first.
 
+## 13. Kalkulator Gaji - PCB dan KWSP - `/kalkulator-gaji`
+
+Full plan with official sources, formulas and test cases: `docs/plans/kalkulator-gaji-pcb-kwsp.md`.
+KWSP Third Schedule downloaded and extracted (`src/data/kwsp/2025-10.ts`). Still needed:
+10-15 cases from LHDN's official PCB calculator (for the check), and how Part F rounding is split.
+
 ## Considered, not recommended
 
 - **Paras air / banjir (JPS)** - publicinfobanjir.water.gov.my has no documented API;
   scraping it would break silently, and wrong flood data is dangerous.
 - **Harga barang (PriceCatcher, KPDN)** - very large dataset; needs real storage and
   search, not a small showcase app.
-- **Kalkulator KWSP / PCB** - rules change often; high risk of wrong numbers.
 - **Cuti umum** - `api.data.gov.my` `public_holidays` returns 404; holidays differ per state.
 - **Kalkulator Faraid** - inheritance shares depend on the whole family situation and on
   court practice; a wrong share is a legal and religious problem.
