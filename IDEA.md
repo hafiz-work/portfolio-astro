@@ -7,7 +7,9 @@ See CLAUDE.md -> Showcase.
 
 Recommended order: **1** first (most searched, data verified, small), **4** any time.
 
-## 1. Harga Minyak Minggu Ini - `/harga-minyak`
+## 1. Harga Minyak Minggu Ini - `/harga-minyak` - DONE (2026-10-11)
+
+- Fallback: plan B is the same dataset as a CSV on `storage.data.gov.my`. History is a 12-week table, not a chart (add one if wanted).
 
 - **Data:** `api.data.gov.my` dataset `fuelprice` - verified 2026-10-11:
   `https://api.data.gov.my/data-catalogue?id=fuelprice&sort=-date&limit=1`

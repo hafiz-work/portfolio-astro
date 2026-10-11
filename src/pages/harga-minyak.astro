@@ -1,0 +1,164 @@
+---
+export const prerender = false;
+import TechHeading from "../components/layout/TechHeading.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { FUELS, getFuelPrices, weeklyChange, type FuelKey } from "../lib/harga-minyak";
+
+const data = await getFuelPrices();
+const weeks = data?.weeks ?? [];
+const now = weeks[0];
+
+const fmtDay = (ymd: string, opts: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat("ms-MY", { timeZone: "UTC", ...opts }).format(new Date(`${ymd}T00:00:00Z`));
+// Each price is in effect for a week from its date (a Thursday).
+const until = now ? new Date(Date.parse(`${now.date}T00:00:00Z`) + 6 * 86_400_000).toISOString().slice(0, 10) : "";
+const period = now
+  ? `${fmtDay(now.date, { day: "numeric", month: "long" })} - ${fmtDay(until, { day: "numeric", month: "long", year: "numeric" })}`
+  : "";
+
+const rm = (n: number | null | undefined) => (n == null ? "-" : `RM ${n.toFixed(2)}`);
+const cards = (keys: FuelKey[]) =>
+  FUELS.filter((f) => keys.includes(f.key) && now?.[f.key] != null).map((f) => ({
+    ...f,
+    price: now![f.key]!,
+    change: weeklyChange(weeks, f.key),
+  }));
+const main = cards(["ron95", "ron97", "diesel", "diesel_eastmsia"]);
+const subsidised = cards(["ron95_budi95", "ron95_skps", "diesel_budi", "diesel_skds"]);
+const historyCols = FUELS.filter((f) => ["ron95", "ron97", "diesel", "diesel_eastmsia", "ron95_budi95"].includes(f.key));
+---
+
+<PublicLayout
+  title="Harga Minyak Minggu Ini (RON95, RON97, Diesel) | Hafiz Bahtiar"
+  description="Harga runcit minyak di Malaysia minggu ini - RON95, RON97, diesel Semenanjung dan Malaysia Timur, BUDI95 - dengan perubahan dari minggu lepas. Data rasmi data.gov.my."
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1 class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl">
+        <TechHeading text="Harga Minyak" fontSize={96} fontWeight={400} box="-my-12 h-48" />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">Harga runcit minyak di Malaysia minggu ini, seliter.</p>
+    </div>
+    {
+      now && (
+        <div class="line-y mt-4">
+          <p class="mx-2 font-mono text-sm/6 tracking-widest text-gray-500 uppercase">Berkuat kuasa {period}</p>
+        </div>
+      )
+    }
+
+    {
+      now ? (
+        <>
+          {[
+            { title: "Harga utama", items: main },
+            { title: "Harga bersubsidi", items: subsidised },
+          ]
+            .filter((g) => g.items.length)
+            .map((g) => (
+              <>
+                <div class="line-y mt-10">
+                  <p class="eyebrow mx-2">{g.title}</p>
+                </div>
+                <div class="line-y mt-4">
+                  <dl class="grid grid-cols-2 gap-px bg-gray-950/5 sm:grid-cols-4 dark:bg-white/10">
+                    {g.items.map((f) => (
+                      <div class="bg-white px-4 py-6 sm:px-6 dark:bg-gray-950">
+                        <dt class="sm:min-h-10">
+                          <span class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase">{f.label}</span>
+                          {f.note && <span class="block text-xs/5 text-gray-500 dark:text-gray-400">{f.note}</span>}
+                        </dt>
+                        <dd class="mt-2 text-4xl font-medium tracking-tighter tabular-nums">{rm(f.price)}</dd>
+                        <dd
+                          class:list={[
+                            "mt-2 text-xs/5 font-medium tabular-nums",
+                            f.change == null || f.change === 0
+                              ? "text-gray-500 dark:text-gray-400"
+                              : f.change > 0
+                                ? "text-red-600 dark:text-red-400"
+                                : "text-emerald-600 dark:text-emerald-400",
+                          ]}
+                        >
+                          {f.change == null
+                            ? ""
+                            : f.change === 0
+                              ? "Tiada perubahan"
+                              : `${f.change > 0 ? "▲ naik" : "▼ turun"} ${rm(Math.abs(f.change))}`}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              </>
+            ))}
+
+          <div class="line-y mt-10">
+            <p class="eyebrow mx-2">12 minggu lepas</p>
+          </div>
+          <div class="line-y mt-4 overflow-x-auto">
+            <table class="w-full min-w-xl text-left text-sm/6 tabular-nums">
+              <thead class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+                <tr class="border-b border-gray-950/5 dark:border-white/10">
+                  <th class="px-2 py-2 font-medium">Berkuat kuasa</th>
+                  {historyCols.map((f) => (
+                    <th class="px-2 py-2 text-right font-medium">
+                      {f.label}
+                      {f.key === "diesel_eastmsia" && " (M. Timur)"}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {weeks.map((w, i) => (
+                  <tr
+                    class:list={[
+                      "border-b border-gray-950/5 dark:border-white/10",
+                      i === 0 && "bg-sky-500/5 font-medium dark:bg-sky-400/10",
+                    ]}
+                  >
+                    <td class="px-2 py-1.5 whitespace-nowrap">{fmtDay(w.date, { day: "numeric", month: "short", year: "numeric" })}</td>
+                    {historyCols.map((f) => (
+                      <td class="px-2 py-1.5 text-right">{w[f.key] == null ? "-" : w[f.key]!.toFixed(2)}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div class="line-y mt-4">
+            <p class="mx-2 text-xs/5 text-gray-500 dark:text-gray-400">
+              Harga seliter dalam RM. Sumber:{" "}
+              <a
+                href="https://data.gov.my/data-catalogue/fuelprice"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+              >
+                {data!.source}
+              </a>
+              {data!.stale && " (data simpanan - sumber tak dapat dicapai sekarang)"}.
+            </p>
+          </div>
+        </>
+      ) : (
+        <div class="line-y mt-10">
+          <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+            Harga minyak tak dapat diambil dari data.gov.my sekarang. Cuba lagi sebentar, atau semak terus di{" "}
+            <a
+              href="https://data.gov.my/data-catalogue/fuelprice"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-sky-600 hover:underline dark:text-sky-400"
+            >
+              data.gov.my
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>
