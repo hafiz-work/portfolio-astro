@@ -25,6 +25,13 @@ const pick = <T extends string>(
   allowed: readonly T[],
   fallback: T,
 ): T => (allowed.includes(q.get(key) as T) ? (q.get(key) as T) : fallback);
+const DEFAULT_BG = "masjid-nabawi";
+function pickBg(key: string, orient: "landscape" | "portrait"): string {
+  const v = q.get(key);
+  if (v === "tiada") return "tiada";
+  const has = (id: string | null) => PAPARAN_BACKGROUNDS.some((b) => b[orient] && b.id === id);
+  return has(v) ? v! : has(DEFAULT_BG) ? DEFAULT_BG : "tiada";
+}
 const settings = {
   jam: pick("jam", ["24", "12"] as const, "24"),
   saat: pick("saat", ["ya", "tidak"] as const, "ya"),
@@ -34,19 +41,16 @@ const settings = {
   peringatan: pick("peringatan", ["ya", "tidak"] as const, "ya"),
   iqamah: Math.min(30, Math.max(0, Math.trunc(Number(q.get("iqamah")) || 0))),
   masjid: (q.get("masjid") ?? "").trim().slice(0, 60),
-  // Background photo per orientation (scripts/waktu-solat/backgrounds.py); "" = none.
-  latar:
-    PAPARAN_BACKGROUNDS.find((b) => b.landscape && b.id === q.get("latar"))
-      ?.id ?? "",
-  latarm:
-    PAPARAN_BACKGROUNDS.find((b) => b.portrait && b.id === q.get("latarm"))
-      ?.id ?? "",
+  // Background photo per orientation (scripts/waktu-solat/backgrounds.py).
+  // Missing/unknown = DEFAULT_BG; "tiada" = no photo.
+  latar: pickBg("latar", "landscape"),
+  latarm: pickBg("latarm", "portrait"),
 };
 const bgUrl = (id: string, orient: "landscape" | "portrait") =>
   `url(/images/waktu-solat/bg/${id}-${orient}.webp)`;
 const bgStyle = [
-  settings.latar && `--pm-img-l: ${bgUrl(settings.latar, "landscape")}`,
-  settings.latarm && `--pm-img-p: ${bgUrl(settings.latarm, "portrait")}`,
+  settings.latar !== "tiada" && `--pm-img-l: ${bgUrl(settings.latar, "landscape")}`,
+  settings.latarm !== "tiada" && `--pm-img-p: ${bgUrl(settings.latarm, "portrait")}`,
 ]
   .filter(Boolean)
   .join("; ");
@@ -105,7 +109,7 @@ const rows = times
 const states = [...new Set(SOLAT_ZONES.map((z) => z.negeri))];
 
 // Tetapan form: every select comes from this list so all fields share one style.
-const none = [["", "Tiada"]];
+const none = [["tiada", "Tiada"]];
 const selects: {
   name: keyof typeof settings;
   label: string;
@@ -196,8 +200,8 @@ const controlClass =
   <main
     id="display"
     data-tema={settings.tema}
-    data-latar-l={settings.latar ? "" : undefined}
-    data-latar-p={settings.latarm ? "" : undefined}
+    data-latar-l={settings.latar !== "tiada" ? "" : undefined}
+    data-latar-p={settings.latarm !== "tiada" ? "" : undefined}
     style={bgStyle || undefined}
     data-jam={settings.jam}
     data-saat={settings.saat}
@@ -526,8 +530,10 @@ const controlClass =
     --pm-ring: rgb(255 255 255 / 0.1);
     --pm-accent: var(--color-sky-400);
     --pm-next: rgb(14 165 233 / 0.2);
-    /* Over a background photo: keeps the text readable. */
-    --pm-overlay: rgb(3 7 18 / 0.72);
+    /* Over a background photo: darker at the top and bottom edges (small text
+       lives there), lighter in the middle so the photo still reads. */
+    --pm-overlay-edge: rgb(3 7 18 / 0.78);
+    --pm-overlay-mid: rgb(3 7 18 / 0.5);
     color-scheme: dark;
   }
   #display[data-tema="terang"] {
@@ -539,13 +545,19 @@ const controlClass =
     --pm-ring: rgb(3 7 18 / 0.1);
     --pm-accent: var(--color-sky-600);
     --pm-next: rgb(14 165 233 / 0.12);
-    --pm-overlay: rgb(255 255 255 / 0.8);
+    --pm-overlay-edge: rgb(255 255 255 / 0.85);
+    --pm-overlay-mid: rgb(255 255 255 / 0.6);
     color-scheme: light;
   }
-  /* Background photo per orientation (Tetapan -> Latar). */
+  /* Background photo per orientation (Tetapan -> Latar). Faint text steps up to
+     muted over a photo so it stays readable. */
+  #display[data-latar-l],
+  #display[data-latar-p] {
+    --pm-faint: var(--pm-muted);
+  }
   #display[data-latar-l] {
     background-image:
-      linear-gradient(var(--pm-overlay), var(--pm-overlay)), var(--pm-img-l);
+      linear-gradient(var(--pm-overlay-edge), var(--pm-overlay-mid) 45%, var(--pm-overlay-edge)), var(--pm-img-l);
     background-size: cover;
     background-position: center;
   }
@@ -559,7 +571,7 @@ const controlClass =
     }
     #display[data-latar-p] {
       background-image:
-        linear-gradient(var(--pm-overlay), var(--pm-overlay)), var(--pm-img-p);
+        linear-gradient(var(--pm-overlay-edge), var(--pm-overlay-mid) 45%, var(--pm-overlay-edge)), var(--pm-img-p);
       background-size: cover;
       background-position: center;
     }
