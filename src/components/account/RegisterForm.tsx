@@ -196,7 +196,7 @@ export function RegisterForm({ siteKey, mode }: { siteKey: string; mode: "regist
             {busy ? "Sending..." : resend ? "Send link" : "Create account"}
           </Button>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Already have an account? <a href="/login" className="font-medium text-sky-600 hover:underline dark:text-sky-400">Sign in</a>
+            Already have an account? <a href="/login" className="underline underline-offset-4">Sign in</a>
           </p>
         </div>
       </form>

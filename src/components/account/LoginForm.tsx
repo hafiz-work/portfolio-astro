@@ -98,7 +98,7 @@ export function LoginForm({ siteKey }: { siteKey: string }) {
               <AlertDescription>
                 {status.text}
                 {status.resend && (
-                  <a href="/register?resend=1" className="ml-1 font-medium underline">Send the link again</a>
+                  <a href="/register?resend=1" className="ml-1 font-medium underline underline-offset-4">Send the link again</a>
                 )}
               </AlertDescription>
             </Alert>
@@ -124,7 +124,7 @@ export function LoginForm({ siteKey }: { siteKey: string }) {
         <div className="mt-6 flex flex-col gap-3">
           <Button type="submit" className="w-full" disabled={busy}>{busy ? "Signing in..." : "Sign in"}</Button>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            No account yet? <a href="/register" className="font-medium text-sky-600 hover:underline dark:text-sky-400">Create one</a>
+            No account yet? <a href="/register" className="underline underline-offset-4">Create one</a>
           </p>
         </div>
       </form>

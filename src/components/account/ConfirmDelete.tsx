@@ -10,7 +10,7 @@ export function ConfirmDelete({ what, onConfirm }: { what: string; onConfirm: ()
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 dark:text-red-400">Delete</Button>
+        <Button variant="ghost" size="sm">Delete</Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -19,7 +19,7 @@ export function ConfirmDelete({ what, onConfirm }: { what: string; onConfirm: ()
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Delete</AlertDialogAction>
+          <AlertDialogAction variant="destructive" onClick={onConfirm}>Delete</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

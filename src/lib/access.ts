@@ -85,6 +85,10 @@ class AccessService extends ApiClient {
     return (await this.get<PermissionInfo[]>('/owner/roles/permissions')) ?? [];
   }
 
+  getRole(code: string) {
+    return this.get<RoleInfo>(`/owner/roles/${encodeURIComponent(code)}`);
+  }
+
   createRole(data: { code: string; name: string; description?: string }) {
     return this.post<RoleInfo>('/owner/roles', data);
   }

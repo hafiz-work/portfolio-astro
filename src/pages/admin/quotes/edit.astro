@@ -38,6 +38,7 @@ import AlertToast from "../../../components/ui/AlertToast.astro";
 </PrivateLayout>
 
 <script>
+  import { normalizeAuthor, normalizeQuote } from "../../../lib/quote-text";
   import { quotesService, categoryLabel } from "../../../lib/quotes";
   import { extractApiError } from "../../../lib/projects-cms";
   import { setupFormGuard } from "../../../lib/form-guard";
@@ -155,8 +156,8 @@ import AlertToast from "../../../components/ui/AlertToast.astro";
       const formData = new FormData(form);
       const source = String(formData.get("source") ?? "").trim();
       const data = {
-        text: String(formData.get("text") ?? "").trim(),
-        author: String(formData.get("author") ?? "").trim(),
+        text: normalizeQuote(String(formData.get("text") ?? "")),
+        author: normalizeAuthor(String(formData.get("author") ?? "")),
         source: source === "" ? null : source,
         tagIds: parseJsonArray(formData.get("tagIds") ?? "")
           .map(Number)

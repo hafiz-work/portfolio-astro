@@ -8,6 +8,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/shadcn/ui/aler
 import { Badge } from "@/components/shadcn/ui/badge";
 import { authService, type Me } from "../../lib/auth";
 import { accountService, errorText, type ModerationEntry } from "../../lib/account";
+import type { ColumnDef } from "@tanstack/react-table";
+import { AccountDataTable, asDate } from "./AccountDataTable";
 
 // /account: profile, password, and what moderation did to my content (and why).
 const FIELDS = [
@@ -19,7 +21,20 @@ const FIELDS = [
   ["twitterUrl", "X / Twitter", "https://x.com/…"],
 ] as const;
 const isLink = (k: string) => k.endsWith("Url") || k === "website";
-const asDate = (iso: string) => new Date(iso + (/[Zz]|[+-]\d\d:\d\d$/.test(iso) ? "" : "Z")).toLocaleDateString();
+const actionVariant = { reject: "destructive", restore: "secondary", delete: "outline" } as const;
+const moderationColumns: ColumnDef<ModerationEntry>[] = [
+  { accessorKey: "createdAt", header: "Date", cell: ({ getValue }) => asDate(getValue<string>()) },
+  { id: "type", accessorFn: (h) => (h.contentType === "quote" ? "Quote" : "Blog post"), header: "Type", meta: { className: "hidden sm:table-cell" } },
+  { accessorKey: "contentTitle", header: "Item", meta: { className: "min-w-40 whitespace-normal font-medium" } },
+  {
+    accessorKey: "action", header: "Action",
+    cell: ({ getValue }) => {
+      const a = getValue<ModerationEntry["action"]>();
+      return <Badge variant={actionVariant[a] ?? "outline"} className="capitalize">{a}</Badge>;
+    },
+  },
+  { accessorKey: "reason", header: "Reason", enableSorting: false, meta: { className: "min-w-48 whitespace-normal" } },
+];
 
 type Msg = { ok: boolean; text: string } | null;
 const Notice = ({ msg }: { msg: Msg }) =>
@@ -87,20 +102,19 @@ export function AccountHome() {
       </div>
 
       {moderation.history.length > 0 && (
-        <Alert variant={moderation.strikes > 0 ? "destructive" : "default"}>
-          <AlertTitle>Moderation notices · {moderation.strikes} strike{moderation.strikes === 1 ? "" : "s"} in 90 days</AlertTitle>
-          <AlertDescription>
-            <ul className="mt-2 grid gap-1">
-              {moderation.history.map((h) => (
-                <li key={h.id}>
-                  <Badge variant="outline" className="mr-2 uppercase">{h.action}</Badge>
-                  <strong>{h.contentTitle}</strong> - {h.reason} · {asDate(h.createdAt)}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-2">Repeated strikes can lead to a ban.</p>
-          </AlertDescription>
-        </Alert>
+        <Card>
+          <CardHeader>
+            <CardTitle>Moderation history</CardTitle>
+            <CardDescription>What moderators did to your posts and quotes, and why.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <Alert variant={moderation.strikes > 0 ? "destructive" : "default"}>
+              <AlertTitle>{moderation.strikes} strike{moderation.strikes === 1 ? "" : "s"} in 90 days</AlertTitle>
+              <AlertDescription>Repeated strikes can lead to a ban.</AlertDescription>
+            </Alert>
+            <AccountDataTable columns={moderationColumns} data={moderation.history} filterPlaceholder="Filter notices…" pageSize={5} />
+          </CardContent>
+        </Card>
       )}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">

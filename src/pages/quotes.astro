@@ -132,13 +132,32 @@ const chipClass =
                           ))}
                         </div>
                       )}
-                      <a
-                        href={`#q-${quote.id}`}
-                        aria-label={`Link to quote by ${quote.author}`}
-                        class="mt-4 inline-block font-mono text-xs/5 text-gray-400 hover:text-sky-500 dark:text-gray-500 dark:hover:text-sky-400"
-                      >
-                        link
-                      </a>
+                      <!-- Copy / Share read the quote from this figure (script below). -->
+                      <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs/5 text-gray-400 dark:text-gray-500">
+                        <button
+                          type="button"
+                          data-quote-copy
+                          aria-label={`Copy quote by ${quote.author}`}
+                          class="hover:text-sky-500 dark:hover:text-sky-400"
+                        >
+                          copy
+                        </button>
+                        <button
+                          type="button"
+                          data-quote-share
+                          aria-label={`Share quote by ${quote.author}`}
+                          class="hover:text-sky-500 dark:hover:text-sky-400"
+                        >
+                          share
+                        </button>
+                        <a
+                          href={`#q-${quote.id}`}
+                          aria-label={`Link to quote by ${quote.author}`}
+                          class="hover:text-sky-500 dark:hover:text-sky-400"
+                        >
+                          link
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </figure>
@@ -196,4 +215,56 @@ const chipClass =
 
   initQuoteFilter();
   document.addEventListener("astro:page-load", initQuoteFilter);
+
+  // Copy / Share for each quote. One delegated listener for the whole page; bound once
+  // (the document survives ClientRouter swaps).
+  const quoteOf = (btn: HTMLElement) => {
+    const fig = btn.closest("figure")!;
+    const text = fig.querySelector("blockquote")?.textContent?.trim() ?? "";
+    const author = fig.querySelector("figcaption")?.textContent?.trim() ?? "";
+    const source = fig.querySelector("cite")?.textContent?.trim();
+    const url = `${location.origin}/quotes#${fig.id}`;
+    const line = `“${text}” - ${author}${source ? `, ${source}` : ""}`;
+    return { text: line, url, title: `Quote by ${author}` };
+  };
+  const flash = (btn: HTMLElement, label: string) => {
+    const before = btn.dataset.label ?? (btn.dataset.label = btn.textContent!.trim());
+    btn.textContent = label;
+    setTimeout(() => (btn.textContent = before), 1800);
+  };
+  // Clipboard API, else the old select-and-copy (blocked clipboard, non-secure context).
+  const copyText = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      const ta = Object.assign(document.createElement("textarea"), { value: text });
+      ta.style.cssText = "position:fixed;opacity:0";
+      document.body.append(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      ta.remove();
+      return ok;
+    }
+  };
+  if (!(window as unknown as { __quoteActions?: boolean }).__quoteActions) {
+    (window as unknown as { __quoteActions?: boolean }).__quoteActions = true;
+    document.addEventListener("click", async (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>("[data-quote-copy], [data-quote-share]");
+      if (!btn) return;
+      const q = quoteOf(btn);
+      if (btn.hasAttribute("data-quote-share") && navigator.share) {
+        try {
+          await navigator.share({ title: q.title, text: q.text, url: q.url });
+        } catch {
+          // dismissed - nothing to do
+        }
+        return;
+      }
+      // Copy, or Share where the Web Share API is missing (desktop): put it on the clipboard.
+      const share = btn.hasAttribute("data-quote-share");
+      const ok = await copyText(share ? q.url : `${q.text}\n${q.url}`);
+      flash(btn, ok ? (share ? "link copied" : "copied") : "copy failed");
+    });
+  }
 </script>

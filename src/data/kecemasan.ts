@@ -7,7 +7,7 @@
 // Checked 2026-10-11 and left out (no official confirmation yet): 112 from mobiles,
 // 991 / 994 as separate lines (999.gov.my lists only 999), Talian HEAL 15555
 // (KKM site unreadable; news only), MCMC phone 1-800-188-030 (suspended in 2021,
-// no official word since), highway operators other than those below.
+// no official word since). Highway hotlines: LLM's directory (all 33 listed 2026-10-12).
 
 export interface Contact {
   name: string;
@@ -32,6 +32,8 @@ export interface Group {
 }
 
 const V = "2026-10-11";
+/** Highway hotlines from LLM's official directory (llm.gov.my/awam/highway), checked: */
+const V2 = "2026-10-12";
 
 export const KECEMASAN: Group[] = [
   {
@@ -52,28 +54,154 @@ export const KECEMASAN: Group[] = [
     id: "lebuh-raya",
     title: "Lebuh raya",
     intro:
-      "Kereta rosak atau kemalangan di lebuh raya? Hubungi operator lebuh raya tersebut. Jika tidak pasti siapa operatornya, hubungi LLM. Jika ada kecederaan atau bahaya, hubungi 999.",
+      "Kereta rosak atau kemalangan di lebuh raya? Hubungi operator lebuh raya tersebut - cari nama lebuh raya di kotak carian. Jika tidak pasti, hubungi LLM. Jika ada kecederaan atau bahaya, hubungi 999. Nombor daripada direktori rasmi Lembaga Lebuhraya Malaysia.",
     contacts: [
       {
-        name: "PLUSLine (lebuh raya PLUS)",
+        name: "PLUS, LINKEDUA, ELITE, BKE, SPDH, JPP",
         number: "1-800-88-0000",
-        note: "Untuk kecemasan dan bantuan di lebuh raya PLUS. Aplikasi PLUS juga ada butang SOS.",
-        source: "https://www.plus.com.my",
-        verified: V,
+        note: "Lebuhraya Utara Selatan (PLUS); Lebuhraya Laluan Kedua Malaysia-Singapura (LINKEDUA); Lebuhraya Utara Selatan Hubungan Tengah (ELITE); Lebuhraya Butterworth-Kulim (BKE); Lebuhraya Seremban-Port Dickson (SPDH); Jambatan Pulau Pinang (JPP). Konsesi: Projek Lebuhraya Usahasama Berhad. Aplikasi PLUS juga ada butang SOS (plus.com.my).",
+        source: "https://www.llm.gov.my/awam/highway",
+        verified: V2,
       },
       {
-        name: "Prolintas - AKLEH, GCE, LKSA, Kajang SILK, SUKE, DASH",
-        number: "1-800-22-8888",
-        note: "Talian kecemasan (Emergency Hotline) Prolintas.",
-        source: "https://www.prolintas.com.my",
-        verified: V,
+        name: "JPP2",
+        number: "1-300-30-2828",
+        note: "Jambatan Sultan Abdul Halim Mu'adzam Shah (JPP2). Konsesi: Jambatan Kedua Sdn Bhd.",
+        source: "https://www.llm.gov.my/awam/highway/16",
+        verified: V2,
       },
       {
-        name: "LPT2 (Lebuhraya Pantai Timur Fasa 2)",
-        number: "1-800-88-0220",
-        note: "Talian bebas tol LPT2.",
-        source: "https://www.lpt2.com.my",
-        verified: V,
+        name: "NPE",
+        number: "1-300-88-1010",
+        note: "Lebuhraya Baru Pantai (NPE). Konsesi: New Pantai Expressway Sdn. Bhd..",
+        source: "https://www.llm.gov.my/awam/highway/8",
+        verified: V2,
+      },
+      {
+        name: "AKLEH, LKSA, SILK, SUKE, DASH, GCE",
+        number: "1800-22-8888",
+        note: "Lebuhraya Bertingkat Ampang-Kuala Lumpur (AKLEH); Lebuhraya Kemuning-Shah Alam (LKSA); Lebuhraya Skim Penyuraian Trafik Lingkaran Kajang (SILK); Lebuhraya Sungai Besi-Ulu Klang (SUKE); Lebuhraya Bertingkat Damansara-Shah Alam (DASH); Lebuhraya Koridor Guthrie (GCE). Konsesi: Projek Lintasan Kota Sdn Bhd, Projek Lintasan Shah Alam Sdn Bhd, Sistem Lingkaran Lebuhraya Kajang Sdn. Bhd., Projek Lintasan Sungai Besi-Ulu Klang Sdn. Bhd., Projek Lintasan Damansara-Shah Alam Sdn Bhd (PROLINTAS), PROLINTAS Expressway Sdn Bhd.",
+        source: "https://www.llm.gov.my/awam/highway/8",
+        verified: V2,
+      },
+      {
+        name: "Grand Saga",
+        number: "03-90750505",
+        note: "Lebuhraya Cheras Kajang (Grand saga). Konsesi: Grand Saga Sdn Bhd.",
+        source: "https://www.llm.gov.my/awam/highway",
+        verified: V2,
+      },
+      {
+        name: "LDP",
+        number: "03-74947333",
+        note: "Lebuhraya Damansara Puchong (LDP). Konsesi: Lingkaran Trans Kota Sdn Bhd.",
+        source: "https://www.llm.gov.my/awam/highway/8",
+        verified: V2,
+      },
+      {
+        name: "DUKE, SPE",
+        number: "03-6251 3100",
+        note: "Lebuhraya Duta-Ulu Klang (DUKE); Lebuhraya Setiawangsa-Pantai (SPE). Konsesi: Konsortium Lebuhraya Utara-Timur (KL) Sdn.Bhd, Lebuhraya Duke Fasa 3 Sdn. Bhd.",
+        source: "https://www.llm.gov.my/awam/highway/24",
+        verified: V2,
+      },
+      {
+        name: "LEKAS",
+        number: "1-800-888-021",
+        note: "Lebuhraya Kajang-Seremban (LEKAS). Konsesi: Lebuhraya Kajang – Seremban Sdn Bhd.",
+        source: "https://www.llm.gov.my/awam/highway/16",
+        verified: V2,
+      },
+      {
+        name: "LATAR",
+        number: "03-6145 1515",
+        note: "Lebuhraya Kuala Lumpur-Kuala Selangor (LATAR). Konsesi: KL-Kuala Selangor Expressway Bhd.",
+        source: "https://www.llm.gov.my/awam/highway/16",
+        verified: V2,
+      },
+      {
+        name: "MEX",
+        number: "03-8315 9111",
+        note: "Lebuhraya Kuala Lumpur-Putrajaya (MEX). Konsesi: Maju Expressway Sdn Bhd.",
+        source: "https://www.llm.gov.my/awam/highway/16",
+        verified: V2,
+      },
+      {
+        name: "KLK, LPT1",
+        number: "1-700-818-700",
+        note: "Lebuhraya Kuala Lumpur-Karak (KLK); Lebuhraya Pantai Timur Fasa 1 (LPT1). Konsesi: ANIH Berhad.",
+        source: "https://www.llm.gov.my/awam/highway",
+        verified: V2,
+      },
+      {
+        name: "SKVE",
+        number: "1-300-88-0026",
+        note: "Lebuhraya Lembah Klang Selatan (SKVE). Konsesi: SKVE Holdings Sdn Bhd.",
+        source: "https://www.llm.gov.my/awam/highway/16",
+        verified: V2,
+      },
+      {
+        name: "LLB",
+        number: "04-3299999",
+        note: "Lebuhraya Lingkaran Luar Butterworth (LLB). Konsesi: Lingkaran Luar Butterworth (Penang) Sdn Bhd.",
+        source: "https://www.llm.gov.my/awam/highway/8",
+        verified: V2,
+      },
+      {
+        name: "LPT2",
+        number: "1800 88 0220",
+        note: "Lebuhraya Pantai Timur Fasa 2 (LPT 2). Konsesi: Lebuhraya Pantai Timur 2 Sdn Bhd.",
+        source: "https://www.llm.gov.my/awam/highway",
+        verified: V2,
+      },
+      {
+        name: "WCE",
+        number: "1700-81-6600",
+        note: "Lebuhraya Pesisiran Pantai Barat (Taiping-Banting). Konsesi: West Coast Expressway Sdn Bhd.",
+        source: "https://www.llm.gov.my/awam/highway/24",
+        verified: V2,
+      },
+      {
+        name: "NNKSB",
+        number: "03-33450333",
+        note: "Lebuhraya Pintas Selat Klang Utara Baru (NNKSB). Konsesi: Grand Sepadu (NK) Sdn. Bhd..",
+        source: "https://www.llm.gov.my/awam/highway/24",
+        verified: V2,
+      },
+      {
+        name: "SDE",
+        number: "07-8612222",
+        note: "Lebuhraya Senai-Desaru (SDE). Konsesi: Senai Desaru Expressway Berhad.",
+        source: "https://www.llm.gov.my/awam/highway/16",
+        verified: V2,
+      },
+      {
+        name: "KESAS",
+        number: "03-56337188",
+        note: "Lebuhraya Shah Alam (KESAS). Konsesi: KESAS Sdn Bhd.",
+        source: "https://www.llm.gov.my/awam/highway",
+        verified: V2,
+      },
+      {
+        name: "SPRINT",
+        number: "03-7494 7376",
+        note: "Lebuhraya Skim Penyuraian Trafik Kuala Lumpur Barat (SPRINT). Konsesi: Sistem Penyuraian Trafik KL Barat Sdn Bhd.",
+        source: "https://www.llm.gov.my/awam/highway/16",
+        verified: V2,
+      },
+      {
+        name: "BESRAYA",
+        number: "1-800-88-0999",
+        note: "Lebuhraya Sungai Besi (BESRAYA). Konsesi: Besraya (M) Sdn Bhd.",
+        source: "https://www.llm.gov.my/awam/highway/8",
+        verified: V2,
+      },
+      {
+        name: "SMART",
+        number: "1-300-88-7188",
+        note: "Sistem Pengurusan Air Banjir dan Terowong (SMART). Konsesi: Syarikat Mengurus Air Banjir & Terowong Sdn Bhd.",
+        source: "https://www.llm.gov.my/awam/highway/24",
+        verified: V2,
       },
       {
         name: "Lembaga Lebuhraya Malaysia (LLM) - Info Trafik",

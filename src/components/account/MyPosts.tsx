@@ -7,11 +7,12 @@ import { Textarea } from "@/components/shadcn/ui/textarea";
 import { Alert, AlertDescription } from "@/components/shadcn/ui/alert";
 import { Badge } from "@/components/shadcn/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/shadcn/ui/radio-group";
-import { Separator } from "@/components/shadcn/ui/separator";
 import { accountService, errorText, type MyPostInput } from "../../lib/account";
 import { renderUserMarkdown } from "../../lib/sanitize";
 import type { BlogPost, BlogPostSummary } from "../../types/blog";
+import type { ColumnDef } from "@tanstack/react-table";
 import { ConfirmDelete } from "./ConfirmDelete";
+import { AccountDataTable, asDate } from "./AccountDataTable";
 
 // /account/blog: own posts. Published posts go live at once; a moderator can reject
 // them (then they're read-only and show the reason).
@@ -65,6 +66,38 @@ export function MyPosts() {
     try { await accountService.deletePost(post.id); await load(); }
     catch (err) { setMsg(errorText(err)); }
   };
+
+  const columns: ColumnDef<BlogPostSummary>[] = [
+    {
+      accessorKey: "title", header: "Title", meta: { className: "min-w-48 whitespace-normal" },
+      cell: ({ row: { original: p } }) => (
+        <>
+          <p className="font-medium">
+            {p.status === "published" ? <a href={`/blog/${p.slug}`} className="hover:underline">{p.title}</a> : p.title}
+          </p>
+          {p.status === "rejected" && (
+            <p className="text-sm text-red-600 dark:text-red-400">Removed by a moderator: {p.moderationReason}</p>
+          )}
+        </>
+      ),
+    },
+    {
+      accessorKey: "status", header: "Status",
+      cell: ({ row: { original: p } }) => (
+        <Badge variant={statusVariant[p.status as keyof typeof statusVariant] ?? "secondary"} className="capitalize">{p.status}</Badge>
+      ),
+    },
+    { id: "date", accessorFn: (p) => p.publishedDate ?? p.createdAt, header: "Date", meta: { className: "hidden sm:table-cell" }, cell: ({ getValue }) => asDate(getValue<string>()) },
+    {
+      id: "actions", header: () => <span className="sr-only">Actions</span>, enableSorting: false,
+      cell: ({ row: { original: p } }) => (
+        <div className="flex justify-end gap-1">
+          {p.status !== "rejected" && <Button variant="ghost" size="sm" onClick={() => void open(p)}>Edit</Button>}
+          <ConfirmDelete what={`"${p.title}"`} onConfirm={() => void remove(p)} />
+        </div>
+      ),
+    },
+  ];
 
   if (loading) return <p className="text-sm text-gray-500">Loading…</p>;
 
@@ -127,25 +160,7 @@ export function MyPosts() {
       </CardHeader>
       <CardContent>
         {msg && <Alert variant="destructive" className="mb-4"><AlertDescription>{msg}</AlertDescription></Alert>}
-        {posts.length === 0 && <p className="text-sm text-gray-500">No posts yet.</p>}
-        {posts.map((p, i) => (
-          <React.Fragment key={p.id}>
-            {i > 0 && <Separator />}
-            <div className="flex flex-wrap items-center gap-3 py-3">
-              <div className="min-w-48 flex-1">
-                <p className="font-medium">
-                  {p.status === "published" ? <a href={`/blog/${p.slug}`} className="hover:underline">{p.title}</a> : p.title}
-                </p>
-                {p.status === "rejected" && (
-                  <p className="text-sm text-red-600 dark:text-red-400">Removed by a moderator: {p.moderationReason}</p>
-                )}
-              </div>
-              <Badge variant={statusVariant[p.status as keyof typeof statusVariant] ?? "secondary"}>{p.status}</Badge>
-              {p.status !== "rejected" && <Button variant="ghost" size="sm" onClick={() => void open(p)}>Edit</Button>}
-              <ConfirmDelete what={`"${p.title}"`} onConfirm={() => void remove(p)} />
-            </div>
-          </React.Fragment>
-        ))}
+        <AccountDataTable columns={columns} data={posts} filterPlaceholder="Filter posts…" empty="No posts yet." />
       </CardContent>
     </Card>
   );

@@ -86,7 +86,7 @@ anonymous → 401; custom role `editor` (blog read+update) → GET/PUT pass, DEL
 | `src/components/admin/AdminSidebar.astro` | every item has `perm`; hidden when missing, empty groups hidden; footer shows real name + role; new **Users** + **Roles** items |
 | `src/lib/access.ts` | users + roles admin client |
 | `/admin/users` (`UsersManager.tsx`) | list/search, add (role picker only with `roles.assign`), role select, active toggle, delete; owner row locked, self not editable |
-| `/admin/roles` (`RolesManager.tsx`) | add role, permission grid (module × action) per role, save, delete unused custom roles; owner locked, `roles` module disabled |
+| `/admin/roles` (`RolesTable.tsx`), `/admin/roles/new` + `/admin/roles/edit?code=` (`RoleForm.tsx`), `/admin/roles/view?code=` (`RoleDetail.tsx`) | standard list / new / edit / detail: name, description, permission grid (module × action); delete unused custom roles; owner locked (view only), `roles` module disabled. Backend `GET /owner/roles/:code` for one role |
 | `src/lib/settings.ts` | password change → `PUT /me/password` |
 
 Not built: per-page guards (the sidebar hides, the backend 403s - the page shows its existing error state).

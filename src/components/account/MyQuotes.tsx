@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
+import { normalizeAuthor, normalizeQuote } from "@/lib/quote-text";
 import { Button } from "@/components/shadcn/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/shadcn/ui/card";
 import { Input } from "@/components/shadcn/ui/input";
 import { Label } from "@/components/shadcn/ui/label";
 import { Textarea } from "@/components/shadcn/ui/textarea";
 import { Alert, AlertDescription } from "@/components/shadcn/ui/alert";
-import { Separator } from "@/components/shadcn/ui/separator";
+import { Badge } from "@/components/shadcn/ui/badge";
 import { accountService, errorText } from "../../lib/account";
 import type { Quote } from "../../types/quotes";
+import type { ColumnDef } from "@tanstack/react-table";
 import { ConfirmDelete } from "./ConfirmDelete";
+import { AccountDataTable, asDate } from "./AccountDataTable";
 
 // /account/quotes: own quotes. Live on /quotes at once; a moderator can reject them.
 const empty = { text: "", author: "", source: "" };
@@ -27,7 +30,7 @@ export function MyQuotes() {
 
   const save = async (e: React.SubmitEvent) => {
     e.preventDefault();
-    const data = { text: draft.text.trim(), author: draft.author.trim(), source: draft.source.trim() || null };
+    const data = { text: normalizeQuote(draft.text), author: normalizeAuthor(draft.author), source: draft.source.trim() || null };
     try {
       if (editId) await accountService.updateQuote(editId, data);
       else await accountService.createQuote(data);
@@ -44,6 +47,41 @@ export function MyQuotes() {
     try { await accountService.deleteQuote(q.id); await load(); }
     catch (err) { setMsg(errorText(err)); }
   };
+
+  const columns: ColumnDef<Quote>[] = [
+    {
+      accessorKey: "text", header: "Quote", meta: { className: "min-w-56 whitespace-normal" },
+      cell: ({ row: { original: q } }) => (
+        <>
+          <p className="line-clamp-3 font-medium whitespace-pre-line" title={q.text}>“{q.text}”</p>
+          {q.source && <p className="text-sm text-gray-500">{q.source}</p>}
+          {q.status === "rejected" && (
+            <p className="text-sm text-red-600 dark:text-red-400">Removed by a moderator: {q.moderationReason}</p>
+          )}
+        </>
+      ),
+    },
+    { accessorKey: "author", header: "Author", meta: { className: "whitespace-normal" } },
+    {
+      id: "status", accessorFn: (q) => q.status ?? "published", header: "Status",
+      cell: ({ getValue }) => {
+        const st = getValue<string>();
+        return <Badge variant={st === "rejected" ? "destructive" : "default"} className="capitalize">{st}</Badge>;
+      },
+    },
+    { accessorKey: "createdAt", header: "Date", meta: { className: "hidden sm:table-cell" }, cell: ({ getValue }) => asDate(getValue<string>()) },
+    {
+      id: "actions", header: () => <span className="sr-only">Actions</span>, enableSorting: false,
+      cell: ({ row: { original: q } }) => (
+        <div className="flex justify-end gap-1">
+          {q.status !== "rejected" && (
+            <Button variant="ghost" size="sm" onClick={() => { setEditId(q.id); setDraft({ text: q.text, author: q.author, source: q.source ?? "" }); }}>Edit</Button>
+          )}
+          <ConfirmDelete what="this quote" onConfirm={() => void remove(q)} />
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="grid gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
@@ -81,25 +119,7 @@ export function MyQuotes() {
           <CardDescription>{quotes.length} shared</CardDescription>
         </CardHeader>
         <CardContent>
-          {quotes.length === 0 && <p className="text-sm text-gray-500">No quotes yet.</p>}
-          {quotes.map((q, i) => (
-            <React.Fragment key={q.id}>
-              {i > 0 && <Separator />}
-              <div className="flex flex-wrap items-start gap-3 py-3">
-                <div className="min-w-48 flex-1">
-                  <p className="font-medium whitespace-pre-line">“{q.text}”</p>
-                  <p className="text-sm text-gray-500">- {q.author}{q.source ? `, ${q.source}` : ""}</p>
-                  {q.status === "rejected" && (
-                    <p className="text-sm text-red-600 dark:text-red-400">Removed by a moderator: {q.moderationReason}</p>
-                  )}
-                </div>
-                {q.status !== "rejected" && (
-                  <Button variant="ghost" size="sm" onClick={() => { setEditId(q.id); setDraft({ text: q.text, author: q.author, source: q.source ?? "" }); }}>Edit</Button>
-                )}
-                <ConfirmDelete what="this quote" onConfirm={() => void remove(q)} />
-              </div>
-            </React.Fragment>
-          ))}
+          <AccountDataTable columns={columns} data={quotes} filterPlaceholder="Filter quotes…" empty="No quotes yet." />
         </CardContent>
       </Card>
     </div>

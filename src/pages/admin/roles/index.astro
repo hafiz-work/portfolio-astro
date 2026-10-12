@@ -1,7 +1,8 @@
 ---
+import { Plus } from "lucide-react";
 import PrivateLayout from "../../../layouts/PrivateLayout.astro";
 import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
-import { RolesManager } from "../../../components/admin/access/RolesManager";
+import { RolesTable } from "../../../components/admin/access/RolesTable";
 ---
 
 <PrivateLayout title="Roles">
@@ -9,7 +10,16 @@ import { RolesManager } from "../../../components/admin/access/RolesManager";
     <AdminPageHeader
       title="Roles"
       description="What each role may do, per module and action. Owner only."
-    />
-    <RolesManager client:load />
+    >
+      <a
+        slot="actions"
+        href="/admin/roles/new"
+        class="admin-btn admin-btn-primary"
+      >
+        <Plus className="w-4 h-4" />
+        New Role
+      </a>
+    </AdminPageHeader>
+    <RolesTable client:load />
   </div>
 </PrivateLayout>

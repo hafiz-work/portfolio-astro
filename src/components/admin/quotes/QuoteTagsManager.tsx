@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Search, Trash2 } from "lucide-react";
 import { quotesService, categoryLabel, sortCategories } from "../../../lib/quotes";
+import { normalizeTagName } from "../../../lib/quote-text";
 import { extractApiError } from "../../../lib/projects-cms";
 import { showToast, confirmDialog } from "../../../lib/admin-ui";
 import type { QuoteTag } from "../../../types/quotes";
@@ -37,7 +38,7 @@ export function QuoteTagsManager() {
     items.some((t) => t.id !== exceptId && t.name.trim().toLowerCase() === name.trim().toLowerCase());
 
   const add = async () => {
-    const name = draft.name.trim();
+    const name = normalizeTagName(draft.name);
     const category = normalizeCategory(draft.category);
     if (!name) { showToast({ type: "warning", title: "Name required" }); return; }
     if (isDuplicate(name)) { showToast({ type: "warning", title: `"${name}" already exists` }); return; }
@@ -57,7 +58,7 @@ export function QuoteTagsManager() {
 
   // Autosave on blur; no-op when unchanged.
   const commit = async (t: QuoteTag) => {
-    const next = { ...t, name: t.name.trim(), category: normalizeCategory(t.category) };
+    const next = { ...t, name: normalizeTagName(t.name), category: normalizeCategory(t.category) };
     if (saved.current.get(t.id) === snapshot(next)) { setField(t.id, next); return; }
     if (!next.name) { showToast({ type: "warning", title: "Name can't be empty" }); return; }
     if (isDuplicate(next.name, t.id)) { showToast({ type: "warning", title: `"${next.name}" already exists` }); return; }
