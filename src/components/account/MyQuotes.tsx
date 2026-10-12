@@ -84,7 +84,7 @@ export function MyQuotes() {
   ];
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 @4xl:grid-cols-[22rem_minmax(0,1fr)]">
       <Card className="self-start">
         <CardHeader>
           <CardTitle>{editId ? "Edit quote" : "Share a quote"}</CardTitle>

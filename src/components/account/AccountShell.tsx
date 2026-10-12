@@ -23,7 +23,7 @@ const writeOnlyStorage = {
   setItem: (key: string, value: string) => {
     try {
       localStorage.setItem(key, value);
-    } catch {}
+    } catch { }
   },
 };
 
@@ -39,7 +39,7 @@ export function AccountShell({ path, children }: { path: string; children?: Reac
       try {
         const saved = JSON.parse(localStorage.getItem(LAYOUT_KEY) ?? "null");
         if (saved && typeof saved.nav === "number" && typeof saved.main === "number") groupRef.current?.setLayout(saved);
-      } catch {}
+      } catch { }
     });
     return () => cancelAnimationFrame(id);
   }, []);
@@ -53,16 +53,18 @@ export function AccountShell({ path, children }: { path: string; children?: Reac
       onLayoutChanged={layout.onLayoutChanged}
       // Library default is overflow:hidden, which would break the sticky sidebar.
       style={{ height: "auto", overflow: "visible" }}
-      className="max-lg:block! max-lg:[&>[data-panel]:first-child]:hidden"
+      className="max-lg:block!"
     >
       <ResizablePanel id="nav" defaultSize="22%" minSize="16%" maxSize="32%" style={{ overflow: "visible" }}>
-        <div className="sticky top-20 pr-4">
+        {/* Below lg the sidebar is hidden (AccountHeader's tabs bar takes over). */}
+        <div className="sticky top-20 pr-4 max-lg:hidden">
           <AccountSidebar path={path} />
         </div>
       </ResizablePanel>
       <ResizableHandle withHandle className="max-lg:hidden" />
       <ResizablePanel id="main" minSize="50%">
-        <main className="min-w-0 lg:pl-8">
+        {/* @container: pages lay out by the panel's width (it resizes), not the viewport's. */}
+        <main className="@container min-w-0 lg:pl-8">
           {current && (
             <Breadcrumb className="mb-6">
               <BreadcrumbList>
