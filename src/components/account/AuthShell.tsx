@@ -29,12 +29,12 @@ export function AuthShell({
   children?: ReactNode;
 }) {
   return (
-    <div className="grid min-h-dvh w-full bg-background text-foreground lg:grid-cols-2">
+    <div className="grid min-h-dvh w-full bg-background text-foreground lg:grid-cols-2 lg:gap-2 lg:p-2">
       {/* Brand panel. `muted` reads as a subtle tint in light (gray-100 on
        *  white) and a raised surface in dark (gray-800 on gray-950), so the
        *  pair is stable both ways - unlike `primary`, which flips to white in
        *  dark and inverted next to the form column. */}
-      <aside className="relative hidden flex-col justify-between overflow-hidden border-r border-border bg-muted p-8 text-foreground lg:flex xl:p-16">
+      <aside className="relative hidden flex-col justify-between overflow-hidden rounded-[10px] bg-muted p-8 text-foreground lg:flex xl:p-16">
         <div
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,currentColor_1px,transparent_1px),linear-gradient(to_bottom,currentColor_1px,transparent_1px)] bg-size-[48px_48px] opacity-[0.08]"
           aria-hidden="true"

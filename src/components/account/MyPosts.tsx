@@ -8,11 +8,13 @@ import { Alert, AlertDescription } from "@/components/shadcn/ui/alert";
 import { Badge } from "@/components/shadcn/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/shadcn/ui/radio-group";
 import { accountService, errorText, type MyPostInput } from "../../lib/account";
+import { PageLoading } from "./PageLoading";
 import { renderUserMarkdown } from "../../lib/sanitize";
 import type { BlogPost, BlogPostSummary } from "../../types/blog";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ConfirmDelete } from "./ConfirmDelete";
 import { AccountDataTable, asDate } from "./AccountDataTable";
+import { BackButton, useFormGuard } from "./FormGuard";
 
 // /account/blog: own posts. Published posts go live at once; a moderator can reject
 // them (then they're read-only and show the reason).
@@ -22,7 +24,7 @@ const statusVariant = { published: "default", draft: "secondary", rejected: "des
 export function MyPosts() {
   const [posts, setPosts] = useState<BlogPostSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState<{ id: number | null; data: MyPostInput } | null>(null);
+  const [editing, setEditing] = useState<{ id: number | null; data: MyPostInput; initial: string } | null>(null);
   const [tagsText, setTagsText] = useState("");
   const [preview, setPreview] = useState(false);
   // The initial list fetch is a page-level LOAD error: it stays inline. Save and
@@ -44,11 +46,15 @@ export function MyPosts() {
     const data: MyPostInput = post
       ? { title: post.title, excerpt: post.excerpt, bodyContent: post.bodyContent, tags: post.tags, status: post.status === "draft" ? "draft" : "published" }
       : empty;
-    setTagsText((data.tags ?? []).join(", "));
-    setEditing({ id: post?.id ?? null, data });
+    const tags = (data.tags ?? []).join(", ");
+    setTagsText(tags);
+    setEditing({ id: post?.id ?? null, data, initial: JSON.stringify([data, tags]) });
   };
 
   const html = useMemo(() => (preview && editing ? renderUserMarkdown(editing.data.bodyContent) : ""), [preview, editing]);
+
+  const leave = useFormGuard(editing != null && JSON.stringify([editing.data, tagsText]) !== editing.initial);
+  const closeEditor = () => void leave(() => setEditing(null));
 
   const save = async (e: React.SubmitEvent) => {
     e.preventDefault();
@@ -102,13 +108,14 @@ export function MyPosts() {
     },
   ];
 
-  if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (loading) return <PageLoading />;
 
   if (editing) {
     const set = (patch: Partial<MyPostInput>) => setEditing({ ...editing, data: { ...editing.data, ...patch } });
     return (
       <div className="grid gap-6">
         <header className="grid gap-1 border-b border-border pb-6">
+          <BackButton onClick={closeEditor}>Blog posts</BackButton>
           <h1 className="text-2xl font-semibold tracking-tight">{editing.id ? "Edit post" : "New post"}</h1>
           <p className="text-sm text-muted-foreground">Published posts appear on the blog straight away. Moderators may remove posts that break the rules.</p>
         </header>
@@ -144,7 +151,7 @@ export function MyPosts() {
           </div>
           <div className="flex flex-wrap gap-2 border-t border-border pt-6">
             <Button type="submit">Save</Button>
-            <Button type="button" variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
+            <Button type="button" variant="ghost" onClick={closeEditor}>Cancel</Button>
           </div>
         </form>
       </div>
@@ -161,7 +168,7 @@ export function MyPosts() {
         <Button onClick={() => void open()}>New post</Button>
       </header>
       {loadError && <Alert variant="destructive"><AlertDescription>{loadError}</AlertDescription></Alert>}
-      <AccountDataTable columns={columns} data={posts} filterPlaceholder="Filter posts…" empty="No posts yet." />
+      <AccountDataTable columns={columns} data={posts} filterPlaceholder="Filter posts…" empty="No posts yet." emptyAction={<Button onClick={() => void open()}>New post</Button>} />
     </div>
   );
 }

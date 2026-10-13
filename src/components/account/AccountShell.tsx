@@ -18,6 +18,7 @@ import {
 import { Toaster } from "@/components/shadcn/ui/sonner";
 import { authService, type Me } from "../../lib/auth";
 import { AccountSidebar } from "./AccountSidebar";
+import { ConfirmHost } from "./ConfirmDialog";
 import { ModeToggle } from "./ModeToggle";
 import { activeAccountLink, initials } from "./account-nav";
 
@@ -54,20 +55,20 @@ export function AccountShell({
   }, []);
 
   const section = activeAccountLink(path);
-  const leaf = section
-    ? path
-      .slice(section.href.length)
-      .split("/")
-      .filter(Boolean)
-      .filter((segment) => !/^\d+$/.test(segment))
-      .pop()
-    : undefined;
+  // Pages outside the sidebar sections (e.g. /account/settings) hang off "Account".
+  const leaf = path
+    .slice((section?.href ?? "/account").length)
+    .split("/")
+    .filter(Boolean)
+    .filter((segment) => !/^\d+$/.test(segment))
+    .pop();
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <AccountSidebar path={path} me={me} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+        {/* Sticky: stays while the page scrolls; opaque so content slides under it. */}
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 bg-background px-4 md:rounded-t-[10px]">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
@@ -75,7 +76,7 @@ export function AccountShell({
           />
           <Breadcrumb>
             <BreadcrumbList>
-              {section ? (
+              {path !== "/account" ? (
                 <BreadcrumbItem>
                   <BreadcrumbLink href="/account">Account</BreadcrumbLink>
                 </BreadcrumbItem>
@@ -111,16 +112,11 @@ export function AccountShell({
           <div className="ml-auto flex items-center gap-1">
             <ModeToggle />
             {me && (
-              <Button asChild variant="ghost" className="h-10 gap-2 px-2">
-                <a href="/account" aria-label="Profile">
-                  <Avatar className="size-7 rounded-lg">
-                    <AvatarFallback className="rounded-lg text-xs">
-                      {initials(me)}
-                    </AvatarFallback>
+              <Button asChild variant="ghost" size="icon" className="rounded-full">
+                <a href="/account" aria-label="Profile" title={me.profile?.displayName || me.name}>
+                  <Avatar className="size-8">
+                    <AvatarFallback className="text-xs">{initials(me)}</AvatarFallback>
                   </Avatar>
-                  <span className="max-w-40 truncate text-sm font-medium max-sm:hidden">
-                    {me.profile?.displayName || me.name}
-                  </span>
                 </a>
               </Button>
             )}
@@ -128,11 +124,12 @@ export function AccountShell({
         </header>
         {/* SidebarInset is the <main>. @container: pages lay out by this column's width
             (the sidebar collapses), not the viewport's. */}
-        <div className="@container flex-1 p-4 md:p-6 lg:p-8">{children}</div>
+        <div className="@container flex flex-1 flex-col p-4 md:p-6 lg:p-8">{children}</div>
       </SidebarInset>
 
       {/* Action feedback (save/delete) surfaces as toasts; one Toaster for the whole app shell. */}
       <Toaster />
+      <ConfirmHost />
     </SidebarProvider>
   );
 }

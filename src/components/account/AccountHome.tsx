@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/shadcn/ui/aler
 import { Badge } from "@/components/shadcn/ui/badge";
 import { cn } from "@/lib/utils";
 import { authService, type Me } from "../../lib/auth";
+import { PageLoading } from "./PageLoading";
 import { accountService, errorText, type ModerationEntry } from "../../lib/account";
 import type { ColumnDef } from "@tanstack/react-table";
 import { AccountDataTable, asDate } from "./AccountDataTable";
@@ -46,7 +47,6 @@ const SectionHeading = ({ title, children }: { title: string; children: React.Re
 export function AccountHome() {
   const [me, setMe] = useState<Me | null>(null);
   const [profile, setProfile] = useState<Record<string, string>>({});
-  const [pw, setPw] = useState({ current: "", next: "" });
   const [moderation, setModeration] = useState<{ strikes: number; history: ModerationEntry[] }>({ strikes: 0, history: [] });
 
   useEffect(() => {
@@ -74,22 +74,7 @@ export function AccountHome() {
     }
   };
 
-  const savePassword = async (e: React.SubmitEvent) => {
-    e.preventDefault();
-    if (pw.next.length < 12) {
-      toast.error("The new password needs at least 12 characters.");
-      return;
-    }
-    try {
-      await accountService.updatePassword(pw.current, pw.next);
-      authService.clearAuthState();
-      window.location.href = "/login";
-    } catch (err) {
-      toast.error(errorText(err));
-    }
-  };
-
-  if (!me) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (!me) return <PageLoading />;
 
   return (
     <div className="grid gap-6">
@@ -109,11 +94,8 @@ export function AccountHome() {
         </section>
       )}
 
-      {/* The header's border-b is this page's first hairline, so the columns only add one when moderation sits above them. */}
-      <div className={cn(
-        "grid grid-cols-[minmax(0,1fr)] gap-6 @4xl:grid-cols-[minmax(0,1fr)_22rem]",
-        moderation.history.length > 0 && "border-t border-border pt-6",
-      )}>
+      {/* The header's border-b is this page's first hairline, so profile only adds one when moderation sits above it. */}
+      <div className={cn("grid max-w-3xl gap-6", moderation.history.length > 0 && "border-t border-border pt-6")}>
         <section className="grid gap-6">
           <SectionHeading title="Profile">Your display name appears on your posts and quotes.</SectionHeading>
           <form onSubmit={saveProfile} className="grid gap-6">
@@ -133,27 +115,6 @@ export function AccountHome() {
             </div>
             <div className="flex flex-wrap gap-2 border-t border-border pt-6">
               <Button type="submit">Save profile</Button>
-            </div>
-          </form>
-        </section>
-
-        <section className="grid gap-6 border-t border-border pt-6 @4xl:border-t-0 @4xl:border-l @4xl:pt-0 @4xl:pl-6">
-          <SectionHeading title="Password">Changing it signs you out everywhere.</SectionHeading>
-          <form onSubmit={savePassword} className="grid gap-6">
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="pw-current">Current password</Label>
-                <Input id="pw-current" type="password" autoComplete="current-password" value={pw.current}
-                  onChange={(e) => setPw({ ...pw, current: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="pw-next">New password</Label>
-                <Input id="pw-next" type="password" autoComplete="new-password" minLength={12} value={pw.next}
-                  onChange={(e) => setPw({ ...pw, next: e.target.value })} />
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2 border-t border-border pt-6">
-              <Button type="submit" variant="outline">Change password</Button>
             </div>
           </form>
         </section>

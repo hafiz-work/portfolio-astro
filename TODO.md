@@ -1,4 +1,4 @@
-# TODO - senarai semak (dikemas kini 2026-09-26)
+# TODO - senarai semak (dikemas kini 2026-10-13)
 
 Priorities: P0 = bug/vuln, P1 = perf/correctness, P2 = polish/cleanup.
 
@@ -55,6 +55,16 @@ Baki:
 - [ ] **[P2] Buang `src/data/kl-polygon.json` (37 KB)** - sifar import (hanya `fetch-kl.cjs` di root menyentuhnya).
 - [ ] **[P3] `lib/blog.ts` `getPublicPosts`/`getPublicPostBySlug` dah tak dipanggil** - public blog guna `public-content.ts`; buang supaya service tu tinggal admin sahaja.
 
+## Akaun - profil awam (`/u/{username}`)
+
+Spec: `docs/specs/public-user-profile-spec.md`. Frontend tersekat sampai backend siap.
+
+- [ ] **[P2] Owner putuskan D1-D6 dalam spec** - URL (`/u/{username}` disyorkan; `/me/*` dah jadi namespace API milik sendiri), visibility opt-in, peraturan username, apa yang dipapar.
+- [ ] **[P2] Backend (`hono-workers`)**: migration `username` + `profile_public` (D1 lokal sahaja), `GET /me` + update profile terima dua field tu (409 `username_taken`), senarai username terpelihara, `GET /public/profiles/:username` (DTO whitelist, 404 seragam untuk private/banned/belum verify), skrip verify.
+- [ ] **[P2] Frontend**: seksyen "Public profile" dalam `/account/settings` (username + `Switch` + salin URL), page `src/pages/u/[username].astro` (`PublicLayout`, map ke DTO tempatan sebelum render), menu user "Website" -> "View public profile".
+- [ ] **[P3] Pilihan**: `authorUsername` dalam DTO blog/quote awam supaya nama penulis link ke profil.
+- [ ] **Owner**: migrate remote + deploy backend, baru deploy frontend.
+
 ## Backend (`hono-workers`)
 
 - [ ] **[P2] Drop-list `db:reset` stale** - tinggal 6 table lama, tak masuk table baru.
@@ -74,6 +84,7 @@ Baki:
 
 ## Docs drift
 
+- [ ] **[P2] Path backend dalam CLAUDE.md (`/Users/hafiz/Developments/hono-workers`) tiada pada mesin 2026-10-13** - sahkan path sebenar dan kemas kini (spec profil awam pun rujuk path ni).
 - [ ] **[P2] CLAUDE.md (`portfolio-astro`) describe `_accessToken` in-memory** dalam ApiClient; kod sebenar httpOnly cookie + silent refresh. Kemas kini seksyen Data flow.
 - [ ] **[P3] `README.md` masih boilerplate Astro starter** - "Astro Starter Kit: Basics", pokok fail rekaan (`Welcome.astro`, `Layout.astro`), dan rujukan `src/assets/astro.svg` yang dah dibuang. Tulis README sebenar (setup, env, deploy) atau buang fail tu.
 

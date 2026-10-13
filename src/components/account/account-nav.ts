@@ -1,9 +1,8 @@
-import { FileText, Quote, UserRound } from "lucide-react";
+import { FileText, Quote } from "lucide-react";
 import type { Me } from "../../lib/auth";
 
 /** Account sections - the sidebar menu and the breadcrumb. */
 export const ACCOUNT_LINKS = [
-  { href: "/account", label: "Profile", icon: UserRound },
   { href: "/account/blog", label: "Blog posts", icon: FileText },
   { href: "/account/quotes", label: "Quotes", icon: Quote },
 ];
