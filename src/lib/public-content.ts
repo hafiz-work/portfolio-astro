@@ -2,6 +2,8 @@ import type { Project, ProjectPolicy } from "../types/project";
 import type { Experience } from "../types/experiences";
 import type { BlogPost, BlogPostSummary } from "../types/blog";
 import type { PublicProjectDetail } from "../types/project-cms";
+import type { Quote } from "../types/quotes";
+import { env } from "cloudflare:workers";
 import { API_BASE_URL } from "./config";
 import {
     FALLBACK_PROJECTS,
@@ -20,23 +22,40 @@ import {
 
 const FETCH_TIMEOUT_MS = 4000;
 
-/** `cf` is a Workers fetch option; the DOM lib's RequestInit does not know it. */
-type WorkerFetchInit = RequestInit & {
-    cf: { cacheTtl: number; cacheEverything: boolean };
-};
+const CACHE_TTL_S = 60;
+
+/**
+ * Server-side GET to the API. In production this goes through the `API` service
+ * binding (Worker → Worker, no public-internet hop, no extra request billing);
+ * without a binding (e.g. `astro dev` while hono-workers isn't running) it falls
+ * back to the public URL. Bindings skip Cloudflare's edge cache, so successful
+ * responses are kept in the colo cache (Cache API) for 60s - the same freshness
+ * the old `cf.cacheTtl` gave, so every visitor's SSR render doesn't re-hit D1.
+ * Note: the Cache API is a no-op on *.workers.dev; it works on the custom domain.
+ */
+async function apiGet(path: string): Promise<Response> {
+    const url = `${API_BASE_URL}/${path}`;
+    const cache = (globalThis.caches as unknown as { default?: Cache } | undefined)?.default;
+    const key = new Request(url);
+    const hit = await cache?.match(key);
+    if (hit) return hit;
+
+    const init = {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    };
+    const response = env.API ? await env.API.fetch(url, init) : await fetch(url, init);
+    if (response.ok && cache) {
+        const copy = new Response(response.clone().body, response);
+        copy.headers.set("Cache-Control", `public, max-age=${CACHE_TTL_S}`);
+        await cache.put(key, copy);
+    }
+    return response;
+}
 
 async function fetchJson<T>(path: string): Promise<T | null> {
     try {
-        const init: WorkerFetchInit = {
-            headers: { Accept: "application/json" },
-            signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-            // Opt this public read into Cloudflare's edge cache. `cache: 'no-store'`
-            // (what the ApiClient sets for browser callers) does nothing in a
-            // Worker, so without this every visitor's SSR render re-hits the API
-            // and D1. 60s is the free-plan floor and the owner publishes rarely.
-            cf: { cacheTtl: 60, cacheEverything: true },
-        };
-        const response = await fetch(`${API_BASE_URL}/${path}`, init);
+        const response = await apiGet(path);
         if (!response.ok) return null;
         const json = (await response.json()) as { success?: boolean; data?: T };
         return (json?.data as T) ?? null;
@@ -57,10 +76,8 @@ const mediaImage = (d: PublicProjectDetail | null): string | undefined =>
     d?.cover?.url ?? d?.media.find((m) => m.url)?.url;
 
 /** Frame picked on the Cover item (admin Media tab) for the card preview; "No frame" = auto. */
-const coverFrame = (d: PublicProjectDetail): Project["previewFrame"] => {
-    const f = d.media.find((m) => m.mediaType === "cover")?.deviceFrame;
-    return f === "phone" || f === "tablet" ? "phone" : f === "desktop" || f === "browser" ? "web" : undefined;
-};
+const toPreviewFrame = (f: string | null | undefined): Project["previewFrame"] =>
+    f === "phone" || f === "tablet" ? "phone" : f === "desktop" || f === "browser" ? "web" : undefined;
 
 /**
  * Apply curated copy + link sanitization to a single API project record.
@@ -105,22 +122,9 @@ export async function getPublicProjects(): Promise<Project[]> {
     if (!data || data.length === 0)
         return sortProjects(FALLBACK_PROJECTS.map(curateProject));
 
-    // CMS projects keep their cover (Media tab) and tech (Tech Stack tab) only in
-    // the detail DTO - the list returns empty imageUrl/technologies for them. Fill
-    // those from the detail (edge-cached; only for projects missing either).
-    const enriched = await Promise.all(
-        data.map(async (p) => {
-            if (p.imageUrl && p.technologies?.length) return p;
-            const d = await fetchJson<PublicProjectDetail>(`projects/${p.slug}`);
-            if (!d) return p;
-            return {
-                ...p,
-                imageUrl: p.imageUrl || mediaImage(d) || "",
-                previewFrame: coverFrame(d),
-                technologies: p.technologies?.length ? p.technologies : d.techStacks.map((t) => t.name),
-            };
-        }),
-    );
+    // The list already carries the CMS cover/tech (filled server-side in one
+    // batched query) plus the Cover item's device frame - no per-project fetch.
+    const enriched = data.map((p) => ({ ...p, previewFrame: toPreviewFrame(p.coverFrame) }));
 
     // Apply curated copy + link sanitization over API records.
     return sortProjects(enriched.map(curateProject));
@@ -194,6 +198,11 @@ export async function getPublicPosts(): Promise<BlogPostSummary[]> {
 
 export async function getPublicPostBySlug(slug: string): Promise<BlogPost | null> {
     return await fetchJson<BlogPost>(`blog/${slug}`);
+}
+
+/** Quotes: same contract as getPublicPosts - `[]` on failure, API order (newest first). */
+export async function getPublicQuotes(): Promise<Quote[]> {
+    return (await fetchJson<Quote[]>("quotes")) ?? [];
 }
 
 export async function getPublicProjectPolicy(slug: string): Promise<ProjectPolicy | null> {

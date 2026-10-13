@@ -109,7 +109,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
 
   // Warn on navigation with unsaved Basics/Case Study edits (child managers save immediately).
   useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } };
+    const handler = (e: BeforeUnloadEvent) => { if (dirty) e.preventDefault(); };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [dirty]);
@@ -352,7 +352,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
               </ul>}
             <p className="admin-help mt-2">Errors (e.g. visible media missing alt text) block publishing.</p>
           </div>
-          <div className="admin-form-actions !justify-start flex-wrap">
+          <div className="admin-form-actions justify-start! flex-wrap">
             {detail.status !== "published"
               ? <button type="button" className="admin-btn admin-btn-primary" onClick={() => lifecycle("Publish", () => cmsService.publishProject(pid))} disabled={saving}>Publish</button>
               : <button type="button" className="admin-btn admin-btn-secondary" onClick={() => lifecycle("Unpublish", () => cmsService.unpublishProject(pid))} disabled={saving}>Unpublish</button>}

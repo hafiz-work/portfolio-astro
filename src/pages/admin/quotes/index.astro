@@ -1,0 +1,26 @@
+---
+import { Plus } from "lucide-react";
+import PrivateLayout from "../../../layouts/PrivateLayout.astro";
+import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
+import { QuotesTable } from "../../../components/admin/quotes/QuotesTable";
+---
+
+<PrivateLayout title="Manage Quotes">
+  <div class="space-y-6">
+    <AdminPageHeader
+      title="Quotes"
+      description="Manage the quotes shown on the public /quotes page."
+    >
+      <a
+        slot="actions"
+        href="/admin/quotes/new"
+        class="admin-btn admin-btn-primary"
+      >
+        <Plus className="w-4 h-4" />
+        New Quote
+      </a>
+    </AdminPageHeader>
+
+    <QuotesTable client:load />
+  </div>
+</PrivateLayout>

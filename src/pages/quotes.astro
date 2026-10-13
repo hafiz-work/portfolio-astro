@@ -1,0 +1,270 @@
+---
+export const prerender = false;
+import TechHeading from "../components/layout/TechHeading.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { getPublicQuotes } from "../lib/public-content";
+import { categoryLabel, sortCategories } from "../lib/quotes";
+
+// API order (newest first) is kept as-is.
+const quotes = await getPublicQuotes();
+const quoteCategories = (tags: { category: string | null }[]) => [
+  ...new Set(tags.map((t) => t.category ?? "other")),
+];
+const presentCategories = sortCategories(
+  quotes.flatMap((q) => quoteCategories(q.tags)),
+);
+
+const chipClass =
+  "rounded-full px-3 py-1 text-sm/6 font-medium text-gray-600 ring-1 ring-gray-950/10 ring-inset transition-colors hover:text-gray-950 aria-pressed:bg-sky-500/10 aria-pressed:text-sky-700 aria-pressed:ring-sky-500/30 dark:text-gray-400 dark:ring-white/10 dark:hover:text-white dark:aria-pressed:text-sky-400 dark:aria-pressed:ring-sky-400/30";
+---
+
+<PublicLayout
+  title="Quotes | Hafiz Bahtiar"
+  description="A small collection of quotes worth keeping - from books, history, anime and life."
+>
+  <!-- Same layout as /blog (tailwindcss.com/blog): big title + lead on hairline
+       rows, then one row per quote - [author | divider | quote, source, tags] -
+       with spacer rows between so the column dividers run the full list. -->
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1
+        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Words worth keeping"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        A small collection of lines from books, history, anime and life.
+      </p>
+    </div>
+
+    {
+      quotes.length > 0 ? (
+        <>
+          {presentCategories.length > 0 && (
+            <div class="line-y mt-10">
+              <div
+                role="group"
+                aria-label="Filter quotes by category"
+                class="mx-2 flex flex-wrap gap-2"
+              >
+                <button
+                  type="button"
+                  data-quote-filter="all"
+                  aria-pressed="true"
+                  class={chipClass}
+                >
+                  All
+                </button>
+                {presentCategories.map((cat) => (
+                  <button
+                    type="button"
+                    data-quote-filter={cat}
+                    aria-pressed="false"
+                    class={chipClass}
+                  >
+                    {categoryLabel(cat)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div class="mt-12 mb-46 grid grid-cols-1 lg:grid-cols-[24rem_2.5rem_minmax(0,1fr)]">
+            {quotes.map((quote, i) => (
+              <div
+                class="contents"
+                data-quote-category={quoteCategories(quote.tags).join(" ")}
+              >
+                {/* Spacer sits before each quote; the first visible one's is hidden
+                    (here and by the filter) so the dividers end on a hairline. */}
+                <div
+                  class="quote-spacer contents divide-x divide-gray-950/5 dark:divide-white/10"
+                  hidden={i === 0}
+                >
+                  <div class="h-16 max-lg:hidden" />
+                  <div class="h-16 max-lg:hidden" />
+                  <div class="h-16" />
+                </div>
+                <figure
+                  id={`q-${quote.id}`}
+                  class="scroll-offset line-y col-span-3 grid grid-cols-subgrid divide-x divide-gray-950/5 dark:divide-white/10"
+                >
+                  <figcaption class="px-2 font-mono text-sm/6 font-medium tracking-widest text-gray-500 uppercase max-lg:hidden">
+                    {quote.author}
+                  </figcaption>
+                  <div class="max-lg:hidden" />
+                  <div class="px-2">
+                    <div class="max-w-2xl">
+                      <div
+                        class="mb-4 font-mono text-sm/6 font-medium tracking-widest text-gray-500 uppercase lg:hidden"
+                        aria-hidden="true"
+                      >
+                        {quote.author}
+                      </div>
+                      <blockquote class="font-semibold whitespace-pre-line">
+                        {quote.text}
+                      </blockquote>
+                      {quote.source && (
+                        <cite class="mt-4 block text-sm/6 text-gray-600 not-italic dark:text-gray-400">
+                          {quote.source}
+                        </cite>
+                      )}
+                      {quote.submittedBy && (
+                        <p class="mt-2 text-xs/5 text-gray-500 dark:text-gray-400">
+                          shared by {quote.submittedBy}
+                        </p>
+                      )}
+                      {quote.tags.length > 0 && (
+                        <div class="mt-4 flex flex-wrap gap-x-3 gap-y-1">
+                          {quote.tags.map((tag) => (
+                            <span
+                              title={categoryLabel(tag.category)}
+                              class="font-mono text-xs/5 text-gray-500 dark:text-gray-400"
+                            >
+                              #{tag.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <!-- Copy / Share read the quote from this figure (script below). -->
+                      <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs/5 text-gray-400 dark:text-gray-500">
+                        <button
+                          type="button"
+                          data-quote-copy
+                          aria-label={`Copy quote by ${quote.author}`}
+                          class="hover:text-sky-500 dark:hover:text-sky-400"
+                        >
+                          copy
+                        </button>
+                        <button
+                          type="button"
+                          data-quote-share
+                          aria-label={`Share quote by ${quote.author}`}
+                          class="hover:text-sky-500 dark:hover:text-sky-400"
+                        >
+                          share
+                        </button>
+                        <a
+                          href={`#q-${quote.id}`}
+                          aria-label={`Link to quote by ${quote.author}`}
+                          class="hover:text-sky-500 dark:hover:text-sky-400"
+                        >
+                          link
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </figure>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div class="line-y mt-12 mb-46">
+          <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+            The first quotes are on the way. Meanwhile,{" "}
+            <a
+              href="/blog"
+              class="font-semibold text-sky-500 hover:text-sky-600 dark:text-sky-400"
+            >
+              the blog has plenty to read
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
+  </div>
+</PublicLayout>
+
+<script>
+  // Client-side category filter over server-rendered quotes: no refetch.
+  // Without JS every quote stays visible and "All" stays pressed.
+  const initQuoteFilter = () => {
+    const chips = document.querySelectorAll<HTMLButtonElement>(
+      "[data-quote-filter]",
+    );
+    const quotes = document.querySelectorAll<HTMLElement>(
+      "[data-quote-category]",
+    );
+    if (!chips.length) return;
+    const apply = (cat: string) => {
+      chips.forEach((c) =>
+        c.setAttribute("aria-pressed", String(c.dataset.quoteFilter === cat)),
+      );
+      let first = true;
+      quotes.forEach((q) => {
+        const cats = (q.dataset.quoteCategory ?? "").split(" ").filter(Boolean);
+        q.hidden = cat !== "all" && !cats.includes(cat);
+        if (q.hidden) return;
+        // Only spacers between visible quotes: the first visible one has none.
+        q.querySelector<HTMLElement>(".quote-spacer")!.hidden = first;
+        first = false;
+      });
+    };
+    chips.forEach((c) =>
+      c.addEventListener("click", () => apply(c.dataset.quoteFilter ?? "all")),
+    );
+  };
+
+  initQuoteFilter();
+  document.addEventListener("astro:page-load", initQuoteFilter);
+
+  // Copy / Share for each quote. One delegated listener for the whole page; bound once
+  // (the document survives ClientRouter swaps).
+  const quoteOf = (btn: HTMLElement) => {
+    const fig = btn.closest("figure")!;
+    const text = fig.querySelector("blockquote")?.textContent?.trim() ?? "";
+    const author = fig.querySelector("figcaption")?.textContent?.trim() ?? "";
+    const source = fig.querySelector("cite")?.textContent?.trim();
+    const url = `${location.origin}/quotes#${fig.id}`;
+    const line = `“${text}” - ${author}${source ? `, ${source}` : ""}`;
+    return { text: line, url, title: `Quote by ${author}` };
+  };
+  const flash = (btn: HTMLElement, label: string) => {
+    const before = btn.dataset.label ?? (btn.dataset.label = btn.textContent!.trim());
+    btn.textContent = label;
+    setTimeout(() => (btn.textContent = before), 1800);
+  };
+  // Clipboard API, else the old select-and-copy (blocked clipboard, non-secure context).
+  const copyText = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      const ta = Object.assign(document.createElement("textarea"), { value: text });
+      ta.style.cssText = "position:fixed;opacity:0";
+      document.body.append(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      ta.remove();
+      return ok;
+    }
+  };
+  if (!(window as unknown as { __quoteActions?: boolean }).__quoteActions) {
+    (window as unknown as { __quoteActions?: boolean }).__quoteActions = true;
+    document.addEventListener("click", async (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>("[data-quote-copy], [data-quote-share]");
+      if (!btn) return;
+      const q = quoteOf(btn);
+      if (btn.hasAttribute("data-quote-share") && navigator.share) {
+        try {
+          await navigator.share({ title: q.title, text: q.text, url: q.url });
+        } catch {
+          // dismissed - nothing to do
+        }
+        return;
+      }
+      // Copy, or Share where the Web Share API is missing (desktop): put it on the clipboard.
+      const share = btn.hasAttribute("data-quote-share");
+      const ok = await copyText(share ? q.url : `${q.text}\n${q.url}`);
+      flash(btn, ok ? (share ? "link copied" : "copied") : "copy failed");
+    });
+  }
+</script>

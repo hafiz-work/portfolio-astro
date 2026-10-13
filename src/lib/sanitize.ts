@@ -1,6 +1,7 @@
 import { isTag, isText, type ChildNode, type Element } from "domhandler";
 import { escapeAttribute, escapeText } from "entities";
 import { parseDocument } from "htmlparser2";
+import { marked } from "marked";
 
 const ALLOWED_TAGS = new Set([
   "a",
@@ -19,6 +20,7 @@ const ALLOWED_TAGS = new Set([
   "h4",
   "hr",
   "iframe",
+  "img",
   "input",
   "label",
   "li",
@@ -42,7 +44,7 @@ const ALLOWED_TAGS = new Set([
   "ul",
 ]);
 
-const VOID_TAGS = new Set(["br", "col", "hr", "input"]);
+const VOID_TAGS = new Set(["br", "col", "hr", "img", "input"]);
 
 const ALLOWED_ATTRS = new Map<string, Set<string>>([
   ["a", new Set(["href", "name", "target", "rel", "class"])],
@@ -54,6 +56,7 @@ const ALLOWED_ATTRS = new Map<string, Set<string>>([
   ["td", new Set(["colspan", "rowspan", "class"])],
   ["th", new Set(["colspan", "rowspan", "class"])],
   ["iframe", new Set(["src", "width", "height"])],
+  ["img", new Set(["src", "alt", "title", "width", "height"])],
   ["input", new Set(["type", "checked"])],
 ]);
 
@@ -70,10 +73,22 @@ const PRESET_ATTRS: Record<string, RegExp> = {
 
 const YOUTUBE_EMBED = /^https:\/\/www\.youtube-nocookie\.com\/embed\/[\w-]+(\?[\w=&%.-]*)?$/;
 
+// Images are linked by URL - https only, so no data:/base64 bloat, no mixed
+// content, no javascript:.
+const IMAGE_SRC = /^https:\/\/[^\s"'<>]+$/i;
+// User posts: our own media only. Any other host would be a tracking pixel that
+// logs every reader's IP.
+const UGC_IMAGE_SRC = /^https:\/\/api\.hafizbahtiar\.com\/api\/v1\/media\/images\/[\w.-]+$/;
+const imageSrcOk = (src: string, ugc: boolean) => (ugc ? UGC_IMAGE_SRC : IMAGE_SRC).test(src);
+
 const SAFE_HREF_PATTERN = /^(https?:|mailto:|tel:|#|\/(?!\/))/i;
 const DROPPED_CONTENT_TAGS = new Set(["script", "style"]);
 
-const renderAttrs = (node: Element, tagName: string): string => {
+// User-generated content (posts by registered users): no embeds, no form inputs,
+// no classes (site CSS could restyle the page), links marked nofollow/ugc.
+const UGC_DROPPED_TAGS = new Set(["iframe", "input"]);
+
+const renderAttrs = (node: Element, tagName: string, ugc: boolean): string => {
   const allowedAttrs = ALLOWED_ATTRS.get(tagName) ?? new Set<string>();
   const attrs: string[] = [];
 
@@ -92,7 +107,11 @@ const renderAttrs = (node: Element, tagName: string): string => {
       continue;
     }
 
-    if (name === "src" && !YOUTUBE_EMBED.test(value)) {
+    if (ugc && (name === "class" || name === "target")) {
+      continue;
+    }
+
+    if (name === "src" && !(tagName === "img" ? imageSrcOk(value, ugc) : YOUTUBE_EMBED.test(value))) {
       continue;
     }
 
@@ -116,12 +135,17 @@ const renderAttrs = (node: Element, tagName: string): string => {
   }
 
   if (tagName === "a") {
-    attrs.push('rel="noopener noreferrer"');
+    attrs.push(ugc ? 'rel="nofollow ugc noopener noreferrer" target="_blank"' : 'rel="noopener noreferrer"');
   }
 
   // Published task lists are read-only.
   if (tagName === "input") {
     attrs.push("disabled");
+  }
+
+  if (tagName === "img") {
+    // Hotlinked: don't leak which page the reader is on to the image host.
+    attrs.push('loading="lazy" decoding="async" referrerpolicy="no-referrer"');
   }
 
   if (tagName === "iframe") {
@@ -133,7 +157,7 @@ const renderAttrs = (node: Element, tagName: string): string => {
   return attrs.length > 0 ? ` ${attrs.join(" ")}` : "";
 };
 
-const renderNode = (node: ChildNode): string => {
+const renderNode = (node: ChildNode, ugc: boolean): string => {
   if (isText(node)) {
     return escapeText(node.data);
   }
@@ -147,8 +171,8 @@ const renderNode = (node: ChildNode): string => {
     return "";
   }
 
-  const children = node.children.map(renderNode).join("");
-  if (!ALLOWED_TAGS.has(tagName)) {
+  const children = node.children.map((child) => renderNode(child, ugc)).join("");
+  if (!ALLOWED_TAGS.has(tagName) || (ugc && UGC_DROPPED_TAGS.has(tagName))) {
     return children;
   }
 
@@ -159,8 +183,12 @@ const renderNode = (node: ChildNode): string => {
   if (tagName === "input" && node.attribs.type !== "checkbox") {
     return "";
   }
+  // An image without a valid https src is dropped entirely (no empty <img>).
+  if (tagName === "img" && !imageSrcOk(node.attribs.src?.trim() ?? "", ugc)) {
+    return "";
+  }
 
-  const attrs = renderAttrs(node, tagName);
+  const attrs = renderAttrs(node, tagName, ugc);
   if (tagName === "iframe") {
     return `<iframe${attrs}></iframe>`;
   }
@@ -171,15 +199,19 @@ const renderNode = (node: ChildNode): string => {
   return `<${tagName}${attrs}>${children}</${tagName}>`;
 };
 
-export const sanitizeRichHtml = (html: string): string => {
+export const sanitizeRichHtml = (html: string, opts: { ugc?: boolean } = {}): string => {
   const document = parseDocument(html, {
     decodeEntities: true,
     lowerCaseAttributeNames: true,
     lowerCaseTags: true,
   });
 
-  return document.children.map(renderNode).join("");
+  return document.children.map((node) => renderNode(node, !!opts.ugc)).join("");
 };
+
+/** A registered user's markdown post → safe HTML (strict UGC mode). Used by the public page and the editor preview. */
+export const renderUserMarkdown = (markdown: string): string =>
+  sanitizeRichHtml(marked.parse(markdown, { async: false, gfm: true }) as string, { ugc: true });
 
 const BLOCK_TAGS = new Set(["p", "div", "li", "br", "h2", "h3", "h4", "blockquote", "pre", "tr", "aside", "summary"]);
 

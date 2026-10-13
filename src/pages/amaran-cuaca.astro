@@ -1,0 +1,135 @@
+---
+import Disclaimer from "../components/ui/Disclaimer.astro";
+export const prerender = false;
+import TechHeading from "../components/layout/TechHeading.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { getWarnings, mytMs } from "../lib/amaran-cuaca";
+
+const data = await getWarnings();
+const warnings = data?.warnings ?? [];
+const fmt = new Intl.DateTimeFormat("ms-MY", {
+  timeZone: "Asia/Kuala_Lumpur",
+  hour: "numeric",
+  minute: "2-digit",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+const time = (s: string) => fmt.format(new Date(mytMs(s)));
+const metLink = "font-medium text-sky-600 hover:underline dark:text-sky-400";
+---
+
+<PublicLayout
+  title="Amaran Cuaca Aktif - MET Malaysia | Hafiz Bahtiar"
+  description="Amaran cuaca yang sedang berkuat kuasa dari Jabatan Meteorologi Malaysia: ribut petir, hujan lebat, angin kencang dan laut bergelora."
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1
+        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Amaran Cuaca"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Amaran cuaca yang sedang berkuat kuasa dari Jabatan Meteorologi
+        Malaysia.
+      </p>
+    </div>
+
+    {
+      data ? (
+        <>
+          {warnings.length ? (
+            warnings.map((w) => (
+              <>
+                <div class="line-y mt-10">
+                  <p class="eyebrow mx-2">
+                    Sah {time(w.from)} - {time(w.to)}
+                  </p>
+                </div>
+                <div class="line-y mt-4">
+                  <article class="mx-2 max-w-3xl">
+                    <h2 class="text-2xl font-medium tracking-tight text-gray-950 dark:text-white">
+                      {w.title}
+                    </h2>
+                    <p class="mt-1 font-mono text-xs/5 tracking-widest text-gray-500 uppercase dark:text-gray-400">
+                      Dikeluarkan {time(w.issued)}
+                    </p>
+                    <p class="mt-4 text-sm/7 text-gray-700 dark:text-gray-300">
+                      {w.text}
+                    </p>
+                    {w.instruction && (
+                      <p class="mt-3 text-sm/7 font-medium text-gray-950 dark:text-white">
+                        {w.instruction}
+                      </p>
+                    )}
+                  </article>
+                </div>
+              </>
+            ))
+          ) : (
+            <div class="line-y mt-10">
+              <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+                Tiada amaran cuaca aktif sekarang.
+              </p>
+            </div>
+          )}
+          <div class="line-y mt-10">
+            <p class="mx-2 max-w-3xl text-xs/5 text-gray-500 dark:text-gray-400">
+              Sumber:{" "}
+              <a
+                href="https://www.met.gov.my"
+                target="_blank"
+                rel="noopener noreferrer"
+                class={metLink}
+              >
+                {data.source}
+              </a>{" "}
+              {`melalui data.gov.my${data.stale ? " (data simpanan - MET tak dapat dicapai sekarang)" : ""}. Hanya amaran yang belum tamat tempoh dipaparkan.`}
+            </p>
+          </div>
+        </>
+      ) : (
+        <div class="line-y mt-10">
+          <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+            Amaran cuaca tak dapat diambil dari MET Malaysia sekarang. Cuba lagi
+            sebentar, atau semak terus di{" "}
+            <a
+              href="https://www.met.gov.my"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-sky-600 hover:underline dark:text-sky-400"
+            >
+              laman MET Malaysia
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
+    <div class="line-y mt-6">
+      <Disclaimer
+        class="mx-2"
+        sources={[
+          {
+            name: "Jabatan Meteorologi Malaysia (MET)",
+            href: "https://www.met.gov.my",
+          },
+          { name: "data.gov.my", href: "https://developer.data.gov.my" },
+        ]}
+      >
+        <Fragment
+          set:html={`Ini <strong>bukan sistem amaran kecemasan</strong> - amaran mungkin lewat atau tidak dipaparkan. Ikut arahan pihak berkuasa dan hubungi <strong>999</strong> dalam kecemasan.`}
+        />
+      </Disclaimer>
+    </div>
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>

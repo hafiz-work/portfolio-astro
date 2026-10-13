@@ -169,7 +169,7 @@ export function MediaManager({ projectId, projectTitle, onChanged }: { projectId
             <div className="flex flex-wrap items-center gap-2">
               {it.asset?.url && <img src={it.asset.url} alt="" className="h-12 w-20 rounded-lg bg-white object-contain p-1 border border-gray-950/5 dark:border-white/10" />}
               <Select
-                className="max-w-[160px]"
+                className="max-w-40"
                 value={it.mediaType}
                 onChange={(v) => change(it, { mediaType: v as MediaType })}
                 options={TYPE_OPTIONS}
@@ -177,7 +177,7 @@ export function MediaManager({ projectId, projectTitle, onChanged }: { projectId
               />
               {GALLERY_TYPES.includes(it.mediaType) && (
                 <Select
-                  className="max-w-[130px]"
+                  className="max-w-32.5"
                   value={it.deviceFrame}
                   onChange={(v) => change(it, { deviceFrame: v as DeviceFrame })}
                   options={FRAME_OPTIONS}
@@ -186,7 +186,7 @@ export function MediaManager({ projectId, projectTitle, onChanged }: { projectId
               )}
               {it.mediaType === "cover" && (
                 <Select
-                  className="max-w-[160px]"
+                  className="max-w-40"
                   value={it.deviceFrame === "tablet" ? "phone" : it.deviceFrame === "desktop" ? "browser" : it.deviceFrame}
                   onChange={(v) => change(it, { deviceFrame: v as DeviceFrame })}
                   options={COVER_FRAME_OPTIONS}
@@ -195,9 +195,9 @@ export function MediaManager({ projectId, projectTitle, onChanged }: { projectId
               )}
               <div className="ml-auto flex shrink-0 items-center gap-2">
                 <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"><input type="checkbox" checked={it.isVisible} onChange={(e) => change(it, { isVisible: e.target.checked })} /> Visible</label>
-                <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
-                <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
-                <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => detach(it)} aria-label="Remove"><Trash2 className="h-4 w-4" /></button>
+                <button type="button" className="admin-btn admin-btn-secondary px-2!" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
+                <button type="button" className="admin-btn admin-btn-secondary px-2!" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
+                <button type="button" className="admin-btn admin-btn-danger px-2!" onClick={() => detach(it)} aria-label="Remove"><Trash2 className="h-4 w-4" /></button>
               </div>
             </div>
             {GALLERY_TYPES.includes(it.mediaType) && (
@@ -235,7 +235,7 @@ export function MediaManager({ projectId, projectTitle, onChanged }: { projectId
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
           aria-busy={!!busy}
-          className={`flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-sky-500 ${busy ? "cursor-wait border-gray-950/10 opacity-70 dark:border-white/15" : dragging ? "cursor-copy border-sky-500 bg-sky-500/5" : "cursor-pointer border-gray-950/10 hover:border-sky-500/50 hover:bg-gray-950/[0.02] dark:border-white/15 dark:hover:bg-white/[0.03]"}`}
+          className={`flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-sky-500 ${busy ? "cursor-wait border-gray-950/10 opacity-70 dark:border-white/15" : dragging ? "cursor-copy border-sky-500 bg-sky-500/5" : "cursor-pointer border-gray-950/10 hover:border-sky-500/50 hover:bg-gray-950/2 dark:border-white/15 dark:hover:bg-white/3"}`}
         >
           <input type="file" accept={UPLOAD_TYPES.join(",")} multiple className="sr-only" disabled={!!busy}
             onChange={(e) => { void addFiles([...(e.target.files ?? [])]); e.target.value = ""; }} />
@@ -258,7 +258,7 @@ export function MediaManager({ projectId, projectTitle, onChanged }: { projectId
               {/^https?:\/\/\S+$/.test(draft.url.trim()) && (
                 <img src={draft.url.trim()} alt="" className="h-12 w-20 rounded-lg bg-white object-contain p-1 border border-gray-950/5 dark:border-white/10" />
               )}
-              <input className="admin-input flex-1 min-w-[200px]" type="url" placeholder="https://…/image.png" value={draft.url} onChange={(e) => setDraft({ ...draft, url: e.target.value })}
+              <input className="admin-input flex-1 min-w-50" type="url" placeholder="https://…/image.png" value={draft.url} onChange={(e) => setDraft({ ...draft, url: e.target.value })}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void addByUrl(); } }} aria-label="New media URL" />
             </div>
             <input className="admin-input" placeholder={`Alt text - optional, defaults to "${defaultAlt(draft.mediaType)}"`} value={draft.altText} onChange={(e) => setDraft({ ...draft, altText: e.target.value })} aria-label="New media alt text" />

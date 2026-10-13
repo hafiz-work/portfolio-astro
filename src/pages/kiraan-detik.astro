@@ -1,0 +1,128 @@
+---
+import Disclaimer from "../components/ui/Disclaimer.astro";
+export const prerender = false;
+import TechHeading from "../components/layout/TechHeading.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { EVENTS, getUpcomingEvents } from "../lib/hari-kebesaran";
+import { formatHijri, todayInMalaysia } from "../lib/waktu-solat";
+
+const today = todayInMalaysia();
+const events = await getUpcomingEvents(today);
+const next = events[0];
+
+const masihi = (ymd: string) =>
+  new Intl.DateTimeFormat("ms-MY", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(`${ymd}T00:00:00Z`),
+  );
+const hijriLabel = (key: string, year: number) => {
+  const e = EVENTS.find((x) => x.key === key)!;
+  return formatHijri(`${year}-${String(e.month).padStart(2, "0")}-${String(e.day).padStart(2, "0")}`);
+};
+// Hero countdown = time left to Malaysian midnight on the day, same formula as the
+// script (the list below shows calendar days instead: "120 hari lagi").
+const target = next ? Date.parse(`${next.date}T00:00:00+08:00`) : 0;
+const fullDays = Math.max(0, Math.floor((target - Date.now()) / 86_400_000));
+const left = (days: number) => (days === 0 ? "Hari ini" : days === 1 ? "Esok" : `${days} hari lagi`);
+---
+
+<PublicLayout
+  title="Berapa Hari Lagi Ramadan & Hari Raya? Kiraan Detik | Hafiz Bahtiar"
+  description="Kiraan detik ke Awal Ramadan, Hari Raya Aidilfitri, Aidiladha dan hari kebesaran Islam lain, mengikut takwim JAKIM."
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1 class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl">
+        <TechHeading text="Kiraan Detik" fontSize={96} fontWeight={400} box="-my-12 h-48" />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">Berapa hari lagi ke Ramadan, Hari Raya dan hari kebesaran Islam yang lain.</p>
+    </div>
+
+    {
+      next && (
+        <div class="line-y mt-10">
+          <!-- Live countdown to Malaysian midnight on the day (the script ticks it). -->
+          <div class="mx-2" id="countdown" data-target={next.daysLeft > 0 ? `${next.date}T00:00:00+08:00` : undefined}>
+            <p class="eyebrow">Seterusnya</p>
+            <p class="mt-2 text-3xl font-medium tracking-tight">{next.name}</p>
+            <p class="mt-1 text-sm/6 text-gray-600 dark:text-gray-400">
+              {masihi(next.date)} · {hijriLabel(next.key, next.hijriYear)}
+            </p>
+            {next.daysLeft === 0 ? (
+              <p class="mt-6 text-6xl font-medium tracking-tighter text-sky-600 dark:text-sky-400">Hari ini</p>
+            ) : (
+              <p class="mt-6 flex flex-wrap items-baseline gap-x-6 gap-y-2 tabular-nums">
+                <span>
+                  <span data-unit="d" class="text-6xl font-medium tracking-tighter">{fullDays}</span>{" "}
+                  <span class="text-gray-500">hari</span>
+                </span>
+                <span data-clock class="text-3xl font-medium tracking-tight text-gray-500" />
+              </p>
+            )}
+          </div>
+        </div>
+      )
+    }
+
+    <div class="line-y mt-10">
+      <ul class="grid gap-px bg-gray-950/5 sm:grid-cols-2 dark:bg-white/10">
+        {
+          events.map((e) => (
+            <li class="bg-white px-4 py-5 sm:px-6 sm:odd:last:col-span-2 dark:bg-gray-950">
+              <div class="flex items-start justify-between gap-4">
+                <p class="font-medium">{e.name}</p>
+                <span
+                  class:list={[
+                    "shrink-0 rounded-full px-2 font-mono text-[10px]/5 tracking-widest uppercase",
+                    e.source === "jakim"
+                      ? "bg-sky-500/10 text-sky-700 dark:text-sky-400"
+                      : "bg-gray-950/5 text-gray-500 dark:bg-white/10 dark:text-gray-400",
+                  ]}
+                >
+                  {e.source === "jakim" ? "Takwim JAKIM" : "Anggaran ±1 hari"}
+                </span>
+              </div>
+              <p class="mt-1 text-sm/6 text-gray-600 dark:text-gray-400">
+                {masihi(e.date)} · {hijriLabel(e.key, e.hijriYear)}
+              </p>
+              <p class="mt-3 text-2xl font-medium tracking-tight tabular-nums">{left(e.daysLeft)}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    <div class="line-y mt-6">
+      <Disclaimer class="mx-2" sources={[{ name: "JAKIM (e-solat)", href: "https://www.e-solat.gov.my" }]}>
+        <Fragment set:html={`Tarikh mengikut takwim JAKIM bila sudah diterbitkan; selepas itu ia <strong>anggaran</strong> kalendar Umm al-Qura dan boleh berbeza sehari. Tarikh sebenar Awal Ramadan dan Hari Raya ditentukan melalui rukyah dan diisytiharkan oleh Penyimpan Mohor Besar Raja-Raja.`} />
+      </Disclaimer>
+    </div>
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>
+
+<script>
+  // Ticks the hours/minutes/seconds left to the day (whole days are server-rendered
+  // and corrected here too in case the page stays open past midnight).
+  let timer = 0;
+  const initCountdown = () => {
+    const box = document.getElementById("countdown");
+    if (!box?.dataset.target || box.dataset.bound === "1") return;
+    box.dataset.bound = "1";
+    clearInterval(timer);
+    const target = Date.parse(box.dataset.target!);
+    const days = box.querySelector<HTMLElement>('[data-unit="d"]')!;
+    const clock = box.querySelector<HTMLElement>("[data-clock]")!;
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const tick = () => {
+      const s = Math.max(0, Math.floor((target - Date.now()) / 1000));
+      days.textContent = String(Math.floor(s / 86400));
+      clock.textContent = `${pad(Math.floor((s % 86400) / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
+    };
+    tick();
+    timer = window.setInterval(tick, 1000);
+  };
+  initCountdown();
+  document.addEventListener("astro:page-load", initCountdown);
+  document.addEventListener("astro:before-swap", () => clearInterval(timer));
+</script>

@@ -1,0 +1,124 @@
+---
+// Account area (public sign-in, register, verify, /account/*): the site navbar on
+// every page, then a shell built on shadcn/ui components (src/components/shadcn/ui)
+// - not the public site's gutters/hairlines. Colors here are our gray/sky palette; shadcn token classes
+// stay inside src/components/shadcn/ (see its README). Admin signs in at
+// /admin/login (its own page), never here.
+import { Check } from "lucide-react";
+import CoreLayout from "./CoreLayout.astro";
+import { Button } from "../components/shadcn/ui/button";
+import Navbar from "../components/layout/Navbar.astro";
+import { AccountHeader } from "../components/account/AccountHeader";
+import { AccountShell } from "../components/account/AccountShell";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "../components/shadcn/ui/breadcrumb";
+
+interface Props {
+  title: string;
+  description?: string;
+  /** "auth": full-width split - brand panel left, form right. "app": signed-in area with nav. */
+  variant?: "auth" | "app";
+  /** auth only: the top-right link to the other auth page. */
+  switchTo?: { href: string; label: string };
+}
+
+const { title, description, variant = "app", switchTo } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+const perks = [
+  "Write blog posts in Markdown",
+  "Share quotes worth keeping",
+  "Published straight away, moderated by people",
+];
+---
+
+<CoreLayout
+  title={`${title} | Hafiz Bahtiar`}
+  description={description}
+  noindex
+  class={`font-inter text-gray-950 dark:bg-gray-950 dark:text-white ${variant === "auth" ? "bg-white" : "bg-gray-50"}`}
+>
+  <Navbar />
+  {
+    variant === "auth" ? (
+      <div class="grid min-h-[calc(100svh-3.5rem)] lg:grid-cols-2">
+        <aside class="relative hidden flex-col justify-between overflow-hidden bg-gray-950 p-10 text-white lg:flex dark:border-r dark:border-white/10">
+          <div
+            class="pointer-events-none absolute inset-0 opacity-[0.08] bg-[linear-gradient(to_right,white_1px,transparent_1px),linear-gradient(to_bottom,white_1px,transparent_1px)] bg-size-[48px_48px]"
+            aria-hidden="true"
+          />
+          <span aria-hidden="true"></span>
+          <div class="relative max-w-md">
+            <p class="font-mono text-xs tracking-widest text-sky-400 uppercase">
+              Community
+            </p>
+            <h2 class="mt-4 text-4xl font-medium tracking-tighter text-balance">
+              Write, share, and keep the good lines.
+            </h2>
+            <ul class="mt-8 grid gap-3 text-sm text-gray-300">
+              {perks.map((perk) => (
+                <li class="flex items-center gap-3">
+                  <Check className="h-4 w-4 text-sky-400" />
+                  {perk}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p class="relative text-xs text-gray-500">
+            &copy; {new Date().getFullYear()} Hafiz Bahtiar
+          </p>
+        </aside>
+
+        <main class="flex flex-col p-6 md:p-10">
+          <div class="flex items-center justify-between gap-4">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{title}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+            {switchTo && (
+              <Button asChild variant="ghost">
+                <a href={switchTo.href}>{switchTo.label}</a>
+              </Button>
+            )}
+          </div>
+          <div class="flex grow items-center justify-center py-10">
+            <div class="w-full max-w-sm">
+              <slot />
+            </div>
+          </div>
+        </main>
+      </div>
+    ) : (
+      <>
+        <!-- Small screens: tabs + account menu bar. lg and up: the side navigation. -->
+        <div class="border-b border-gray-950/5 bg-white lg:hidden dark:border-white/10 dark:bg-gray-900">
+          <div class="mx-auto max-w-6xl px-4 py-2 sm:px-6">
+            <AccountHeader client:load path={path} />
+          </div>
+        </div>
+        <div class="mx-auto w-full max-w-6xl grow px-4 py-8 sm:px-6 sm:py-12">
+          <AccountShell client:load path={path}>
+            <slot />
+          </AccountShell>
+        </div>
+        <footer class="py-6 text-center text-xs text-gray-500 dark:text-gray-400">
+          <a href="/" class="hover:text-gray-950 dark:hover:text-white">
+            hafizbahtiar.com
+          </a>
+        </footer>
+      </>
+    )
+  }
+</CoreLayout>

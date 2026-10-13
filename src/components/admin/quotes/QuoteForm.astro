@@ -1,0 +1,86 @@
+---
+import { Check } from "lucide-react";
+import MultiDropdown from "../../ui/MultiDropdown.astro";
+
+type Props = {
+  submitLabel: string;
+  submitButtonId?: string;
+};
+
+const { submitLabel, submitButtonId = "submit-btn" } = Astro.props;
+---
+
+<div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
+  <div class="admin-card">
+    <h3 class="admin-card-title">Quote</h3>
+    <div class="grid grid-cols-1 gap-6">
+      <div class="space-y-2">
+        <label class="admin-label" for="quote-text">Quote text</label>
+        <textarea
+          id="quote-text"
+          name="text"
+          required
+          maxlength="500"
+          rows="5"
+          class="admin-input"></textarea>
+      </div>
+      <div class="space-y-2">
+        <label class="admin-label" for="quote-author">Author</label>
+        <input
+          id="quote-author"
+          type="text"
+          name="author"
+          required
+          maxlength="120"
+          class="admin-input"
+        />
+      </div>
+      <div class="space-y-2">
+        <label class="admin-label" for="quote-source">Source</label>
+        <input
+          id="quote-source"
+          type="text"
+          name="source"
+          maxlength="120"
+          class="admin-input"
+        />
+        <p class="admin-help">
+          Optional - book, speech, episode or work it comes from.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <h3 class="admin-card-title">Tags</h3>
+    <MultiDropdown
+      label="Tags"
+      name="tagIds"
+      options={[]}
+      placeholder="Select tags"
+    />
+    <p id="quote-tags-empty" class="admin-help mt-2 hidden">
+      No tags yet - create them in <a
+        href="/admin/quote-tags"
+        class="font-semibold text-sky-600 dark:text-sky-400">Quote Tags</a
+      >.
+    </p>
+  </div>
+</div>
+
+<div class="admin-form-actions">
+  <button type="submit" id={submitButtonId} class="admin-btn admin-btn-primary">
+    <Check className="h-4 w-4" />
+    {submitLabel}
+  </button>
+</div>
+
+<!-- Cloned by the page script for each tag option (same markup as MultiDropdown items). -->
+<template id="quote-tag-item">
+  <li>
+    <button type="button" class="dropdown-item menu-item justify-between">
+      <span class="min-w-0 truncate"></span>
+      <Check className="indicator h-4 w-4 shrink-0 opacity-0" />
+    </button>
+  </li>
+</template>

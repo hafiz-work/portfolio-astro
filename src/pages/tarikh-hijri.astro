@@ -1,0 +1,219 @@
+---
+import Disclaimer from "../components/ui/Disclaimer.astro";
+export const prerender = false;
+import TechHeading from "../components/layout/TechHeading.astro";
+import Combobox from "../components/ui/Combobox.astro";
+import DatePicker from "../components/ui/DatePicker.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { toHijri, toMasihi } from "../lib/hari-kebesaran";
+import { formatHijri, HIJRI_MONTHS, todayInMalaysia } from "../lib/waktu-solat";
+
+const today = todayInMalaysia();
+const q = Astro.url.searchParams;
+
+// The Hijri form sends hy/hm/hd (no JS needed); fold them into one shareable ?hijri=.
+const [hy, hm, hd] = ["hy", "hm", "hd"].map((k) => q.get(k) ?? "");
+if (/^\d{4}$/.test(hy) && /^\d{1,2}$/.test(hm) && /^\d{1,2}$/.test(hd)) {
+  return Astro.redirect(
+    `/tarikh-hijri?hijri=${hy}-${hm.padStart(2, "0")}-${hd.padStart(2, "0")}`,
+  );
+}
+
+const masihiParam = q.get("masihi");
+const hijriParam =
+  q.get("hijri") ?? (q.has("hy") || q.has("hm") || q.has("hd") ? "" : null);
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+let error: string | null = null;
+let asked = await toHijri(today, today);
+if (hijriParam != null) {
+  asked = DATE.test(hijriParam)
+    ? await toMasihi(hijriParam, today)
+    : { error: "Tarikh Hijri tidak sah." };
+} else if (masihiParam != null) {
+  asked = DATE.test(masihiParam)
+    ? await toHijri(masihiParam, today)
+    : { error: "Tarikh Masihi tidak sah." };
+}
+if ("error" in asked) {
+  error = asked.error;
+  asked = await toHijri(today, today);
+}
+const r = asked as Exclude<typeof asked, { error: string }>;
+const [ry, rm, rd] = r.hijri.split("-").map(Number);
+
+const weekday = new Intl.DateTimeFormat("ms-MY", {
+  weekday: "long",
+  timeZone: "UTC",
+}).format(new Date(`${r.masihi}T00:00:00Z`));
+const masihiLabel = new Intl.DateTimeFormat("ms-MY", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+}).format(new Date(`${r.masihi}T00:00:00Z`));
+const diff = Math.round(
+  (Date.parse(r.masihi) - Date.parse(today)) / 86_400_000,
+);
+const relative =
+  diff === 0
+    ? "Hari ini"
+    : diff > 0
+      ? `${diff} hari lagi`
+      : `${-diff} hari yang lalu`;
+---
+
+<PublicLayout
+  title="Tukar Tarikh Hijri ke Masihi | Hafiz Bahtiar"
+  description="Penukar tarikh Hijri ke Masihi dan sebaliknya, mengikut takwim JAKIM."
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1
+        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Tarikh Hijri"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Tukar tarikh Masihi ke Hijri, atau Hijri ke Masihi.
+      </p>
+    </div>
+
+    {
+      error && (
+        <div class="line-y mt-10">
+          <p
+            role="alert"
+            class="mx-2 text-sm/6 font-medium text-red-600 dark:text-red-400"
+          >
+            {error} Dipaparkan: tarikh hari ini.
+          </p>
+        </div>
+      )
+    }
+
+    <div class="line-y mt-10">
+      <div class="mx-2">
+        <div class="flex items-center gap-3">
+          <p class="eyebrow">{relative}</p>
+          <span
+            class:list={[
+              "shrink-0 rounded-full px-2 font-mono text-[10px]/5 tracking-widest uppercase",
+              r.source === "jakim"
+                ? "bg-sky-500/10 text-sky-700 dark:text-sky-400"
+                : "bg-gray-950/5 text-gray-500 dark:bg-white/10 dark:text-gray-400",
+            ]}
+          >
+            {r.source === "jakim" ? "Takwim JAKIM" : "Anggaran ±1 hari"}
+          </span>
+        </div>
+        <p class="mt-4 text-4xl font-medium tracking-tight sm:text-5xl">
+          {formatHijri(r.hijri)}
+        </p>
+        <p class="mt-2 text-xl text-gray-600 dark:text-gray-400">
+          {weekday}, {masihiLabel}
+        </p>
+      </div>
+    </div>
+
+    <div class="line-y mt-10">
+      <div class="grid gap-px bg-gray-950/5 sm:grid-cols-2 dark:bg-white/10">
+        <form
+          method="get"
+          action="/tarikh-hijri"
+          class="bg-white px-4 py-5 sm:px-6 dark:bg-gray-950"
+        >
+          <label for="masihi-text" class="eyebrow">Masihi → Hijri</label>
+          <DatePicker
+            id="masihi"
+            name="masihi"
+            required
+            min="1900-01-01"
+            max="2100-12-31"
+            value={r.masihi}
+            class="mt-3"
+          />
+          <button type="submit" class="btn-pill btn-pill-primary mt-4"
+            >Tukar ke Hijri</button
+          >
+        </form>
+        <form
+          method="get"
+          action="/tarikh-hijri"
+          class="bg-white px-4 py-5 sm:px-6 dark:bg-gray-950"
+        >
+          <p class="eyebrow">Hijri → Masihi</p>
+          <div class="mt-3 grid grid-cols-4 gap-2">
+            <label class="sr-only" for="hd">Hari</label>
+            <input
+              id="hd"
+              name="hd"
+              type="number"
+              required
+              min="1"
+              max="30"
+              value={rd}
+              class="field"
+            />
+            <label class="sr-only" for="hm">Bulan</label>
+            <Combobox
+              id="hm"
+              name="hm"
+              class="col-span-2"
+              listLabel="Bulan Hijri"
+              searchPlaceholder="Cari bulan…"
+              emptyText="Tiada bulan sepadan."
+              value={String(rm)}
+              options={HIJRI_MONTHS.map((name, i) => ({
+                value: String(i + 1),
+                label: name,
+                hint: String(i + 1),
+              }))}
+            />
+            <label class="sr-only" for="hy">Tahun</label>
+            <input
+              id="hy"
+              name="hy"
+              type="number"
+              required
+              min="1318"
+              max="1524"
+              value={ry}
+              class="field"
+            />
+          </div>
+          <button type="submit" class="btn-pill btn-pill-primary mt-4"
+            >Tukar ke Masihi</button
+          >
+        </form>
+      </div>
+    </div>
+
+    <div class="line-y mt-4">
+      <div class="mx-2 flex flex-wrap gap-2">
+        <a href="/tarikh-hijri" class="btn-pill btn-pill-ghost">Hari ini</a>
+        <a href="/kiraan-detik" class="btn-pill btn-pill-ghost">Kiraan Detik</a>
+      </div>
+    </div>
+
+    <div class="line-y mt-6">
+      <Disclaimer
+        class="mx-2"
+        sources={[
+          { name: "JAKIM (e-solat)", href: "https://www.e-solat.gov.my" },
+        ]}
+      >
+        <Fragment
+          set:html={`Tarikh mengikut takwim JAKIM bagi tahun semasa; tarikh lain ialah <strong>anggaran</strong> kalendar Umm al-Qura dan boleh berbeza sehari. Awal Ramadan, Syawal dan Zulhijjah ditentukan melalui rukyah dan pengisytiharan rasmi.`}
+        />
+      </Disclaimer>
+    </div>
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>

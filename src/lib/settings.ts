@@ -16,7 +16,7 @@ class SettingsService extends ApiClient {
 
   // Calls the dedicated password endpoint which verifies currentPassword via bcrypt
   async updatePassword(currentPassword: string, newPassword: string) {
-    return this.put('/owner/profile/password', { currentPassword, newPassword });
+    return this.put('/me/password', { currentPassword, newPassword });
   }
 }
 

@@ -76,26 +76,26 @@ export function LinksManager({ projectId, onChanged }: { projectId: number; onCh
       {items.map((it, i) => (
         <div key={it.id} className="rounded-lg border border-gray-950/5 dark:border-white/10 p-3 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <input className="admin-input max-w-[160px]" placeholder="Label" value={it.label}
+            <input className="admin-input max-w-40" placeholder="Label" value={it.label}
               onChange={(e) => setField(it.id, { label: e.target.value })} onBlur={() => void commit(it)} aria-label="Link label" />
-            <input type="url" className="admin-input flex-1 min-w-[200px]" placeholder="https://…" value={it.url}
+            <input type="url" className="admin-input flex-1 min-w-50" placeholder="https://…" value={it.url}
               onChange={(e) => setField(it.id, { url: e.target.value })} onBlur={() => void commit(it)} aria-label="Link URL" />
             <div className="ml-auto flex shrink-0 items-center gap-2">
-              <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
-              <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
-              <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => remove(it)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
+              <button type="button" className="admin-btn admin-btn-secondary px-2!" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
+              <button type="button" className="admin-btn admin-btn-secondary px-2!" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
+              <button type="button" className="admin-btn admin-btn-danger px-2!" onClick={() => remove(it)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Select
-              className="max-w-[150px]"
+              className="max-w-37.5"
               value={it.linkType}
               onChange={(v) => change(it, { linkType: v as ProjectLinkType })}
               options={TYPE_OPTIONS}
               ariaLabel="Link type"
             />
             <Select
-              className="max-w-[130px]"
+              className="max-w-32.5"
               value={it.status}
               onChange={(v) => change(it, { status: v as ProjectLinkStatus })}
               options={LINK_STATUSES.map((s) => ({ value: s, label: s }))}
@@ -108,10 +108,10 @@ export function LinksManager({ projectId, onChanged }: { projectId: number; onCh
         </div>
       ))}
       <div className="rounded-lg border border-dashed border-gray-950/10 dark:border-white/10 p-3 flex flex-wrap gap-2 items-center">
-        <input className="admin-input max-w-[160px]" placeholder="Label" value={draft.label} onChange={(e) => setDraft({ ...draft, label: e.target.value })} onKeyDown={onEnter} aria-label="New link label" />
-        <input type="url" className="admin-input flex-1 min-w-[200px]" placeholder="https://…" value={draft.url} onChange={(e) => setDraft({ ...draft, url: e.target.value })} onKeyDown={onEnter} aria-label="New link URL" />
+        <input className="admin-input max-w-40" placeholder="Label" value={draft.label} onChange={(e) => setDraft({ ...draft, label: e.target.value })} onKeyDown={onEnter} aria-label="New link label" />
+        <input type="url" className="admin-input flex-1 min-w-50" placeholder="https://…" value={draft.url} onChange={(e) => setDraft({ ...draft, url: e.target.value })} onKeyDown={onEnter} aria-label="New link URL" />
         <Select
-          className="max-w-[150px]"
+          className="max-w-37.5"
           value={draft.linkType}
           onChange={(v) => setDraft({ ...draft, linkType: v as ProjectLinkType })}
           options={TYPE_OPTIONS}

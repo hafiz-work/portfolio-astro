@@ -4,7 +4,10 @@ import PublicLayout from "../../layouts/PublicLayout.astro";
 import Annot from "../../components/layout/Annot.astro";
 import { FamilyExplorer } from "../../components/family/FamilyExplorer";
 import { COMBINED_FAMILY } from "../../data/family";
-import { getPublicFamilyTreeBySlug, getPublicFamilyTrees } from "../../lib/family";
+import {
+  getPublicFamilyTreeBySlug,
+  getPublicFamilyTrees,
+} from "../../lib/family";
 import { mergeFamilyTrees } from "../../lib/family-merge";
 import {
   sanitizeFamilyDetailForPublic,
@@ -32,14 +35,16 @@ try {
 }
 ---
 
-<PublicLayout title="Family">
+<PublicLayout title="Family" noindex>
   <section>
     <div class="h-16 sm:h-24"></div>
     <div class="line-y">
       <p class="eyebrow container-main">Family</p>
     </div>
     <div class="line-y mt-2">
-      <h1 class="container-main text-4xl/[1.1] font-medium tracking-tighter text-balance text-gray-950 sm:text-6xl/[1.05] dark:text-white">
+      <h1
+        class="container-main text-4xl/[1.1] font-medium tracking-tighter text-balance text-gray-950 sm:text-6xl/[1.05] dark:text-white"
+      >
         {COMBINED_FAMILY.name}
       </h1>
     </div>
@@ -54,7 +59,10 @@ try {
           <nav aria-label="Individual family trees" class="line-y">
             <div class="container-main flex flex-wrap gap-2">
               {trees.map((tree) => (
-                <a href={`/family/${tree.slug}`} class="btn-pill btn-pill-ghost">
+                <a
+                  href={`/family/${tree.slug}`}
+                  class="btn-pill btn-pill-ghost"
+                >
                   {tree.name}
                 </a>
               ))}
@@ -79,7 +87,7 @@ try {
 
       {
         !loadError && !detail && (
-          <div class="pattern flex h-[420px] items-center justify-center rounded-xl text-sm text-gray-500">
+          <div class="pattern flex h-105 items-center justify-center rounded-xl text-sm text-gray-500">
             Family data is not available yet.
           </div>
         )

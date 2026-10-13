@@ -1,0 +1,119 @@
+---
+export const prerender = false;
+import CoreLayout from "../../layouts/CoreLayout.astro";
+import { bandOf, getReadings } from "../../lib/ipu";
+
+// Widget for other sites: <iframe src="https://hafizbahtiar.com/ipu/embed?stesen=CA20B">.
+// Other origins may frame it (EMBEDDABLE in src/middleware.ts). One station's
+// current IPU, no site chrome; links back to /ipu in a new tab.
+const q = Astro.url.searchParams;
+const tema = ["gelap", "terang"].includes(q.get("tema") ?? "")
+  ? q.get("tema")!
+  : "auto";
+const data = await getReadings();
+const stations = data?.stations ?? [];
+// ?stesen= is matched against the list (never echoed raw); default: first KL station.
+const station =
+  stations.find((s) => s.id === q.get("stesen")) ??
+  stations.find((s) => s.state === "WP Kuala Lumpur") ??
+  stations[0];
+const band = station ? bandOf(station.api) : null;
+const TONE: Record<string, string> = {
+  baik: "bg-sky-500 text-white",
+  sederhana: "bg-emerald-500 text-white",
+  "tidak-sihat": "bg-amber-400 text-gray-950",
+  sangat: "bg-orange-500 text-white",
+  bahaya: "bg-red-600 text-white",
+};
+const time = station
+  ? new Intl.DateTimeFormat("ms-MY", {
+      timeZone: "UTC", // APIMS times are Malaysian wall-clock stored as UTC (lib/ipu)
+      hour: "numeric",
+      minute: "2-digit",
+      day: "numeric",
+      month: "short",
+    }).format(new Date(station.time))
+  : "";
+const town = station?.location.split(",")[0].trim() ?? "";
+---
+
+<CoreLayout
+  title={`IPU ${town} | hafizbahtiar.com`}
+  description={`Indeks Pencemaran Udara terkini di ${town}.`}
+  noindex
+  class="font-inter"
+>
+  <!-- tema=gelap|terang overrides the visitor's system theme (auto = follow it). -->
+  <script is:inline define:vars={{ tema }}>
+    if (tema === "gelap") document.documentElement.classList.add("dark");
+    if (tema === "terang") document.documentElement.classList.remove("dark");
+  </script>
+  <main
+    class="min-h-dvh bg-white p-4 text-gray-950 dark:bg-gray-950 dark:text-white"
+  >
+    <p
+      class="font-mono text-[11px]/5 tracking-widest text-sky-600 uppercase dark:text-sky-400"
+    >
+      Kualiti udara · IPU
+    </p>
+    {
+      station ? (
+        <>
+          <p class="truncate text-sm/6 font-medium" title={station.place}>
+            {town}, {station.state}
+          </p>
+          <div class="mt-3 flex items-center gap-4">
+            <span
+              class:list={[
+                "flex size-16 shrink-0 items-center justify-center rounded-xl text-2xl font-semibold tabular-nums",
+                band
+                  ? TONE[band.tone]
+                  : "bg-gray-950/5 text-gray-500 dark:bg-white/10",
+              ]}
+            >
+              {station.api ?? "-"}
+            </span>
+            <div>
+              <p class="text-lg/6 font-medium">
+                {band ? band.label : "Tiada bacaan"}
+              </p>
+              <p class="text-xs/5 text-gray-500 dark:text-gray-400">
+                {station.pollutant && `${station.pollutant} · `}
+                {time}
+                {data?.stale && " · data simpanan"}
+              </p>
+            </div>
+          </div>
+        </>
+      ) : (
+        <p class="mt-3 text-sm/6 text-gray-600 dark:text-gray-400">
+          Bacaan IPU tak dapat diambil sekarang.
+        </p>
+      )
+    }
+    <a
+      href={`https://hafizbahtiar.com/ipu${station ? `#stesen-${station.id}` : ""}`}
+      target="_blank"
+      rel="noopener"
+      class="mt-3 block text-[11px]/5 text-gray-500 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400"
+    >
+      Sumber: Jabatan Alam Sekitar · hafizbahtiar.com/ipu ↗
+    </a>
+    <!-- Widgets travel to other sites: the disclaimer goes with them (/penafian §7). -->
+    <p class="text-[11px]/5 text-gray-500 dark:text-gray-400">
+      Bukan rasmi; dipaparkan seadanya tanpa jaminan.
+      <a
+        href="https://hafizbahtiar.com/penafian"
+        target="_blank"
+        rel="noopener"
+        class="underline underline-offset-2 hover:text-sky-600 dark:hover:text-sky-400"
+        >Penafian</a
+      >
+    </p>
+  </main>
+</CoreLayout>
+
+<script>
+  // Readings are hourly: refresh twice an hour.
+  setTimeout(() => location.reload(), 30 * 60 * 1000);
+</script>

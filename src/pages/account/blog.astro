@@ -1,0 +1,9 @@
+---
+export const prerender = false;
+import AccountLayout from "../../layouts/AccountLayout.astro";
+import { MyPosts } from "../../components/account/MyPosts";
+---
+
+<AccountLayout title="Your blog posts">
+  <MyPosts client:load />
+</AccountLayout>

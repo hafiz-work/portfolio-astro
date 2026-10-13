@@ -1,0 +1,299 @@
+---
+/**
+ * Date field in the Malaysian format (dd/mm/yyyy) with a calendar popover - our
+ * `.field`/`.menu` look, modelled on shadcn's Date Picker (Calendar in a Popover)
+ * but plain Astro + a small script, no React, no date library.
+ *
+ * - The text box shows/accepts dd/mm/yyyy (also 8/2/2027, 08-02-2027, 08022027).
+ * - The form gets ISO yyyy-mm-dd from a hidden input that carries `id` + `name`,
+ *   so server code and `form.elements[name].value = "2027-02-08"` keep working:
+ *   set it, dispatch `change`, and the text box follows. `disabled` on it is
+ *   mirrored too. Label it with `for={`${id}-text`}`.
+ * - Calendar: month/year dropdowns, Isnin-first grid, arrows/PageUp/PageDown/
+ *   Home/End/Enter/Esc, "Hari ini" and "Kosongkan".
+ * Logic: src/lib/date-my.ts (check: bun scripts/check-date-my.ts).
+ */
+import { BULAN, HARI_PENDEK, isoToDmy } from "../../lib/date-my";
+
+interface Props {
+  id: string;
+  name: string;
+  /** ISO yyyy-mm-dd. */
+  value?: string;
+  required?: boolean;
+  /** ISO bounds; also the year dropdown's range (default 1900-2100). */
+  min?: string;
+  max?: string;
+  class?: string;
+}
+
+const { id, name, value = "", required = false, min = "1900-01-01", max = "2100-12-31", class: className } = Astro.props;
+const years = Array.from(
+  { length: Number(max.slice(0, 4)) - Number(min.slice(0, 4)) + 1 },
+  (_, i) => Number(min.slice(0, 4)) + i,
+);
+const selectClass =
+  "h-8 rounded-md bg-transparent px-1.5 text-sm font-medium text-gray-950 outline-1 -outline-offset-1 outline-gray-950/10 focus:outline-2 focus:outline-sky-500 dark:bg-gray-900 dark:text-white dark:outline-white/10";
+const navClass =
+  "flex size-8 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-gray-950/5 hover:text-gray-950 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white";
+---
+
+<div data-datepicker data-min={min} data-max={max} class:list={["relative w-full", className]}>
+  <input type="hidden" id={id} name={name} value={value} />
+  <div class="relative">
+    <input
+      type="text"
+      id={`${id}-text`}
+      data-text
+      inputmode="numeric"
+      autocomplete="off"
+      placeholder="dd/mm/yyyy"
+      maxlength="10"
+      value={isoToDmy(value)}
+      required={required}
+      class="field h-10 pr-10 tabular-nums"
+    />
+    <button
+      type="button"
+      data-open
+      aria-label="Buka kalendar"
+      aria-haspopup="dialog"
+      aria-expanded="false"
+      aria-controls={`${id}-panel`}
+      class="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-lg text-gray-400 hover:text-sky-600 disabled:pointer-events-none disabled:opacity-50 dark:hover:text-sky-400"
+    >
+      <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path
+          fill-rule="evenodd"
+          d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z"
+          clip-rule="evenodd"></path>
+      </svg>
+    </button>
+  </div>
+  <p data-error class="mt-1.5 text-xs/5 text-red-600 empty:hidden dark:text-red-400" aria-live="polite"></p>
+
+  <div id={`${id}-panel`} data-panel hidden role="dialog" aria-label="Pilih tarikh" class="menu w-max min-w-0 p-3">
+    <div class="flex items-center gap-1">
+      <button type="button" data-prev aria-label="Bulan sebelum" class={navClass}>
+        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path
+            fill-rule="evenodd"
+            d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z"
+            clip-rule="evenodd"></path>
+        </svg>
+      </button>
+      <select data-month aria-label="Bulan" class:list={[selectClass, "flex-1"]}>
+        {BULAN.map((b, i) => <option value={i + 1}>{b}</option>)}
+      </select>
+      <select data-year aria-label="Tahun" class={selectClass}>
+        {years.map((y) => <option value={y}>{y}</option>)}
+      </select>
+      <button type="button" data-next aria-label="Bulan seterusnya" class={navClass}>
+        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path
+            fill-rule="evenodd"
+            d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+            clip-rule="evenodd"></path>
+        </svg>
+      </button>
+    </div>
+    <table role="grid" class="mt-2 border-separate border-spacing-0.5">
+      <thead>
+        <tr>
+          {
+            HARI_PENDEK.map((h) => (
+              <th scope="col" class="size-9 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
+                {h}
+              </th>
+            ))
+          }
+        </tr>
+      </thead>
+      <tbody data-days></tbody>
+    </table>
+    <div class="mt-2 flex items-center justify-between gap-2 border-t border-gray-950/5 pt-2 dark:border-white/10">
+      <button type="button" data-today class="rounded-md px-2 py-1 text-sm font-medium text-sky-600 hover:bg-sky-500/10 dark:text-sky-400">
+        Hari ini
+      </button>
+      <button type="button" data-clear class="rounded-md px-2 py-1 text-sm text-gray-500 hover:bg-gray-950/5 hover:text-gray-950 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white">
+        Kosongkan
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { addDays, addMonths, dmyToIso, isoToDmy, monthGrid } from "../../lib/date-my";
+
+  const DAY_CLASS =
+    "size-9 rounded-lg text-sm tabular-nums text-gray-950 hover:bg-gray-950/5 focus-visible:outline-2 focus-visible:outline-sky-500 disabled:pointer-events-none disabled:opacity-30 data-outside:text-gray-400 data-today:ring-1 data-today:ring-sky-500 aria-selected:bg-sky-500 aria-selected:font-semibold aria-selected:text-white aria-selected:hover:bg-sky-500 dark:text-white dark:hover:bg-white/10 dark:data-outside:text-gray-600";
+  const todayMy = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur" }).format(new Date());
+
+  function setupDatePicker(root: HTMLElement) {
+    if (root.dataset.bound === "1") return;
+    root.dataset.bound = "1";
+    const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+    const hidden = $<HTMLInputElement>('input[type="hidden"]');
+    const text = $<HTMLInputElement>("[data-text]");
+    const openBtn = $<HTMLButtonElement>("[data-open]");
+    const error = $<HTMLElement>("[data-error]");
+    const panel = $<HTMLElement>("[data-panel]");
+    const monthSel = $<HTMLSelectElement>("[data-month]");
+    const yearSel = $<HTMLSelectElement>("[data-year]");
+    const days = $<HTMLElement>("[data-days]");
+    const min = root.dataset.min!;
+    const max = root.dataset.max!;
+    const clamp = (iso: string) => (iso < min ? min : iso > max ? max : iso);
+    let focusIso = clamp(hidden.value || todayMy());
+
+    const showError = (msg: string) => {
+      error.textContent = msg;
+      text.setCustomValidity(msg);
+      text.toggleAttribute("aria-invalid", !!msg);
+    };
+    const setValue = (iso: string) => {
+      showError("");
+      text.value = isoToDmy(iso);
+      if (hidden.value === iso) return;
+      hidden.value = iso;
+      hidden.dispatchEvent(new Event("input", { bubbles: true }));
+      hidden.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+
+    const render = () => {
+      const [y, m] = focusIso.split("-").map(Number);
+      monthSel.value = String(m);
+      yearSel.value = String(y);
+      const today = todayMy();
+      const cells = monthGrid(y, m);
+      days.replaceChildren(
+        ...Array.from({ length: 6 }, (_, w) => {
+          const tr = document.createElement("tr");
+          for (const c of cells.slice(w * 7, w * 7 + 7)) {
+            const td = document.createElement("td");
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = DAY_CLASS;
+            b.textContent = String(c.day);
+            b.dataset.iso = c.iso;
+            b.tabIndex = c.iso === focusIso ? 0 : -1;
+            b.disabled = c.iso < min || c.iso > max;
+            b.toggleAttribute("data-outside", !c.inMonth);
+            b.toggleAttribute("data-today", c.iso === today);
+            b.setAttribute("aria-selected", String(c.iso === hidden.value));
+            b.setAttribute("aria-label", isoToDmy(c.iso));
+            td.append(b);
+            tr.append(td);
+          }
+          return tr;
+        }),
+      );
+    };
+    const focusDay = () => days.querySelector<HTMLElement>(`[data-iso="${focusIso}"]`)?.focus();
+    const moveTo = (iso: string) => {
+      focusIso = clamp(iso);
+      render();
+      focusDay();
+    };
+
+    const isOpen = () => !panel.hidden;
+    const open = () => {
+      focusIso = clamp(hidden.value || todayMy());
+      render();
+      panel.hidden = false;
+      openBtn.setAttribute("aria-expanded", "true");
+      focusDay();
+    };
+    const close = (refocus = true) => {
+      if (!isOpen()) return;
+      panel.hidden = true;
+      openBtn.setAttribute("aria-expanded", "false");
+      if (refocus) openBtn.focus();
+    };
+    const pick = (iso: string) => {
+      setValue(iso);
+      close();
+    };
+
+    // Typing: "dd" -> "dd/", "dd/mm" -> "dd/mm/"; validate on change / Enter.
+    text.addEventListener("input", (e) => {
+      if ((e as InputEvent).inputType === "insertText" && /^\d{2}(\/\d{2})?$/.test(text.value)) text.value += "/";
+      if (error.textContent) showError("");
+    });
+    const commit = () => {
+      const raw = text.value.trim();
+      if (!raw) return setValue("");
+      const iso = dmyToIso(raw);
+      if (!iso) return showError("Tarikh tidak sah. Guna format dd/mm/yyyy.");
+      if (iso < min || iso > max) return showError(`Tarikh mesti antara ${isoToDmy(min)} dan ${isoToDmy(max)}.`);
+      setValue(iso);
+    };
+    text.addEventListener("change", commit);
+    text.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") commit();
+      if (e.key === "ArrowDown" && e.altKey) open();
+    });
+
+    openBtn.addEventListener("click", () => (isOpen() ? close() : open()));
+    $<HTMLButtonElement>("[data-prev]").addEventListener("click", () => ((focusIso = clamp(addMonths(focusIso, -1))), render()));
+    $<HTMLButtonElement>("[data-next]").addEventListener("click", () => ((focusIso = clamp(addMonths(focusIso, 1))), render()));
+    // Month/year dropdowns: same day in the chosen month (clamped, 31 -> 30/28).
+    const jump = () => {
+      const [y, m] = focusIso.split("-").map(Number);
+      focusIso = clamp(addMonths(focusIso, (Number(yearSel.value) - y) * 12 + Number(monthSel.value) - m));
+      render();
+    };
+    monthSel.addEventListener("change", jump);
+    yearSel.addEventListener("change", jump);
+    $<HTMLButtonElement>("[data-today]").addEventListener("click", () => pick(clamp(todayMy())));
+    $<HTMLButtonElement>("[data-clear]").addEventListener("click", () => pick(""));
+
+    days.addEventListener("click", (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-iso]");
+      if (b && !b.disabled) pick(b.dataset.iso!);
+    });
+    days.addEventListener("keydown", (e) => {
+      const steps: Record<string, () => string> = {
+        ArrowLeft: () => addDays(focusIso, -1),
+        ArrowRight: () => addDays(focusIso, 1),
+        ArrowUp: () => addDays(focusIso, -7),
+        ArrowDown: () => addDays(focusIso, 7),
+        Home: () => addDays(focusIso, -((new Date(`${focusIso}T00:00:00Z`).getUTCDay() + 6) % 7)),
+        End: () => addDays(focusIso, 6 - ((new Date(`${focusIso}T00:00:00Z`).getUTCDay() + 6) % 7)),
+        PageUp: () => addMonths(focusIso, e.shiftKey ? -12 : -1),
+        PageDown: () => addMonths(focusIso, e.shiftKey ? 12 : 1),
+      };
+      if (steps[e.key]) {
+        e.preventDefault();
+        moveTo(steps[e.key]());
+      }
+    });
+    panel.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        close();
+      }
+    });
+    document.addEventListener("pointerdown", (e) => {
+      if (isOpen() && !root.contains(e.target as Node)) close(false);
+    });
+
+    // Code that sets the hidden input (admin edit forms) dispatches `change`.
+    hidden.addEventListener("change", () => {
+      showError("");
+      text.value = isoToDmy(hidden.value);
+    });
+    const syncDisabled = () => {
+      text.disabled = hidden.disabled;
+      openBtn.disabled = hidden.disabled;
+      if (hidden.disabled) close(false);
+    };
+    new MutationObserver(syncDisabled).observe(hidden, { attributes: true, attributeFilter: ["disabled"] });
+    syncDisabled();
+  }
+
+  const setupDatePickers = () => document.querySelectorAll<HTMLElement>("[data-datepicker]").forEach(setupDatePicker);
+  (window as unknown as { setupDatePickers: () => void }).setupDatePickers = setupDatePickers;
+  setupDatePickers();
+  document.addEventListener("astro:page-load", setupDatePickers);
+</script>

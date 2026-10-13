@@ -1,0 +1,29 @@
+---
+import TechTitle from "./TechTitle";
+/**
+ * Heading text with React Bits TechText on lg+ (canvas, one line, hover/drag a
+ * letter). Below lg the slot renders instead (default: the plain text). The real
+ * text stays in the heading (sr-only on lg) for SEO and screen readers.
+ * `box` sizes the canvas: taller than the line (room for the selection label and
+ * dragged letters) with a negative margin that keeps the row height unchanged.
+ */
+interface Props {
+  text: string;
+  fontSize: number;
+  fontWeight?: number;
+  box: string;
+}
+const { text, fontSize, fontWeight = 500, box } = Astro.props;
+---
+
+<span class="lg:sr-only"><slot>{text}</slot></span>
+<span class:list={["hidden lg:block", box]} aria-hidden="true">
+  <TechTitle
+    client:only="react"
+    text={text}
+    fontSize={fontSize}
+    fontWeight={fontWeight}
+  >
+    <span slot="fallback" class="flex h-full items-center">{text}</span>
+  </TechTitle>
+</span>

@@ -34,17 +34,24 @@ const { title, description, image, type, publishedTime, imageAlt, noindex } =
   <div class="page-shell">
     <div class="gutter gutter-left" aria-hidden="true"></div>
     <div class="page-col">
-      <main class="flex-grow">
+      <main class="grow">
         <slot />
       </main>
       <Footer />
     </div>
     <div class="gutter gutter-right" aria-hidden="true"></div>
   </div>
+  <!-- Page transition overlay (lib/pixel-swipe.ts); persisted so it survives the swap. -->
+  <canvas
+    id="pixel-swipe"
+    transition:persist="pixel-swipe"
+    class="pointer-events-none fixed inset-0 z-100 h-full w-full"
+    aria-hidden="true"></canvas>
 </CoreLayout>
 
 <script>
   import { isResumePdfHref, trackResumeDownload } from "../lib/track";
+  import "../lib/pixel-swipe";
 
   // Scroll-reveal: elements with [data-reveal] slide up when entering the
   // viewport. CSS handles prefers-reduced-motion (elements stay visible).

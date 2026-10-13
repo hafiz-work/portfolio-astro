@@ -111,6 +111,7 @@ import Dropdown from "../../../components/ui/Dropdown.astro";
 </PrivateLayout>
 
 <script>
+  import { showToast } from "../../../lib/admin-ui";
   import { projectsService } from "../../../lib/projects";
   import { setupFormGuard } from "../../../lib/form-guard";
 
@@ -227,7 +228,7 @@ import Dropdown from "../../../components/ui/Dropdown.astro";
           formGuard = setupFormGuard(form);
         }
       } catch (error) {
-        alert("Failed to load projects");
+        showToast({ type: "error", title: "Failed to load projects" });
         loadingState?.classList.add("hidden");
       }
     }
@@ -262,7 +263,7 @@ import Dropdown from "../../../components/ui/Dropdown.astro";
 
       const projectId = Number(projectInput?.value);
       if (!projectId) {
-        alert("Please select a project");
+        showToast({ type: "warning", title: "Please select a project" });
         return;
       }
 
@@ -283,14 +284,20 @@ import Dropdown from "../../../components/ui/Dropdown.astro";
         });
         if (result) {
           formGuard?.updateInitialState();
-          alert("Policy saved successfully!");
-          window.location.href = "/admin/policies";
+          showToast({ type: "success", title: "Policy saved successfully!" });
+          window.setTimeout(
+            () => (window.location.href = "/admin/policies"),
+            900,
+          );
         } else {
           throw new Error("Failed to save policy");
         }
       } catch (error) {
         console.error(error);
-        alert("Failed to save policy. Please try again.");
+        showToast({
+          type: "error",
+          title: "Failed to save policy. Please try again.",
+        });
       } finally {
         submitBtn.innerHTML = originalContent;
         submitBtn.disabled = false;

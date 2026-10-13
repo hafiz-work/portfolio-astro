@@ -12,6 +12,7 @@ import {
   DeleteAction,
 } from "../../ui/admin/primitives";
 import { blogService } from "../../../lib/blog";
+import { showToast, confirmDialog } from "../../../lib/admin-ui";
 import type { BlogPostSummary } from "../../../types/blog";
 
 export const BlogPostsTable = () => {
@@ -33,23 +34,18 @@ export const BlogPostsTable = () => {
     loadPosts();
   }, []);
 
-  const confirmDelete = async (post: BlogPostSummary) => {
-    const modal = (window as Window & { confirmModal?: any }).confirmModal;
-    if (modal?.show) {
-      return modal.show({
-        title: "Delete post",
-        message: `Delete “${post.title}”? This action cannot be undone.`,
-        confirmText: "Delete",
-        cancelText: "Cancel",
-        variant: "danger",
-      });
-    }
-    return confirm("Are you sure you want to delete this post?");
-  };
+  const confirmDelete = (post: BlogPostSummary) =>
+    confirmDialog({
+      title: "Delete post",
+      message: `Delete “${post.title}”? This action cannot be undone.`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "danger",
+    });
 
   const handleDelete = async (post: BlogPostSummary) => {
     if (!post.id) {
-      alert("Missing blog post ID");
+      showToast({ type: "error", title: "Missing blog post ID" });
       return;
     }
     const shouldDelete = await confirmDelete(post);
@@ -59,11 +55,11 @@ export const BlogPostsTable = () => {
       if (success) {
         setData((prev) => prev.filter((item) => item.id !== post.id));
       } else {
-        alert("Failed to delete post");
+        showToast({ type: "error", title: "Failed to delete post" });
       }
     } catch (error) {
       console.error("Delete failed:", error);
-      alert("Failed to delete post");
+      showToast({ type: "error", title: "Failed to delete post" });
     }
   };
 

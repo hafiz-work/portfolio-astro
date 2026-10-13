@@ -16,7 +16,7 @@
 | Concern | Repo | Path |
 |---|---|---|
 | Frontend (Astro + React island + family-chart) | `portfolio-astro` | `/Users/hafiz/Developments/portfolio-astro` |
-| Backend (Hono + Workers + D1 + KV) | `hono-workers` | `/Users/hafiz/Developments/hono-workers` |
+| Backend (Hono + Workers + D1) | `hono-workers` | `/Users/hafiz/Developments/hono-workers` |
 
 These docs live in the **frontend** repo (`docs/brain`, `docs/architecture`) but describe
 **both** sides. Backend file paths below are relative to the `hono-workers` repo.
@@ -189,7 +189,7 @@ was deliberately **not** migrated onto the public hook to avoid regressing the i
 ## 11. Backend shape (hono-workers)
 
 - **Public routes** `src/routes/v1/public/family.ts`: `GET /` (list), `GET /person/:id`,
-  `GET /trees-by-global/:key`, `GET /:slug` (detail). KV cache: `family_trees:list` and
+  `GET /trees-by-global/:key`, `GET /:slug` (detail). In-isolate cache (no KV since 2026-10-09): `family_trees:list` and
   `family_tree_detail:${slug}` (TTL 120s); HTTP `Cache-Control: public, max-age=60,
   stale-while-revalidate=600`. Bypass with `?noCache=1` or `Cache-Control: no-cache`. Malformed
   cache entries are purged, never 500.

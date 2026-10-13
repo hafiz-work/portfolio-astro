@@ -1,9 +1,12 @@
 ---
 import Annot from "./Annot.astro";
+import TextReveal from "../great-ui/TextReveal";
+import TechHeading from "./TechHeading.astro";
 /**
  * tailwindcss.com section header: eyebrow row, heading row, faint class
  * annotation (live, see Annot.astro), lead row - each on its own full-bleed hairline row.
  * Optional `action` slot sits to the right of the heading on sm+.
+ * Title effect: TextReveal below lg, TechText on lg+ (see TechHeading).
  */
 interface Props {
   eyebrow?: string;
@@ -12,12 +15,7 @@ interface Props {
   as?: "h1" | "h2";
 }
 
-const {
-  eyebrow,
-  title,
-  description,
-  as: Heading = "h2",
-} = Astro.props;
+const { eyebrow, title, description, as: Heading = "h2" } = Astro.props;
 const hasAction = Astro.slots.has("action");
 ---
 
@@ -33,18 +31,31 @@ const hasAction = Astro.slots.has("action");
     <div
       class:list={[
         "container-main",
-        hasAction && "flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between",
+        hasAction &&
+          "flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between",
       ]}
     >
       <Heading
         class:list={[
-          "text-4xl/[1.1] font-medium tracking-tighter text-pretty text-gray-950 dark:text-white",
+          "min-w-0 flex-1 text-4xl/[1.1] font-medium tracking-tighter text-pretty text-gray-950 dark:text-white",
           Heading === "h1" ? "sm:text-6xl/[1.05]" : "sm:text-5xl/[1.05]",
         ]}
       >
-        {title}
+        <TechHeading
+          text={title}
+          fontSize={Heading === "h1" ? 60 : 48}
+          box={Heading === "h1" ? "-my-7 h-30" : "-my-6 h-24"}
+        >
+          <TextReveal client:visible text={title} />
+        </TechHeading>
       </Heading>
-      {hasAction && <div class="shrink-0 pb-1.5"><slot name="action" /></div>}
+      {
+        hasAction && (
+          <div class="shrink-0 pb-1.5">
+            <slot name="action" />
+          </div>
+        )
+      }
     </div>
   </div>
   {
@@ -52,9 +63,7 @@ const hasAction = Astro.slots.has("action");
       <>
         <Annot preset="lead" class="mt-4" />
         <div class="line-y">
-          <p class="lead container-main">
-            {description}
-          </p>
+          <p class="lead container-main">{description}</p>
         </div>
       </>
     )

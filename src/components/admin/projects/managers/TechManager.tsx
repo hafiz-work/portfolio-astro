@@ -70,15 +70,15 @@ export function TechManager({ projectId, onChanged }: { projectId: number; onCha
         <div className="mt-2 space-y-2">
           {attached.map((it, i) => (
             <div key={it.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-950/5 dark:border-white/10 px-3 py-2">
-              <span className="min-w-0 break-words font-medium text-gray-800 dark:text-gray-200">{it.tech?.name ?? `#${it.techStackId}`}</span>
+              <span className="min-w-0 wrap-break-word font-medium text-gray-800 dark:text-gray-200">{it.tech?.name ?? `#${it.techStackId}`}</span>
               {it.tech?.category && <span className="admin-help">· {it.tech.category}</span>}
               <div className="ml-auto flex shrink-0 items-center gap-2">
                 <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                   <input type="checkbox" checked={it.isPrimary} onChange={(e) => setPrimary(it, e.target.checked)} title="Main technology - shown first" /> Primary
                 </label>
-                <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
-                <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === attached.length - 1}><ChevronDown className="h-4 w-4" /></button>
-                <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => detach(it)} aria-label="Detach"><X className="h-4 w-4" /></button>
+                <button type="button" className="admin-btn admin-btn-secondary px-2!" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
+                <button type="button" className="admin-btn admin-btn-secondary px-2!" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === attached.length - 1}><ChevronDown className="h-4 w-4" /></button>
+                <button type="button" className="admin-btn admin-btn-danger px-2!" onClick={() => detach(it)} aria-label="Detach"><X className="h-4 w-4" /></button>
               </div>
             </div>
           ))}
@@ -88,7 +88,7 @@ export function TechManager({ projectId, onChanged }: { projectId: number; onCha
       <div className="space-y-1.5">
         <span className="admin-label">Add from library</span>
         <Select
-          className="max-w-[260px]"
+          className="max-w-65"
           value=""
           onChange={(v) => void attach(v)}
           options={available.map((t) => ({ value: String(t.id), label: t.category ? `${t.name} · ${t.category}` : t.name }))}
@@ -100,11 +100,11 @@ export function TechManager({ projectId, onChanged }: { projectId: number; onCha
       <div className="rounded-lg border border-dashed border-gray-950/10 dark:border-white/10 p-3 space-y-2">
         <span className="admin-label">Not in the library?</span>
         <div className="flex flex-wrap items-center gap-2">
-          <input className="admin-input max-w-[200px]" placeholder="New tech name" value={newTech.name}
+          <input className="admin-input max-w-50" placeholder="New tech name" value={newTech.name}
             onChange={(e) => setNewTech({ ...newTech, name: e.target.value })}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void createTech(); } }} aria-label="New tech name" />
           <Select
-            className="max-w-[150px]"
+            className="max-w-37.5"
             value={newTech.category}
             onChange={(v) => setNewTech({ ...newTech, category: v as TechCategory })}
             options={CATEGORIES.map((c) => ({ value: c, label: c }))}

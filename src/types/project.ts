@@ -12,6 +12,8 @@ export interface Project {
     imageVariant?: ImageVariant;
     /** Device-frame card preview: set on the Cover media in admin; unset = guess from tech. */
     previewFrame?: "phone" | "web";
+    /** API list only: device frame of the Cover media item (raw; see toPreviewFrame). */
+    coverFrame?: string | null;
     technologies: string[]; // Array of technology names
     githubUrl: string;
     liveUrl: string;

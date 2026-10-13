@@ -11,7 +11,7 @@
 
 - **Frontend:** Astro 6 (`output: "server"`, `@astrojs/cloudflare`) + React 19 islands +
   Tailwind v4. Public family pages are `prerender = false` (fetch at request time).
-- **Backend:** Hono on Cloudflare Workers + D1 (SQLite) + KV (cache). Web APIs only.
+- **Backend:** Hono on Cloudflare Workers + D1 (SQLite). Web APIs only.
 - **Library:** `family-chart@0.9.0` (d3-based tree layout/rendering).
 - **Trust boundary:** the browser. Everything server-side may hold full data; only the sanitized
   `PublicFamilyTreeDetail` may cross into a React island.
@@ -28,7 +28,7 @@ hono-workers FamilyService  ── full rows, NO field filtering ──┐
   │                                                            │  ⚠ public API
   ▼                                                            │  exposes full PII
 Public API  GET /api/v1/family[, /:slug, /person/:id, ...]     │  (see brain §7)
-  │   (KV cache 120s; HTTP cache 60s + swr 600s)               │
+  │   (memory cache 120s; HTTP 60s + swr 600s)                 │
   ▼
 Astro SSR frontmatter (prerender=false)
   src/lib/family.ts publicGet()  ── plain fetch, no cache-buster, no no-store ──
@@ -118,7 +118,7 @@ PersonDetailPanel (desktop side panel + mobile bottom sheet)
 
 | Path | Role | Notes |
 |---|---|---|
-| `src/routes/v1/public/family.ts` | public API ⚠ | `/`, `/:slug`, `/person/:id`, `/trees-by-global/:key`; KV cache; no field filtering. |
+| `src/routes/v1/public/family.ts` | public API ⚠ | `/`, `/:slug`, `/person/:id`, `/trees-by-global/:key`; in-isolate cache; no field filtering. |
 | `src/routes/v1/owner/family.ts` | admin API | `jwtAuth + requireAdmin`; CRUD. |
 | `src/services/family.ts` | service ⚠ | `FamilyService` (public + admin); public reads gate on `is_public=1` only. |
 | `src/types/family.ts` | types | `FamilyTree`/`FamilyPerson`/`FamilyRelationship`/`FamilyTreeDetail` + Create/Update. |
@@ -148,8 +148,8 @@ people.global_key (NOCASE after 007), relationships.tree_id/person/related/type.
 
 ## 8. Caching
 
-- **KV** (backend): `family_trees:list`, `family_tree_detail:${slug}`, TTL 120s. Malformed entries
-  are purged, never 500. Bypass via `?noCache=1` or `Cache-Control: no-cache`.
+- **In-isolate memory** (backend, no KV since 2026-10-09): `family_trees:list`, `family_tree_detail:${slug}`,
+  TTL 120s, max 200 keys per isolate. Bypass via `?noCache=1` or `Cache-Control: no-cache`.
 - **HTTP** (backend): `Cache-Control: public, max-age=60, stale-while-revalidate=600` on public GETs.
 - **Frontend** intentionally uses a plain `fetch` for public reads (no cache-buster, no `no-store`)
-  so the backend KV/HTTP cache stays effective. Admin calls still use the authenticated `ApiClient`.
+  so the backend memory/HTTP cache stays effective. Admin calls still use the authenticated `ApiClient`.

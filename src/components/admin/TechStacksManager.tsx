@@ -111,7 +111,7 @@ export function TechStacksManager() {
         <h3 className="admin-card-title">Add tech</h3>
         <div className="flex flex-wrap items-center gap-2">
           <input
-            className="admin-input max-w-[260px]"
+            className="admin-input max-w-65"
             placeholder="e.g. Flutter"
             value={draft.name}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
@@ -150,7 +150,7 @@ export function TechStacksManager() {
               {rows.map((t) => (
                 <li key={t.id} className="flex flex-wrap items-center gap-2 px-3 py-2">
                   <input
-                    className="admin-input min-w-[160px] flex-1"
+                    className="admin-input min-w-40 flex-1"
                     value={t.name}
                     onChange={(e) => setField(t.id, { name: e.target.value })}
                     onBlur={() => void commit(t)}
@@ -158,7 +158,7 @@ export function TechStacksManager() {
                   />
                   <Select className="w-40" value={t.category ?? ""} onChange={(v) => change(t, { category: v as TechCategory })} options={CATEGORY_OPTIONS} placeholder="Category" ariaLabel={`Category of ${t.name}`} />
                   <Select className="w-40" value={t.proficiency ?? ""} onChange={(v) => change(t, { proficiency: String(v) || null })} options={proficiencyOptions(t.proficiency)} ariaLabel={`Proficiency of ${t.name}`} />
-                  <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => remove(t)} aria-label={`Delete ${t.name}`}>
+                  <button type="button" className="admin-btn admin-btn-danger px-2!" onClick={() => remove(t)} aria-label={`Delete ${t.name}`}>
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </li>

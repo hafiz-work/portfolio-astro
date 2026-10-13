@@ -11,6 +11,7 @@ import {
     ViewAction,
 } from "../../ui/admin/primitives";
 import { contactService, type OwnerContact } from "../../../lib/contact";
+import { showToast } from "../../../lib/admin-ui";
 import { X } from "lucide-react";
 
 const formatDate = (value: string) => {
@@ -57,7 +58,7 @@ export const ContactsTable = () => {
             );
         } catch (error) {
             console.error("Failed to update contact status:", error);
-            alert("Couldn't update the message status. Please try again.");
+            showToast({ type: "error", title: "Couldn't update the message status", message: "Please try again." });
         } finally {
             setStatusUpdating(false);
         }
@@ -141,7 +142,7 @@ export const ContactsTable = () => {
                         className="absolute inset-0 bg-gray-950/60 backdrop-blur-sm"
                         onClick={() => setSelectedContact(null)}
                     />
-                    <div className="relative w-full max-w-3xl rounded-xl border border-gray-950/5 bg-white shadow-2xl overflow-hidden dark:border-white/10 dark:bg-white/[0.03]">
+                    <div className="relative w-full max-w-3xl rounded-xl border border-gray-950/5 bg-white shadow-2xl overflow-hidden dark:border-white/10 dark:bg-white/3">
                         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-950/5 dark:border-white/10">
                             <div className="space-y-1">
                                 <p className="text-xs text-sky-600 dark:text-sky-400 font-mono uppercase tracking-wider">
@@ -190,7 +191,7 @@ export const ContactsTable = () => {
                             </div>
                             <div className="space-y-2">
                                 <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">MESSAGE</p>
-                                <div className="rounded-xl border border-gray-950/5 bg-gray-950/[0.025] p-4 text-sm text-gray-700 leading-relaxed whitespace-pre-line dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-200">
+                                <div className="rounded-xl border border-gray-950/5 bg-gray-950/2.5 p-4 text-sm text-gray-700 leading-relaxed whitespace-pre-line dark:border-white/10 dark:bg-white/3 dark:text-gray-200">
                                     {selectedContact.message}
                                 </div>
                             </div>
@@ -203,7 +204,7 @@ export const ContactsTable = () => {
                                         type="button"
                                         disabled={statusUpdating || selectedContact.status === status}
                                         onClick={() => updateStatus(selectedContact, status)}
-                                        className="rounded-lg border border-gray-950/10 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-sky-400 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-300 dark:hover:border-sky-400 dark:hover:text-sky-300"
+                                        className="rounded-lg border border-gray-950/10 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-sky-400 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/3 dark:text-gray-300 dark:hover:border-sky-400 dark:hover:text-sky-300"
                                     >
                                         {status === "READ" ? "Mark read" : status === "REPLIED" ? "Mark replied" : "Archive"}
                                     </button>

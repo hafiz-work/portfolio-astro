@@ -1,0 +1,412 @@
+---
+import {
+  Check,
+  ChevronLeft,
+  CircleCheck,
+  CircleX,
+  Eye,
+  EyeOff,
+} from "lucide-react";
+import { Image } from "astro:assets";
+import CoreLayout from "../../layouts/CoreLayout.astro";
+import SectionHeader from "../../components/layout/SectionHeader.astro";
+
+// Cloudflare Turnstile (invisible until a challenge is needed). This site key is
+// public; keep it as a fallback so production login still works when build-time
+// env is absent.
+const DEFAULT_TURNSTILE_SITE_KEY = "0x4AAAAAAFD-PSk_u7NHAF-5";
+const turnstileSiteKey =
+  import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || DEFAULT_TURNSTILE_SITE_KEY;
+---
+
+<CoreLayout
+  title="Admin sign in | Hafiz Bahtiar"
+  description="Sign in to manage the portfolio - projects, posts, experiences and policies."
+  noindex
+>
+  <!-- Public shell without PublicLayout's navbar/footer: gutters + full-bleed
+       hairlines + Inter, so /login reads as part of the site but stays focused. -->
+  <div class="page-shell font-inter text-gray-950 dark:text-white">
+    <div class="gutter gutter-left" aria-hidden="true"></div>
+    <div class="page-col">
+      <main class="grow">
+        <div class="line-b">
+          <div class="container-main flex h-14 items-center">
+            <a
+              href="/"
+              class="inline-flex items-center"
+              aria-label="Hafiz Bahtiar - home"
+            >
+              <Image
+                src="/brand/wordmark.svg"
+                alt="hafizbahtiar"
+                width={383}
+                height={120}
+                loading="eager"
+                class="h-8 w-auto"
+              />
+            </a>
+          </div>
+        </div>
+
+        <div class="section-gap"></div>
+
+        <SectionHeader
+          as="h1"
+          eyebrow="Account"
+          title="Welcome back."
+          description="Sign in to manage projects, posts, experiences and policies."
+        />
+
+        <div class="h-10"></div>
+
+        <!-- Form row: same full-bleed hairline rhythm as the contact form. -->
+        <div class="line-y">
+          <form
+            class="container-main max-w-md space-y-5 py-10 sm:py-14"
+            id="login-form"
+            novalidate
+            data-turnstile-site-key={turnstileSiteKey || undefined}
+          >
+            <!-- Status message: error by default, emerald when the script flips it. -->
+            <div id="status-display" class="hidden" aria-live="polite">
+              <div
+                id="status-panel"
+                role="alert"
+                class="flex items-center gap-3"
+              >
+                <div id="status-icon" class="shrink-0">
+                  <CircleX className="h-4 w-4" />
+                </div>
+                <span id="status-text">Invalid email or password.</span>
+              </div>
+            </div>
+            <!-- Lucide icons the script swaps in (see icon()). -->
+            <template id="icon-error"><CircleX className="h-4 w-4" /></template>
+            <template id="icon-success"
+              ><CircleCheck className="h-4 w-4" /></template
+            >
+            <template id="icon-spinner"
+              ><span class="terminal-loader w-10" aria-hidden="true"
+              ></span></template
+            >
+            <template id="icon-check"><Check className="h-4 w-4" /></template>
+            <template id="icon-eye"><Eye className="h-4 w-4" /></template>
+            <template id="icon-eye-off"><EyeOff className="h-4 w-4" /></template
+            >
+
+            <div>
+              <label
+                for="username"
+                class="mb-1.5 block text-sm/6 font-medium text-gray-950 dark:text-white"
+                >Email</label
+              >
+              <input
+                type="email"
+                id="username"
+                name="username"
+                autocomplete="username"
+                inputmode="email"
+                class="field"
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+
+            <div>
+              <label
+                for="password"
+                data-required
+                class="mb-1.5 block text-sm/6 font-medium text-gray-950 dark:text-white"
+                >Password</label
+              >
+              <div class="relative">
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  autocomplete="current-password"
+                  class="field pr-11"
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  id="toggle-password"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-gray-400 transition-colors hover:text-gray-950 dark:text-gray-500 dark:hover:text-white"
+                  aria-label="Toggle password visibility"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              id="submit-btn"
+              class="btn-pill btn-pill-primary w-full"
+            >
+              Sign in
+            </button>
+
+            {
+              turnstileSiteKey && (
+                <div id="turnstile-login" class="flex justify-center" />
+              )
+            }
+
+            {
+              turnstileSiteKey && (
+                <p class="text-xs/5 text-gray-500 dark:text-gray-400">
+                  Protected by Cloudflare Turnstile - the Cloudflare{" "}
+                  <a
+                    href="https://www.cloudflare.com/privacypolicy/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="underline hover:text-gray-950 dark:hover:text-white"
+                  >
+                    Privacy Policy
+                  </a>{" "}
+                  applies.
+                </p>
+              )
+            }
+          </form>
+        </div>
+
+        <!-- Return row -->
+        <div class="line-y">
+          <div
+            class="container-main flex flex-wrap items-center gap-x-4 gap-y-3 py-5"
+          >
+            <a href="/" class="btn-pill btn-pill-ghost">
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Back to site
+            </a>
+            <span class="font-mono text-xs/6 text-gray-400 dark:text-gray-500"
+              >/admin/login</span
+            >
+          </div>
+        </div>
+
+        <div class="section-gap"></div>
+      </main>
+    </div>
+    <div class="gutter gutter-right" aria-hidden="true"></div>
+  </div>
+</CoreLayout>
+
+{
+  // Turnstile: explicit rendering, so the page keeps the widget id and can
+  // reset it between attempts (tokens are single-use).
+  turnstileSiteKey && (
+    <script
+      is:inline
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+      async
+      defer
+    />
+  )
+}
+
+<script>
+  import { authService, can } from "../../lib/auth";
+  import { createTurnstile } from "../../lib/turnstile";
+
+  const form = document.getElementById("login-form") as HTMLFormElement | null;
+  const statusDisplay = document.getElementById("status-display");
+  const statusText = document.getElementById("status-text");
+  const statusPanel = document.getElementById("status-panel");
+  const statusIcon = document.getElementById("status-icon");
+  const submitBtn = document.getElementById(
+    "submit-btn",
+  ) as HTMLButtonElement | null;
+  const turnstileSiteKey = form?.dataset.turnstileSiteKey || "";
+
+  let failedAttempts = 0;
+  let lockUntil = 0;
+  let submitting = false;
+
+  // Shared with the public sign-in (src/lib/turnstile.ts).
+  const turnstile = createTurnstile(
+    "turnstile-login",
+    turnstileSiteKey,
+    "login",
+  );
+
+  // Toggle Password Visibility
+  const togglePasswordBtn = document.getElementById("toggle-password");
+  const passwordInput = document.getElementById("password") as HTMLInputElement;
+
+  togglePasswordBtn?.addEventListener("click", () => {
+    if (passwordInput) {
+      const type =
+        passwordInput.getAttribute("type") === "password" ? "text" : "password";
+      passwordInput.setAttribute("type", type);
+
+      togglePasswordBtn.innerHTML = icon(type === "text" ? "eye-off" : "eye");
+    }
+  });
+
+  // Redirect only when the API refresh cookie is still valid.
+  if (authService.isAuthenticated()) {
+    authService.tryRefresh().then(async (valid) => {
+      if (valid && can(await authService.me(), "admin.access")) {
+        window.location.href = "/admin";
+      } else {
+        authService.clearAuthState();
+      }
+    });
+  }
+
+  const showStatus = (
+    message: string,
+    type: "error" | "success",
+    iconHtml: string,
+  ) => {
+    if (!statusDisplay || !statusText || !statusPanel || !statusIcon) return;
+    statusText.textContent = message;
+    if (type === "success") {
+      statusPanel.classList.add("status-success");
+    } else {
+      statusPanel.classList.remove("status-success");
+    }
+    statusIcon.innerHTML = iconHtml;
+    statusDisplay.classList.remove("hidden");
+    void statusDisplay.offsetWidth;
+  };
+
+  // Icon markup comes from the <template id="icon-*"> lucide icons in the page.
+  const icon = (name: string) =>
+    document.getElementById(`icon-${name}`)?.innerHTML ?? "";
+  const errorIcon = icon("error");
+  const successIcon = icon("success");
+
+  const resetUI = () => {
+    (form as HTMLFormElement)?.reset();
+    submitting = false;
+    if (submitBtn) {
+      submitBtn.textContent = "Sign in";
+      submitBtn.disabled = false;
+    }
+    if (statusDisplay) statusDisplay.classList.add("hidden");
+  };
+
+  resetUI();
+  window.addEventListener("pageshow", resetUI);
+
+  // Map backend/API errors to clean user-facing copy. Never surface raw
+  // technical messages on the login screen.
+  const friendlyError = (error: unknown): string => {
+    const message = error instanceof Error ? error.message : "";
+    const status = (error as { status?: number })?.status;
+    if (message.toLowerCase().includes("captcha")) {
+      return "Spam check failed. Please reload the page and try again.";
+    }
+    if (message === "no-admin")
+      return "This account has no admin access. Use the public sign-in at /login.";
+    if (status === 401 || status === 400) return "Invalid email or password.";
+    if (status === 429) return "Too many attempts. Please wait a minute.";
+    return "Couldn't sign you in right now. Please try again.";
+  };
+
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (submitting) return;
+
+    const formData = new FormData(e.target as HTMLFormElement);
+    const email = (formData.get("username") as string)?.trim();
+    const password = ((formData.get("password") as string) || "").trim();
+
+    if (!email || !password) {
+      showStatus("Please enter your email and password.", "error", errorIcon);
+      return;
+    }
+
+    if (Date.now() < lockUntil) {
+      const remaining = Math.ceil((lockUntil - Date.now()) / 1000);
+      showStatus(
+        `Too many attempts. Try again in ${remaining}s.`,
+        "error",
+        errorIcon,
+      );
+      return;
+    }
+
+    submitting = true;
+    if (submitBtn) {
+      submitBtn.innerHTML = `
+        ${icon("spinner")}
+        Signing in...
+      `;
+      submitBtn.disabled = true;
+    }
+
+    if (statusDisplay) statusDisplay.classList.add("hidden");
+
+    try {
+      let captchaToken = "";
+      if (turnstileSiteKey) {
+        captchaToken = await turnstile.execute();
+        if (!captchaToken) {
+          throw Object.assign(new Error("captcha"), { status: 0 });
+        }
+      }
+
+      const result = await authService.login(
+        email,
+        password,
+        captchaToken || undefined,
+      );
+
+      if (result && !can(await authService.me(), "admin.access")) {
+        // A public account signed in on the admin page: end that session here.
+        await authService.logout();
+        throw Object.assign(new Error("no-admin"), { status: 403 });
+      }
+
+      if (result) {
+        failedAttempts = 0;
+        if (submitBtn) {
+          submitBtn.innerHTML = `
+            ${icon("check")}
+            Signed in
+          `;
+        }
+        showStatus("Redirecting to dashboard...", "success", successIcon);
+        setTimeout(() => {
+          window.location.href = "/admin";
+        }, 1000);
+      } else {
+        throw new Error("Invalid email or password.");
+      }
+    } catch (error: unknown) {
+      failedAttempts++;
+      if (failedAttempts >= 5) {
+        lockUntil = Date.now() + 60_000;
+        failedAttempts = 0;
+      }
+
+      submitting = false;
+      if (submitBtn) {
+        submitBtn.textContent = "Sign in";
+        submitBtn.disabled = false;
+      }
+
+      showStatus(friendlyError(error), "error", errorIcon);
+    } finally {
+      turnstile.reset();
+    }
+  });
+</script>
+
+<style>
+  .status-success {
+    border-color: rgba(16, 185, 129, 0.3) !important;
+    background: rgba(16, 185, 129, 0.08) !important;
+    color: rgb(5, 150, 105) !important;
+  }
+  html.dark .status-success {
+    color: rgb(167, 243, 208) !important;
+  }
+</style>

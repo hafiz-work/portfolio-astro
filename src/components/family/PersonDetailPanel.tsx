@@ -188,7 +188,7 @@ export const PersonDetailPanel = ({
   }
 
   return (
-    <div className="h-full space-y-4 overflow-y-auto rounded-xl bg-white p-5 outline outline-gray-950/5 dark:bg-white/[0.03] dark:outline-white/10">
+    <div className="h-full space-y-4 overflow-y-auto rounded-xl bg-white p-5 outline outline-gray-950/5 dark:bg-white/3 dark:outline-white/10">
       {body}
     </div>
   );

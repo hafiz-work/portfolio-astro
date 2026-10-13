@@ -44,7 +44,7 @@ const imageProps = {
   loading: imageLoading,
   decoding: "async",
   fetchpriority: imageFetchPriority,
-  class: `w-full h-full group-hover:scale-[1.03] transition-transform duration-500 ${imageVariant === "width-banner" ? "object-contain p-4" : "object-cover"}`,
+  class: `w-full h-full transform-gpu transition-transform duration-300 ease-out group-hover:scale-102 motion-reduce:transition-none motion-reduce:group-hover:scale-100 ${imageVariant === "width-banner" ? "object-contain p-4" : "object-cover"}`,
 } as const;
 const slug = link.split("/").pop() || title.toLowerCase().replace(/\s+/g, "-");
 
@@ -55,9 +55,7 @@ const useComposedPreview = imageVariant === "logo";
 // Width-banner assets are brand lockups designed for light backgrounds -
 // keep them on a white surface even in dark mode.
 const imageSurface =
-  imageVariant === "width-banner"
-    ? "bg-white"
-    : "bg-gray-50 dark:bg-white/5";
+  imageVariant === "width-banner" ? "bg-white" : "bg-gray-50 dark:bg-white/5";
 
 const typeLabel: Record<string, string> = {
   personal: "Personal project",
@@ -70,7 +68,7 @@ const eyebrow = [year, projectType ? typeLabel[projectType] : null]
 ---
 
 <div
-  class="frame-inner group relative flex h-full flex-col transition-colors hover:outline-gray-950/15 dark:hover:outline-white/20"
+  class="frame-inner group relative flex h-full flex-col transition-colors duration-300 ease-out hover:outline-gray-950/15 dark:hover:outline-white/20"
 >
   <!-- Image Area -->
   <div
@@ -85,6 +83,7 @@ const eyebrow = [year, projectType ? typeLabel[projectType] : null]
           imageUrl={imageUrl}
           tags={tags}
           frame={previewFrame}
+          loading={imageLoading}
         />
       ) : imageUrl ? (
         <div class="absolute inset-0">
@@ -110,12 +109,10 @@ const eyebrow = [year, projectType ? typeLabel[projectType] : null]
   </div>
 
   <!-- Content -->
-  <div class="flex flex-grow flex-col p-4 sm:p-5">
+  <div class="flex grow flex-col p-4 sm:p-5">
     {
       eyebrow && (
-        <p class="mb-1 font-mono text-[11px]/5 text-gray-500">
-          {eyebrow}
-        </p>
+        <p class="mb-1 font-mono text-[11px]/5 text-gray-500">{eyebrow}</p>
       )
     }
     <div class="flex items-start justify-between gap-2 mb-2">
@@ -125,7 +122,9 @@ const eyebrow = [year, projectType ? typeLabel[projectType] : null]
       >
         {title}
       </h3>
-      <ArrowUpRight className="mt-1 h-4 w-4 shrink-0 text-gray-400 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-sky-500 dark:text-gray-500 dark:group-hover:text-sky-400" />
+      <ArrowUpRight
+        className="mt-1 h-4 w-4 shrink-0 text-gray-400 transition duration-300 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-sky-500 dark:text-gray-500 dark:group-hover:text-sky-400"
+      />
     </div>
 
     <!-- No flex-grow here: stretching a line-clamped box re-exposes the
@@ -138,15 +137,7 @@ const eyebrow = [year, projectType ? typeLabel[projectType] : null]
     </p>
 
     <div class="flex flex-wrap gap-1.5 mt-auto">
-      {
-        tags
-          .slice(0, 4)
-          .map((tag) => (
-            <span class="tag">
-              {tag}
-            </span>
-          ))
-      }
+      {tags.slice(0, 4).map((tag) => <span class="tag">{tag}</span>)}
       {
         tags.length > 4 && (
           <span class="tag text-gray-400 dark:text-gray-500">

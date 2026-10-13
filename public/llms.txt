@@ -1,0 +1,24 @@
+# Hafiz Bahtiar (hafizbahtiar.com)
+
+> Hafiz Bahtiar (also written "hafizbahtiar") is a backend and Flutter developer based in Kuala Lumpur, Malaysia, with 6+ years shipping production software: APIs on Node.js, Hono and Cloudflare Workers, and mobile apps in Flutter. hafizbahtiar.com is his personal portfolio and blog.
+
+Not to be confused with other people named "Hafiz Bakhtiar" (with a "k").
+
+## Pages
+
+- [Home](https://hafizbahtiar.com/): who he is, stack, experience, contact
+- [Projects](https://hafizbahtiar.com/projects): production systems - marketplaces, government platforms, logistics tooling, offline-first mobile apps
+- [Blog](https://hafizbahtiar.com/blog): notes on backend systems, Flutter and shipping production software
+- [Quotes](https://hafizbahtiar.com/quotes): a small collection of quotes
+- [Showcase](https://hafizbahtiar.com/showcase): small free apps hosted on the site
+- [Waktu Solat](https://hafizbahtiar.com/waktu-solat): today's Malaysian prayer times per JAKIM zone, with a full-screen mosque display
+- [Harga Minyak](https://hafizbahtiar.com/harga-minyak): this week's Malaysian fuel prices (RON95, RON97, diesel, BUDI95) from data.gov.my, with 12 weeks of history
+- [Kadar Tukaran](https://hafizbahtiar.com/kadar-tukaran): official Bank Negara Malaysia exchange rates with an RM converter
+- [Kiraan Detik](https://hafizbahtiar.com/kiraan-detik): days left to Ramadan, Hari Raya and other Islamic days, per JAKIM's takwim
+- [Resume (PDF)](https://hafizbahtiar.com/resume.pdf)
+
+## Profiles
+
+- [GitHub](https://github.com/hafizbahtiar)
+- [LinkedIn](https://www.linkedin.com/in/hafizbahtiar/)
+- Email: hafiz@hafizbahtiar.com

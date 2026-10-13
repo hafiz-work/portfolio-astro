@@ -1,0 +1,94 @@
+/*
+ * shadcn/ui tokens - consumed ONLY by components in src/components/shadcn/.
+ * Values are our palette (gray ink, sky accent; STYLE.md), not shadcn's
+ * defaults, so shadcn parts sit naturally next to ours.
+ *
+ * Isolation rules (see src/components/shadcn/README.md):
+ * - Never use these token classes (bg-background, text-muted-foreground,
+ *   border-border, ring-ring, ...) outside src/components/shadcn/.
+ * - No base layer here: shadcn's `* { @apply border-border }` and
+ *   `body { @apply bg-background }` would restyle the whole site.
+ * - No --radius-* overrides: they would change every rounded-* class site-wide.
+ * - Vars live on :root/.dark (not a wrapper class) so Radix portals, which
+ *   render into <body>, still resolve them.
+ * The shadcn CLI writes here (components.json → tailwind.css); review its
+ * diff after every `shadcn add`.
+ */
+
+:root {
+    --background: oklch(100% 0 0);
+    /* white */
+    --foreground: oklch(13% 0.028 261.692);
+    /* gray-950 */
+    --card: oklch(100% 0 0);
+    --card-foreground: oklch(13% 0.028 261.692);
+    --popover: oklch(100% 0 0);
+    --popover-foreground: oklch(13% 0.028 261.692);
+    --primary: oklch(13% 0.028 261.692);
+    /* gray-950 - matches .btn-pill / .admin-btn-primary ink */
+    --primary-foreground: oklch(100% 0 0);
+    --secondary: oklch(96.7% 0.003 264.542);
+    /* gray-100 */
+    --secondary-foreground: oklch(13% 0.028 261.692);
+    --muted: oklch(96.7% 0.003 264.542);
+    --muted-foreground: oklch(44.6% 0.03 256.802);
+    /* gray-600 */
+    --accent: oklch(96.7% 0.003 264.542);
+    --accent-foreground: oklch(13% 0.028 261.692);
+    --destructive: oklch(57.7% 0.245 27.325);
+    /* red-600 */
+    --border: oklch(92.8% 0.006 264.531);
+    /* gray-200 */
+    --input: oklch(92.8% 0.006 264.531);
+    --ring: oklch(68.5% 0.169 237.323);
+    /* sky-500 - focus ring = site accent */
+}
+
+.dark {
+    --background: oklch(13% 0.028 261.692);
+    /* gray-950 = pub-dark */
+    --foreground: oklch(100% 0 0);
+    --card: oklch(21% 0.034 264.665);
+    /* gray-900 */
+    --card-foreground: oklch(100% 0 0);
+    --popover: oklch(21% 0.034 264.665);
+    --popover-foreground: oklch(100% 0 0);
+    --primary: oklch(100% 0 0);
+    --primary-foreground: oklch(13% 0.028 261.692);
+    --secondary: oklch(27.8% 0.033 256.848);
+    /* gray-800 */
+    --secondary-foreground: oklch(100% 0 0);
+    --muted: oklch(27.8% 0.033 256.848);
+    --muted-foreground: oklch(70.7% 0.022 261.325);
+    /* gray-400 */
+    --accent: oklch(27.8% 0.033 256.848);
+    --accent-foreground: oklch(100% 0 0);
+    --destructive: oklch(63.7% 0.237 25.331);
+    /* red-500 */
+    --border: oklch(100% 0 0 / 10%);
+    /* white/10 */
+    --input: oklch(100% 0 0 / 15%);
+    --ring: oklch(74.6% 0.16 232.661);
+    /* sky-400 */
+}
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+}

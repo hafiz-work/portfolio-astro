@@ -18,7 +18,7 @@ export type BadgeVariant =
     | "accent";
 
 const BADGE_VARIANTS: Record<BadgeVariant, string> = {
-    neutral: "bg-gray-950/[0.03] text-gray-700 ring-gray-950/10 dark:bg-white/5 dark:text-gray-300 dark:ring-white/10",
+    neutral: "bg-gray-950/3 text-gray-700 ring-gray-950/10 dark:bg-white/5 dark:text-gray-300 dark:ring-white/10",
     info: "bg-sky-500/10 text-sky-700 ring-sky-500/25 dark:text-sky-300 dark:ring-sky-400/25",
     success: "bg-emerald-500/10 text-emerald-700 ring-emerald-500/25 dark:text-emerald-300 dark:ring-emerald-400/25",
     warning: "bg-amber-500/10 text-amber-700 ring-amber-500/25 dark:text-amber-300 dark:ring-amber-400/25",
@@ -86,7 +86,7 @@ const ACTION_BASE =
 
 const ACTION_STYLES = {
     default:
-        "text-gray-500 ring-gray-950/10 hover:bg-gray-950/[0.03] hover:text-gray-950 dark:text-gray-400 dark:ring-white/15 dark:hover:bg-white/5 dark:hover:text-white",
+        "text-gray-500 ring-gray-950/10 hover:bg-gray-950/3 hover:text-gray-950 dark:text-gray-400 dark:ring-white/15 dark:hover:bg-white/5 dark:hover:text-white",
     danger:
         "text-red-600 ring-red-500/30 hover:bg-red-500/10 dark:text-red-400",
 };
@@ -96,9 +96,9 @@ type ActionProps = {
     icon?: LucideIcon;
     variant?: keyof typeof ACTION_STYLES;
 } & (
-    | { href: string; onClick?: never }
-    | { href?: never; onClick: () => void }
-);
+        | { href: string; onClick?: never }
+        | { href?: never; onClick: () => void }
+    );
 
 export function AdminAction({
     label,

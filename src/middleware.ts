@@ -10,17 +10,23 @@ import type { MiddlewareHandler } from "astro";
  *
  * KEEP THE Content-Security-Policy VALUE IN SYNC WITH public/_headers.
  */
+/** Routes other sites may put in an <iframe> (see the end of onRequest). */
+const EMBEDDABLE = new Set(["/waktu-solat/embed", "/ipu/embed"]);
+
 const SECURITY_HEADERS: Record<string, string> = {
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
   "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
+  // Dev only: ClientRouter loads the next page in a same-origin iframe to collect
+  // client:only styles (prepareForClientOnlyComponents); DENY would hang navigation.
+  "X-Frame-Options": import.meta.env.DEV ? "SAMEORIGIN" : "DENY",
   "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+  // geolocation=(self): /waktu-solat "Guna lokasi saya" (still asks the user first).
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(self)",
   "Content-Security-Policy": [
     "default-src 'self'",
     "base-uri 'self'",
     "object-src 'none'",
-    "frame-ancestors 'none'",
+    import.meta.env.DEV ? "frame-ancestors 'self'" : "frame-ancestors 'none'",
     "form-action 'self'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' https://fonts.gstatic.com data:",
@@ -35,9 +41,12 @@ const SECURITY_HEADERS: Record<string, string> = {
     // lets an <iframe> point at.
     "frame-src 'self' https://challenges.cloudflare.com https://www.youtube-nocookie.com",
     "worker-src 'self' blob:",
+    // api.waktusolat.app: /waktu-solat "Guna lokasi saya" (GPS -> JAKIM zone).
+    // github-contributions-api.jogruber.de: contact-section GitHub card,
+    // fetched only when a visitor opens the card.
     // In dev the API runs on localhost:8787 - without this, the CSP silently
     // blocks every admin fetch during local development.
-    `connect-src 'self' https://api.hafizbahtiar.com https://cloudflareinsights.com https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com${import.meta.env.DEV ? " http://localhost:8787" : ""
+    `connect-src 'self' https://api.hafizbahtiar.com https://api.waktusolat.app https://cloudflareinsights.com https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com https://github-contributions-api.jogruber.de${import.meta.env.DEV ? " http://localhost:8787" : ""
     }`,
   ].join("; "),
 };
@@ -70,9 +79,14 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   // The flag is client-settable, so this is not access control: every admin
   // page still fetches its data client-side behind the backend's real auth.
   const path = url.pathname;
-  const isAdminRoute = path === "/admin" || path.startsWith("/admin/");
-  if (isAdminRoute && context.cookies.get("session_active")?.value !== "1") {
-    return context.redirect("/login", 302);
+  // /admin/login is the admin sign-in page itself - never gate it.
+  const isAdminRoute =
+    (path === "/admin" || path.startsWith("/admin/")) && path !== "/admin/login";
+  // /account/verify is the email-link landing page - reachable signed out.
+  const isAccountRoute =
+    (path === "/account" || path.startsWith("/account/")) && !path.startsWith("/account/verify");
+  if ((isAdminRoute || isAccountRoute) && context.cookies.get("session_active")?.value !== "1") {
+    return context.redirect(isAdminRoute ? "/admin/login" : "/login", 302);
   }
 
   const response = await next();
@@ -82,6 +96,15 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   if (contentType.includes("text/html")) {
     for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
       response.headers.set(name, value);
+    }
+    // The prayer-times widget is made to be iframed by other sites (mosques,
+    // companies). Only this route may be framed; everything else stays DENY.
+    if (EMBEDDABLE.has(path)) {
+      response.headers.delete("X-Frame-Options");
+      response.headers.set(
+        "Content-Security-Policy",
+        SECURITY_HEADERS["Content-Security-Policy"].replace(/frame-ancestors [^;]+/, "frame-ancestors *"),
+      );
     }
   }
 

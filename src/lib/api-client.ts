@@ -93,7 +93,8 @@ export class ApiClient {
 
                 this.clearAuthState();
                 if (typeof window !== 'undefined') {
-                    window.location.href = '/login';
+                    // Admin pages sign in at /admin/login; everyone else at /login.
+                    window.location.href = window.location.pathname.startsWith('/admin') ? '/admin/login' : '/login';
                 }
                 return null;
             }

@@ -1,4 +1,4 @@
-export type BlogStatus = 'draft' | 'published' | 'archived'
+export type BlogStatus = 'draft' | 'published' | 'archived' | 'rejected'
 
 export interface BlogSection {
   id: number
@@ -35,6 +35,10 @@ export interface BlogPost {
   isFeatured: boolean
   createdAt: string
   updatedAt: string
+  /** Set for posts written by registered users (display name); null/absent for the owner's posts. */
+  authorName?: string | null
+  /** Own/admin views: why a moderator rejected it. */
+  moderationReason?: string | null
   sections?: BlogSection[]
   checklist?: BlogChecklist[]
 }
@@ -54,6 +58,10 @@ export interface BlogPostSummary {
   isFeatured: boolean
   createdAt: string
   updatedAt: string
+  /** Set for posts written by registered users (display name); null/absent for the owner's posts. */
+  authorName?: string | null
+  /** Own/admin views: why a moderator rejected it. */
+  moderationReason?: string | null
 }
 
 export interface CreateBlogPostPayload {

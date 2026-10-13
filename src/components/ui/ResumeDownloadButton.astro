@@ -1,5 +1,6 @@
 ---
 import { Download } from "lucide-react";
+import { RESUME_URL } from "../../lib/constants";
 interface Props {
   /** Override the anchor classes for the placement (defaults to the Hero style). */
   class?: string;
@@ -7,14 +8,12 @@ interface Props {
   source?: string;
 }
 
-const {
-  class: className = "btn-pill btn-pill-ghost",
-  source = "site",
-} = Astro.props;
+const { class: className = "btn-pill btn-pill-ghost", source = "site" } =
+  Astro.props;
 ---
 
 <a
-  href="/docs/hafizbahtiar-resume-4-3.pdf"
+  href={RESUME_URL}
   download="Hafiz-Bahtiar-Resume.pdf"
   data-resume-download
   data-source={source}

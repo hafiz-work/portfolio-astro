@@ -157,7 +157,8 @@ const projectSchema = {
   image: ogImageAbs,
   dateCreated: project.year != null ? String(project.year) : undefined,
   keywords: techChips.join(", "),
-  creator: { "@type": "Person", name: "Hafiz Bahtiar" },
+  // Same entity as the homepage Person (src/pages/index.astro, @id …/#person).
+  creator: { "@type": "Person", "@id": "https://hafizbahtiar.com/#person", name: "Hafiz Bahtiar", url: "https://hafizbahtiar.com/" },
 };
 ---
 

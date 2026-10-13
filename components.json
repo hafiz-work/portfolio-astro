@@ -1,11 +1,10 @@
 {
-  "$schema": "https://ui.shadcn.com/schema.json",
   "style": "new-york",
   "rsc": false,
   "tsx": true,
   "tailwind": {
-    "config": "tailwind.config.ts",
-    "css": "src/styles/global.css",
+    "config": "",
+    "css": "src/styles/shadcn.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""
@@ -13,11 +12,11 @@
   "iconLibrary": "lucide",
   "rtl": false,
   "aliases": {
-    "components": "@/components",
+    "components": "@/components/shadcn",
     "utils": "@/lib/utils",
-    "ui": "@/components/ui",
-    "lib": "@/lib",
-    "hooks": "@/hooks"
+    "ui": "@/components/shadcn/ui",
+    "lib": "@/components/shadcn/lib",
+    "hooks": "@/components/shadcn/hooks"
   },
   "registries": {
     "@mapcn": "https://mapcn.dev/r/{name}.json"

@@ -1,5 +1,6 @@
 ---
 import { Check } from "lucide-react";
+import DatePicker from "../../ui/DatePicker.astro";
 import Dropdown from "../../ui/Dropdown.astro";
 import { TextEditor } from "../../ui/TextEditor";
 
@@ -65,6 +66,7 @@ const inputClass = "admin-input";
             id="blog-body"
             name="bodyContent"
             content=""
+            images
             client:load
           />
         </div>
@@ -87,15 +89,10 @@ const inputClass = "admin-input";
           />
         </div>
         <div class="space-y-2">
-          <label class={labelClass} for="blog-published-date">
+          <label class={labelClass} for="blog-published-date-text">
             Published Date
           </label>
-          <input
-            id="blog-published-date"
-            type="date"
-            name="publishedDate"
-            class={inputClass}
-          />
+          <DatePicker id="blog-published-date" name="publishedDate" />
         </div>
         <div class="space-y-2">
           <label class={labelClass} for="blog-cover-image">
@@ -131,7 +128,7 @@ const inputClass = "admin-input";
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" name="isFeatured" class="sr-only peer" />
             <div
-              class="w-11 h-6 bg-gray-950/10 dark:bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-950/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-950/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-950 dark:peer-checked:bg-sky-500"
+              class="w-11 h-6 bg-gray-950/10 dark:bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-950/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-950/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-950 dark:peer-checked:bg-sky-500"
             >
             </div>
             <span

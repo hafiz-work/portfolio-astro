@@ -15,9 +15,11 @@ interface Props {
   tags?: string[];
   /** Chosen on the Cover media in admin; unset = guess from the tech tags. */
   frame?: "phone" | "web";
+  /** "eager" for cards in the first screen (see ProjectCard). */
+  loading?: "lazy" | "eager";
 }
 
-const { slug, title, imageUrl, tags = [], frame } = Astro.props;
+const { slug, title, imageUrl, tags = [], frame, loading = "lazy" } = Astro.props;
 
 const isMobile =
   frame === "phone" ||
@@ -34,7 +36,7 @@ const isMobile =
 const logoSrc = typeof imageUrl === "string" ? imageUrl : imageUrl?.src;
 ---
 
-<div class="absolute inset-0 bg-gray-50 dark:bg-white/[0.03] overflow-hidden">
+<div class="absolute inset-0 bg-gray-50 dark:bg-white/3 overflow-hidden">
   <!-- Dot grid + accent glow backdrop -->
   <div class="absolute inset-0 pattern"></div>
   <div
@@ -48,7 +50,7 @@ const logoSrc = typeof imageUrl === "string" ? imageUrl : imageUrl?.src;
           width={40}
           height={40}
           aria-hidden="true"
-          loading="lazy"
+          {loading}
           decoding="async"
           class="h-full w-full scale-150 object-cover saturate-200"
         />
@@ -58,7 +60,7 @@ const logoSrc = typeof imageUrl === "string" ? imageUrl : imageUrl?.src;
 
   {
     isMobile ? (
-      <div class="relative mx-auto mt-5 sm:mt-7 w-[100px] sm:w-[116px] h-full rounded-t-2xl border border-gray-200 dark:border-gray-600/80 bg-white dark:bg-gray-900 shadow-xl shadow-gray-300/40 dark:shadow-black/40 overflow-hidden group-hover:-translate-y-1 transition-transform duration-300">
+      <div class="relative mx-auto mt-5 sm:mt-7 w-25 sm:w-29 h-full rounded-t-2xl border border-gray-200 dark:border-gray-600/80 bg-white dark:bg-gray-900 shadow-xl shadow-gray-300/40 dark:shadow-black/40 overflow-hidden transform-gpu transition-transform duration-300 ease-out group-hover:-translate-y-1 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
         <div class="mx-auto mt-1.5 h-1 w-8 rounded-full bg-gray-200 dark:bg-gray-600" />
         <div class="p-2 space-y-1.5">
           <div class="flex items-center gap-1.5">
@@ -68,7 +70,7 @@ const logoSrc = typeof imageUrl === "string" ? imageUrl : imageUrl?.src;
                 alt={`${title} logo`}
                 width={40}
                 height={40}
-                loading="lazy"
+                {loading}
                 decoding="async"
                 class="w-5 h-5 rounded bg-white object-contain shrink-0"
               />
@@ -85,7 +87,7 @@ const logoSrc = typeof imageUrl === "string" ? imageUrl : imageUrl?.src;
                 width={40}
                 height={40}
                 aria-hidden="true"
-                loading="lazy"
+                {loading}
                 decoding="async"
                 class="absolute inset-0 h-full w-full scale-[3] object-cover blur-md saturate-200"
               />
@@ -98,7 +100,7 @@ const logoSrc = typeof imageUrl === "string" ? imageUrl : imageUrl?.src;
         </div>
       </div>
     ) : (
-      <div class="relative mx-auto mt-6 sm:mt-8 w-[80%] h-full rounded-t-xl border border-gray-200 dark:border-gray-600/80 bg-white dark:bg-gray-900 shadow-xl shadow-gray-300/40 dark:shadow-black/40 overflow-hidden group-hover:-translate-y-1 transition-transform duration-300">
+      <div class="relative mx-auto mt-6 sm:mt-8 w-[80%] h-full rounded-t-xl border border-gray-200 dark:border-gray-600/80 bg-white dark:bg-gray-900 shadow-xl shadow-gray-300/40 dark:shadow-black/40 overflow-hidden transform-gpu transition-transform duration-300 ease-out group-hover:-translate-y-1 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
         <div class="flex items-center gap-1.5 px-2.5 py-1.5 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
           <span class="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
           <span class="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
@@ -121,7 +123,7 @@ const logoSrc = typeof imageUrl === "string" ? imageUrl : imageUrl?.src;
                   alt={`${title} logo`}
                   width={40}
                   height={40}
-                  loading="lazy"
+                  {loading}
                   decoding="async"
                   class="w-5 h-5 rounded bg-white object-contain shrink-0"
                 />
@@ -139,7 +141,7 @@ const logoSrc = typeof imageUrl === "string" ? imageUrl : imageUrl?.src;
                     width={40}
                     height={40}
                     aria-hidden="true"
-                    loading="lazy"
+                    {loading}
                     decoding="async"
                     class="absolute inset-0 h-full w-full scale-[3] object-cover blur-md saturate-200"
                   />

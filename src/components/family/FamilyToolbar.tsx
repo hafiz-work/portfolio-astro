@@ -30,7 +30,7 @@ export const FamilyToolbar = ({
   onCenterMain,
 }: Props) => {
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 outline outline-gray-950/5 dark:bg-white/[0.03] dark:outline-white/10">
+    <div className="flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 outline outline-gray-950/5 dark:bg-white/3 dark:outline-white/10">
       <PersonSearch people={people} onSelect={onSelectPerson} />
 
       <div

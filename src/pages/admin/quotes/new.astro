@@ -1,0 +1,156 @@
+---
+import { ArrowLeft } from "lucide-react";
+import PrivateLayout from "../../../layouts/PrivateLayout.astro";
+import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
+import QuoteForm from "../../../components/admin/quotes/QuoteForm.astro";
+import AlertToast from "../../../components/ui/AlertToast.astro";
+---
+
+<PrivateLayout title="New Quote">
+  <div class="space-y-6">
+    <AdminPageHeader
+      title="New Quote"
+      description="Add a quote to the public collection"
+    >
+      <a
+        slot="actions"
+        href="/admin/quotes"
+        class="admin-btn admin-btn-secondary"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to list
+      </a>
+    </AdminPageHeader>
+
+    <form id="quote-form" class="space-y-8">
+      <QuoteForm submitLabel="Create quote" />
+    </form>
+  </div>
+  <AlertToast id="quote-alert" />
+</PrivateLayout>
+
+<script>
+  import { normalizeAuthor, normalizeQuote } from "../../../lib/quote-text";
+  import { quotesService, categoryLabel } from "../../../lib/quotes";
+  import { extractApiError } from "../../../lib/projects-cms";
+  import { setupFormGuard } from "../../../lib/form-guard";
+
+  // <ClientRouter> runs a page's bundled script once per session. Init on every visit.
+  async function initPage() {
+    if (location.pathname.replace(/\/+$/, "") !== "/admin/quotes/new") return;
+    const form = document.getElementById("quote-form") as HTMLFormElement;
+    const submitBtn = document.getElementById(
+      "submit-btn",
+    ) as HTMLButtonElement;
+    if (!form || !submitBtn) return;
+    const formGuard = setupFormGuard(form);
+
+    const showAlert = (options: {
+      type?: "success" | "error" | "warning" | "info";
+      title?: string;
+      message?: string;
+    }) => (window as any).__uiAlerts?.["quote-alert"]?.show(options);
+
+    const fieldLabels: Record<string, string> = {
+      text: "Quote text",
+      author: "Author",
+      source: "Source",
+      tagIds: "Tags",
+    };
+
+    const parseJsonArray = (value: FormDataEntryValue) => {
+      const raw = String(value).trim();
+      if (!raw) return [];
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return raw
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+    };
+
+    // updateProjectOptions() technique from experiences: rebuild the MultiDropdown list client-side.
+    const updateTagOptions = async () => {
+      const list = document.querySelector(
+        '.tech-multi-dropdown-container[data-name="tagIds"] ul',
+      );
+      const tpl = document.getElementById(
+        "quote-tag-item",
+      ) as HTMLTemplateElement | null;
+      if (!list || !tpl) return;
+      try {
+        const tags = await quotesService.listQuoteTags();
+        list.innerHTML = "";
+        tags.forEach((tag) => {
+          const li = tpl.content.firstElementChild!.cloneNode(
+            true,
+          ) as HTMLElement;
+          li.querySelector("button")!.dataset.value = String(tag.id);
+          li.querySelector("span")!.textContent =
+            `${tag.name} · ${categoryLabel(tag.category)}`;
+          list.appendChild(li);
+        });
+        document
+          .getElementById("quote-tags-empty")
+          ?.classList.toggle("hidden", tags.length > 0);
+        (window as any).setupMultiDropdowns?.();
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    await updateTagOptions();
+    formGuard.updateInitialState();
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const originalContent = submitBtn.innerHTML;
+      submitBtn.innerHTML = "SAVING...";
+      submitBtn.disabled = true;
+
+      const formData = new FormData(form);
+      const source = String(formData.get("source") ?? "").trim();
+      const data = {
+        text: normalizeQuote(String(formData.get("text") ?? "")),
+        author: normalizeAuthor(String(formData.get("author") ?? "")),
+        source: source === "" ? null : source,
+        tagIds: parseJsonArray(formData.get("tagIds") ?? "")
+          .map(Number)
+          .filter((n) => !Number.isNaN(n)),
+      };
+
+      try {
+        const result = await quotesService.createQuote(data);
+        if (!result) throw new Error("Failed to create quote");
+        formGuard.updateInitialState();
+        showAlert({
+          type: "success",
+          title: "Quote created",
+          message: "Quote created successfully.",
+        });
+        window.setTimeout(() => {
+          window.location.href = "/admin/quotes";
+        }, 800);
+      } catch (error) {
+        console.error(error);
+        const { message, field } = extractApiError(error);
+        if (field)
+          (form.elements.namedItem(field) as HTMLElement | null)?.focus?.();
+        showAlert({
+          type: "error",
+          title: "Save failed",
+          message: field
+            ? `${message} (Field: ${fieldLabels[field] || field})`
+            : message,
+        });
+      } finally {
+        submitBtn.innerHTML = originalContent;
+        submitBtn.disabled = false;
+      }
+    });
+  }
+  document.addEventListener("astro:page-load", initPage);
+</script>

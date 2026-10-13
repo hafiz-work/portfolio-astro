@@ -1,7 +1,6 @@
 ---
 import PrivateLayout from "../../../layouts/PrivateLayout.astro";
 import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
-import AlertToast from "../../../components/ui/AlertToast.astro";
 import { TechStacksManager } from "../../../components/admin/TechStacksManager";
 ---
 
@@ -13,5 +12,4 @@ import { TechStacksManager } from "../../../components/admin/TechStacksManager";
     />
     <TechStacksManager client:load />
   </div>
-  <AlertToast id="admin-alert" />
 </PrivateLayout>

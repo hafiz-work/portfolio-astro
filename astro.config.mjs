@@ -27,7 +27,7 @@ const dynamicPages = [
 
 // Kept out of the sitemap: private/utility pages, /family (unlisted by design -
 // see CLAUDE.md), and per-project legal pages (thin; empty ones are noindex).
-const SITEMAP_EXCLUDE = [/\/admin/, /\/login/, /\/family(\/|$)/, /\/verify-email/, /\/(privacy|terms)\/?$/];
+const SITEMAP_EXCLUDE = [/\/admin/, /\/login/, /\/account(\/|$)/, /\/register/, /\/family(\/|$)/, /\/verify-email/, /\/(privacy|terms)\/?$/];
 
 // https://astro.build/config
 export default defineConfig({
@@ -51,6 +51,12 @@ export default defineConfig({
     sitemap({
       customPages: dynamicPages,
       filter: (page) => !SITEMAP_EXCLUDE.some((re) => re.test(page)),
+      // Same URL form as the canonical tag (CoreLayout): no trailing slash except "/".
+      serialize: (item) => {
+        const url = new URL(item.url);
+        if (url.pathname !== "/") url.pathname = url.pathname.replace(/\/+$/, "");
+        return { ...item, url: url.href };
+      },
     }),
   ],
   image: {
@@ -70,7 +76,15 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
     optimizeDeps: {
-      include: ["@tanstack/react-table"],
+      include: ["@tanstack/react-table", "motion/react", "lucide-react"],
+    },
+    // Pre-bundle SSR-side React deps at startup. Discovered lazily, Vite re-optimizes
+    // mid-request ("optimized dependencies changed. reloading") and the SSR runner
+    // ends up with two React copies -> "Invalid hook call" in islands (dev only).
+    ssr: {
+      optimizeDeps: {
+        include: ["motion/react", "lucide-react", "clsx", "tailwind-merge", "htmlparser2", "domhandler", "entities"],
+      },
     },
     build: {
       chunkSizeWarningLimit: 1200,

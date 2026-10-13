@@ -1,0 +1,15 @@
+{
+  // Bun CLI checks (bun scripts/check-sanitize.ts) - Bun types, kept out of the
+  // Astro program so Bun's globals never mix with the browser/DOM types.
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["bun"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  },
+  "include": ["**/*.ts"]
+}

@@ -62,7 +62,7 @@ const mapCenter: [number, number] =
           <li>
             <button
               type="button"
-              class="exp-entry group relative flex w-full gap-4 px-4 py-5 text-left transition-colors hover:bg-gray-950/[0.025] sm:px-6 dark:hover:bg-white/[0.03]"
+              class="exp-entry group relative flex w-full gap-4 px-4 py-5 text-left transition-colors hover:bg-gray-950/2.5 sm:px-6 dark:hover:bg-white/3"
               data-marker-id={exp.id}
               aria-pressed={index === 0 ? "true" : "false"}
             >
@@ -109,7 +109,7 @@ const mapCenter: [number, number] =
       style="--reveal-delay: 100ms"
     >
       <div class="frame lg:sticky lg:top-20">
-        <div class="frame-inner h-[280px] w-full lg:h-[440px]">
+        <div class="frame-inner h-70 w-full lg:h-110">
           <MapCanvas client:only="react" markers={markers} center={mapCenter} />
         </div>
       </div>

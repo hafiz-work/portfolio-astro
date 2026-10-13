@@ -6,23 +6,29 @@ import CommandPalette from "./CommandPalette.astro";
 const links = [
     { text: "Projects", href: "/projects", reload: false, spy: "projects" },
     { text: "Stack", href: "/#skills", reload: true, spy: "skills" },
-    { text: "Experience", href: "/#experience", reload: true, spy: "experience" },
+    {
+        text: "Experience",
+        href: "/#experience",
+        reload: true,
+        spy: "experience",
+    },
     { text: "Blog", href: "/blog", reload: false, spy: "blog" },
+    { text: "Quotes", href: "/quotes", reload: false, spy: "quotes" },
 ];
 
 // tailwind's "Plus" link: dashed box with a tiny "+" on each corner.
 const corners = [
-    "-top-[3px] -left-[3px]",
-    "-top-[3px] -right-[3px]",
-    "-bottom-[3px] -left-[3px]",
-    "-bottom-[3px] -right-[3px]",
+    "-top-0.75 -left-0.75",
+    "-top-0.75 -right-0.75",
+    "-bottom-0.75 -left-0.75",
+    "-bottom-0.75 -right-0.75",
 ];
 ---
 
 <!-- tailwindcss.com line: flat, full-width, hairline bottom, sticky. -->
 <nav
     id="main-nav"
-    class="sticky top-0 z-50 w-full [overflow-x:clip] bg-canvas/95 backdrop-blur-sm dark:bg-pub-dark/95"
+    class="sticky top-0 z-50 w-full overflow-x-clip bg-canvas/95 backdrop-blur-sm dark:bg-pub-dark/95"
 >
     <div
         class="line-b flex h-14 items-center justify-between gap-4 px-4 sm:px-6"
@@ -57,7 +63,7 @@ const corners = [
             <button
                 type="button"
                 data-cmdk-open
-                class="hidden items-center gap-1.5 rounded-full bg-gray-950/[0.03] px-2.5 py-1 text-gray-500 ring-1 ring-gray-950/5 ring-inset transition-colors hover:text-gray-950 md:inline-flex dark:bg-white/5 dark:text-gray-400 dark:ring-white/10 dark:hover:text-white"
+                class="hidden items-center gap-1.5 rounded-full bg-gray-950/3 px-2.5 py-1 text-gray-500 ring-1 ring-gray-950/5 ring-inset transition-colors hover:text-gray-950 md:inline-flex dark:bg-white/5 dark:text-gray-400 dark:ring-white/10 dark:hover:text-white"
                 aria-label="Search (⌘K)"
             >
                 <Search className="h-4 w-4" aria-hidden="true" />
@@ -69,7 +75,11 @@ const corners = [
                 class="inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-950 hover:bg-gray-950/5 md:hidden dark:text-white dark:hover:bg-white/10"
                 aria-label="Search"
             >
-                <Search className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
+                <Search
+                    className="h-5 w-5"
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                />
             </button>
 
             <div class="hidden items-center gap-6 md:flex" id="navbar-default">
@@ -79,7 +89,7 @@ const corners = [
                             href={link.href}
                             data-astro-reload={link.reload ? true : undefined}
                             data-spy={link.spy}
-                            class="nav-link text-sm/6 text-gray-600 transition-colors hover:text-gray-950 dark:text-gray-300 dark:hover:text-white"
+                            class="nav-link link-reveal text-sm/6 text-gray-600 transition-colors hover:text-gray-950 dark:text-gray-300 dark:hover:text-white"
                         >
                             {link.text}
                         </a>
@@ -98,11 +108,15 @@ const corners = [
                     {
                         corners.map((pos) => (
                             <svg
-                                class={`pointer-events-none absolute size-[5px] text-sky-600 dark:text-sky-300 ${pos}`}
+                                class={`pointer-events-none absolute size-1.25 text-sky-600 dark:text-sky-300 ${pos}`}
                                 viewBox="0 0 5 5"
                                 aria-hidden="true"
                             >
-                                <path d="M2.5 0v5M0 2.5h5" stroke="currentColor" stroke-width="1" />
+                                <path
+                                    d="M2.5 0v5M0 2.5h5"
+                                    stroke="currentColor"
+                                    stroke-width="1"
+                                />
                             </svg>
                         ))
                     }
@@ -114,7 +128,12 @@ const corners = [
                     aria-label="GitHub"
                     class="text-gray-950 transition-colors hover:text-gray-600 dark:text-white dark:hover:text-gray-300"
                 >
-                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg
+                        class="h-5 w-5"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                    >
                         <path
                             fill-rule="evenodd"
                             d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
@@ -132,7 +151,11 @@ const corners = [
                 aria-expanded="false"
             >
                 <span class="sr-only">Open main menu</span>
-                <Menu id="nav-icon-open" className="h-5 w-5" strokeWidth={1.5} />
+                <Menu
+                    id="nav-icon-open"
+                    className="h-5 w-5"
+                    strokeWidth={1.5}
+                />
                 <X id="nav-icon-close" className="hidden h-5 w-5" />
             </button>
         </div>
@@ -150,7 +173,7 @@ const corners = [
                         <a
                             href={link.href}
                             data-astro-reload={link.reload ? true : undefined}
-                            class="px-4 py-2.5 text-base/7 font-medium text-gray-950 hover:bg-gray-950/[0.025] sm:px-6 dark:text-white dark:hover:bg-white/5"
+                            class="px-4 py-2.5 text-base/7 font-medium text-gray-950 hover:bg-gray-950/2.5 sm:px-6 dark:text-white dark:hover:bg-white/5"
                         >
                             {link.text}
                         </a>
@@ -159,7 +182,7 @@ const corners = [
                 <a
                     href="/#contact"
                     data-astro-reload
-                    class="px-4 py-2.5 text-base/7 font-medium text-sky-700 hover:bg-gray-950/[0.025] sm:px-6 dark:text-sky-300 dark:hover:bg-white/5"
+                    class="px-4 py-2.5 text-base/7 font-medium text-sky-700 hover:bg-gray-950/2.5 sm:px-6 dark:text-sky-300 dark:hover:bg-white/5"
                 >
                     Contact
                 </a>
@@ -167,7 +190,7 @@ const corners = [
                     href="https://github.com/hafizbahtiar"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="px-4 py-2.5 text-base/7 font-medium text-gray-950 hover:bg-gray-950/[0.025] sm:px-6 dark:text-white dark:hover:bg-white/5"
+                    class="px-4 py-2.5 text-base/7 font-medium text-gray-950 hover:bg-gray-950/2.5 sm:px-6 dark:text-white dark:hover:bg-white/5"
                 >
                     GitHub
                 </a>
@@ -271,6 +294,8 @@ const corners = [
             setActive("projects");
         } else if (window.location.pathname.startsWith("/blog")) {
             setActive("blog");
+        } else if (window.location.pathname.startsWith("/quotes")) {
+            setActive("quotes");
         } else if (window.location.pathname === "/") {
             const sections = ["projects", "skills", "experience", "contact"]
                 .map((id) => document.getElementById(id))
@@ -282,8 +307,7 @@ const corners = [
                     const visible = entries
                         .filter((e) => e.isIntersecting)
                         .sort(
-                            (a, b) =>
-                                b.intersectionRatio - a.intersectionRatio,
+                            (a, b) => b.intersectionRatio - a.intersectionRatio,
                         )[0];
                     if (visible) {
                         setActive(visible.target.id);

@@ -1,5 +1,6 @@
 ---
 export const prerender = false;
+import TechHeading from "../../components/layout/TechHeading.astro";
 import PublicLayout from "../../layouts/PublicLayout.astro";
 import { getPublicPosts } from "../../lib/public-content";
 
@@ -31,7 +32,12 @@ const formatDate = (value: string) =>
       <h1
         class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
       >
-        Latest Updates
+        <TechHeading
+          text="Latest Updates"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
       </h1>
     </div>
     <div class="line-y mt-10">
@@ -60,6 +66,11 @@ const formatDate = (value: string) =>
                       <div class="mb-4 font-mono text-sm/6 font-medium tracking-widest text-gray-500 uppercase lg:hidden">
                         {date}
                       </div>
+                      {post.authorName && (
+                        <p class="mb-2 text-sm/6 text-gray-500 dark:text-gray-400">
+                          by {post.authorName}
+                        </p>
+                      )}
                       <a class="font-semibold" href={`/blog/${post.slug}`}>
                         {post.title}
                       </a>

@@ -85,15 +85,15 @@ export function FeaturesManager({ projectId, onChanged }: { projectId: number; o
         <div key={it.id} className="rounded-lg border border-gray-950/5 dark:border-white/10 p-3 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <IconSelect value={it.icon ?? ""} onChange={(icon) => change(it, { icon })} label="Feature icon" />
-            <input className="admin-input flex-1 min-w-[180px]" placeholder="Title" value={it.title}
+            <input className="admin-input flex-1 min-w-45" placeholder="Title" value={it.title}
               onChange={(e) => setField(it.id, { title: e.target.value })} onBlur={() => void commit(it)} aria-label="Feature title" />
             <div className="ml-auto flex shrink-0 items-center gap-2">
               <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                 <input type="checkbox" checked={it.isVisible} onChange={(e) => change(it, { isVisible: e.target.checked })} /> Visible
               </label>
-              <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
-              <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
-              <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => remove(it)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
+              <button type="button" className="admin-btn admin-btn-secondary px-2!" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
+              <button type="button" className="admin-btn admin-btn-secondary px-2!" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
+              <button type="button" className="admin-btn admin-btn-danger px-2!" onClick={() => remove(it)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
             </div>
           </div>
           <textarea className="admin-input min-h-16" placeholder="Description" value={it.description ?? ""}
@@ -103,7 +103,7 @@ export function FeaturesManager({ projectId, onChanged }: { projectId: number; o
       <div className="rounded-lg border border-dashed border-gray-950/10 dark:border-white/10 p-3 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <IconSelect value={draft.icon} onChange={(icon) => setDraft({ ...draft, icon })} label="New feature icon" />
-          <input className="admin-input flex-1 min-w-[180px]" placeholder="New feature title" value={draft.title}
+          <input className="admin-input flex-1 min-w-45" placeholder="New feature title" value={draft.title}
             onChange={(e) => setDraft({ ...draft, title: e.target.value })}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void add(); } }} aria-label="New feature title" />
         </div>

@@ -5,6 +5,7 @@ import AdminSidebar from "../components/admin/AdminSidebar.astro";
 import AdminNavbar from "../components/admin/AdminNavbar.astro";
 import UnsavedChangesModal from "../components/ui/UnsavedChangesModal.astro";
 import ConfirmModal from "../components/ui/ConfirmModal.astro";
+import AlertToast from "../components/ui/AlertToast.astro";
 
 interface Props {
     title?: string;
@@ -17,6 +18,7 @@ const { title, description } = Astro.props;
 <CoreLayout
     title={title}
     description={description}
+    noindex
     class="font-inter text-gray-950 dark:text-white"
 >
     <Background />
@@ -26,11 +28,11 @@ const { title, description } = Astro.props;
     <div class="page-shell min-h-dvh">
         <div class="gutter gutter-left" aria-hidden="true"></div>
         <div class="page-col">
-            <div class="flex flex-grow">
+            <div class="flex grow">
                 <AdminSidebar />
-                <div class="flex min-w-0 flex-grow flex-col">
+                <div class="flex min-w-0 grow flex-col">
                     <AdminNavbar />
-                    <main class="container-main flex-grow pt-10 pb-20">
+                    <main class="container-main grow pt-10 pb-20">
                         <slot />
                     </main>
                 </div>
@@ -41,19 +43,28 @@ const { title, description } = Astro.props;
 
     <UnsavedChangesModal />
     <ConfirmModal />
+    <AlertToast id="admin-alert" />
 </CoreLayout>
 
 <script>
-    import { authService } from "../lib/auth";
+    import { authService, can, homeFor } from "../lib/auth";
 
     // Attempt a silent token refresh before deciding to redirect.
     // This handles the case where _accessToken is gone (new tab / page reload)
     // but a valid refresh_token httpOnly cookie still exists on the API domain.
+    // Then require admin.access: a signed-in public user is sent home. Cosmetic -
+    // the backend's /owner/* gate is the real wall.
     const guardAuth = async () => {
-        if (authService.isAuthenticated()) return;
-        const refreshed = await authService.tryRefresh();
-        if (!refreshed) {
-            window.location.replace("/login");
+        if (
+            !authService.isAuthenticated() &&
+            !(await authService.tryRefresh())
+        ) {
+            window.location.replace("/admin/login");
+            return;
+        }
+        const me = await authService.me();
+        if (!can(me, "admin.access")) {
+            window.location.replace(me ? homeFor(me) : "/admin/login");
         }
     };
 

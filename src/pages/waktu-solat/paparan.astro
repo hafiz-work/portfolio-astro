@@ -1,0 +1,974 @@
+---
+export const prerender = false;
+import CoreLayout from "../../layouts/CoreLayout.astro";
+import { SOLAT_ZONES } from "../../data/solat-zones";
+import {
+  formatHijri,
+  getPrayerTimes,
+  hhmm,
+  resolveZone,
+  todayInMalaysia,
+} from "../../lib/waktu-solat";
+import { getDailyReminder } from "../../lib/peringatan";
+import { getForecast } from "../../lib/cuaca";
+import { PAPARAN_BACKGROUNDS } from "../../data/paparan-backgrounds";
+
+// Mosque display (Paparan Masjid): full screen, sized by --u so any screen fits.
+// Clock and countdown run client-side on server time; the page reloads itself
+// after Malaysian midnight to pick up the new day.
+//
+// Settings live in the URL (?zone=…&jam=12&masjid=…): a mosque bookmarks one URL
+// per screen, nothing is lost when a TV browser clears storage, and the server
+// renders the right format on the first paint. Every value is checked here.
+const q = Astro.url.searchParams;
+const pick = <T extends string>(
+  key: string,
+  allowed: readonly T[],
+  fallback: T,
+): T => (allowed.includes(q.get(key) as T) ? (q.get(key) as T) : fallback);
+const DEFAULT_BG = "masjid-nabawi";
+function pickBg(key: string, orient: "landscape" | "portrait"): string {
+  const v = q.get(key);
+  if (v === "tiada" || v === "gilir") return v;
+  const has = (id: string | null) =>
+    PAPARAN_BACKGROUNDS.some((b) => b[orient] && b.id === id);
+  return has(v) ? v! : has(DEFAULT_BG) ? DEFAULT_BG : "tiada";
+}
+const settings = {
+  jam: pick("jam", ["24", "12"] as const, "24"),
+  saat: pick("saat", ["ya", "tidak"] as const, "ya"),
+  angka: pick("angka", ["rumi", "arab"] as const, "rumi"),
+  label: pick("label", ["rumi", "jawi"] as const, "rumi"),
+  tema: pick("tema", ["gelap", "terang"] as const, "gelap"),
+  peringatan: pick("peringatan", ["ya", "tidak"] as const, "ya"),
+  ramadan: pick("ramadan", ["auto", "tidak"] as const, "auto"),
+  cuaca: pick("cuaca", ["ya", "tidak"] as const, "ya"),
+  iqamah: Math.min(30, Math.max(0, Math.trunc(Number(q.get("iqamah")) || 0))),
+  masjid: (q.get("masjid") ?? "").trim().slice(0, 60),
+  // Scrolling notice; whitespace collapsed (a newline in the URL would break the ticker).
+  pengumuman: (q.get("pengumuman") ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200),
+  // Background photo per orientation (scripts/waktu-solat/backgrounds.py).
+  // Missing/unknown = DEFAULT_BG; "tiada" = no photo; "gilir" = every photo in turn.
+  latar: pickBg("latar", "landscape"),
+  latarm: pickBg("latarm", "portrait"),
+};
+/** Photo ids to show for one orientation: none, one, or all of them (gilir). */
+const photos = (choice: string, orient: "landscape" | "portrait") =>
+  choice === "tiada"
+    ? []
+    : choice === "gilir"
+      ? PAPARAN_BACKGROUNDS.filter((b) => b[orient]).map((b) => b.id)
+      : [choice];
+const photosL = photos(settings.latar, "landscape");
+const photosP = photos(settings.latarm, "portrait");
+
+const zone = resolveZone(q.get("zone"));
+const today = todayInMalaysia();
+const [times, reminder, weather] = await Promise.all([
+  getPrayerTimes(zone.code),
+  settings.peringatan === "ya" ? getDailyReminder(today) : null,
+  settings.cuaca === "ya" ? getForecast(zone.code, today) : null,
+]);
+
+// Eastern Arabic digits on request (٠١٢٣٤٥٦٧٨٩); the script does the same live.
+const digits = (s: string) =>
+  settings.angka === "arab"
+    ? s.replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)])
+    : s;
+/** "16:17" -> "16:17" or "4:17" (12-hour; the PG/PTG suffix is shown separately). */
+const showTime = (t: string) => {
+  const [h, m] = hhmm(t).split(":").map(Number);
+  return digits(
+    settings.jam === "12"
+      ? `${h % 12 || 12}:${String(m).padStart(2, "0")}`
+      : hhmm(t),
+  );
+};
+
+const dateLabel = digits(
+  new Intl.DateTimeFormat("ms-MY", {
+    timeZone: "Asia/Kuala_Lumpur",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date()),
+);
+
+// What mosque screens show: the five prayers plus Imsak and Syuruk (no Dhuha).
+// Jawi names are the standard Arabic spellings used on Malaysian mosque displays.
+const PRAYERS = [
+  { key: "imsak", rumi: "Imsak", jawi: "إمساك", azan: false },
+  { key: "fajr", rumi: "Subuh", jawi: "صبح", azan: true },
+  { key: "syuruk", rumi: "Syuruk", jawi: "شروق", azan: false },
+  { key: "dhuhr", rumi: "Zohor", jawi: "ظهر", azan: true },
+  { key: "asr", rumi: "Asar", jawi: "عصر", azan: true },
+  { key: "maghrib", rumi: "Maghrib", jawi: "مغرب", azan: true },
+  { key: "isha", rumi: "Isyak", jawi: "عشاء", azan: true },
+] as const;
+const jawi = settings.label === "jawi";
+// Mod Ramadan (JAKIM's Hijri date, month 9): the countdown also targets Imsak
+// (end of sahur) and names Imsak/Maghrib by what they mean in Ramadan.
+const inRamadan = (hijri?: string) =>
+  settings.ramadan === "auto" && hijri?.split("-")[1] === "09";
+const ramadan = inRamadan(times?.today.hijri);
+const RAMADAN_TAG: Partial<Record<(typeof PRAYERS)[number]["key"], string>> = {
+  imsak: "Sahur berakhir",
+  maghrib: "Berbuka puasa",
+};
+const rows = times
+  ? PRAYERS.map((p) => ({
+      ...p,
+      label: jawi ? p.jawi : p.rumi,
+      time: times.today[p.key],
+      tag: ramadan ? RAMADAN_TAG[p.key] : undefined,
+      // Countdown targets: the azan times, plus Imsak in Ramadan.
+      target: p.azan || (ramadan && p.key === "imsak"),
+    }))
+  : [];
+// After Isyak the countdown runs to tomorrow: Imsak if tomorrow is in Ramadan.
+const tomorrowRamadan = inRamadan(times?.tomorrow.hijri);
+const states = [...new Set(SOLAT_ZONES.map((z) => z.negeri))];
+
+// Tetapan form: every select comes from this list so all fields share one style.
+const none = [
+  ["tiada", "Tiada"],
+  ["gilir", "Gilir semua gambar (tukar setiap minit)"],
+];
+const selects: {
+  name: keyof typeof settings;
+  label: string;
+  options: string[][];
+}[] = [
+  {
+    name: "jam",
+    label: "Format jam",
+    options: [
+      ["24", "24 jam (16:17)"],
+      ["12", "12 jam (4:17 PTG)"],
+    ],
+  },
+  {
+    name: "saat",
+    label: "Saat pada jam",
+    options: [
+      ["ya", "Tunjuk"],
+      ["tidak", "Sembunyi"],
+    ],
+  },
+  {
+    name: "angka",
+    label: "Angka",
+    options: [
+      ["rumi", "Rumi (0-9)"],
+      ["arab", "Arab (٠-٩)"],
+    ],
+  },
+  {
+    name: "label",
+    label: "Nama waktu",
+    options: [
+      ["rumi", "Rumi (Subuh)"],
+      ["jawi", "Jawi (صبح)"],
+    ],
+  },
+  {
+    name: "tema",
+    label: "Tema",
+    options: [
+      ["gelap", "Gelap"],
+      ["terang", "Terang"],
+    ],
+  },
+  {
+    name: "peringatan",
+    label: "Ayat / hadis hari ini",
+    options: [
+      ["ya", "Tunjuk"],
+      ["tidak", "Sembunyi"],
+    ],
+  },
+  {
+    name: "cuaca",
+    label: "Cuaca hari ini (MET Malaysia)",
+    options: [
+      ["ya", "Tunjuk"],
+      ["tidak", "Sembunyi"],
+    ],
+  },
+  {
+    name: "ramadan",
+    label: "Mod Ramadan",
+    options: [
+      ["auto", "Automatik (sepanjang Ramadan)"],
+      ["tidak", "Tutup"],
+    ],
+  },
+  {
+    name: "latar",
+    label: "Latar - skrin melintang (TV)",
+    options: [
+      ...none,
+      ...PAPARAN_BACKGROUNDS.filter((b) => b.landscape).map((b) => [
+        b.id,
+        b.label,
+      ]),
+    ],
+  },
+  {
+    name: "latarm",
+    label: "Latar - skrin menegak (phone)",
+    options: [
+      ...none,
+      ...PAPARAN_BACKGROUNDS.filter((b) => b.portrait).map((b) => [
+        b.id,
+        b.label,
+      ]),
+    ],
+  },
+];
+const labelClass = "grid gap-1.5 text-sm font-medium";
+const controlClass =
+  "h-10 w-full rounded-lg bg-(--pm-card) px-3 text-sm text-(--pm-fg) outline-1 -outline-offset-1 outline-(--pm-ring) focus:outline-2 focus:outline-(--pm-accent)";
+---
+
+<CoreLayout
+  title={`Paparan Masjid · Waktu Solat ${zone.code} | Hafiz Bahtiar`}
+  description={`Paparan waktu solat untuk skrin masjid - ${zone.daerah}, ${zone.negeri}.`}
+  noindex
+  class="font-inter"
+>
+  <main
+    id="display"
+    data-tema={settings.tema}
+    data-latar-l={photosL.length ? "" : undefined}
+    data-latar-p={photosP.length ? "" : undefined}
+    data-photos-l={photosL.join(",")}
+    data-photos-p={photosP.join(",")}
+    data-jam={settings.jam}
+    data-saat={settings.saat}
+    data-angka={settings.angka}
+    data-iqamah={settings.iqamah}
+    data-today={today}
+    data-server-now={Date.now()}
+    data-tomorrow-subuh={times
+      ? hhmm(tomorrowRamadan ? times.tomorrow.imsak : times.tomorrow.fajr)
+      : undefined}
+    data-subuh-label={tomorrowRamadan
+      ? "Sahur berakhir"
+      : jawi
+        ? "صبح"
+        : "Subuh"}
+    class="fixed inset-0 flex flex-col overflow-hidden bg-(--pm-bg) p-[calc(3*var(--u))] text-(--pm-fg) select-none portrait:overflow-y-auto"
+  >
+    <!-- Background photos: two layers so a new photo can fade in over the old one.
+         The script sets them after the image has decoded (see initBackground). -->
+    <div
+      id="display-bg"
+      class="pointer-events-none fixed inset-0 -z-10"
+      aria-hidden="true"
+    >
+      <div class="pm-bg-layer"></div>
+      <div class="pm-bg-layer"></div>
+    </div>
+    <header
+      class="flex items-start justify-between gap-[calc(2*var(--u))] portrait:flex-col"
+    >
+      <div>
+        <p
+          class="font-mono text-[calc(1.3*var(--u))] tracking-widest text-(--pm-accent) uppercase"
+        >
+          Waktu Solat · {zone.code}{settings.masjid && ` · ${zone.daerah}`}
+        </p>
+        <p
+          class="mt-[calc(0.5*var(--u))] text-[calc(2.2*var(--u))] font-medium tracking-tight"
+        >
+          {settings.masjid || `${zone.daerah}, ${zone.negeri}`}
+        </p>
+      </div>
+      <div class="text-right portrait:text-left">
+        <p class="text-[calc(2.2*var(--u))] font-medium tracking-tight">
+          {dateLabel}
+        </p>
+        {
+          times && (
+            <p class="mt-[calc(0.5*var(--u))] font-mono text-[calc(1.3*var(--u))] tracking-widest text-(--pm-muted) uppercase">
+              {digits(formatHijri(times.today.hijri))}
+            </p>
+          )
+        }
+        {
+          times?.bearing && (
+            <p class="mt-[calc(0.3*var(--u))] font-mono text-[calc(1.1*var(--u))] tracking-widest text-(--pm-faint) uppercase">
+              Kiblat {digits(times.bearing)}
+            </p>
+          )
+        }
+        {
+          weather && (
+            <p class="mt-[calc(0.3*var(--u))] text-[calc(1.3*var(--u))] text-(--pm-muted)">
+              Cuaca: {weather.summary} ·{" "}
+              {digits(`${weather.min}–${weather.max}`)}°C
+            </p>
+          )
+        }
+      </div>
+    </header>
+
+    <div
+      id="display-views"
+      class="grid flex-1 place-items-center portrait:flex-none portrait:py-[8vw]"
+    >
+      <!-- Two views in one grid cell, crossfaded by the script: the clock, and
+           (when Tetapan -> Pengumuman is set) the notice. -->
+      <div
+        data-view="clock"
+        class="pm-view flex flex-col items-center [grid-area:1/1]"
+      >
+        <p
+          class="flex items-baseline gap-[calc(1.5*var(--u))] leading-none font-medium tracking-tighter tabular-nums"
+        >
+          <span
+            id="display-clock"
+            class="text-[calc(13*var(--u))] portrait:text-[20vw]">--:--</span
+          >
+          <span
+            id="display-suffix"
+            class="text-[calc(3*var(--u))] tracking-normal text-(--pm-muted) portrait:text-[6vw]"
+          ></span>
+        </p>
+        <p
+          id="display-next"
+          class="mt-[calc(1.5*var(--u))] text-[calc(3*var(--u))] font-medium tracking-tight text-(--pm-accent) tabular-nums"
+        >
+        </p>
+        {
+          reminder && (
+            <figure class="mt-[calc(2.5*var(--u))] max-w-[calc(72*var(--u))] text-center">
+              {reminder.arabic && (
+                <p
+                  lang="ar"
+                  dir="rtl"
+                  class="line-clamp-2 text-[calc(2.2*var(--u))] leading-[1.8]"
+                >
+                  {reminder.arabic}
+                </p>
+              )}
+              <blockquote class="mt-[calc(0.6*var(--u))] line-clamp-3 text-[calc(1.5*var(--u))] leading-snug text-(--pm-muted)">
+                {reminder.text}
+              </blockquote>
+              <figcaption class="mt-[calc(0.6*var(--u))] font-mono text-[calc(0.9*var(--u))] tracking-widest text-(--pm-faint) uppercase">
+                {reminder.kind === "ayat" ? "Ayat hari ini" : "Hadis hari ini"}{" "}
+                ·{" "}
+                {reminder.sourceAr && (
+                  <span
+                    lang="ar"
+                    dir="rtl"
+                    class="font-sans tracking-normal normal-case"
+                  >
+                    {reminder.sourceAr}
+                  </span>
+                )}
+                {reminder.sourceAr && reminder.source && " · "}
+                {reminder.source}
+              </figcaption>
+            </figure>
+          )
+        }
+      </div>
+      {
+        settings.pengumuman && (
+          <div
+            data-view="notice"
+            aria-hidden="true"
+            class="pm-view pm-view-off flex max-w-[calc(80*var(--u))] flex-col items-center text-center [grid-area:1/1]"
+          >
+            <p class="rounded-full bg-(--pm-accent) px-[calc(1.5*var(--u))] py-[calc(0.4*var(--u))] font-mono text-[calc(1.2*var(--u))] font-semibold tracking-widest text-(--pm-bg) uppercase">
+              Pengumuman
+            </p>
+            <p class="mt-[calc(2*var(--u))] text-[calc(4*var(--u))] leading-tight font-medium tracking-tight text-balance">
+              {settings.pengumuman}
+            </p>
+          </div>
+        )
+      }
+    </div>
+
+    {
+      times ? (
+        <dl class="grid grid-cols-7 gap-(--u) portrait:grid-cols-1">
+          {rows.map((r) => (
+            <div
+              data-label={r.label}
+              data-countdown={r.tag ?? r.label}
+              data-time={hhmm(r.time)}
+              data-azan={r.azan ? "" : undefined}
+              data-target={r.target ? "" : undefined}
+              class="rounded-[calc(1.2*var(--u))] bg-(--pm-card) px-(--u) py-[calc(1.4*var(--u))] text-center ring-1 backdrop-blur-md ring-(--pm-ring) transition-colors portrait:flex portrait:items-center portrait:justify-between portrait:text-left data-next:bg-(--pm-next) data-next:ring-(--pm-accent) data-past:opacity-40"
+            >
+              <dt
+                lang={jawi ? "ar" : undefined}
+                class:list={[
+                  "text-[calc(1.3*var(--u))] text-(--pm-muted)",
+                  jawi
+                    ? "font-sans text-[calc(1.8*var(--u))]"
+                    : "font-mono tracking-widest uppercase",
+                ]}
+              >
+                {r.label}
+              </dt>
+              <dd
+                class:list={[
+                  "mt-[calc(0.5*var(--u))] text-[calc(3.6*var(--u))] leading-none portrait:mt-0 font-medium tracking-tighter tabular-nums",
+                  !r.azan && "text-(--pm-muted)",
+                ]}
+              >
+                {showTime(r.time)}
+              </dd>
+              {r.tag && (
+                <dd class="mt-[calc(0.6*var(--u))] text-[calc(1.1*var(--u))] font-medium text-(--pm-accent) portrait:mt-0">
+                  {r.tag}
+                </dd>
+              )}
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <p class="text-center text-[calc(2*var(--u))] text-(--pm-muted)">
+          Waktu solat tak dapat diambil dari JAKIM. Cuba semula dalam 5 minit.
+        </p>
+      )
+    }
+
+    <p
+      class="mt-[calc(1.5*var(--u))] text-center font-mono text-[calc(0.9*var(--u))] tracking-widest text-(--pm-faint) uppercase"
+    >
+      Sumber: {times?.source ?? "e-solat JAKIM"}{
+        times?.stale && " (data simpanan)"
+      } · hafizbahtiar.com/waktu-solat
+    </p>
+
+    <!-- Operator controls: hidden in full screen and while the mouse is idle. -->
+    <div
+      id="display-controls"
+      class="absolute top-(--u) right-(--u) flex gap-2 transition-opacity"
+    >
+      <a
+        href={`/waktu-solat?zone=${zone.code}`}
+        class="rounded-full bg-(--pm-card) px-4 py-2 text-sm ring-1 ring-(--pm-ring) hover:ring-(--pm-accent)"
+      >
+        Keluar
+      </a>
+      <button
+        id="display-open-settings"
+        type="button"
+        class="rounded-full bg-(--pm-card) px-4 py-2 text-sm ring-1 ring-(--pm-ring) hover:ring-(--pm-accent)"
+      >
+        Tetapan
+      </button>
+      <button
+        id="display-fullscreen"
+        type="button"
+        class="rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600"
+      >
+        Skrin penuh
+      </button>
+    </div>
+
+    <!-- Settings: a plain GET form - saving reloads this page with the new URL,
+         which is what the mosque bookmarks. -->
+    <dialog
+      id="display-settings"
+      class="m-auto max-h-[92dvh] w-2xl max-w-[92vw] rounded-2xl bg-(--pm-bg) p-0 text-(--pm-fg) ring-1 ring-(--pm-ring) backdrop:bg-black/60"
+    >
+      <form method="get" class="grid gap-5 p-6">
+        <div>
+          <h2 class="text-lg font-medium tracking-tight">Tetapan paparan</h2>
+          <p class="mt-1 text-sm/6 text-(--pm-muted)">
+            Disimpan dalam alamat (URL) halaman ini. Bookmark selepas simpan
+            supaya tetapan kekal untuk skrin ini.
+          </p>
+          <p class="mt-2 text-xs/5 text-(--pm-muted)">
+            Penafian: paparan ini bukan rasmi. Waktu daripada JAKIM dan cuaca
+            daripada MET dipaparkan seadanya tanpa jaminan; rujukan muktamad
+            ialah JAKIM dan jabatan agama Islam negeri.
+            <a
+              href="/penafian"
+              target="_blank"
+              class="underline underline-offset-2">Penafian penuh</a
+            >
+          </p>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class={labelClass}>
+            Nama masjid / surau
+            <input
+              name="masjid"
+              maxlength="60"
+              value={settings.masjid}
+              placeholder="Contoh: Masjid Al-Hidayah"
+              class={controlClass}
+            />
+          </label>
+          <label class:list={[labelClass, "sm:col-span-2 sm:row-start-2"]}>
+            Pengumuman (bergilir dengan jam)
+            <input
+              name="pengumuman"
+              maxlength="200"
+              value={settings.pengumuman}
+              placeholder="Contoh: Kuliah Maghrib malam ini bersama Ustaz Ahmad, selepas solat Maghrib."
+              class={controlClass}
+            />
+            <span class="text-xs font-normal text-(--pm-muted)"
+              >Dipapar 10 saat selepas setiap 20 saat jam (bukan dekat waktu
+              azan atau iqamah). Kosongkan untuk sembunyi. Maksimum 200 aksara.</span
+            >
+          </label>
+          <label class={labelClass}>
+            Zon
+            <span class="relative">
+              <select
+                name="zone"
+                class={`${controlClass} appearance-none pr-9`}
+              >
+                {
+                  states.map((negeri) => (
+                    <optgroup label={negeri}>
+                      {SOLAT_ZONES.filter((z) => z.negeri === negeri).map(
+                        (z) => (
+                          <option
+                            value={z.code}
+                            selected={z.code === zone.code}
+                          >
+                            {z.code} - {z.daerah}
+                          </option>
+                        ),
+                      )}
+                    </optgroup>
+                  ))
+                }
+              </select>
+              <svg
+                class="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-(--pm-muted)"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                  clip-rule="evenodd"></path>
+              </svg>
+            </span>
+          </label>
+          {
+            selects.map((f) => (
+              <label class={labelClass}>
+                {f.label}
+                <span class="relative">
+                  <select
+                    name={f.name}
+                    class={`${controlClass} appearance-none pr-9`}
+                  >
+                    {f.options.map(([value, text]) => (
+                      <option
+                        value={value}
+                        selected={String(settings[f.name]) === value}
+                      >
+                        {text}
+                      </option>
+                    ))}
+                  </select>
+                  <svg
+                    class="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-(--pm-muted)"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </span>
+              </label>
+            ))
+          }
+          <label class={labelClass}>
+            Iqamah (minit)
+            <input
+              name="iqamah"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              max="30"
+              step="1"
+              value={settings.iqamah}
+              class={controlClass}
+            />
+            <span class="text-xs font-normal text-(--pm-muted)"
+              >0 = tiada kiraan detik iqamah.</span
+            >
+          </label>
+        </div>
+        <div
+          class="flex flex-wrap items-center justify-end gap-2 border-t border-(--pm-ring) pt-5"
+        >
+          <a
+            href={`?zone=${zone.code}`}
+            class="mr-auto text-sm text-(--pm-muted) underline">Set semula</a
+          >
+          <button
+            type="button"
+            data-close
+            class="h-10 rounded-full px-5 text-sm ring-1 ring-(--pm-ring)"
+            >Batal</button
+          >
+          <button
+            type="submit"
+            class="h-10 rounded-full bg-sky-500 px-5 text-sm font-medium text-white hover:bg-sky-600"
+          >
+            Simpan
+          </button>
+        </div>
+      </form>
+    </dialog>
+  </main>
+</CoreLayout>
+
+<style>
+  /* Size unit: 1vw on a 16:9 screen (TV), shrinks on shorter landscape screens
+     (phones) so nothing overlaps; portrait (phone/tablet held upright) scales up
+     and switches to a stacked layout via the portrait: classes. */
+  #display {
+    --u: min(1vw, 1.78vh);
+    /* Theme (Tetapan -> Tema). Every colour on the page goes through these.
+       --pm-* (paparan masjid), not --accent/--card/...: those names are shadcn's
+       global tokens (styles/shadcn.css) and would collide. */
+    --pm-bg: var(--color-gray-950);
+    --pm-fg: var(--color-white);
+    --pm-muted: var(--color-gray-400);
+    --pm-faint: var(--color-gray-600);
+    --pm-card: rgb(255 255 255 / 0.05);
+    --pm-ring: rgb(255 255 255 / 0.1);
+    --pm-accent: var(--color-sky-400);
+    --pm-next: rgb(14 165 233 / 0.2);
+    /* Over a background photo: darker at the top and bottom edges (small text
+       lives there), lighter in the middle so the photo still reads. */
+    --pm-overlay-edge: rgb(3 7 18 / 0.78);
+    --pm-overlay-mid: rgb(3 7 18 / 0.5);
+    color-scheme: dark;
+  }
+  #display[data-tema="terang"] {
+    --pm-bg: var(--color-white);
+    --pm-fg: var(--color-gray-950);
+    --pm-muted: var(--color-gray-600);
+    --pm-faint: var(--color-gray-400);
+    --pm-card: rgb(3 7 18 / 0.04);
+    --pm-ring: rgb(3 7 18 / 0.1);
+    --pm-accent: var(--color-sky-600);
+    --pm-next: rgb(14 165 233 / 0.12);
+    --pm-overlay-edge: rgb(255 255 255 / 0.85);
+    --pm-overlay-mid: rgb(255 255 255 / 0.6);
+    color-scheme: light;
+  }
+  /* Background photo per orientation (Tetapan -> Latar). Faint text steps up to
+     muted over a photo so it stays readable. */
+  #display[data-latar-l],
+  #display[data-latar-p] {
+    --pm-faint: var(--pm-muted);
+  }
+  /* Photo layers fade in once decoded; the overlay (darker at the top and bottom
+     edges, where the small text is) fades in with the first photo. Animating
+     opacity also makes browsers repaint the cards' backdrop blur (glass). */
+  .pm-bg-layer,
+  #display-bg::after {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+  }
+  .pm-bg-layer {
+    background-size: cover;
+    background-position: center;
+  }
+  .pm-bg-layer[data-on],
+  #display-bg[data-has-photo]::after {
+    opacity: 1;
+  }
+  #display-bg::after {
+    content: "";
+    background: linear-gradient(
+      var(--pm-overlay-edge),
+      var(--pm-overlay-mid) 45%,
+      var(--pm-overlay-edge)
+    );
+  }
+  @media (orientation: portrait) {
+    #display {
+      --u: 2.2vw;
+    }
+  }
+
+  /* Clock <-> Pengumuman views (crossfade). */
+  .pm-view {
+    transition: opacity 0.8s ease;
+  }
+  .pm-view-off {
+    opacity: 0;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pm-view {
+      transition: none;
+    }
+  }
+
+  /* Idle: hide the cursor and the operator buttons. */
+  :global(#display.is-idle),
+  :global(#display.is-idle *) {
+    cursor: none;
+  }
+  :global(#display.is-idle #display-controls),
+  :global(:fullscreen #display-controls) {
+    opacity: 0;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  const IDLE_MS = 3000;
+  const AZAN_BANNER_S = 10 * 60; // "Telah masuk waktu …" for 10 minutes
+  // Pengumuman rotation (seconds). ponytail: fixed; make them Tetapan if mosques ask.
+  const CLOCK_VIEW_S = 20;
+  const NOTICE_VIEW_S = 10;
+  const HOLD_BEFORE_AZAN_S = 2 * 60;
+
+  // Malaysian wall-clock time, whatever the TV's own timezone is set to.
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kuala_Lumpur",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+  const dayFmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kuala_Lumpur",
+  });
+  const toSec = (hhmm: string) => {
+    const [h, m] = hhmm.split(":").map(Number);
+    return h * 3600 + m * 60;
+  };
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const span = (s: number) =>
+    s >= 3600
+      ? `${Math.floor(s / 3600)}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`
+      : `${Math.floor(s / 60)}:${pad(s % 60)}`;
+
+  let timer = 0;
+  // Mosque screen boxes often have a wrong system clock: run on server time instead
+  // (offset taken once at load), which also stops a wrong date from reload-looping.
+  let offset = 0;
+  let wakeLock: { release(): Promise<void> } | null = null;
+
+  const initDisplay = () => {
+    const screen = document.getElementById("display");
+    if (!screen || screen.dataset.bound === "1") return;
+    screen.dataset.bound = "1";
+    clearInterval(timer);
+    offset = Number(screen.dataset.serverNow) - Date.now() || 0;
+    const { jam, saat, angka } = screen.dataset;
+    const iqamahS = Number(screen.dataset.iqamah || 0) * 60;
+    const digits = (s: string) =>
+      angka === "arab" ? s.replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]) : s;
+    const clock = document.getElementById("display-clock")!;
+    const suffix = document.getElementById("display-suffix")!;
+    const next = document.getElementById("display-next")!;
+    const settings = document.getElementById(
+      "display-settings",
+    ) as HTMLDialogElement;
+    const cells = [...screen.querySelectorAll<HTMLElement>("[data-time]")];
+    const azan = cells.filter((c) => c.hasAttribute("data-azan"));
+    // Countdown targets: azan times, plus Imsak in Mod Ramadan (data-target).
+    const targets = cells.filter((c) => c.hasAttribute("data-target"));
+
+    // Clock CLOCK_VIEW_S, then the notice NOTICE_VIEW_S, and round again.
+    const clockView = screen.querySelector<HTMLElement>('[data-view="clock"]')!;
+    const noticeView = screen.querySelector<HTMLElement>(
+      '[data-view="notice"]',
+    );
+    let showingNotice = false;
+    let viewSec = 0;
+    const setView = (notice: boolean) => {
+      showingNotice = notice;
+      viewSec = 0;
+      clockView.classList.toggle("pm-view-off", notice);
+      clockView.setAttribute("aria-hidden", String(notice));
+      noticeView!.classList.toggle("pm-view-off", !notice);
+      noticeView!.setAttribute("aria-hidden", String(!notice));
+    };
+    const rotateViews = (hold: boolean) => {
+      if (!noticeView) return;
+      viewSec++;
+      if (showingNotice && (hold || viewSec >= NOTICE_VIEW_S)) setView(false);
+      else if (!showingNotice && !hold && viewSec >= CLOCK_VIEW_S)
+        setView(true);
+    };
+
+    const tick = () => {
+      const now = new Date(Date.now() + offset);
+      if (dayFmt.format(now) !== screen.dataset.today) return location.reload(); // new day
+      const [h, m, s] = fmt.format(now).split(":").map(Number);
+      const sec = h * 3600 + m * 60 + s;
+      const hour = jam === "12" ? String(h % 12 || 12) : pad(h);
+      clock.textContent = digits(
+        `${hour}:${pad(m)}${saat === "tidak" ? "" : `:${pad(s)}`}`,
+      );
+      suffix.textContent = jam === "12" ? (h < 12 ? "PG" : "PTG") : "";
+      if (!cells.length) return;
+
+      cells.forEach((c) =>
+        c.toggleAttribute("data-past", toSec(c.dataset.time!) <= sec),
+      );
+      const upcoming = targets.find((c) => toSec(c.dataset.time!) > sec);
+      const current = [...azan]
+        .reverse()
+        .find((c) => toSec(c.dataset.time!) <= sec);
+      const since = current ? sec - toSec(current.dataset.time!) : Infinity;
+      // Never cover the clock close to azan, during iqamah or its banner.
+      const soon = upcoming
+        ? toSec(upcoming.dataset.time!) - sec <= HOLD_BEFORE_AZAN_S
+        : false;
+      rotateViews(soon || since < iqamahS + AZAN_BANNER_S);
+      // Keep the prayer that just came in highlighted through iqamah and its banner.
+      const focus = since < iqamahS + AZAN_BANNER_S ? current : upcoming;
+      cells.forEach((c) => c.toggleAttribute("data-next", c === focus));
+      if (current && since < iqamahS) {
+        next.textContent = `Iqamah ${current.dataset.label} dalam ${digits(span(iqamahS - since))}`;
+      } else if (current && since < iqamahS + AZAN_BANNER_S) {
+        next.textContent = `Telah masuk waktu ${current.dataset.label}`;
+      } else if (upcoming) {
+        next.textContent = `${upcoming.dataset.countdown} dalam ${digits(span(toSec(upcoming.dataset.time!) - sec))}`;
+      } else if (screen.dataset.tomorrowSubuh) {
+        next.textContent = `${screen.dataset.subuhLabel} dalam ${digits(span(86400 - sec + toSec(screen.dataset.tomorrowSubuh)))}`;
+      }
+    };
+    tick();
+    timer = window.setInterval(tick, 1000);
+    // JAKIM was down when the page rendered: try again in 5 minutes.
+    if (!cells.length)
+      window.setTimeout(() => location.reload(), 5 * 60 * 1000);
+
+    // Idle cursor/controls (never while the settings dialog is open).
+    let idle = 0;
+    const wake = () => {
+      screen.classList.remove("is-idle");
+      clearTimeout(idle);
+      idle = window.setTimeout(
+        () => !settings.open && screen.classList.add("is-idle"),
+        IDLE_MS,
+      );
+    };
+    screen.addEventListener("pointermove", wake);
+    screen.addEventListener("keydown", wake);
+    wake();
+
+    document
+      .getElementById("display-open-settings")
+      ?.addEventListener("click", () => settings.showModal());
+    settings
+      .querySelector("[data-close]")
+      ?.addEventListener("click", () => settings.close());
+
+    // Full screen + keep the TV awake (Wake Lock, where the browser supports it).
+    const lock = async () => {
+      try {
+        wakeLock = await (navigator as any).wakeLock?.request("screen");
+      } catch {}
+    };
+    document
+      .getElementById("display-fullscreen")
+      ?.addEventListener("click", () => {
+        void document.documentElement.requestFullscreen?.();
+        void lock();
+      });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && wakeLock) void lock();
+    });
+  };
+
+  // Background photos (Tetapan -> Latar): the list for the current orientation,
+  // one photo or all of them in turn ("gilir"). Each photo is decoded before it
+  // fades in over the other layer, so there is never a half-loaded frame.
+  const ROTATE_MS = 60_000;
+  let bgTimer = 0;
+  let portraitQuery: MediaQueryList | null = null;
+
+  const initBackground = () => {
+    const screen = document.getElementById("display");
+    const bg = document.getElementById("display-bg");
+    if (!screen || !bg || bg.dataset.bound === "1") return;
+    bg.dataset.bound = "1";
+    const layers = [...bg.querySelectorAll<HTMLElement>(".pm-bg-layer")];
+    let front = 0;
+
+    const show = async (url: string) => {
+      const img = new Image();
+      img.src = url;
+      try {
+        await img.decode();
+      } catch {
+        return; // missing/broken file: keep what is on screen
+      }
+      const next = layers[1 - front];
+      next.style.backgroundImage = `url("${url}")`;
+      next.toggleAttribute("data-on", true);
+      layers[front].toggleAttribute("data-on", false);
+      front = 1 - front;
+      bg.toggleAttribute("data-has-photo", true);
+    };
+
+    const start = () => {
+      clearInterval(bgTimer);
+      const portrait = portraitQuery?.matches ?? false;
+      const ids =
+        (portrait ? screen.dataset.photosP : screen.dataset.photosL)
+          ?.split(",")
+          .filter(Boolean) ?? [];
+      const orient = portrait ? "portrait" : "landscape";
+      if (!ids.length) {
+        layers.forEach((l) => l.toggleAttribute("data-on", false));
+        bg.toggleAttribute("data-has-photo", false);
+        return;
+      }
+      let i = Math.floor(Math.random() * ids.length);
+      const url = () => `/images/waktu-solat/bg/${ids[i]}-${orient}.webp`;
+      void show(url());
+      if (ids.length > 1) {
+        bgTimer = window.setInterval(() => {
+          i = (i + 1) % ids.length;
+          void show(url());
+        }, ROTATE_MS);
+      }
+    };
+
+    portraitQuery = window.matchMedia("(orientation: portrait)");
+    portraitQuery.addEventListener("change", start);
+    start();
+  };
+
+  initDisplay();
+  initBackground();
+  document.addEventListener("astro:page-load", () => {
+    initDisplay();
+    initBackground();
+  });
+  document.addEventListener("astro:before-swap", () => {
+    clearInterval(timer);
+    clearInterval(bgTimer);
+  });
+</script>

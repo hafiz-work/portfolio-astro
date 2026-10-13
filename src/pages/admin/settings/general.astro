@@ -31,7 +31,7 @@ import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
     </p>
 
     <div
-      class="rounded-xl border border-gray-950/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 md:p-5 max-w-2xl"
+      class="rounded-xl border border-gray-950/5 dark:border-white/10 bg-white dark:bg-white/3 p-4 md:p-5 max-w-2xl"
     >
       <form id="general-settings-form" class="space-y-6">
         <div class="space-y-2">
@@ -70,6 +70,7 @@ import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
 </PrivateLayout>
 
 <script>
+  import { showToast } from "../../../lib/admin-ui";
   // <ClientRouter> runs a page's bundled script once per session, so a
   // second visit got a dead page (no data, no handlers). Init on every visit.
   async function initPage() {
@@ -87,7 +88,10 @@ import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
       saveBtn.disabled = true;
 
       setTimeout(() => {
-        alert("Settings saved locally (No backend endpoint yet)");
+        showToast({
+          type: "info",
+          title: "Settings saved locally (No backend endpoint yet)",
+        });
         saveBtn.innerHTML = originalContent;
         saveBtn.disabled = false;
       }, 1000);

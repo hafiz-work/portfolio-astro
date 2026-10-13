@@ -8,8 +8,12 @@ import {
   LayoutDashboard,
   LogOut,
   Newspaper,
+  Quote,
   Scale,
   Settings,
+  ShieldAlert,
+  ShieldCheck,
+  Tags,
   Terminal,
   TriangleAlert,
   Users,
@@ -20,65 +24,106 @@ const links = [
   {
     text: "Dashboard",
     href: "/admin",
+    perm: "dashboard.read",
     icon: LayoutDashboard,
   },
   {
     text: "Projects",
     href: "/admin/projects",
+    perm: "projects.read",
     icon: Folder,
   },
   {
     text: "Tech Stack",
     href: "/admin/tech-stacks",
+    perm: "projects.read",
     icon: Layers,
   },
   {
     text: "Experiences",
     href: "/admin/experiences",
+    perm: "experiences.read",
     icon: Briefcase,
   },
   {
     text: "Family",
     href: "/admin/family",
+    perm: "family.read",
     icon: Users,
   },
   {
     text: "Blog",
     href: "/admin/blog",
+    perm: "blog.read",
     icon: Newspaper,
+  },
+  {
+    text: "Quotes",
+    href: "/admin/quotes",
+    perm: "quotes.read",
+    icon: Quote,
+  },
+  {
+    text: "Quote Tags",
+    href: "/admin/quote-tags",
+    perm: "quotes.read",
+    icon: Tags,
   },
   {
     text: "Policies",
     href: "/admin/policies",
+    perm: "projects.read",
     icon: Scale,
   },
   {
     text: "Contacts",
     href: "/admin/contact",
+    perm: "contact.read",
     icon: Inbox,
+  },
+  {
+    text: "Moderation",
+    href: "/admin/moderation",
+    perm: "moderation.read",
+    icon: ShieldAlert,
+  },
+  {
+    text: "Users",
+    href: "/admin/users",
+    perm: "users.read",
+    icon: Users,
+  },
+  {
+    text: "Roles",
+    href: "/admin/roles",
+    perm: "roles.read",
+    icon: ShieldCheck,
   },
   {
     text: "System Logs",
     href: "/admin/system",
+    perm: "audit.read",
     icon: Terminal,
   },
   {
     text: "Settings",
     href: "/admin/settings",
+    perm: "account.update",
     icon: Settings,
   },
   {
     text: "Profile",
     href: "/admin/profile",
+    perm: "profile.read",
     icon: CircleUser,
   },
 ];
 
 const groups = [
   { label: "Overview", items: links.slice(0, 1) },
-  { label: "Content", items: links.slice(1, 7) },
-  { label: "Inbox", items: links.slice(7, 8) },
-  { label: "System", items: links.slice(8) },
+  { label: "Content", items: links.slice(1, 9) },
+  { label: "Inbox", items: links.slice(9, 11) }, // Contacts, Moderation
+  { label: "System", items: links.slice(11) }, // Users, Roles, System Logs, Settings, Profile
 ];
 
 const currentPath = Astro.url.pathname;
@@ -131,10 +176,10 @@ const currentPath = Astro.url.pathname;
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-grow px-3 py-4 overflow-y-auto">
+    <nav class="grow px-3 py-4 overflow-y-auto">
       {
         groups.map((group) => (
-          <div class="mb-4 last:mb-0">
+          <div class="nav-group mb-4 last:mb-0">
             <p class="nav-group-label px-3 mb-1.5 font-mono text-xs font-medium uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
               {group.label}
             </p>
@@ -146,21 +191,22 @@ const currentPath = Astro.url.pathname;
                 return (
                   <a
                     href={link.href}
+                    data-perm={link.perm}
                     aria-label={link.text}
                     title={link.text}
                     aria-current={isActive ? "page" : undefined}
                     class:list={[
                       "nav-item relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150 group",
                       isActive
-                        ? "bg-sky-500/10 text-sky-700 font-medium dark:bg-white/[0.03] dark:text-white"
-                        : "text-gray-500 hover:text-gray-950 hover:bg-gray-950/[0.025] dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-white/5",
+                        ? "bg-sky-500/10 text-sky-700 font-medium dark:bg-white/3 dark:text-white"
+                        : "text-gray-500 hover:text-gray-950 hover:bg-gray-950/2.5 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-white/5",
                     ]}
                   >
                     {isActive && (
                       <span class="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-sky-500 dark:bg-sky-400" />
                     )}
                     <link.icon
-                      className={`nav-icon h-[18px] w-[18px] ${
+                      className={`nav-icon h-4.5 w-4.5 ${
                         isActive
                           ? "text-sky-600 dark:text-sky-400"
                           : "text-gray-400 group-hover:text-gray-700 dark:text-gray-500 dark:group-hover:text-gray-300"
@@ -182,7 +228,7 @@ const currentPath = Astro.url.pathname;
         <div class="flex items-center space-x-3 px-2">
           <div class="relative">
             <div
-              class="w-10 h-10 rounded-full bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center text-white font-bold text-sm"
+              class="w-10 h-10 rounded-full bg-linear-to-br from-sky-500 to-sky-600 flex items-center justify-center text-white font-bold text-sm"
             >
               HB
             </div>
@@ -191,12 +237,18 @@ const currentPath = Astro.url.pathname;
             >
             </div>
           </div>
-          <div class="user-meta flex-grow min-w-0">
-            <div class="text-gray-950 dark:text-white font-medium truncate">
+          <div class="user-meta grow min-w-0">
+            <div
+              id="sidebar-user-name"
+              class="text-gray-950 dark:text-white font-medium truncate"
+            >
               Hafiz Bahtiar
             </div>
-            <div class="text-gray-500 dark:text-gray-500 text-xs truncate">
-              Super Admin
+            <div
+              id="sidebar-user-role"
+              class="text-gray-500 dark:text-gray-500 text-xs truncate capitalize"
+            >
+              Owner
             </div>
           </div>
         </div>
@@ -355,14 +407,16 @@ const currentPath = Astro.url.pathname;
         class="relative transform overflow-hidden rounded-xl bg-white dark:bg-gray-950 ring-1 ring-gray-950/5 dark:ring-white/10 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
         id="logout-panel"
       >
-        <div
-          class="bg-white dark:bg-white/[0.03] px-4 pb-4 pt-5 sm:p-6 sm:pb-4"
-        >
+        <div class="bg-white dark:bg-white/3 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
           <div class="sm:flex sm:items-start">
             <div
-              class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-500/10 sm:mx-0 sm:h-10 sm:w-10"
+              class="mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-500/10 sm:mx-0 sm:h-10 sm:w-10"
             >
-              <TriangleAlert className="h-5 w-5 text-red-600 dark:text-red-400" strokeWidth={1.5} aria-hidden="true" />
+              <TriangleAlert
+                className="h-5 w-5 text-red-600 dark:text-red-400"
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
             </div>
             <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
               <h3
@@ -381,7 +435,7 @@ const currentPath = Astro.url.pathname;
           </div>
         </div>
         <div
-          class="bg-gray-950/[0.03] dark:bg-white/5 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-2"
+          class="bg-gray-950/3 dark:bg-white/5 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-2"
         >
           <button
             type="button"
@@ -411,7 +465,28 @@ const currentPath = Astro.url.pathname;
     }
   }
 
-  import { authService } from "../../lib/auth";
+  import { authService, can } from "../../lib/auth";
+
+  // Hide nav items the caller lacks; a group with nothing left goes too. The owner
+  // sees no change. Cosmetic - the backend 403s anyway.
+  async function applyPermissions() {
+    const me = await authService.me();
+    if (!me) return;
+    document
+      .querySelectorAll<HTMLElement>("#admin-sidebar [data-perm]")
+      .forEach((a) => {
+        a.hidden = !can(me, a.dataset.perm!);
+      });
+    document
+      .querySelectorAll<HTMLElement>("#admin-sidebar .nav-group")
+      .forEach((g) => {
+        g.hidden = !g.querySelector("[data-perm]:not([hidden])");
+      });
+    const name = document.getElementById("sidebar-user-name");
+    const role = document.getElementById("sidebar-user-role");
+    if (name) name.textContent = me.name;
+    if (role) role.textContent = me.role;
+  }
 
   function bindLogoutModal() {
     const logoutBtn = document.getElementById("logout-btn");
@@ -458,11 +533,11 @@ const currentPath = Astro.url.pathname;
         logoutConfirmBtn?.setAttribute("disabled", "true");
         logoutCancelBtn?.setAttribute("disabled", "true");
         await authService.logout();
-        window.location.replace("/login");
+        window.location.replace("/admin/login");
       } catch (error) {
         console.error("Logout failed", error);
         authService.clearAuthState();
-        window.location.replace("/login");
+        window.location.replace("/admin/login");
       } finally {
         logoutConfirmBtn?.removeAttribute("disabled");
         logoutCancelBtn?.removeAttribute("disabled");
@@ -491,6 +566,8 @@ const currentPath = Astro.url.pathname;
 
   bindLogoutModal();
   document.addEventListener("astro:page-load", bindLogoutModal);
+  void applyPermissions();
+  document.addEventListener("astro:page-load", () => void applyPermissions());
   document.addEventListener("astro:after-swap", bindLogoutModal);
 
   const STORAGE_KEY = "admin-sidebar-state";
@@ -538,10 +615,7 @@ const currentPath = Astro.url.pathname;
   function applyStoredSidebarState() {
     const isMobileView = window.matchMedia("(max-width: 767px)").matches;
     const storedState = localStorage.getItem(STORAGE_KEY) as
-      | "open"
-      | "closed"
-      | "minimized"
-      | null;
+      "open" | "closed" | "minimized" | null;
 
     if (isMobileView) {
       setSidebarState("closed");

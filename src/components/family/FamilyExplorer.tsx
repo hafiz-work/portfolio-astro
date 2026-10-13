@@ -84,7 +84,7 @@ export const FamilyExplorer = ({
 
   if (detail.people.length === 0) {
     return (
-      <div className="flex h-[420px] items-center justify-center pattern rounded-xl text-sm text-gray-500">
+      <div className="flex h-105 items-center justify-center pattern rounded-xl text-sm text-gray-500">
         No family members have been added yet.
       </div>
     );
@@ -108,7 +108,7 @@ export const FamilyExplorer = ({
       />
 
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-4">
-        <div className="h-[65vh] min-h-[420px] lg:h-[580px]">
+        <div className="h-[65vh] min-h-105 lg:h-145">
           <FamilyTreeCanvas
             key={detail.tree.slug}
             data={chartData}
@@ -122,7 +122,7 @@ export const FamilyExplorer = ({
           />
         </div>
 
-        <div className="hidden lg:block lg:h-[580px]">
+        <div className="hidden lg:block lg:h-145">
           <PersonDetailPanel
             detail={detail}
             person={selected}

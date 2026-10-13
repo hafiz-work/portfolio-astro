@@ -11,6 +11,7 @@ import {
   DeleteAction,
 } from "../../ui/admin/primitives";
 import { experiencesService } from "../../../lib/experiences";
+import { showToast, confirmDialog } from "../../../lib/admin-ui";
 import type { Experience } from "../../../types/experiences";
 
 const formatDate = (value: string | null) => {
@@ -44,23 +45,18 @@ export const ExperiencesTable = () => {
     loadExperiences();
   }, []);
 
-  const confirmDelete = async (experience: Experience) => {
-    const modal = (window as Window & { confirmModal?: any }).confirmModal;
-    if (modal?.show) {
-      return modal.show({
-        title: "Delete experience",
-        message: `Delete “${experience.companyName} - ${experience.role}”? This action cannot be undone.`,
-        confirmText: "Delete",
-        cancelText: "Cancel",
-        variant: "danger",
-      });
-    }
-    return confirm("Are you sure you want to delete this experience?");
-  };
+  const confirmDelete = (experience: Experience) =>
+    confirmDialog({
+      title: "Delete experience",
+      message: `Delete “${experience.companyName} - ${experience.role}”? This action cannot be undone.`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "danger",
+    });
 
   const handleDelete = async (experience: Experience) => {
     if (!experience.id) {
-      alert("Missing experience ID");
+      showToast({ type: "error", title: "Missing experience ID" });
       return;
     }
     const shouldDelete = await confirmDelete(experience);
@@ -70,11 +66,11 @@ export const ExperiencesTable = () => {
       if (success) {
         setData((prev) => prev.filter((item) => item.id !== experience.id));
       } else {
-        alert("Failed to delete experience");
+        showToast({ type: "error", title: "Failed to delete experience" });
       }
     } catch (error) {
       console.error("Delete failed:", error);
-      alert("Failed to delete experience");
+      showToast({ type: "error", title: "Failed to delete experience" });
     }
   };
 

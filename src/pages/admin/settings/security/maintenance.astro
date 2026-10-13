@@ -30,10 +30,10 @@ import AdminPageHeader from "../../../../components/admin/AdminPageHeader.astro"
     </p>
 
     <div
-      class="rounded-xl border border-gray-950/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 md:p-5 max-w-2xl"
+      class="rounded-xl border border-gray-950/5 dark:border-white/10 bg-white dark:bg-white/3 p-4 md:p-5 max-w-2xl"
     >
       <div
-        class="flex items-center justify-between p-4 bg-gray-950/[0.025] dark:bg-white/5 rounded-lg border border-gray-950/5 dark:border-white/10"
+        class="flex items-center justify-between p-4 bg-gray-950/2.5 dark:bg-white/5 rounded-lg border border-gray-950/5 dark:border-white/10"
       >
         <div>
           <h4 class="text-gray-950 dark:text-white font-medium">
@@ -53,7 +53,7 @@ import AdminPageHeader from "../../../../components/admin/AdminPageHeader.astro"
             checked={settings.maintenanceMode}
           />
           <div
-            class="w-11 h-6 bg-gray-950/15 dark:bg-white/15 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-sky-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-950/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"
+            class="w-11 h-6 bg-gray-950/15 dark:bg-white/15 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-sky-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-950/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"
           >
           </div>
         </label>
@@ -63,6 +63,7 @@ import AdminPageHeader from "../../../../components/admin/AdminPageHeader.astro"
 </PrivateLayout>
 
 <script>
+  import { showToast } from "../../../../lib/admin-ui";
   // <ClientRouter> runs a page's bundled script once per session, so a
   // second visit got a dead page (no data, no handlers). Init on every visit.
   async function initPage() {
@@ -83,9 +84,11 @@ import AdminPageHeader from "../../../../components/admin/AdminPageHeader.astro"
       saveBtn.disabled = true;
 
       setTimeout(() => {
-        alert(
-          "Maintenance mode settings saved locally (No backend endpoint yet)",
-        );
+        showToast({
+          type: "info",
+          title:
+            "Maintenance mode settings saved locally (No backend endpoint yet)",
+        });
         saveBtn.innerHTML = originalContent;
         saveBtn.disabled = false;
       }, 1000);

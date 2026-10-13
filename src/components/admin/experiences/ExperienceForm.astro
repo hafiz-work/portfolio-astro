@@ -59,13 +59,13 @@ const inputClass = "admin-input";
             Current Company
           </label>
           <div
-            class="flex items-center gap-3 bg-gray-950/[0.025] dark:bg-white/5 border border-gray-950/10 dark:border-white/10 rounded-lg px-4 py-2"
+            class="flex items-center gap-3 bg-gray-950/2.5 dark:bg-white/5 border border-gray-950/10 dark:border-white/10 rounded-lg px-4 py-2"
           >
             <input
               id="experience-is-current"
               type="checkbox"
               name="isCurrent"
-              class="h-4 w-4 rounded-lg border-gray-950/10 dark:border-white/10 bg-white dark:bg-white/[0.03] text-sky-600 focus:ring-sky-500/20"
+              class="h-4 w-4 rounded-lg border-gray-950/10 dark:border-white/10 bg-white dark:bg-white/3 text-sky-600 focus:ring-sky-500/20"
             />
             <span class="text-sm text-gray-700 dark:text-gray-300">
               Still working here
@@ -143,6 +143,7 @@ const inputClass = "admin-input";
     if (!currentToggle || !endDateInput) return;
     if (currentToggle.checked) {
       endDateInput.value = "";
+      endDateInput.dispatchEvent(new Event("change")); // DatePicker clears its text box
       endDateInput.disabled = true;
     } else {
       endDateInput.disabled = false;

@@ -117,6 +117,7 @@ import { TextEditor } from "../../../components/ui/TextEditor";
 </PrivateLayout>
 
 <script>
+  import { showToast } from "../../../lib/admin-ui";
   import { projectsService } from "../../../lib/projects";
   import { setupFormGuard } from "../../../lib/form-guard";
 
@@ -187,8 +188,11 @@ import { TextEditor } from "../../../components/ui/TextEditor";
 
         const project = await projectsService.getAdminProjectById(projectId);
         if (!project) {
-          alert("Project not found");
-          window.location.href = "/admin/policies";
+          showToast({ type: "error", title: "Project not found" });
+          window.setTimeout(
+            () => (window.location.href = "/admin/policies"),
+            900,
+          );
           return;
         }
 
@@ -224,8 +228,11 @@ import { TextEditor } from "../../../components/ui/TextEditor";
           formGuard.updateInitialState();
         }
       } catch (error) {
-        alert("Failed to load policy");
-        window.location.href = "/admin/policies";
+        showToast({ type: "error", title: "Failed to load policy" });
+        window.setTimeout(
+          () => (window.location.href = "/admin/policies"),
+          900,
+        );
       }
     }
 
@@ -250,14 +257,20 @@ import { TextEditor } from "../../../components/ui/TextEditor";
         });
         if (result) {
           formGuard?.updateInitialState();
-          alert("Policy updated successfully!");
-          window.location.href = "/admin/policies";
+          showToast({ type: "success", title: "Policy updated successfully!" });
+          window.setTimeout(
+            () => (window.location.href = "/admin/policies"),
+            900,
+          );
         } else {
           throw new Error("Failed to update policy");
         }
       } catch (error) {
         console.error(error);
-        alert("Failed to update policy. Please try again.");
+        showToast({
+          type: "error",
+          title: "Failed to update policy. Please try again.",
+        });
       } finally {
         submitBtn.innerHTML = originalContent;
         submitBtn.disabled = false;

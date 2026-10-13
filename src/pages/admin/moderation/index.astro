@@ -1,0 +1,15 @@
+---
+import PrivateLayout from "../../../layouts/PrivateLayout.astro";
+import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
+import { ModerationManager } from "../../../components/admin/access/ModerationManager";
+---
+
+<PrivateLayout title="Moderation">
+  <div class="space-y-6">
+    <AdminPageHeader
+      title="Moderation"
+      description="Posts and quotes by registered users. Reject, restore or delete with a reason; ban repeat offenders."
+    />
+    <ModerationManager client:load />
+  </div>
+</PrivateLayout>

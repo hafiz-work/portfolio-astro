@@ -70,17 +70,17 @@ export function SectionsManager({ projectId, onChanged }: { projectId: number; o
       {items.map((it, i) => (
         <div key={it.id} className="rounded-lg border border-gray-950/5 dark:border-white/10 p-3 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <input className={`${"admin-input"} max-w-[180px]`} value={it.sectionType} list="section-types"
+            <input className={`${"admin-input"} max-w-45`} value={it.sectionType} list="section-types"
               onChange={(e) => setField(it.id, { sectionType: e.target.value })} onBlur={() => void commit(it)} aria-label="Section type" />
-            <input className="admin-input flex-1 min-w-[160px]" placeholder="Title (optional)" value={it.title ?? ""}
+            <input className="admin-input flex-1 min-w-40" placeholder="Title (optional)" value={it.title ?? ""}
               onChange={(e) => setField(it.id, { title: e.target.value })} onBlur={() => void commit(it)} aria-label="Section title" />
             <div className="ml-auto flex shrink-0 items-center gap-2">
               <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                 <input type="checkbox" checked={it.isVisible} onChange={(e) => { setField(it.id, { isVisible: e.target.checked }); void commit({ ...it, isVisible: e.target.checked }); }} /> Visible
               </label>
-              <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
-              <button type="button" className="admin-btn admin-btn-secondary !px-2" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
-              <button type="button" className="admin-btn admin-btn-danger !px-2" onClick={() => remove(it)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
+              <button type="button" className="admin-btn admin-btn-secondary px-2!" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}><ChevronUp className="h-4 w-4" /></button>
+              <button type="button" className="admin-btn admin-btn-secondary px-2!" onClick={() => move(i, 1)} aria-label="Move down" disabled={i === items.length - 1}><ChevronDown className="h-4 w-4" /></button>
+              <button type="button" className="admin-btn admin-btn-danger px-2!" onClick={() => remove(it)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
             </div>
           </div>
           <textarea className="admin-input min-h-20" placeholder="Body (plain text / HTML)" value={it.body ?? ""}
@@ -92,9 +92,9 @@ export function SectionsManager({ projectId, onChanged }: { projectId: number; o
 
       <div className="rounded-lg border border-dashed border-gray-950/10 dark:border-white/10 p-3 space-y-2">
         <div className="flex flex-wrap gap-2">
-          <input className="admin-input max-w-[180px]" value={draft.sectionType} list="section-types"
+          <input className="admin-input max-w-45" value={draft.sectionType} list="section-types"
             onChange={(e) => setDraft({ ...draft, sectionType: e.target.value })} aria-label="New section type" />
-          <input className="admin-input flex-1 min-w-[160px]" placeholder="Title (optional)" value={draft.title}
+          <input className="admin-input flex-1 min-w-40" placeholder="Title (optional)" value={draft.title}
             onChange={(e) => setDraft({ ...draft, title: e.target.value })} aria-label="New section title" />
         </div>
         <textarea className="admin-input min-h-16" placeholder="Body" value={draft.body}

@@ -37,8 +37,8 @@ const projects = await getPublicProjects();
             imageUrl={project.imageUrl}
             imageVariant={project.imageVariant}
             previewFrame={project.previewFrame}
-            imageLoading={index < 3 ? "eager" : "lazy"}
-            imageFetchPriority={index < 3 ? "high" : "auto"}
+            imageLoading={index === 0 ? "eager" : "lazy"}
+            imageFetchPriority={index === 0 ? "high" : "auto"}
             tags={
               project.technologies?.length
                 ? project.technologies

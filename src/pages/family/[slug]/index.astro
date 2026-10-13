@@ -26,7 +26,7 @@ if (!detail && !loadError) {
 }
 ---
 
-<PublicLayout title={detail ? detail.tree.name : "Family"}>
+<PublicLayout title={detail ? detail.tree.name : "Family"} noindex>
   <section>
     <div class="h-10 sm:h-16"></div>
     <div class="line-y">
@@ -35,7 +35,10 @@ if (!detail && !loadError) {
           href="/family"
           class="group inline-flex items-center gap-1.5 font-mono text-xs/6 text-gray-500 transition-colors hover:text-gray-950 dark:hover:text-white"
         >
-          <span class="transition-transform group-hover:-translate-x-0.5" aria-hidden="true">&larr;</span>
+          <span
+            class="transition-transform group-hover:-translate-x-0.5"
+            aria-hidden="true">&larr;</span
+          >
           All families
         </a>
       </div>
@@ -45,7 +48,9 @@ if (!detail && !loadError) {
       <p class="eyebrow container-main">Family tree</p>
     </div>
     <div class="line-y mt-2">
-      <h1 class="container-main text-4xl/[1.1] font-medium tracking-tighter text-balance text-gray-950 sm:text-6xl/[1.05] dark:text-white">
+      <h1
+        class="container-main text-4xl/[1.1] font-medium tracking-tighter text-balance text-gray-950 sm:text-6xl/[1.05] dark:text-white"
+      >
         {detail ? detail.tree.name : "Family tree not found"}
       </h1>
     </div>
@@ -75,9 +80,11 @@ if (!detail && !loadError) {
 
       {
         !loadError && !detail && (
-          <div class="pattern flex h-[320px] flex-col items-center justify-center gap-3 rounded-xl text-sm text-gray-500">
+          <div class="pattern flex h-80 flex-col items-center justify-center gap-3 rounded-xl text-sm text-gray-500">
             <p>There is no family tree at this address.</p>
-            <a href="/family" class="btn-pill btn-pill-ghost">Browse all families</a>
+            <a href="/family" class="btn-pill btn-pill-ghost">
+              Browse all families
+            </a>
           </div>
         )
       }

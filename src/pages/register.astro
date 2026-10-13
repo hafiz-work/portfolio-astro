@@ -1,0 +1,25 @@
+---
+import AccountLayout from "../layouts/AccountLayout.astro";
+import { RegisterForm } from "../components/account/RegisterForm";
+// Public Turnstile site key; fallback keeps production working without build-time env.
+const siteKey =
+  import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAAFD-PSk_u7NHAF-5";
+// ?resend=1 (from /login) re-sends the confirmation link.
+const mode =
+  Astro.url.searchParams.get("resend") === "1" ? "resend" : "register";
+---
+
+<AccountLayout
+  title={mode === "resend" ? "Resend confirmation" : "Create account"}
+  description="Create a hafizbahtiar.com account to write blog posts and share quotes."
+  variant="auth"
+  switchTo={{ href: "/login", label: "Sign in" }}
+>
+  <RegisterForm client:load siteKey={siteKey} mode={mode} />
+</AccountLayout>
+
+<script
+  is:inline
+  src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+  async
+  defer></script>

@@ -1,0 +1,9 @@
+---
+export const prerender = false;
+import AccountLayout from "../../layouts/AccountLayout.astro";
+import { VerifyEmail } from "../../components/account/VerifyEmail";
+---
+
+<AccountLayout title="Confirm email" variant="auth">
+  <VerifyEmail client:load />
+</AccountLayout>

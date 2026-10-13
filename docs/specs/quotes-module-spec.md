@@ -1,13 +1,13 @@
 # Quotes Module Spec
 
-**Status:** Draft (agent-ready) - **not implemented**. Blocking open decision: tag category list (§2.2 - confirm the 6 values).
+**Status:** Draft (agent-ready) - **not implemented**. No open decisions (2026-10-08: categories are dynamic free text, `displayOrder` dropped, full scope).
 **Repos:** `portfolio-astro` (this repo, frontend) + `hono-workers` (backend - implemented in its own session/repo; specified here, never edited from this repo).
 **Read alongside:** `API_CONTRACT.md`, `docs/specs/backend-content-api-spec.md`, `STYLE.md`.
 **Reuses existing primitives:** `src/layouts/` (`PublicLayout.astro`, `PrivateLayout.astro`); `src/components/layout/` (`SectionHeader.astro`, `Navbar.astro`, `Footer.astro`, `CommandPalette.astro`); `src/components/admin/` (`AdminSidebar.astro`, `AdminPageHeader.astro`); `src/components/ui/` (`DataTable`, `MultiDropdown`, `Select`, `AlertToast`, `admin/primitives` - `AdminBadge`, `RowActions`, `EditAction`, `DeleteAction`, `CellPrimary`, `CellSecondary`, `CellText`); `src/lib/` (`form-guard.ts`, `admin-ui.ts` - `showToast`, `confirmDialog`); `window.confirmModal`.
 
 > **For the implementing agent:** read §0 first. This doc is the contract - if reality forces a deviation, update this doc (and its Status) in the same change instead of silently drifting. Report status strictly (DONE / PARTIAL / BLOCKED / NOT DONE).
 
-A standalone content module: a curated quotes collection at `/quotes`, managed from `/admin/quotes`, with a shared tag taxonomy (`/admin/quote-tags`) modelled on the existing **tech stack ("skill table") pattern**: a `quote_tags` table where each row is a specific tag (`naruto`, `muqaddimah`, `motivasi`) carrying a broad **category** (`personal`, `anime`, `books`, `history`, `work`, `other`). A quote links many tags; the public page filters by category.
+A standalone content module: a curated quotes collection at `/quotes`, managed from `/admin/quotes`, with a shared tag taxonomy (`/admin/quote-tags`) modelled on the existing **tech stack ("skill table") pattern**: a `quote_tags` table where each row is a specific tag (`naruto`, `muqaddimah`, `motivasi`) carrying a broad **category** - free text slug typed by the admin (e.g. `personal`, `anime`, `books`); no category table, no code constant. A quote links many tags; the public page filters by category.
 
 ---
 
@@ -25,7 +25,7 @@ A standalone content module: a curated quotes collection at `/quotes`, managed f
 
 | Session | Read first | Build from | Copy templates |
 |---|---|---|---|
-| Backend (`hono-workers`) | §2, §3 | Phase 1 (§8) | existing blog/experiences routes + tech-stacks taxonomy endpoints in that repo |
+| Backend (`hono-workers`) | §2, §3 | Phase 1 (§8) | existing blog/experiences routes; tech-stack taxonomy = `services/tech-stacks.ts` + the `/tech-stacks` handlers inside `routes/v1/owner/project-children.ts` |
 | Frontend data layer | §2, §4 (loader), §5 (service) | Phase 2 | `src/lib/experiences.ts`, `src/lib/projects-cms.ts` (tech-stack methods), `src/lib/public-content.ts` |
 | Public `/quotes` | §4 | Phase 3 | `src/pages/blog/index.astro` (empty state + rows); filter sketch in §4 |
 | Admin quotes | §5 | Phase 4 | `src/pages/admin/experiences/*`, `src/components/admin/experiences/*` |
@@ -34,8 +34,8 @@ A standalone content module: a curated quotes collection at `/quotes`, managed f
 
 ### 0.3 Ground rules (hard)
 
-- **No:** slug/detail pages, status/draft workflow, seed migration, fallback fixture, image fields, public search/pagination, filter query params, inline tag-create in the quote form (deferred), new dependencies.
-- **Category list sync:** `QUOTE_TAG_CATEGORIES` (`src/types/quotes.ts`) and the backend validator must match; categories are a code constant (not admin-managed).
+- **No:** slug/detail pages, status/draft workflow, seed migration, fallback fixture, image fields, public search/pagination, filter query params, inline tag-create in the quote form (deferred), manual ordering (`displayOrder`), a category table or category constant, new dependencies.
+- **Categories are dynamic:** a slug string on the tag row (`^[a-z0-9-]{1,30}$`, normalised lowercase, default `other`). The set of categories = distinct values across tags. Nothing to keep in sync between repos.
 - **Tag names are unique** (case-insensitive duplicate check, client + server) and admin-managed; renaming a tag updates every quote automatically (tags are referenced by id).
 - **Reuse only the listed primitives**; no ad-hoc classes - styling follows `STYLE.md`.
 - Touch only the files listed in §4-§6 (plus the spec/TODO if a deviation is agreed).
@@ -46,12 +46,12 @@ A standalone content module: a curated quotes collection at `/quotes`, managed f
 | Layer | Status |
 |---|---|
 | Spec | ✅ this document |
-| Tag category list | ⚠️ open - confirm the 6 values in §2.2 before Phase 1 |
-| Backend: migrations / validators / services / routes (quotes + tags) | ❌ not started |
+| Tag category model | ✅ decided - dynamic free-text slug on the tag row (§2.2) |
+| Backend: migrations / validators / services / routes (quotes + tags) | ✅ local (2026-10-08, branch `feat/quotes-module`, uncommitted): type-check clean, 016 migrated locally, all §3.5 items exercised incl. 401/403/CSRF/cascade/audit |
 | Backend remote migrate / deploy | ❌ not started |
-| Frontend: types / services / loader | ❌ not started |
-| Public `/quotes` + nav wiring | ❌ not started |
-| Admin quotes CRUD + tag manager + sidebar wiring | ❌ not started |
+| Frontend: types / services / loader | ✅ (2026-10-08) build + `astro check` clean |
+| Public `/quotes` + nav wiring | ⚠️ SSR verified against local API (empty state, order, chips, tag order, sitemap URL); chip click / no-JS not browser-tested |
+| Admin quotes CRUD + tag manager + sidebar wiring | ⚠️ builds; not browser-tested (CRUD UI round trip pending) |
 | End-to-end verification | ❌ not started |
 
 Do not upgrade a ❌ without the matching §8 verification actually run.
@@ -77,23 +77,19 @@ Naming contract (source of truth for every layer):
 | Quote text | `text` | `text` | string, 1-500, required |
 | Author | `author` | `author` | string, 1-120, required |
 | Source | `source` | `source` | string, ≤120, nullable; empty string → `null` |
-| Display order | `displayOrder` | `display_order` | integer ≥0, default 0 |
 | Tags | `tags` / `tagIds` | via `quote_tag_links` | read: embedded `tags: QuoteTag[]`; write: `tagIds: number[]` (full replace) |
 | - | `id` | `id` | server-owned |
 | - | `createdAt` / `updatedAt` | `created_at` / `updated_at` | server-owned ISO strings |
 | Tag name | `name` | `quote_tags.name` | string, 1-60, required, unique (case-insensitive) |
-| Tag category | `category` | `quote_tags.category` | one of `QUOTE_TAG_CATEGORIES` (§2.2), default `other` |
+| Tag category | `category` | `quote_tags.category` | slug `^[a-z0-9-]{1,30}$`, trimmed + lowercased, default `other` (§2.2) |
 
 TypeScript (`src/types/quotes.ts`, mirrors `src/types/experiences.ts` + `TechStack` in `src/types/project-cms.ts`):
 
 ```ts
-export const QUOTE_TAG_CATEGORIES = ["personal", "anime", "books", "history", "work", "other"] as const;
-export type QuoteTagCategory = (typeof QUOTE_TAG_CATEGORIES)[number];
-
 export interface QuoteTag {
     id: number;
     name: string;
-    category: QuoteTagCategory | string | null;
+    category: string | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -103,7 +99,6 @@ export interface Quote {
     text: string;
     author: string;
     source: string | null;
-    displayOrder: number;
     tags: QuoteTag[];
     createdAt: string;
     updatedAt: string;
@@ -113,7 +108,6 @@ export interface CreateQuotePayload {
     text: string;
     author: string;
     source?: string | null;
-    displayOrder?: number;
     tagIds?: number[];
 }
 
@@ -121,11 +115,11 @@ export type UpdateQuotePayload = Partial<CreateQuotePayload>;
 
 export interface QuoteTagInput {
     name?: string;
-    category?: QuoteTagCategory | null;
+    category?: string | null;
 }
 ```
 
-D1 migration `src/database/migrations/015_quotes.sql` (next after `014`; shape only - align with the backend repo's existing table/migration conventions):
+D1 migration `src/database/migrations/016_quotes.sql` (next after `015_visits_and_counters.sql`; canonical schema `src/database/schemas/quotes.sql`; shape only - align with the backend repo's existing table/migration conventions):
 
 ```sql
 CREATE TABLE IF NOT EXISTS quotes (
@@ -133,14 +127,13 @@ CREATE TABLE IF NOT EXISTS quotes (
     text          TEXT NOT NULL,
     author        TEXT NOT NULL,
     source        TEXT,
-    display_order INTEGER NOT NULL DEFAULT 0,
     created_at    TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS quote_tags (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    name       TEXT NOT NULL UNIQUE,
+    name       TEXT NOT NULL UNIQUE COLLATE NOCASE,
     category   TEXT NOT NULL DEFAULT 'other',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -152,27 +145,26 @@ CREATE TABLE IF NOT EXISTS quote_tag_links (
     PRIMARY KEY (quote_id, tag_id)
 );
 CREATE INDEX IF NOT EXISTS idx_quote_tag_links_tag ON quote_tag_links (tag_id);
+CREATE INDEX IF NOT EXISTS idx_quotes_created ON quotes (created_at DESC);
 ```
 
 - **No seed migration.** All content and tags are created through the admin; the public page shows the empty state until then.
-- No status column, no slug; a quote's tags are returned ordered by name (case-insensitive) - deterministic for rendering.
+- No status column, no slug, no manual order; quotes list newest first; a quote's tags are returned ordered by name (case-insensitive) - deterministic for rendering.
 
-### 2.2 Tag categories (research-backed, OPEN - confirm the 6 values)
+### 2.2 Tag categories (dynamic, decided 2026-10-08)
 
 Research check (2026-10): the professional standard is **both** - broad categories for structure, specific tags for detail ([WordPress.com](https://wordpress.com/support/posts/categories-vs-tags/), [Crocoblock](https://crocoblock.com/blog/difference-between-taxonomies-categories-and-tags/)). This module implements that the **tech-stack way**: one taxonomy (`quote_tags`), where the broad grouping is the `category` column on the tag row - no second per-quote category field.
 
-| Category | Covers | Example tags |
-|---|---|---|
-| `personal` | quoted from myself | `diri`, `nota-sendiri` |
-| `anime` | anime characters / dialogue | `naruto`, `itachi` |
-| `books` | books, essays, papers | `muqaddimah`, `atomic-habits` |
-| `history` | historians / historical figures | `ibnu-khaldun` |
-| `work` | colleagues, managers, working life | `mentor-kerja` |
-| `other` | anything else / uncategorised | - |
+Categories are **admin-typed free text**, not a table and not a code constant:
 
-- Categories are a code constant in both repos (`QUOTE_TAG_CATEGORIES` / backend enum); adding one is a small code change, not an admin action.
-- UI label = category string with its first letter capitalised; unknown/null category groups under "Other" in admin and public.
-- If this list changes during review, update §2.1, §3.3, and the ground-rule sync note together.
+- Stored as a slug: trimmed, lowercased, `^[a-z0-9-]{1,30}$` (no spaces - the public filter splits `data-quote-category` on spaces). Client lowercases and turns spaces into `-` before sending; server is authoritative.
+- Missing/empty → `other`.
+- The category list anywhere (admin grouping, public chips, form suggestions) = distinct `category` values of existing tags. A category disappears when no tag uses it.
+- Suggestions: tag manager inputs use a native `<input list="quote-tag-categories">` + `<datalist>` built from existing categories - no dropdown component.
+- UI label = slug with `-` → space and first letter capitalised (`self-help` → `Self help`); null groups under "Other".
+- Renaming a category = editing each tag that uses it (accepted: tag count is small). <!-- ponytail: no category table; add `quote_tag_categories` only if bulk rename / per-category ordering is ever needed -->
+
+Starting suggestions (not enforced): `personal`, `anime`, `books`, `history`, `work`, `other`.
 
 ## 3. Backend specification (for the backend agent)
 
@@ -182,7 +174,7 @@ Repo: `hono-workers`, branch off `main`. Follows `API_CONTRACT.md` + `backend-co
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/api/v1/quotes` | public: full list, ordered `display_order ASC, created_at DESC`, each quote embeds `tags`; `Cache-Control: public, max-age=60, stale-while-revalidate=600` |
+| GET | `/api/v1/quotes` | public: full list, ordered `created_at DESC, id DESC`, each quote embeds `tags`; `Cache-Control: public, max-age=60, stale-while-revalidate=600` |
 | GET | `/api/v1/owner/quotes` | admin list (same DTO) |
 | GET | `/api/v1/owner/quotes/:id` | single; 404 envelope when missing |
 | POST | `/api/v1/owner/quotes` | create → **201** |
@@ -195,7 +187,7 @@ Repo: `hono-workers`, branch off `main`. Follows `API_CONTRACT.md` + `backend-co
 
 All `/api/v1/owner/*` routes require `jwtAuth` + `requireAdmin` (existing owner-router middleware); mutations are CSRF/Origin-checked and audit-logged.
 
-Files to add: `src/routes/v1/public/quotes.ts`, `src/routes/v1/owner/quotes.ts`, `src/routes/v1/owner/quote-tags.ts`, `src/validators/quotes.ts`, `src/services/quotes.ts`, migration `src/database/migrations/015_quotes.sql` (+ the canonical schema file). Register the routers where blog/experiences/tech-stacks routers are mounted.
+Files to add: `src/routes/v1/public/quotes.ts`, `src/routes/v1/owner/quotes.ts` (quotes **and** `/quote-tags` handlers in one router - same as tech-stacks living in `project-children.ts`), `src/validators/quotes.ts`, `src/services/quotes.ts`, migration `src/database/migrations/016_quotes.sql`, schema `src/database/schemas/quotes.sql`. Register in `src/routes/v1.ts` next to blog/experiences; export from `services/index.ts` / `validators/index.ts` like siblings.
 
 ### 3.2 Public list DTO
 
@@ -208,7 +200,6 @@ Files to add: `src/routes/v1/public/quotes.ts`, `src/routes/v1/owner/quotes.ts`,
       "text": "The best way out is always through.",
       "author": "Robert Frost",
       "source": "A Servant to Servants",          // nullable
-      "displayOrder": 0,
       "tags": [                                    // embedded; ordered by name
         { "id": 3, "name": "muqaddimah", "category": "books" }
       ],
@@ -224,25 +215,27 @@ Public tag shape = `{ id, name, category }` (no timestamps); owner tag list retu
 ### 3.3 Validation (Zod `.strict()` + shared `parse` helper)
 
 ```ts
-export const QUOTE_TAG_CATEGORIES = ["personal", "anime", "books", "history", "work", "other"] as const;
+const categorySlug = z.string().trim().toLowerCase().regex(/^[a-z0-9-]{1,30}$/);
 
 export const QuoteCreateSchema = z.object({
     text: z.string().trim().min(1).max(500),
     author: z.string().trim().min(1).max(120),
     source: z.string().trim().max(120).optional().nullable(),
-    displayOrder: z.number().int().min(0).default(0),
     tagIds: z.array(z.number().int().positive()).max(20).default([]),
 }).strict();
 // Quote update = all fields optional; `tagIds` (when present) replaces the full set.
 
 export const QuoteTagCreateSchema = z.object({
     name: z.string().trim().min(1).max(60),
-    category: z.enum(QUOTE_TAG_CATEGORIES).default("other"),
+    category: categorySlug.default("other"),
 }).strict();
 // Tag update = partial; unknown ids in `tagIds` → 400 { field: "tagIds" }.
 ```
 
 - Empty-string `source` maps to `null` (blog cover-image precedent).
+- Missing / `""` / `null` `category` → `other`; responses always carry a string category.
+- Shared `parse` helper (`validators/common.ts`) reports the first unknown key as `field` for `.strict()` errors (applies to every module; additive).
+- Deleting a tag still used by quotes is allowed (links cascade) - unlike tech-stacks, which refuses.
 - Duplicate tag name (case-insensitive) → `400 { field: "name" }`; `:id` parsed with `parseIdParam`.
 - Every mutation writes an `audit_logs` row; CSRF `Origin` check applies via existing middleware.
 
@@ -284,11 +277,11 @@ export const QuoteTagCreateSchema = z.object({
 **Loader** - `getPublicQuotes()` in `src/lib/public-content.ts`:
 
 - `(await fetchJson<Quote[]>("quotes")) ?? []` - same contract as `getPublicPosts()` (blog): returns `[]` on failure, the page renders the empty state;
-- always sorted `displayOrder ASC, createdAt DESC` in the loader.
+- trusts the API order (`createdAt DESC`); no client re-sort.
 
 **Category filter (client-side, no refetch)**
 
-- Chips rendered from the categories actually present in the rendered list (no empty chips), "All" first; labels per §2.2.
+- Chips rendered from the distinct categories present in the rendered quotes' tags (dynamic - no constant, no empty chips), sorted alphabetically with "Other" last, "All" first; labels per §2.2.
 - `<button type="button" aria-pressed>` inside a `role="group"` labelled `Filter quotes by category`; chips styled as the site's grey pills, active state sky-tinted.
 - Reference sketch (adapt classes to `STYLE.md`; re-init on `astro:page-load` is safe because navigation replaces the DOM):
 
@@ -350,7 +343,7 @@ Template copy map:
 
 | Create | Copy from | Change |
 |---|---|---|
-| `QuotesTable.tsx` | `ExperiencesTable.tsx` | columns (Quote + author, Tags badges, Source, Order, Actions), service calls, empty copy, delete toast wiring |
+| `QuotesTable.tsx` | `ExperiencesTable.tsx` | columns (Quote + author, Tags badges, Source, Actions), service calls, empty copy, delete toast wiring |
 | `QuoteForm.astro` | `ExperienceForm.astro` | fields per table below; drop DateInput / TextEditor / MapPicker; add Tags `MultiDropdown` |
 | `index.astro` | `experiences/index.astro` | titles, button href `/admin/quotes/new`, table component, mount `<AlertToast id="admin-alert" />` |
 | `new.astro` / `edit.astro` | `experiences/new.astro`, `edit.astro` | form component, service methods, normalize map, alert id (`quote-alert`), redirect to `/admin/quotes` |
@@ -358,22 +351,21 @@ Template copy map:
 
 **Service:** quotes - `getAdminQuotes()`, `getAdminQuoteById(id)`, `createQuote(data)`, `updateQuote(id, data)` (`this.patch`), `deleteQuote(id): Promise<boolean>` (try/catch); tags - `listQuoteTags(): Promise<QuoteTag[]>`, `createQuoteTag(data)`, `updateQuoteTag(id, data)` (`this.patch`), `deleteQuoteTag(id)`. Endpoints `owner/quotes`, `owner/quote-tags` (+ `/:id`). ApiClient contract: writes throw on failure; GET 404 → `null`.
 
-**Table:** columns Quote (truncated text, author as `CellSecondary`), Tags (up to 3 `AdminBadge` + `+n`), Source, Order (`CellText mono`), Actions (`RowActions` + `EditAction` → `/admin/quotes/edit?id=`, `DeleteAction`). Delete confirms with `confirmDialog()`, removes the row from local state on success, `showToast()` on failure. Shared `DataTable` supplies search/sort/pagination; `emptyTitle="No quotes yet"`.
+**Table:** columns Quote (truncated text, author as `CellSecondary`), Tags (up to 3 `AdminBadge` + `+n`), Source, Actions (`RowActions` + `EditAction` → `/admin/quotes/edit?id=`, `DeleteAction`). Delete confirms with `confirmDialog()`, removes the row from local state on success, `showToast()` on failure. Shared `DataTable` supplies search/sort/pagination; `emptyTitle="No quotes yet"`.
 
 **Form fields:**
 
 | Field | Control | Rules |
 |---|---|---|
-| Quote text | `<textarea name="text" required>` | 1-500 chars; red `*` |
-| Author | `<input name="author" required>` | 1-120 chars; red `*` |
+| Quote text | `<textarea name="text" required>` | 1-500 chars; red `*` comes from the global `label:has(+ :required)` rule - never add one manually |
+| Author | `<input name="author" required>` | 1-120 chars (auto red `*`) |
 | Source | `<input name="source">` + `admin-help` | optional, ≤120; empty → `null` |
 | Tags | `MultiDropdown` (`name="tagIds"`, `values` = ids) | optional; many; options are all tags, label `${name} · ${categoryLabel}` |
-| Display Order | `<input type="number" name="displayOrder" value={displayOrderValue}>` | ≥ 0; default 0 |
 
 **Flows:**
 
-- Props: `submitLabel`, `submitButtonId = "submit-btn"`, `displayOrderValue = 0`.
-- new/edit pages clone the experiences flow: `setupFormGuard(form)`, normalize `FormData` (trim; `""` → `null`; number cast; `tagIds` via the existing `parseJsonArray` helper → number array), service call, map `error.data.field` to focus + error toast, `formGuard.updateInitialState()` + toast + redirect on success.
+- Props: `submitLabel`, `submitButtonId = "submit-btn"`.
+- new/edit pages clone the experiences flow: `setupFormGuard(form)`, normalize `FormData` (trim; `""` → `null`; `tagIds` via the existing `parseJsonArray` helper → number array), service call, map `error.data.field` to focus + error toast, `formGuard.updateInitialState()` + toast + redirect on success.
 - **Tag options are client-side data**: before submitting/hydrating, populate the MultiDropdown list from `quotesService.listQuoteTags()` using the `updateProjectOptions()` technique in `experiences/new.astro` (`.tech-multi-dropdown-container[data-name="tagIds"]` → rebuild `<li><button class="dropdown-item" data-value="…">` → `window.setupMultiDropdowns?.()`). Empty list → show a `admin-help` line linking to `/admin/quote-tags`.
 - edit hydration order: populate tag options first, then `setMultiDropdownValues("tagIds", quote.tags.map(t => t.id))` (same helper as `experiences/edit.astro`), then `formGuard.updateInitialState()`.
 
@@ -385,9 +377,10 @@ Template copy map:
 | `src/components/admin/quotes/QuoteTagsManager.tsx` | **create** |
 
 - Clone `src/pages/admin/tech-stacks/index.astro` (`PrivateLayout`, `AdminPageHeader`, `<AlertToast id="admin-alert" />`) and `TechStacksManager.tsx`, adapting:
-  - `cmsService` → `quotesService` (tag methods); `TechStack` → `QuoteTag`; `TechCategory` → `QuoteTagCategory`; drop `proficiency` (name + category only).
-  - Add card: name input (`placeholder="e.g. naruto"`) + category `Select` + Add.
-  - List grouped by category (same `label()` + "other" fallback grouping), rows: name input (autosave on blur, case-insensitive duplicate guard), category `Select` (autosave), delete (`confirmDialog`, message: `Delete "…"? It is also removed from any quote that uses it.`).
+  - `cmsService` → `quotesService` (tag methods); `TechStack` → `QuoteTag`; drop `TechCategory` enum and `proficiency` (name + category only).
+  - One `<datalist id="quote-tag-categories">` built from the distinct categories of the loaded tags.
+  - Add card: name input (`placeholder="e.g. naruto"`) + category `<input list="quote-tag-categories" placeholder="e.g. anime">` (normalise per §2.2) + Add.
+  - List grouped by the distinct categories present (`label()` per §2.2, null → "Other", "Other" last), rows: name input (autosave on blur, case-insensitive duplicate guard), category input with the same datalist (autosave on blur), delete (`confirmDialog`, message: `Delete "…"? It is also removed from any quote that uses it.`).
   - Search + empty copy; help text: `Shared across all quotes - name + category.`
 - No inline create inside `QuoteForm` in v1 (link to this page instead).
 
@@ -415,8 +408,8 @@ Template copy map:
 
 ### Phase 1 - Backend (`hono-workers` session)
 
-- **Files:** `src/database/migrations/015_quotes.sql` (3 tables), `src/validators/quotes.ts`, `src/services/quotes.ts`, `src/routes/v1/public/quotes.ts`, `src/routes/v1/owner/quotes.ts`, `src/routes/v1/owner/quote-tags.ts`, canonical schema file, router registration.
-- **Template:** existing blog/experiences module files + tech-stacks taxonomy endpoints in that repo.
+- **Files:** `src/database/migrations/016_quotes.sql` (3 tables), `src/database/schemas/quotes.sql`, `src/validators/quotes.ts`, `src/services/quotes.ts`, `src/routes/v1/public/quotes.ts`, `src/routes/v1/owner/quotes.ts` (quotes + quote-tags), registration in `src/routes/v1.ts`.
+- **Template:** `routes/v1/{public,owner}/experiences.ts`, `services/experiences.ts`, `validators/experiences.ts`; tag CRUD from `services/tech-stacks.ts` + `/tech-stacks` handlers in `routes/v1/owner/project-children.ts`.
 - **Verify:** §3.5 checklist (migrate local, all routes, strict rejection, duplicate tag name, auth guards, ordering, cascade on tag delete).
 - **Done when:** all §3.5 items pass and the backend half of §9 item 5 holds.
 
@@ -452,5 +445,5 @@ Template copy map:
 - [ ] Category chips filter instantly client-side; a quote appears under every category its tags carry; all quotes visible without JS; `aria-pressed` correct.
 - [ ] `/admin/quotes` CRUD works; tag multi-select populated from the tag library; validation errors map to the right field; delete is confirmed.
 - [ ] `/admin/quote-tags` supports add / rename / recategorise (autosave) / delete with case-insensitive duplicate guard; deleting a tag removes it from quotes.
-- [ ] `QUOTE_TAG_CATEGORIES` identical in both repos; unknown/null categories group under "Other" and never break rendering; public API returns only the §3.2 DTO with owner routes auth-guarded and audited.
+- [ ] Categories are dynamic (typed in the tag manager with datalist suggestions, invalid slug → 400 `{ field: "category" }`); null categories group under "Other" and never break rendering; public API returns only the §3.2 DTO with owner routes auth-guarded and audited.
 - [ ] `npm run build` passes; `/quotes` appears in the sitemap; no other page changes behavior.

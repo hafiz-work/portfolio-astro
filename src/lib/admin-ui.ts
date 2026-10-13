@@ -1,6 +1,6 @@
 // Thin wrappers over the global admin toast (AlertToast) + confirm modal so
-// React islands don't repeat the window casting. Mount <AlertToast id="admin-alert" />
-// on the page; ConfirmModal is provided by PrivateLayout.
+// React islands don't repeat the window casting. <AlertToast id="admin-alert" /> is
+// mounted once in PrivateLayout, next to ConfirmModal.
 
 type ToastType = "success" | "error" | "warning" | "info";
 

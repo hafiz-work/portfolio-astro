@@ -1,0 +1,378 @@
+---
+import Disclaimer from "../components/ui/Disclaimer.astro";
+export const prerender = false;
+import GridFillers from "../components/ui/GridFillers.astro";
+import TechHeading from "../components/layout/TechHeading.astro";
+import Combobox from "../components/ui/Combobox.astro";
+import PointsMap, { type MapPoint } from "../components/ui/PointsMap";
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { BANDS, bandOf, getReadings, type Station } from "../lib/ipu";
+
+const data = await getReadings();
+const stations = data?.stations ?? [];
+const latest = Math.max(0, ...stations.map((s) => s.time).filter(Number.isFinite));
+const readingTime = latest
+  ? new Intl.DateTimeFormat("ms-MY", {
+      timeZone: "UTC", // APIMS times are Malaysian wall-clock stored as UTC (lib/ipu)
+      hour: "numeric",
+      minute: "2-digit",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(new Date(latest))
+  : "";
+
+const states = [...new Set(stations.map((s) => s.state))].sort((a, b) => a.localeCompare(b));
+const byState = (state: string) =>
+  stations.filter((s) => s.state === state).sort((a, b) => a.location.localeCompare(b.location));
+const counts = BANDS.map((b) => ({ ...b, n: stations.filter((s) => bandOf(s.api)?.tone === b.tone).length }));
+
+// JAS's colour scale, with the site's sky in place of JAS blue (STYLE.md: no blue).
+const TONE: Record<string, string> = {
+  baik: "bg-sky-500",
+  sederhana: "bg-emerald-500",
+  "tidak-sihat": "bg-amber-400",
+  sangat: "bg-orange-500",
+  bahaya: "bg-red-600",
+};
+const embedDefault = stations.find((s) => s.state === "WP Kuala Lumpur") ?? stations[0];
+const embedCode = (id: string) =>
+  `<iframe src="https://hafizbahtiar.com/ipu/embed?stesen=${id}" title="Kualiti udara (IPU)" width="100%" height="220" style="border:0;max-width:420px" loading="lazy"></iframe>`;
+const town = (s: Station) => s.location.split(",")[0].trim();
+const markerClass = (s: Station) => {
+  const band = bandOf(s.api);
+  if (!band) return "bg-gray-400 text-white";
+  return `${TONE[band.tone]} ${band.tone === "tidak-sihat" ? "text-gray-950" : "text-white"}`;
+};
+const points: MapPoint[] = stations.map((s) => ({
+  id: s.id,
+  lat: s.lat,
+  lng: s.lng,
+  title: town(s),
+  subtitle: `${s.place}, ${s.state}`,
+  detail: s.api == null ? "Tiada bacaan" : `IPU ${s.api} · ${bandOf(s.api)!.label}${s.pollutant ? ` · ${s.pollutant}` : ""}`,
+  badge: s.api ?? "-",
+  markerClass: markerClass(s),
+}));
+---
+
+<PublicLayout
+  title="IPU Hari Ini - Indeks Pencemaran Udara Malaysia | Hafiz Bahtiar"
+  description="Bacaan Indeks Pencemaran Udara (IPU) terkini dari stesen Jabatan Alam Sekitar di seluruh Malaysia, dengan stesen terdekat anda."
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1 class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl">
+        <TechHeading text="Kualiti Udara" fontSize={96} fontWeight={400} box="-my-12 h-48" />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Indeks Pencemaran Udara (IPU) terkini dari {stations.length || "stesen"} stesen Jabatan Alam Sekitar.
+      </p>
+    </div>
+    {
+      readingTime && (
+        <div class="line-y mt-4">
+          <p class="mx-2 font-mono text-sm/6 tracking-widest text-gray-500 uppercase">
+            Bacaan {readingTime}
+            {data?.stale && " · data simpanan"}
+          </p>
+        </div>
+      )
+    }
+
+    {
+      stations.length > 0 ? (
+        <>
+          <div class="line-y mt-10">
+            <div class="mx-2 flex flex-wrap items-center gap-3">
+              <!-- Shown by the script where geolocation exists; distance is computed
+                   in the browser from the station list below (nothing is sent anywhere). -->
+              <button type="button" id="ipu-locate" hidden class="btn-pill btn-pill-primary">
+                Stesen terdekat saya
+              </button>
+              <p id="ipu-locate-status" class="text-sm/6 text-gray-600 empty:hidden dark:text-gray-400" aria-live="polite" />
+            </div>
+          </div>
+
+          <div class="line-y mt-4">
+            <ul class="mx-2 flex flex-wrap gap-x-5 gap-y-2 text-sm/6" aria-label="Bilangan stesen mengikut kategori">
+              {counts.map((b) => (
+                <li class="flex items-center gap-2">
+                  <span class:list={["size-2.5 rounded-full", TONE[b.tone]]} aria-hidden="true" />
+                  {b.label}
+                  <span class="text-gray-500 tabular-nums">
+                    {b.max === Infinity ? ">300" : `≤${b.max}`} · {b.n} stesen
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div class="line-y mt-10">
+            <div role="tablist" aria-label="Paparan" class="mx-2 inline-flex gap-1 rounded-full bg-gray-950/5 p-1 dark:bg-white/10">
+              {[
+                ["peta", "Peta"],
+                ["senarai", "Senarai"],
+              ].map(([id, label], i) => (
+                <button
+                  type="button"
+                  role="tab"
+                  id={`tab-${id}`}
+                  data-tab={id}
+                  aria-controls={`panel-${id}`}
+                  aria-selected={i === 0 ? "true" : "false"}
+                  class="rounded-full px-4 py-1.5 text-sm/6 font-medium text-gray-600 aria-selected:bg-white aria-selected:text-gray-950 aria-selected:shadow-sm dark:text-gray-400 dark:aria-selected:bg-gray-950 dark:aria-selected:text-white"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div id="panel-peta" role="tabpanel" aria-labelledby="tab-peta" class="line-y mt-4">
+            <div class="h-[70vh] max-h-180 min-h-96 overflow-hidden">
+              <PointsMap client:only="react" points={points} fallbackLabel="Peta tak dapat dipapar di peranti ini" />
+            </div>
+          </div>
+
+          <div id="panel-senarai" role="tabpanel" aria-labelledby="tab-senarai" hidden>
+          {states.map((state) => (
+            <>
+              <div class="line-y mt-10">
+                <p class="eyebrow mx-2">{state}</p>
+              </div>
+              <div class="line-y mt-4">
+                <ul class="grid grid-cols-1 gap-px bg-gray-950/5 sm:grid-cols-2 lg:grid-cols-3 dark:bg-white/10">
+                  {byState(state).map((s) => {
+                    const band = bandOf(s.api);
+                    return (
+                      <li
+                        id={`stesen-${s.id}`}
+                        data-lat={s.lat}
+                        data-lng={s.lng}
+                        data-name={town(s)}
+                        class="scroll-offset flex items-center gap-4 bg-white px-4 py-4 data-nearest:bg-sky-500/5 data-nearest:ring-2 data-nearest:ring-sky-500 data-nearest:ring-inset sm:px-6 dark:bg-gray-950 dark:data-nearest:bg-sky-400/10"
+                      >
+                        <span
+                          class:list={[
+                            "flex size-14 shrink-0 items-center justify-center rounded-xl text-xl font-semibold tabular-nums",
+                            band ? [TONE[band.tone], band.tone === "tidak-sihat" ? "text-gray-950" : "text-white"] : "bg-gray-950/5 text-gray-500 dark:bg-white/10",
+                          ]}
+                        >
+                          {s.api ?? "-"}
+                        </span>
+                        <div class="min-w-0">
+                          <p class="truncate font-medium">{town(s)}</p>
+                          <p class="truncate text-xs/5 text-gray-500 dark:text-gray-400">{s.place}</p>
+                          <p class="text-xs/5 text-gray-600 dark:text-gray-300">
+                            {band ? band.label : "Tiada bacaan"}
+                            {s.pollutant && <span class="text-gray-500"> · {s.pollutant}</span>}
+                          </p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                  <GridFillers count={byState(state).length} />
+                </ul>
+              </div>
+            </>
+          ))}
+          </div>
+
+          <div class="line-y mt-4">
+            <p class="mx-2 max-w-3xl text-xs/5 text-gray-500 dark:text-gray-400">
+              Sumber:{" "}
+              <a
+                href="https://eqms.doe.gov.my/APIMS/main"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+              >
+                {data!.source}
+              </a>
+              {data!.stale && " (data simpanan - JAS tak dapat dicapai sekarang)"}. Bacaan dikemas kini setiap jam.
+              Kategori ikut julat IPU JAS: 0-50 Baik, 51-100 Sederhana, 101-200 Tidak sihat, 201-300 Sangat
+              tidak sihat, lebih 300 Berbahaya.
+            </p>
+          </div>
+        </>
+      ) : (
+        <div class="line-y mt-10">
+          <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+            Bacaan IPU tak dapat diambil dari Jabatan Alam Sekitar sekarang. Cuba lagi sebentar, atau semak terus di{" "}
+            <a
+              href="https://eqms.doe.gov.my/APIMS/main"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-sky-600 hover:underline dark:text-sky-400"
+            >
+              APIMS JAS
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
+    <div class="line-y mt-6">
+      <Disclaimer class="mx-2" sources={[{ name: "Jabatan Alam Sekitar (APIMS)", href: "https://eqms.doe.gov.my/APIMS/main" }]}>
+        <Fragment set:html={`Bacaan IPU <strong>bukan nasihat perubatan</strong>. Kanak-kanak, warga emas dan pesakit asma, paru-paru atau jantung patut mengikut nasihat Kementerian Kesihatan Malaysia.`} />
+      </Disclaimer>
+    </div>
+
+    {
+      embedDefault && (
+        <section id="pasang">
+          <div class="line-y mt-10">
+            <div class="mx-2">
+              <p class="eyebrow">Pasang di laman anda</p>
+              <h2 class="mt-1 text-2xl font-medium tracking-tight">Widget IPU</h2>
+              <p class="mt-2 max-w-2xl text-sm/6 text-gray-600 dark:text-gray-400">
+                Pilih stesen, kemudian salin kod ke laman sekolah, pejabat atau komuniti anda. Bacaan dikemas kini
+                sendiri. Tambah <code class="font-mono">&amp;tema=gelap</code> atau{" "}
+                <code class="font-mono">&amp;tema=terang</code> untuk tetapkan warna.
+              </p>
+            </div>
+          </div>
+          <div class="line-y mt-4">
+            <div class="mx-2 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+              <div class="grid gap-3">
+                <label for="ipu-embed-stesen" class="text-sm/6 font-medium">Stesen</label>
+                <Combobox
+                  id="ipu-embed-stesen"
+                  listLabel="Stesen"
+                  searchPlaceholder="Cari bandar atau negeri…"
+                  emptyText="Tiada stesen sepadan."
+                  value={embedDefault.id}
+                  options={states.flatMap((state) =>
+                    byState(state).map((s) => ({ value: s.id, label: town(s), group: state, keywords: s.place })),
+                  )}
+                />
+                <textarea id="ipu-embed-code" readonly rows="4" class="field resize-none font-mono text-xs/5">{embedCode(embedDefault.id)}</textarea>
+                <div>
+                  <button type="button" id="ipu-embed-copy" class="btn-pill btn-pill-ghost">
+                    Salin kod
+                  </button>
+                </div>
+              </div>
+              <iframe
+                id="ipu-embed-preview"
+                src={`/ipu/embed?stesen=${embedDefault.id}`}
+                title="Contoh widget IPU"
+                width="100%"
+                height="220"
+                loading="lazy"
+                class="rounded-xl ring-1 ring-gray-950/10 dark:ring-white/10"
+              />
+            </div>
+          </div>
+        </section>
+      )
+    }
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>
+
+<script>
+  // Nearest station: the browser's location vs every station's coordinates,
+  // haversine distance, all on the device.
+  const distanceKm = (aLat: number, aLng: number, bLat: number, bLng: number) => {
+    const r = (d: number) => (d * Math.PI) / 180;
+    const h =
+      Math.sin(r(bLat - aLat) / 2) ** 2 +
+      Math.cos(r(aLat)) * Math.cos(r(bLat)) * Math.sin(r(bLng - aLng) / 2) ** 2;
+    return 2 * 6371 * Math.asin(Math.sqrt(h));
+  };
+
+  const initLocate = () => {
+    const btn = document.getElementById("ipu-locate");
+    const status = document.getElementById("ipu-locate-status");
+    if (!btn || !status || !("geolocation" in navigator) || btn.dataset.bound === "1") return;
+    btn.dataset.bound = "1";
+    btn.hidden = false;
+    const stations = [...document.querySelectorAll<HTMLElement>("[data-lat][data-lng]")];
+    btn.addEventListener("click", () => {
+      status.textContent = "Mencari lokasi…";
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => {
+          let best: HTMLElement | null = null;
+          let bestKm = Infinity;
+          for (const s of stations) {
+            const km = distanceKm(coords.latitude, coords.longitude, Number(s.dataset.lat), Number(s.dataset.lng));
+            if (km < bestKm) [best, bestKm] = [s, km];
+          }
+          if (!best) return void (status.textContent = "Tiada stesen dijumpai.");
+          stations.forEach((s) => s.toggleAttribute("data-nearest", s === best));
+          window.dispatchEvent(new CustomEvent("points-map:focus", { detail: { id: best.id.replace("stesen-", "") } }));
+          status.textContent = `Stesen terdekat: ${best.dataset.name} (${Math.round(bestKm)} km)`;
+          if (!document.getElementById("panel-senarai")?.hidden) best.scrollIntoView({ behavior: "smooth", block: "center" });
+        },
+        (err) =>
+          (status.textContent =
+            err.code === err.PERMISSION_DENIED ? "Akses lokasi ditolak." : "Lokasi tak dapat dikesan."),
+        { timeout: 10000, maximumAge: 10 * 60 * 1000 },
+      );
+    });
+  };
+  // Peta (default) / Senarai tabs; #senarai opens the list directly.
+  const initTabs = () => {
+    const tabs = [...document.querySelectorAll<HTMLButtonElement>("[data-tab]")];
+    if (!tabs.length || tabs[0].dataset.bound === "1") return;
+    const show = (id: string) => {
+      for (const t of tabs) {
+        const on = t.dataset.tab === id;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(`panel-${t.dataset.tab}`)!.hidden = !on;
+      }
+    };
+    for (const t of tabs) {
+      t.dataset.bound = "1";
+      t.addEventListener("click", () => {
+        show(t.dataset.tab!);
+        history.replaceState(history.state, "", t.dataset.tab === "peta" ? location.pathname : "#senarai");
+      });
+      t.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        const next = tabs[(tabs.indexOf(t) + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+        next.focus();
+        next.click();
+      });
+    }
+    show(location.hash === "#senarai" ? "senarai" : "peta");
+  };
+
+  // Widget generator: station pick -> snippet + preview; copy button.
+  const initEmbed = () => {
+    const select = document.getElementById("ipu-embed-stesen") as HTMLSelectElement | null;
+    const code = document.getElementById("ipu-embed-code") as HTMLTextAreaElement | null;
+    const preview = document.getElementById("ipu-embed-preview") as HTMLIFrameElement | null;
+    const btn = document.getElementById("ipu-embed-copy");
+    if (!select || !code || !preview || !btn || btn.dataset.bound === "1") return;
+    btn.dataset.bound = "1";
+    code.value = code.value.trim();
+    select.addEventListener("change", () => {
+      code.value = code.value.replace(/stesen=[^"&]+/, `stesen=${encodeURIComponent(select.value)}`);
+      preview.src = `/ipu/embed?stesen=${encodeURIComponent(select.value)}`;
+    });
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(code.value);
+        btn.textContent = "Disalin";
+      } catch {
+        code.select(); // clipboard blocked: let the user copy it
+        btn.textContent = "Tekan Ctrl/Cmd+C";
+      }
+      setTimeout(() => (btn.textContent = "Salin kod"), 2000);
+    });
+  };
+
+  const init = () => {
+    initEmbed();
+    initTabs();
+    initLocate();
+  };
+  init();
+  document.addEventListener("astro:page-load", init);
+</script>

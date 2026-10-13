@@ -1,0 +1,147 @@
+---
+export const prerender = true; // static list, no data
+import PublicLayout from "../layouts/PublicLayout.astro";
+import SectionHeader from "../components/layout/SectionHeader.astro";
+import Alert from "../components/ui/Alert.astro";
+
+// Small public apps that live on this site (each under its own route). Add one
+// entry per app. Linked from the footer for now; a navbar/home section waits
+// until there are enough of them (see CLAUDE.md -> Showcase).
+const apps = [
+  {
+    title: "Bas Langsung",
+    href: "/bas",
+    description: "Lokasi langsung bas Rapid KL, Rapid Penang dan myBAS setiap 30 saat, garisan laluan, dan peta LRT/MRT/Monorel.",
+    tags: ["GTFS Realtime", "Peta", "14 operator"],
+  },
+  {
+    title: "Nombor Kecemasan",
+    href: "/kecemasan",
+    description:
+      "999, talian lebuh raya, NSRC 997 untuk scam, sokongan emosi dan APM negeri - tekan untuk call. Setiap nombor dari laman rasmi.",
+    tags: ["999", "Lebuh raya", "Scam"],
+  },
+  {
+    title: "Waktu Solat",
+    href: "/waktu-solat",
+    description:
+      "Waktu solat hari ini untuk setiap zon JAKIM, dengan Paparan Masjid untuk skrin di masjid.",
+    tags: ["JAKIM e-solat", "Paparan Masjid", "60 zon"],
+  },
+  {
+    title: "Amaran Cuaca",
+    href: "/amaran-cuaca",
+    description:
+      "Amaran cuaca aktif dari MET Malaysia: ribut petir, hujan lebat, angin kencang dan laut bergelora.",
+    tags: ["MET Malaysia", "data.gov.my", "Cuaca"],
+  },
+  {
+    title: "Gempa Bumi",
+    href: "/gempa",
+    description:
+      "Gempa bumi terkini dari MET Malaysia di peta dan senarai, dengan magnitud, kedalaman dan jarak dari Malaysia.",
+    tags: ["MET Malaysia", "Peta", "Masa nyata"],
+  },
+  {
+    title: "Tarikh Hijri",
+    href: "/tarikh-hijri",
+    description:
+      "Tukar tarikh Masihi ke Hijri dan sebaliknya, mengikut takwim JAKIM (anggaran Umm al-Qura di luar tahun semasa).",
+    tags: ["Takwim", "JAKIM", "Penukar"],
+  },
+  {
+    title: "Kompas Kiblat",
+    href: "/kiblat",
+    description:
+      "Arah kiblat dari lokasi anda dengan kompas telefon - dikira terus di peranti, tiada data dihantar.",
+    tags: ["GPS", "Kompas", "Tanpa API"],
+  },
+  {
+    title: "Kualiti Udara (IPU)",
+    href: "/ipu",
+    description:
+      "Indeks Pencemaran Udara terkini dari stesen Jabatan Alam Sekitar, dengan stesen terdekat anda.",
+    tags: ["Jabatan Alam Sekitar", "Setiap jam", "68 stesen"],
+  },
+  {
+    title: "Harga Minyak",
+    href: "/harga-minyak",
+    description:
+      "Harga RON95, RON97 dan diesel minggu ini, dengan perubahan dari minggu lepas dan sejarah 12 minggu.",
+    tags: ["data.gov.my", "Mingguan", "BUDI95"],
+  },
+  {
+    title: "Kadar Tukaran",
+    href: "/kadar-tukaran",
+    description:
+      "Kadar pertukaran asing rasmi Bank Negara Malaysia untuk 27 mata wang, dengan penukar RM.",
+    tags: ["Bank Negara Malaysia", "27 mata wang", "Penukar RM"],
+  },
+  {
+    title: "Kiraan Detik",
+    href: "/kiraan-detik",
+    description:
+      "Berapa hari lagi ke Ramadan, Hari Raya dan hari kebesaran Islam lain, mengikut takwim JAKIM.",
+    tags: ["Takwim JAKIM", "Ramadan", "Hari Raya"],
+  },
+];
+---
+
+<PublicLayout
+  title="Showcase | Hafiz Bahtiar"
+  description="Small apps built and hosted on hafizbahtiar.com - free to use."
+>
+  <div class="h-16 sm:h-24"></div>
+  <SectionHeader
+    as="h1"
+    eyebrow="Showcase"
+    title="Small apps, free to use."
+    description="Tools I built and host here. Open them, share them, put them on a screen."
+  />
+  <div class="h-12"></div>
+
+  <div class="line-y">
+    <Alert variant="warning" title="Penafian" class="m-2">
+      <p>
+        Kebanyakan aplikasi di sini memaparkan data terbuka daripada agensi
+        kerajaan Malaysia (JAKIM, Bank Negara Malaysia, Jabatan Alam Sekitar,
+        MET, data.gov.my) dan pihak ketiga. Ini <strong
+          >bukan laman rasmi</strong
+        >; maklumat dipaparkan seadanya tanpa jaminan, dan sumber rasmi sentiasa
+        mengatasinya.
+      </p>
+      <p><a href="/penafian">Baca penafian penuh</a></p>
+    </Alert>
+  </div>
+  <div class="h-4"></div>
+
+  <div
+    class="line-y mb-46 grid grid-cols-1 gap-2 p-2 sm:grid-cols-2 lg:grid-cols-3"
+  >
+    {
+      apps.map((app) => (
+        <a href={app.href} class="frame group block">
+          <div class="frame-inner h-full p-6 transition-colors group-hover:bg-gray-50 dark:group-hover:bg-white/5">
+            <h2 class="text-xl font-medium tracking-tight text-gray-950 dark:text-white">
+              {app.title}
+              <span
+                class="ml-1 inline-block text-sky-500 transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              >
+                →
+              </span>
+            </h2>
+            <p class="mt-2 text-sm/6 text-gray-600 dark:text-gray-400">
+              {app.description}
+            </p>
+            <div class="mt-4 flex flex-wrap gap-1.5">
+              {app.tags.map((tag) => (
+                <span class="tag">{tag}</span>
+              ))}
+            </div>
+          </div>
+        </a>
+      ))
+    }
+  </div>
+</PublicLayout>

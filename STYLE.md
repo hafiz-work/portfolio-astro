@@ -93,14 +93,65 @@ Same line, focused chrome - no second theme:
 
 ## Brand
 
-One source: `scripts/brand/gen.py` (see its docstring to run). Mark = isometric
-circuit cube (left face **H**, right face **B**, top face traces), blue→green
-gradient. Outputs, all text outlined to paths:
+One source: `scripts/brand/gen.py` (see its docstring to run), which traces the
+**HB circuit monogram** artwork `scripts/brand/hb-monogram.png` to a vector path
+with a blue→teal diagonal gradient. Outputs, all text outlined to paths:
 
 - `public/brand/logo.svg` (mark), `wordmark.svg` (mark + "hafizbahtiar", used in navbar/login), `jata.svg` (stacked emblem), `icon.svg` / `icon-maskable.svg` (dark tile)
-- `public/favicon.svg|ico`, `public/favicons/*.png`, `public/og-default.png`
+- `public/favicon.svg|ico`, `public/favicons/*.png`, `public/apple-touch-icon.png`, `public/og-default.png`
 
 Never hand-edit those files - change the generator and re-run.
+
+## Account area (`AccountLayout`)
+
+`/login`, `/register`, `/account/verify` and `/account/*` use `AccountLayout.astro` (admin signs in at `/admin/login`, which keeps the public-shell look), not the public shell: a plain
+full-width split - dark brand panel left, form right (`auth`) - or a nav + content column (`app`), built from **shadcn/ui** components
+(`src/components/shadcn/ui/*` - button, input, label, textarea, card, alert, badge, separator, radio-group,
+alert-dialog). Page islands live in `src/components/account/`. Same gray/sky palette; never use shadcn token
+classes outside `src/components/shadcn/`.
+
+## Adding a third-party component
+
+Three copy-in bases sit beside ours (`src/components/ui/`). Each folder's README
+has the full rules; these are the commands.
+
+**shadcn** (`src/components/shadcn/`) - the only base the CLI may write to:
+
+```bash
+npx shadcn@latest add <name> --dry-run   # preview first, always
+npx shadcn@latest add <name>
+git diff src/styles/shadcn.css           # delete any inserted @layer base / --radius-* overrides
+npm run build
+```
+
+Never `shadcn init`, never `--overwrite`/`--path` into `src/components/ui/`.
+
+**Great UI** (`src/components/great-ui/`) - by hand, never via the shadcn CLI:
+
+```bash
+curl -s https://www.great-ui.com/r/<name>.json \
+  | node -e 'process.stdin.on("data",d=>b+=d);var b="";process.stdin.on("end",()=>process.stdout.write(JSON.parse(b).files[0].content))' \
+  > src/components/great-ui/<name>.tsx
+npm i motion                             # only if the component imports motion/react and it isn't installed
+npm run build
+```
+
+**React Bits** (`src/components/react-bits/`) - by hand, never via the shadcn CLI (`@react-bits/...` lands in `shadcn/`):
+
+```bash
+curl -s https://raw.githubusercontent.com/DavidHDev/react-bits/main/src/ts-tailwind/Components/<Name>/<Name>.tsx \
+  > src/components/react-bits/<name>.tsx
+# no ts-tailwind variant? list what exists:
+#   https://github.com/DavidHDev/react-bits/tree/main/src/content/Components/<Name>
+npm i <dep>                              # only what that file imports (three, gsap, motion...)
+npm run build
+```
+
+Then, for Great UI and React Bits (see the porting table in each README):
+
+1. Delete `"use client"`; add the source URL + license comment (React Bits: also the bundle cost) at the top.
+2. Swap raw colours to gray ink + sky, icons to lucide; no shadcn token classes.
+3. Mount from `.astro` as an island, `client:visible`, inside a fixed-height parent when it fills `h-full`.
 
 ## Rules
 
@@ -108,3 +159,4 @@ Never hand-edit those files - change the generator and re-run.
 2. Admin shares the public line: change the look in the shared atoms (`index.css`) or the chrome (`PrivateLayout`, `AdminSidebar`, `AdminNavbar`), never one page at a time.
 3. New colors: add a token to `@theme`, don't inline arbitrary hex.
 4. Pattern alpha must stay ≤ 5% light / ≤ 10% dark - texture is a whisper.
+5. Third-party bases (`great-ui/`, `react-bits/`) get ported to this palette and lucide on copy-in - see each folder's README.

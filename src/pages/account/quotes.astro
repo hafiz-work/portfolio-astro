@@ -1,0 +1,9 @@
+---
+export const prerender = false;
+import AccountLayout from "../../layouts/AccountLayout.astro";
+import { MyQuotes } from "../../components/account/MyQuotes";
+---
+
+<AccountLayout title="Your quotes">
+  <MyQuotes client:load />
+</AccountLayout>

@@ -1,0 +1,61 @@
+---
+export const prerender = true; // the shell is static; positions come from /bas/<feed>.json
+import BasMap from "../components/bas/BasMap";
+import TechHeading from "../components/layout/TechHeading.astro";
+import Disclaimer from "../components/ui/Disclaimer.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { FEEDS } from "../lib/bas";
+
+// "rel" = the Rapid KL rail network (static lines + stations; no live trains on data.gov.my).
+const feeds = [
+  ...FEEDS.filter((f) => f.id !== "ktmb").map(({ id, label, region }) => ({ id, label, region })),
+  { id: "rel", label: "Rel Rapid KL - LRT, MRT, Monorel, BRT (peta laluan)", region: "Lembah Klang" },
+  ...FEEDS.filter((f) => f.id === "ktmb").map(({ id, label, region }) => ({ id, label, region })),
+];
+---
+
+<PublicLayout
+  title="Bas & Tren Langsung - Rapid KL, Rapid Penang, myBAS | Hafiz Bahtiar"
+  description="Lokasi langsung bas Rapid KL, Rapid Penang dan myBAS setiap 30 saat, garisan laluan bas, dan peta rangkaian LRT, MRT, Monorel dan BRT. Data GTFS daripada data.gov.my."
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1 class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl">
+        <TechHeading text="Bas Langsung" fontSize={96} fontWeight={400} box="-my-12 h-48" />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">Di mana bas saya? Lokasi langsung bas setiap 30 saat, garisan setiap laluan, dan peta rangkaian LRT, MRT dan Monorel.</p>
+    </div>
+
+    <div class="line-y mt-10 py-2">
+      <BasMap client:only="react" feeds={feeds} />
+    </div>
+    <div class="line-y mt-4">
+      <p class="mx-2 max-w-3xl text-xs/5 text-gray-500 dark:text-gray-400">
+        Nombor pada peta ialah nombor laluan; pilih satu laluan untuk melihat garisannya. Pilih "Rel Rapid KL" untuk peta LRT, MRT, Monorel dan BRT. Tekan bas untuk melihat laluan, nombor pendaftaran dan bila kedudukannya
+        dihantar. Sumber:{" "}
+        <a
+          href="https://developer.data.gov.my/realtime-api/gtfs-realtime"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="font-medium text-sky-600 hover:underline dark:text-sky-400">data.gov.my GTFS Realtime</a
+        > (Prasarana, KTMB, myBAS).
+      </p>
+    </div>
+
+    <div class="line-y mt-6">
+      <Disclaimer
+        class="mx-2"
+        sources={[
+          { name: "data.gov.my (GTFS Realtime)", href: "https://developer.data.gov.my/realtime-api/gtfs-realtime" },
+          { name: "Prasarana", href: "https://myrapid.com.my" },
+        ]}
+      >
+        Kedudukan dihantar oleh peranti dalam kenderaan dan boleh <strong>lewat, hilang atau tidak tepat</strong>. Ini
+        bukan jadual rasmi atau anggaran waktu tiba - rujuk aplikasi dan pengumuman rasmi operator.
+      </Disclaimer>
+    </div>
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>

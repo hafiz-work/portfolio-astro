@@ -3,6 +3,7 @@ import { Camera, Save } from "lucide-react";
 import PrivateLayout from "../../layouts/PrivateLayout.astro";
 import AdminPageHeader from "../../components/admin/AdminPageHeader.astro";
 import { Image } from "astro:assets";
+import avatar from "../../assets/avatar.jpg";
 
 const profile: any = {}; // populated client-side after page load
 ---
@@ -16,14 +17,14 @@ const profile: any = {}; // populated client-side after page load
 
     <div class="flex flex-col md:flex-row gap-6 items-start">
       <!-- Profile Card -->
-      <div class="w-full md:w-80 flex-shrink-0">
+      <div class="w-full md:w-80 shrink-0">
         <div
-          class="rounded-xl border border-gray-950/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 md:p-5 flex flex-col items-center gap-6 sticky top-6"
+          class="rounded-xl border border-gray-950/5 dark:border-white/10 bg-white dark:bg-white/3 p-4 md:p-5 flex flex-col items-center gap-6 sticky top-6"
         >
-          <div class="relative w-32 h-32 group flex-shrink-0">
+          <div class="relative w-32 h-32 group shrink-0">
             <Image
               id="avatar-preview"
-              src={profile?.avatarUrl || "/favicons/icon1.png"}
+              src={profile?.avatarUrl || avatar}
               alt="Profile"
               width={128}
               height={128}
@@ -64,7 +65,7 @@ const profile: any = {}; // populated client-side after page load
       <!-- Edit Form -->
       <div class="flex-1 w-full">
         <div
-          class="rounded-xl border border-gray-950/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 md:p-5"
+          class="rounded-xl border border-gray-950/5 dark:border-white/10 bg-white dark:bg-white/3 p-4 md:p-5"
         >
           <h3
             class="text-lg font-bold text-gray-950 dark:text-white mb-6 border-b border-gray-950/5 dark:border-white/10 pb-4"
@@ -267,7 +268,7 @@ const profile: any = {}; // populated client-side after page load
 
     <!-- Telegram: one bot, the linked chat id is what makes a chat "the owner" -->
     <div
-      class="rounded-xl border border-gray-950/5 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 md:p-5"
+      class="rounded-xl border border-gray-950/5 dark:border-white/10 bg-white dark:bg-white/3 p-4 md:p-5"
     >
       <h3
         class="text-lg font-bold text-gray-950 dark:text-white mb-6 border-b border-gray-950/5 dark:border-white/10 pb-4"
@@ -323,6 +324,7 @@ const profile: any = {}; // populated client-side after page load
   </div>
 
   <script>
+    import { showToast } from "../../lib/admin-ui";
     import { profileService } from "../../lib/profile";
     import { uploadImage } from "../../lib/upload";
     import { ApiClient } from "../../lib/api-client";
@@ -392,8 +394,7 @@ const profile: any = {}; // populated client-side after page load
 
             Object.entries(inputs).forEach(([key, value]) => {
               const input = document.querySelector(`[name="${key}"]`) as
-                | HTMLInputElement
-                | HTMLTextAreaElement;
+                HTMLInputElement | HTMLTextAreaElement;
               if (input && value) input.value = String(value);
             });
 
@@ -443,7 +444,7 @@ const profile: any = {}; // populated client-side after page load
           } catch (error) {
             const message =
               error instanceof Error ? error.message : "Upload failed";
-            alert(`Upload failed: ${message}`);
+            showToast({ type: "error", title: `Upload failed: ${message}` });
           } finally {
             avatarUpload.disabled = false;
           }
@@ -473,11 +474,14 @@ const profile: any = {}; // populated client-side after page load
         try {
           if (id) {
             await profileService.updateProfile(Number(id), data);
-            alert("Profile updated successfully!");
+            showToast({
+              type: "success",
+              title: "Profile updated successfully!",
+            });
           }
         } catch (error) {
           console.error(error);
-          alert("Failed to update profile.");
+          showToast({ type: "error", title: "Failed to update profile." });
         } finally {
           if (saveBtnBottom && saveBtnBottom.dataset.originalContent) {
             saveBtnBottom.innerHTML = saveBtnBottom.dataset.originalContent;
@@ -521,7 +525,10 @@ const profile: any = {}; // populated client-side after page load
       telegramLinkBtn?.addEventListener("click", async () => {
         const chatId = telegramInput?.value.trim();
         if (!chatId) {
-          alert("Paste your Telegram chat id first.");
+          showToast({
+            type: "warning",
+            title: "Paste your Telegram chat id first.",
+          });
           return;
         }
 
@@ -530,9 +537,10 @@ const profile: any = {}; // populated client-side after page load
           await telegramApi.put("/owner/profile/telegram", { chatId });
           await loadProfile();
         } catch (error) {
-          alert(
-            `Link failed: ${error instanceof Error ? error.message : "unknown error"}`,
-          );
+          showToast({
+            type: "error",
+            title: `Link failed: ${error instanceof Error ? error.message : "unknown error"}`,
+          });
         } finally {
           telegramLinkBtn.disabled = false;
         }
@@ -544,9 +552,10 @@ const profile: any = {}; // populated client-side after page load
           await telegramApi.delete("/owner/profile/telegram");
           await loadProfile();
         } catch (error) {
-          alert(
-            `Unlink failed: ${error instanceof Error ? error.message : "unknown error"}`,
-          );
+          showToast({
+            type: "error",
+            title: `Unlink failed: ${error instanceof Error ? error.message : "unknown error"}`,
+          });
         } finally {
           telegramUnlinkBtn.disabled = false;
         }

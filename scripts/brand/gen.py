@@ -1,29 +1,40 @@
-"""Generate every brand asset from one source: the circuit-cube mark.
+"""Generate every brand asset from one source: the HB circuit monogram.
+
+Source: scripts/brand/hb-monogram.png (the owner's artwork). Its glow is dropped
+and the letters are traced to a vector path on every run, so every output stays
+crisp at any size and there is still exactly one source.
 
 Writes public/brand/{logo,wordmark,jata,icon,icon-maskable}.svg, all favicon
-PNGs + favicon.ico + favicon.svg, and og-default.png.
+PNGs, favicon.ico, favicon.svg, apple-touch-icon.png and og-default.png.
 
-    python3 -m venv .venv-brand && .venv-brand/bin/pip install fonttools pillow
+    python3 -m venv .venv-brand && .venv-brand/bin/pip install fonttools pillow potracer
     .venv-brand/bin/python scripts/brand/gen.py
 
-macOS only: uses the system DIN Alternate Bold font and Google Chrome
-(headless) to rasterise. All text is outlined to paths, so the SVGs need no
-fonts at runtime.
+macOS only: uses the system DIN Alternate Bold font and a Chromium browser
+(Google Chrome, else Brave) headless to rasterise. All text is outlined to
+paths, so the SVGs need no fonts at runtime.
 """
-import glob, math, os, subprocess, tempfile
+import glob, os, subprocess, tempfile
+import potrace
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.pens.transformPen import TransformPen
-from PIL import Image
+from PIL import Image, ImageFilter, ImageOps
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 PUBLIC = os.path.join(ROOT, "public")
 OUT = os.path.join(PUBLIC, "brand")
-CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+SRC = os.path.join(os.path.dirname(__file__), "hb-monogram.png")
+BROWSERS = [
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+]
+BROWSER = next((b for b in BROWSERS if os.path.exists(b)), None)
 DIN = TTFont("/System/Library/Fonts/Supplemental/DIN Alternate Bold.ttf")
 INK = "#030712"  # tile / OG background = site dark canvas (gray-950)
 
-BLUE, GREEN, TEAL = "#2563eb", "#34d399", "#22b8c4"
+# Sampled from the source artwork: bottom-left blue -> top-right teal.
+BLUE, TEAL = "#1c7bf5", "#42cfc7"
 
 
 def text(font, s, size, x, y, tracking=0.0, anchor="start"):
@@ -41,60 +52,53 @@ def text(font, s, size, x, y, tracking=0.0, anchor="start"):
     return pen.getCommands(), width
 
 
-# Faces are drawn in a unit square and mapped onto the cube with an affine
-# matrix, so every stroke skews with its face. Left = H, right = B, both built
-# as circuit traces (straight runs, 45° chamfers, round pads); top = plain
-# parallel traces.
-FACES = {
-    "left": {
-        "paths": ["M.22 .14V.86", "M.78 .14V.86", "M.22 .5H.78"],
-        "pads": [(.22, .14), (.78, .14)],
-    },
-    "right": {
-        "paths": [
-            "M.22 .86V.14H.6L.78 .32V.34L.62 .5H.22",
-            "M.62 .5L.8 .68V.7L.64 .86H.22",
-        ],
-        "pads": [(.22, .86)],
-    },
-    "top": {
-        "paths": ["M.14 .2H.86", "M.14 .5H.4L.54 .36H.86", "M.14 .8H.86"],
-        "pads": [(.14, .2), (.14, .5), (.14, .8)],
-    },
-}
+def trace_mark():
+    """Source PNG -> (path d, width, height) of the letters alone.
+
+    The artwork is letters (alpha >= ~220) over a soft glow (alpha <= ~140) on
+    transparency. Ramp alpha across that gap, work at 2x for smooth curves,
+    threshold, crop to the letters and trace.
+    """
+    alpha = Image.open(SRC).convert("RGBA").getchannel("A")
+    m = alpha.point(lambda v: 0 if v < 120 else 255 if v > 230 else int((v - 120) * 255 / 110))
+    m = m.resize((m.width * 2, m.height * 2), Image.LANCZOS).filter(ImageFilter.GaussianBlur(1.2))
+    m = m.point(lambda v: 255 if v >= 128 else 0)
+    m = m.crop(m.getbbox())
+    # potrace fills dark pixels: letters must be black.
+    bm = potrace.Bitmap(ImageOps.invert(m).convert("1"), blacklevel=0.5)
+    curves = bm.trace(turdsize=20, turnpolicy=potrace.POTRACE_TURNPOLICY_MINORITY,
+                      alphamax=1.0, opticurve=True, opttolerance=0.2)
+    d = []
+    for c in curves:
+        d.append(f"M{c.start_point.x:.1f} {c.start_point.y:.1f}")
+        for seg in c.segments:
+            if seg.is_corner:
+                d.append(f"L{seg.c.x:.1f} {seg.c.y:.1f}L{seg.end_point.x:.1f} {seg.end_point.y:.1f}")
+            else:
+                d.append(f"C{seg.c1.x:.1f} {seg.c1.y:.1f} {seg.c2.x:.1f} {seg.c2.y:.1f} "
+                         f"{seg.end_point.x:.1f} {seg.end_point.y:.1f}")
+        d.append("Z")
+    return "".join(d), m.width, m.height
 
 
-def cube(cx, cy, L, sw=0.13, pad=0.085):
-    dx, dy = L * math.cos(math.pi / 6), L / 2
-    mats = {
-        "left": (dx, dy, 0, L, cx - dx, cy - dy),
-        "right": (dx, -dy, 0, L, cx, cy),
-        "top": (dx, -dy, dx, dy, cx - dx, cy - dy),
-    }
-    out = []
-    for k, m in mats.items():
-        f = FACES[k]
-        body = "".join(f'<path d="{d}"/>' for d in f["paths"])
-        body += "".join(f'<circle cx="{x}" cy="{y}" r="{pad}" fill="#fff" stroke="none"/>' for x, y in f["pads"])
-        out.append(
-            f'<g transform="matrix({" ".join(f"{v:.3f}" for v in m)})" stroke="#fff" '
-            f'stroke-width="{sw}" stroke-linecap="round" stroke-linejoin="round">{body}</g>'
-        )
-    return "".join(out)
+MARK_D, MARK_W, MARK_H = trace_mark()
 
 
-def mark(cx, cy, L, gid):
+def mark(cx, cy, w, gid):
+    """The monogram centred on (cx, cy), `w` wide, blue -> teal diagonal gradient."""
+    k = w / MARK_W
+    x, y = cx - w / 2, cy - MARK_H * k / 2
     return (
-        f'<defs><linearGradient id="{gid}" x1="{cx - L}" y1="{cy + L}" x2="{cx + L}" y2="{cy - L}" gradientUnits="userSpaceOnUse">'
-        f'<stop stop-color="{BLUE}"/><stop offset="1" stop-color="{GREEN}"/></linearGradient>'
-        f'<mask id="{gid}m" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%">{cube(cx, cy, L)}</mask></defs>'
-        f'<rect x="{cx - 2 * L}" y="{cy - 2 * L}" width="{4 * L}" height="{4 * L}" fill="url(#{gid})" mask="url(#{gid}m)"/>'
+        f'<defs><linearGradient id="{gid}" x1="0" y1="1" x2="1" y2="0">'
+        f'<stop stop-color="{BLUE}"/><stop offset="1" stop-color="{TEAL}"/></linearGradient></defs>'
+        f'<path transform="translate({x:.2f} {y:.2f}) scale({k:.5f})" fill="url(#{gid})" '
+        f'fill-rule="evenodd" d="{MARK_D}"/>'
     )
 
 
 def text_grad(gid):
     return (f'<defs><linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="0">'
-            f'<stop stop-color="#3b82f6"/><stop offset="1" stop-color="{TEAL}"/></linearGradient></defs>')
+            f'<stop stop-color="{BLUE}"/><stop offset="1" stop-color="{TEAL}"/></linearGradient></defs>')
 
 
 def svg(w, h, body):
@@ -108,7 +112,7 @@ def build():
     # Wordmark: mark left, lowercase name right, optically centred on the cube.
     name, name_w = text(DIN, "hafizbahtiar", 52, 112, 77, 0.5)
     wordmark = svg(round(112 + name_w + 8), 120,
-                   mark(52, 60, 40, "gw") + text_grad("tw") + f'<path fill="url(#tw)" d="{name}"/>')
+                   mark(52, 60, 88, "gw") + text_grad("tw") + f'<path fill="url(#tw)" d="{name}"/>')
 
     # Jata: stacked emblem, no ring - mark, tracked name, hairline-flanked year.
     title, _ = text(DIN, "HAFIZ BAHTIAR", 22, 140, 206, 7, "middle")
@@ -116,18 +120,18 @@ def build():
     gap, rule = 14, 44
     l, r = 140 - year_w / 2 - gap, 140 + year_w / 2 + gap
     jata = svg(280, 260,
-               mark(140, 92, 58, "gj") + text_grad("tj")
+               mark(140, 92, 150, "gj") + text_grad("tj")
                + f'<path fill="url(#tj)" d="{title}"/>'
                + f'<path fill="#3b82f6" d="{year}"/>'
                + f'<path d="M{l - rule:.1f} 234.5H{l:.1f}M{r:.1f} 234.5H{r + rule:.1f}" stroke="#3b82f6" stroke-width="1"/>')
 
-    # App icons: rounded dark tile, and a full-bleed maskable one whose cube
-    # stays inside the 80% safe zone.
-    icon = svg(512, 512, f'<rect width="512" height="512" rx="112" fill="{INK}"/>' + mark(256, 256, 150, "gi"))
-    maskable = svg(512, 512, f'<rect width="512" height="512" fill="{INK}"/>' + mark(256, 256, 120, "gm"))
+    # App icons: rounded dark tile, and a full-bleed opaque one (maskable / Apple)
+    # whose monogram stays inside the 80% safe circle (300 wide -> 378 diagonal < 410).
+    icon = svg(512, 512, f'<rect width="512" height="512" rx="112" fill="{INK}"/>' + mark(256, 256, 340, "gi"))
+    maskable = svg(512, 512, f'<rect width="512" height="512" fill="{INK}"/>' + mark(256, 256, 300, "gm"))
 
     files = {
-        "logo.svg": svg(128, 128, mark(64, 64, 50, "gl")),
+        "logo.svg": svg(128, 128, mark(64, 64, 112, "gl")),
         "wordmark.svg": wordmark,
         "jata.svg": jata,
         "icon.svg": icon,
@@ -138,9 +142,7 @@ def build():
             fh.write(content)
     with open(os.path.join(PUBLIC, "favicon.svg"), "w") as fh:
         fh.write(icon)
-    with open(os.path.join(PUBLIC, "icon0.svg"), "w") as fh:
-        fh.write(icon)
-    print("wrote", ", ".join(files), "+ favicon.svg, icon0.svg")
+    print("wrote", ", ".join(files), "+ favicon.svg")
     return wordmark
 
 
@@ -150,12 +152,14 @@ def screenshot(html, w, h, out):
         page = os.path.join(tmp, "p.html")
         with open(page, "w") as fh:
             fh.write(html)
-        subprocess.run([CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars",
+        subprocess.run([BROWSER, "--headless=new", "--disable-gpu", "--hide-scrollbars",
                         "--default-background-color=00000000", f"--window-size={w},{h}",
                         f"--screenshot={out}", f"file://{page}"], check=True, capture_output=True)
 
 
 def raster(wordmark):
+    if not BROWSER:
+        raise SystemExit("No Chromium browser found (Chrome or Brave) - needed to rasterise.")
     fav = os.path.join(PUBLIC, "favicons")
     with tempfile.TemporaryDirectory() as tmp:
         masters = {}
@@ -170,7 +174,9 @@ def raster(wordmark):
             icon.resize((n, n), Image.LANCZOS).save(os.path.join(fav, f"favicon-{n}x{n}.png"))
         for n in (192, 512):
             maskable.resize((n, n), Image.LANCZOS).save(os.path.join(fav, f"web-app-manifest-{n}x{n}.png"))
-        maskable.resize((180, 180), Image.LANCZOS).save(os.path.join(fav, "apple-icon.png"))
+        # Apple wants an opaque full square (iOS rounds it; transparent corners turn
+        # black). Root path: iOS and crawlers request /apple-touch-icon.png by default.
+        maskable.convert("RGB").resize((180, 180), Image.LANCZOS).save(os.path.join(PUBLIC, "apple-touch-icon.png"))
         icon.resize((512, 512), Image.LANCZOS).save(os.path.join(fav, "icon1.png"))
         icon.save(os.path.join(PUBLIC, "favicon.ico"), sizes=[(16, 16), (32, 32), (48, 48)])
 

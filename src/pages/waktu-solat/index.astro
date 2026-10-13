@@ -1,0 +1,451 @@
+---
+import Disclaimer from "../../components/ui/Disclaimer.astro";
+export const prerender = false;
+import TechHeading from "../../components/layout/TechHeading.astro";
+import PublicLayout from "../../layouts/PublicLayout.astro";
+import { SOLAT_ZONES } from "../../data/solat-zones";
+import Combobox from "../../components/ui/Combobox.astro";
+import {
+  formatHijri,
+  getPrayerTimes,
+  hhmm,
+  resolveZone,
+  todayInMalaysia,
+} from "../../lib/waktu-solat";
+import { getDailyReminder } from "../../lib/peringatan";
+
+const zone = resolveZone(Astro.url.searchParams.get("zone"));
+const today = todayInMalaysia();
+const [times, reminder] = await Promise.all([
+  getPrayerTimes(zone.code),
+  getDailyReminder(today),
+]);
+const day = times?.today ?? null;
+// The plan that answered (lib/fallback): JAKIM, or its mirror.
+const sourceUrl = times?.source.includes("waktusolat") ? "https://waktusolat.app/" : "https://www.e-solat.gov.my/";
+
+// Monthly table (same cached month as today's times - no extra request).
+const monthLabel = new Intl.DateTimeFormat("ms-MY", {
+  timeZone: "Asia/Kuala_Lumpur",
+  month: "long",
+  year: "numeric",
+}).format(new Date());
+const weekday = new Intl.DateTimeFormat("ms-MY", { weekday: "short", timeZone: "UTC" });
+const monthRows = (times?.month ?? []).map((d, i) => {
+  const ymd = `${today.slice(0, 8)}${String(i + 1).padStart(2, "0")}`;
+  const date = new Date(`${ymd}T00:00:00Z`);
+  return {
+    ...d,
+    ymd,
+    dayNum: i + 1,
+    weekday: weekday.format(date),
+    friday: date.getUTCDay() === 5,
+    hijriShort: formatHijri(d.hijri).replace(/ \d+H$/, ""),
+  };
+});
+
+const dateLabel = new Intl.DateTimeFormat("ms-MY", {
+  timeZone: "Asia/Kuala_Lumpur",
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+}).format(new Date());
+
+// `azan` = the five prayers (the "next prayer" highlight only looks at these).
+const rows = day
+  ? [
+      { label: "Imsak", time: day.imsak, azan: false },
+      { label: "Subuh", time: day.fajr, azan: true },
+      { label: "Syuruk", time: day.syuruk, azan: false },
+      { label: "Dhuha", time: day.dhuha, azan: false },
+      { label: "Zohor", time: day.dhuhr, azan: true },
+      { label: "Asar", time: day.asr, azan: true },
+      { label: "Maghrib", time: day.maghrib, azan: true },
+      { label: "Isyak", time: day.isha, azan: true },
+    ]
+  : [];
+---
+
+<PublicLayout
+  title="Waktu Solat Malaysia Hari Ini | Hafiz Bahtiar"
+  description="Waktu solat hari ini untuk setiap zon JAKIM di Malaysia - Subuh, Zohor, Asar, Maghrib dan Isyak. Data rasmi e-solat JAKIM."
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1
+        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Waktu Solat"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Waktu solat hari ini untuk {zone.daerah}, {zone.negeri}.
+      </p>
+    </div>
+    <div class="line-y mt-4">
+      <p
+        class="mx-2 font-mono text-sm/6 tracking-widest text-gray-500 uppercase"
+      >
+        {dateLabel}{day && ` · ${formatHijri(day.hijri)}`}
+        {
+          times?.bearing && (
+            <span class="whitespace-nowrap">
+              {" "}· Kiblat {times.bearing} (<a href="/kiblat" class="text-sky-600 hover:underline dark:text-sky-400">kompas</a>)
+            </span>
+          )
+        }
+      </p>
+    </div>
+
+    <!-- Plain GET form: works without JS, and the URL (?zone=) is shareable.
+         The zone Combobox submits it on pick. -->
+    <div class="line-y mt-10">
+      <form method="get" class="mx-2 flex flex-wrap items-center gap-3">
+        <label for="zone" class="text-sm/6 font-medium">Zon</label>
+        <Combobox
+          id="zone"
+          name="zone"
+          class="max-w-md"
+          listLabel="Zon"
+          searchPlaceholder="Cari daerah, negeri atau kod…"
+          emptyText="Tiada zon sepadan."
+          submitOnPick
+          value={zone.code}
+          options={SOLAT_ZONES.map((z) => ({ value: z.code, hint: z.code, label: z.daerah, group: z.negeri }))}
+        />
+        <noscript>
+          <button type="submit" class="btn-pill btn-pill-primary">Tukar</button>
+        </noscript>
+        <!-- Shown by the script only where geolocation exists. -->
+        <button
+          type="button"
+          id="zone-locate"
+          hidden
+          title="Lokasi anda dihantar ke api.waktusolat.app untuk mencari zon JAKIM."
+          class="btn-pill btn-pill-ghost"
+        >
+          Guna lokasi saya
+        </button>
+        <a href={`/waktu-solat/imsakiah?zone=${zone.code}`} class="btn-pill btn-pill-ghost sm:ml-auto">
+          Jadual Imsakiah
+        </a>
+        <!-- Full page load: the mosque display has its own shell (no navbar/footer). -->
+        <a
+          href={`/waktu-solat/paparan?zone=${zone.code}`}
+          data-astro-reload
+          class="btn-pill btn-pill-ghost"
+        >
+          Paparan Masjid
+        </a>
+        <p
+          id="zone-locate-status"
+          class="w-full text-xs/5 text-gray-500 empty:hidden dark:text-gray-400"
+          aria-live="polite"></p>
+      </form>
+    </div>
+
+    {
+      day ? (
+        <div class="line-y mt-10">
+          <dl
+            id="waktu-solat"
+            class="grid grid-cols-2 gap-px bg-gray-950/5 sm:grid-cols-4 dark:bg-white/10"
+          >
+            {rows.map((r) => (
+              <div
+                data-time={hhmm(r.time)}
+                data-azan={r.azan ? "" : undefined}
+                class="group bg-white px-4 py-6 data-next:bg-sky-500/5 sm:px-6 dark:bg-gray-950 dark:data-next:bg-sky-400/10"
+              >
+                <dt class="flex items-center gap-2 font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+                  {r.label}
+                  <span class="hidden rounded-full bg-sky-500/10 px-2 text-[10px] text-sky-700 group-data-next:inline dark:text-sky-400">
+                    Seterusnya
+                  </span>
+                </dt>
+                <dd
+                  class:list={[
+                    "mt-2 text-4xl font-medium tracking-tighter tabular-nums",
+                    r.azan
+                      ? "text-gray-950 dark:text-white"
+                      : "text-gray-400 dark:text-gray-500",
+                  ]}
+                >
+                  {hhmm(r.time)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+        <div class="line-y mt-4">
+          <p class="mx-2 text-xs/5 text-gray-500 dark:text-gray-400">
+            Sumber:{" "}
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+            >
+              {times?.source}
+            </a>
+            {times?.stale && " (data simpanan - sumber tak dapat dicapai sekarang)"}. Imsak, Syuruk dan Dhuha bukan waktu azan.
+          </p>
+        </div>
+      ) : (
+        <div class="line-y mt-10">
+          <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+            Waktu solat tak dapat diambil dari JAKIM sekarang. Cuba lagi
+            sebentar, atau semak terus di{" "}
+            <a
+              href="https://www.e-solat.gov.my/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-sky-600 hover:underline dark:text-sky-400"
+            >
+              e-solat.gov.my
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
+    {
+      reminder && (
+        <div class="line-y mt-10">
+          <figure class="mx-2 max-w-3xl">
+            <p class="eyebrow">
+              {reminder.kind === "ayat" ? "Ayat hari ini" : "Hadis hari ini"}
+            </p>
+            {reminder.arabic && (
+              <p
+                lang="ar"
+                dir="rtl"
+                class="mt-4 text-3xl/[1.9] text-gray-950 dark:text-white"
+              >
+                {reminder.arabic}
+              </p>
+            )}
+            <blockquote class="mt-4 text-lg/8 whitespace-pre-line text-gray-700 dark:text-gray-300">
+              {reminder.text}
+            </blockquote>
+            <figcaption class="mt-3 font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+              {reminder.sourceAr && (
+                <span
+                  lang="ar"
+                  dir="rtl"
+                  class="font-sans tracking-normal normal-case"
+                >
+                  {reminder.sourceAr}
+                </span>
+              )}
+              {reminder.sourceAr && reminder.source && " · "}
+              {reminder.source}
+            </figcaption>
+          </figure>
+        </div>
+      )
+    }
+    {
+      monthRows.length > 0 && (
+        <section
+          id="jadual"
+          data-title={`Jadual Waktu Solat ${monthLabel}`}
+          data-footer={`Hari Jumaat ditebalkan. Sumber: ${times?.source} · hafizbahtiar.com/waktu-solat`}
+          data-zone={`${zone.code} · ${zone.daerah}, ${zone.negeri}${times?.bearing ? ` · Kiblat ${times.bearing}` : ""}`}
+        >
+          <div class="line-y mt-10">
+            <div class="mx-2 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p class="eyebrow">Jadual bulan ini</p>
+                <h2 class="mt-1 text-2xl font-medium tracking-tight capitalize">{monthLabel}</h2>
+              </div>
+              <button type="button" id="jadual-print" class="btn-pill btn-pill-ghost">
+                Cetak jadual
+              </button>
+            </div>
+          </div>
+          <div class="line-y mt-4 overflow-x-auto">
+            <table class="w-full min-w-xl text-left text-sm/6 tabular-nums">
+              <thead class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+                <tr class="border-b border-gray-950/5 dark:border-white/10">
+                  <th class="px-2 py-2 font-medium">Tarikh</th>
+                  <th class="px-2 py-2 font-medium">Hijri</th>
+                  <th class="px-2 py-2 font-medium">Imsak</th>
+                  <th class="px-2 py-2 font-medium">Subuh</th>
+                  <th class="px-2 py-2 font-medium">Syuruk</th>
+                  <th class="px-2 py-2 font-medium">Zohor</th>
+                  <th class="px-2 py-2 font-medium">Asar</th>
+                  <th class="px-2 py-2 font-medium">Maghrib</th>
+                  <th class="px-2 py-2 font-medium">Isyak</th>
+                </tr>
+              </thead>
+              <tbody>
+                {monthRows.map((r) => (
+                  <tr
+                    data-today={r.ymd === today ? "" : undefined}
+                    data-friday={r.friday ? "" : undefined}
+                    aria-current={r.ymd === today ? "date" : undefined}
+                    class="border-b border-gray-950/5 data-friday:font-semibold data-today:bg-sky-500/5 dark:border-white/10 dark:data-today:bg-sky-400/10"
+                  >
+                    <td class="px-2 py-1.5 whitespace-nowrap">
+                      {r.dayNum} <span class="text-gray-500">{r.weekday}</span>
+                    </td>
+                    <td class="px-2 py-1.5 whitespace-nowrap text-gray-500">{r.hijriShort}</td>
+                    <td class="px-2 py-1.5 text-gray-500">{hhmm(r.imsak)}</td>
+                    <td class="px-2 py-1.5">{hhmm(r.fajr)}</td>
+                    <td class="px-2 py-1.5 text-gray-500">{hhmm(r.syuruk)}</td>
+                    <td class="px-2 py-1.5">{hhmm(r.dhuhr)}</td>
+                    <td class="px-2 py-1.5">{hhmm(r.asr)}</td>
+                    <td class="px-2 py-1.5">{hhmm(r.maghrib)}</td>
+                    <td class="px-2 py-1.5">{hhmm(r.isha)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div class="line-y mt-4">
+            <p class="mx-2 text-xs/5 text-gray-500 dark:text-gray-400">
+              Hari Jumaat ditebalkan. Sumber: {times?.source}.
+            </p>
+          </div>
+        </section>
+      )
+    }
+    <div class="line-y mt-6">
+      <Disclaimer class="mx-2" sources={[{ name: "JAKIM (e-solat)", href: "https://www.e-solat.gov.my" }, { name: "api.waktusolat.app (sandaran tidak rasmi)", href: "https://api.waktusolat.app" }]}>
+        <Fragment set:html={`Rujukan muktamad waktu solat ialah <strong>JAKIM dan jabatan agama Islam negeri</strong>. Ayat dan hadis hari ini diambil daripada Al Quran Cloud dan HadeethEnc.`} />
+      </Disclaimer>
+    </div>
+
+    <!-- Widget for other sites: the only route the middleware lets others iframe. -->
+    <section id="pasang">
+      <div class="line-y mt-10">
+        <div class="mx-2">
+          <p class="eyebrow">Pasang di laman anda</p>
+          <h2 class="mt-1 text-2xl font-medium tracking-tight">Widget waktu solat</h2>
+          <p class="mt-2 max-w-2xl text-sm/6 text-gray-600 dark:text-gray-400">
+            Salin kod ini ke laman masjid, surau atau syarikat anda. Waktu dikemas kini sendiri setiap hari
+            untuk zon {zone.code}. Tambah <code class="font-mono">&amp;tema=gelap</code> atau{" "}
+            <code class="font-mono">&amp;tema=terang</code> untuk tetapkan warna.
+          </p>
+        </div>
+      </div>
+      <div class="line-y mt-4">
+        <div class="mx-2 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+          <div class="grid gap-3">
+            <textarea
+              id="embed-code"
+              readonly
+              rows="4"
+              class="field resize-none font-mono text-xs/5"
+            >{`<iframe src="https://hafizbahtiar.com/waktu-solat/embed?zone=${zone.code}" title="Waktu Solat ${zone.daerah}" width="100%" height="420" style="border:0;max-width:420px" loading="lazy"></iframe>`}</textarea>
+            <div>
+              <button type="button" id="embed-copy" class="btn-pill btn-pill-ghost">Salin kod</button>
+            </div>
+          </div>
+          <iframe
+            src={`/waktu-solat/embed?zone=${zone.code}`}
+            title={`Contoh widget Waktu Solat ${zone.daerah}`}
+            width="100%"
+            height="420"
+            loading="lazy"
+            class="rounded-xl ring-1 ring-gray-950/10 dark:ring-white/10"
+          ></iframe>
+        </div>
+      </div>
+    </section>
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>
+
+<script>
+  import { navigate } from "astro:transitions/client";
+  import { bindPrintTable } from "../../lib/print-table";
+
+  // Mark the next azan (Malaysian time). Re-run on every ClientRouter visit.
+  const initWaktuSolat = () => {
+    const cells = document.querySelectorAll<HTMLElement>(
+      "#waktu-solat [data-azan]",
+    );
+    if (!cells.length) return;
+    const now = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Kuala_Lumpur",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).format(new Date());
+    // After Isyak the next azan is tomorrow's Subuh, which isn't on this page.
+    const next = [...cells].find((c) => (c.dataset.time ?? "") > now);
+    next?.setAttribute("data-next", "");
+  };
+
+  // "Guna lokasi saya": GPS -> JAKIM zone via api.waktusolat.app (JAKIM's own
+  // e-solat has no coordinate lookup). Only runs on click; the zone is validated
+  // before it goes into the URL.
+  const initLocate = () => {
+    const btn = document.getElementById("zone-locate");
+    const status = document.getElementById("zone-locate-status");
+    if (!btn || !status || !("geolocation" in navigator) || btn.dataset.bound === "1") return;
+    btn.dataset.bound = "1";
+    btn.hidden = false;
+    const say = (text: string) => (status.textContent = text);
+    btn.addEventListener("click", () => {
+      say("Mencari lokasi…");
+      navigator.geolocation.getCurrentPosition(
+        async ({ coords }) => {
+          try {
+            const res = await fetch(
+              `https://api.waktusolat.app/zones/${coords.latitude.toFixed(4)}/${coords.longitude.toFixed(4)}`,
+              { signal: AbortSignal.timeout(8000) },
+            );
+            const zone = ((await res.json()) as { zone?: string }).zone;
+            if (!res.ok || !zone || !/^[A-Z]{3}\d{2}$/.test(zone)) throw new Error("no zone");
+            say("");
+            navigate(`?zone=${zone}`);
+          } catch {
+            say("Zon tak dapat dikesan dari lokasi ini (di luar Malaysia?). Pilih zon secara manual.");
+          }
+        },
+        (err) =>
+          say(err.code === err.PERMISSION_DENIED ? "Akses lokasi ditolak. Pilih zon secara manual." : "Lokasi tak dapat dikesan. Pilih zon secara manual."),
+        { timeout: 10000, maximumAge: 10 * 60 * 1000 },
+      );
+    });
+  };
+
+  // "Cetak jadual" (src/lib/print-table.ts).
+  const initPrint = () => bindPrintTable(document.getElementById("jadual-print"), document.getElementById("jadual"));
+
+  const initEmbedCopy = () => {
+    const btn = document.getElementById("embed-copy");
+    const code = document.getElementById("embed-code") as HTMLTextAreaElement | null;
+    if (!btn || !code || btn.dataset.bound === "1") return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(code.value);
+        btn.textContent = "Disalin";
+      } catch {
+        code.select(); // clipboard blocked: let the user copy it
+        btn.textContent = "Tekan Ctrl/Cmd+C";
+      }
+      setTimeout(() => (btn.textContent = "Salin kod"), 2000);
+    });
+  };
+
+  const init = () => {
+    initEmbedCopy();
+    initWaktuSolat();
+    initLocate();
+    initPrint();
+  };
+  init();
+  document.addEventListener("astro:page-load", init);
+</script>

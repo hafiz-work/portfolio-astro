@@ -2,7 +2,7 @@ import { API_BASE_URL } from "./config";
 
 /**
  * True for links that point at the downloadable resume PDF
- * (e.g. `/docs/hafizbahtiar-resume-4-3.pdf`).
+ * (e.g. `RESUME_URL` in `constants.ts`).
  */
 export const isResumePdfHref = (href: string | null | undefined): boolean =>
   !!href && /resume[^/]*\.pdf(?:[?#].*)?$/i.test(href);
@@ -22,7 +22,7 @@ export function trackResumeDownload(source = "site"): void {
     if (navigator.sendBeacon) {
       navigator.sendBeacon(url, new Blob([source], { type: "text/plain" }));
     } else {
-      void fetch(url, { method: "POST", body: source, keepalive: true }).catch(() => {});
+      void fetch(url, { method: "POST", body: source, keepalive: true }).catch(() => { });
     }
   } catch {
     /* tracking is best-effort */

@@ -1,16 +1,19 @@
 ---
 import PrivateLayout from "../../../layouts/PrivateLayout.astro";
 import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
-import AlertToast from "../../../components/ui/AlertToast.astro";
 import { ProjectEditor } from "../../../components/admin/projects/ProjectEditor";
 
 const idParam = Astro.url.searchParams.get("id");
-const projectId = idParam && /^\d+$/.test(idParam) ? Number(idParam) : undefined;
+const projectId =
+  idParam && /^\d+$/.test(idParam) ? Number(idParam) : undefined;
 ---
 
 <PrivateLayout title="Edit Project">
   <div class="space-y-6">
-    <AdminPageHeader title="Edit Project" description="Manage project content and publishing">
+    <AdminPageHeader
+      title="Edit Project"
+      description="Manage project content and publishing"
+    >
       <a
         slot="actions"
         href="/admin/projects"
@@ -28,5 +31,4 @@ const projectId = idParam && /^\d+$/.test(idParam) ? Number(idParam) : undefined
       )
     }
   </div>
-  <AlertToast id="admin-alert" />
 </PrivateLayout>

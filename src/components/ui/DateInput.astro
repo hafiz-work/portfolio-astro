@@ -1,4 +1,7 @@
 ---
+// Admin wrapper: label + DatePicker (dd/mm/yyyy shown, ISO submitted).
+import DatePicker from "./DatePicker.astro";
+
 interface Props {
   label: string;
   name: string;
@@ -6,7 +9,6 @@ interface Props {
   required?: boolean;
   class?: string;
   id?: string;
-  placeholder?: string;
 }
 
 const {
@@ -16,24 +18,12 @@ const {
   required = false,
   class: className = "",
   id: inputId = `${name}-input`,
-  placeholder,
 } = Astro.props;
 ---
 
 <div class={`space-y-2 ${className}`}>
-  <label
-    class="admin-label"
-    for={inputId}
-  >
+  <label class="admin-label" for={`${inputId}-text`}>
     {label}
   </label>
-  <input
-    id={inputId}
-    type="date"
-    name={name}
-    value={value}
-    required={required}
-    placeholder={placeholder}
-    class="field"
-  />
+  <DatePicker id={inputId} name={name} value={value} required={required} />
 </div>

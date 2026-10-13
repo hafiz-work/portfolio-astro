@@ -12,6 +12,7 @@ import type {
 } from "../../../types/family";
 import { FamilyTreeChart } from "./FamilyTreeChart";
 import { Minus } from "lucide-react";
+import { confirmDialog } from "../../../lib/admin-ui";
 
 type BuilderMode = "new" | "edit";
 type RelationAction = "father" | "mother" | "spouse" | "son" | "daughter" | null;
@@ -56,11 +57,11 @@ const initials = (name: string) =>
     .join("");
 
 const builderShellClass =
-  "admin-family-builder rounded-xl border border-gray-950/5 bg-white/70 p-4 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none md:p-5";
+  "admin-family-builder rounded-xl border border-gray-950/5 bg-white/70 p-4 dark:border-white/10 dark:bg-white/3 dark:shadow-none md:p-5";
 // Admin atoms (index.css) - kept as names so the JSX below reads the same.
 const sectionCardClass = "admin-card";
 const insetPanelClass =
-  "rounded-xl border border-gray-950/5 bg-gray-950/[0.025] p-4 dark:border-white/10 dark:bg-white/[0.03]";
+  "rounded-xl border border-gray-950/5 bg-gray-950/2.5 p-4 dark:border-white/10 dark:bg-white/3";
 const inputClass = "admin-input";
 const monoInputClass = `${inputClass} font-mono text-xs`;
 const labelClass = "admin-label";
@@ -69,12 +70,12 @@ const headingClass = "text-gray-950 dark:text-white";
 const bodyTextClass = "text-gray-600 dark:text-gray-400";
 const toolbarButtonClass = "admin-btn admin-btn-secondary";
 const emptyStateClass =
-  "rounded-xl border border-gray-950/5 bg-gray-950/[0.025] p-5 text-sm text-gray-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-400";
+  "rounded-xl border border-gray-950/5 bg-gray-950/2.5 p-5 text-sm text-gray-600 dark:border-white/10 dark:bg-white/3 dark:text-gray-400";
 const errorClass = "rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-700 ring-1 ring-red-500/25 ring-inset dark:text-red-300";
 const selectedPillClass =
   "rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-1 text-sm font-medium text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300";
 const canvasFrameClass =
-  "h-[70vh] min-h-[520px] rounded-xl border border-gray-950/5 bg-family-canvas p-3 dark:border-white/10 dark:shadow-none";
+  "h-[70vh] min-h-130 rounded-xl border border-gray-950/5 bg-family-canvas p-3 dark:border-white/10 dark:shadow-none";
 
 const relationActionStyles: Record<RelativeAction, {
   card: string;
@@ -391,7 +392,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
     setPersonMetadataInput(JSON.stringify(selectedPerson.metadata || {}, null, 2));
   }, [selectedAction, selectedPerson]);
 
-  const handleCreateTree = async (e: React.FormEvent) => {
+  const handleCreateTree = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setIsSaving(true);
     setError(null);
@@ -438,7 +439,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
     }
   };
 
-  const handleSaveTree = async (e: React.FormEvent) => {
+  const handleSaveTree = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (!treeId) return;
     setIsSaving(true);
@@ -467,9 +468,12 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
 
   const handleDeleteTree = async () => {
     if (!treeId || !detail) return;
-    const confirmed = window.confirm(
-      `Delete "${detail.tree.name}"? This cannot be undone.`,
-    );
+    const confirmed = await confirmDialog({
+      title: "Delete family tree",
+      message: `Delete "${detail.tree.name}"? This cannot be undone.`,
+      confirmText: "Delete",
+      variant: "danger",
+    });
     if (!confirmed) return;
 
     setIsSaving(true);
@@ -488,7 +492,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
     }
   };
 
-  const handleSavePerson = async (e: React.FormEvent) => {
+  const handleSavePerson = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (!selectedPerson || !treeId) return;
     setIsSaving(true);
@@ -543,9 +547,12 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
 
   const handleDeletePerson = async () => {
     if (!selectedPerson || !treeId) return;
-    const confirmed = window.confirm(
-      `Delete "${selectedPerson.displayName}" and related links?`,
-    );
+    const confirmed = await confirmDialog({
+      title: "Delete person",
+      message: `Delete "${selectedPerson.displayName}" and related links?`,
+      confirmText: "Delete",
+      variant: "danger",
+    });
     if (!confirmed) return;
 
     setIsSaving(true);
@@ -665,7 +672,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
     [treeId],
   );
 
-  const handleQuickAdd = async (e: React.FormEvent) => {
+  const handleQuickAdd = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (!treeId || !selectedPerson || !selectedAction) return;
     setIsSaving(true);
@@ -1017,13 +1024,13 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-lg border border-gray-950/5 bg-gray-950/[0.025] px-3 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+                <div className="rounded-lg border border-gray-950/5 bg-gray-950/2.5 px-3 py-3 dark:border-white/10 dark:bg-white/3">
                   <div className={`text-lg font-semibold ${headingClass}`}>{stats.people}</div>
                   <div className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     People
                   </div>
                 </div>
-                <div className="rounded-lg border border-gray-950/5 bg-gray-950/[0.025] px-3 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+                <div className="rounded-lg border border-gray-950/5 bg-gray-950/2.5 px-3 py-3 dark:border-white/10 dark:bg-white/3">
                   <div className={`text-lg font-semibold ${headingClass}`}>
                     {stats.relationships}
                   </div>
@@ -1031,7 +1038,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                     Links
                   </div>
                 </div>
-                <div className="rounded-lg border border-gray-950/5 bg-gray-950/[0.025] px-3 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+                <div className="rounded-lg border border-gray-950/5 bg-gray-950/2.5 px-3 py-3 dark:border-white/10 dark:bg-white/3">
                   <div className={`text-lg font-semibold ${headingClass}`}>{stats.living}</div>
                   <div className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     Living
@@ -1265,7 +1272,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                       {detail.relationships.map((relationship) => (
                         <div
                           key={relationship.id}
-                          className="rounded-lg border border-gray-950/5 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:border-sky-500/30 hover:bg-sky-500/10 dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-white/5"
+                          className="rounded-lg border border-gray-950/5 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:border-sky-500/30 hover:bg-sky-500/10 dark:border-white/10 dark:bg-white/3 dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-white/5"
                         >
                           {buildRelationshipSummary(relationship, peopleById)}
                         </div>
@@ -1275,7 +1282,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                 </div>
               </div>
 
-              <aside className="space-y-5 rounded-xl border border-gray-950/5 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03] xl:sticky xl:top-5">
+              <aside className="space-y-5 rounded-xl border border-gray-950/5 bg-white p-4 dark:border-white/10 dark:bg-white/3 xl:sticky xl:top-5">
                 {!selectedPerson ? (
                   <div className={emptyStateClass}>
                     Select a person from the chart to open the inspector.
@@ -1294,7 +1301,7 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-3 rounded-xl border border-gray-950/5 bg-gray-950/[0.025] p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                    <div className="flex items-center gap-3 rounded-xl border border-gray-950/5 bg-gray-950/2.5 p-3 dark:border-white/10 dark:bg-white/3">
                       {selectedPerson.photoUrl ? (
                         <img
                           src={selectedPerson.photoUrl}

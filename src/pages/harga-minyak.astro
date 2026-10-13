@@ -1,0 +1,388 @@
+---
+import Disclaimer from "../components/ui/Disclaimer.astro";
+export const prerender = false;
+import TechHeading from "../components/layout/TechHeading.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+import {
+  FUELS,
+  getFuelPrices,
+  linePath,
+  priceAxis,
+  weeklyChange,
+  type FuelKey,
+} from "../lib/harga-minyak";
+
+const data = await getFuelPrices();
+const weeks = data?.weeks ?? [];
+const now = weeks[0];
+
+const fmtDay = (ymd: string, opts: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat("ms-MY", { timeZone: "UTC", ...opts }).format(
+    new Date(`${ymd}T00:00:00Z`),
+  );
+// Each price is in effect for a week from its date (a Thursday).
+const until = now
+  ? new Date(Date.parse(`${now.date}T00:00:00Z`) + 6 * 86_400_000)
+      .toISOString()
+      .slice(0, 10)
+  : "";
+const period = now
+  ? `${fmtDay(now.date, { day: "numeric", month: "long" })} - ${fmtDay(until, { day: "numeric", month: "long", year: "numeric" })}`
+  : "";
+
+const rm = (n: number | null | undefined) =>
+  n == null ? "-" : `RM ${n.toFixed(2)}`;
+const cards = (keys: FuelKey[]) =>
+  FUELS.filter((f) => keys.includes(f.key) && now?.[f.key] != null).map(
+    (f) => ({
+      ...f,
+      price: now![f.key]!,
+      change: weeklyChange(weeks, f.key),
+    }),
+  );
+const main = cards(["ron95", "ron97", "diesel", "diesel_eastmsia"]);
+const subsidised = cards([
+  "ron95_budi95",
+  "ron95_skps",
+  "diesel_budi",
+  "diesel_skds",
+]);
+
+// Line chart of the loaded weeks, oldest on the left. Server-rendered SVG; the
+// table below is the data view. -600 steps pass the dataviz palette check on both
+// the light and the dark surface; RON97 is dashed as a second (non-colour) cue.
+const SERIES = [
+  { key: "ron95", label: "RON95", color: "#0284c7", dash: "" },
+  { key: "ron97", label: "RON97", color: "#059669", dash: "6 3" },
+  { key: "diesel", label: "Diesel (Semenanjung)", color: "#d97706", dash: "" },
+] as const;
+const oldestFirst = [...weeks].reverse();
+const chartValues = oldestFirst.flatMap((w) =>
+  SERIES.map((s) => w[s.key]).filter((v): v is number => v != null),
+);
+const W = 400,
+  H = 220,
+  L = 56,
+  R = 8,
+  T = 8,
+  B = 24; // viewBox + plot margins
+const axis = chartValues.length ? priceAxis(chartValues) : null;
+const px = (i: number) =>
+  L +
+  (oldestFirst.length > 1
+    ? (i * (W - L - R)) / (oldestFirst.length - 1)
+    : (W - L - R) / 2);
+const py = (v: number) =>
+  axis ? T + ((axis.max - v) * (H - T - B)) / (axis.max - axis.min) : 0;
+const chart = SERIES.map((s) => {
+  const points = oldestFirst.map((w, i) =>
+    w[s.key] == null ? null : ([px(i), py(w[s.key]!)] as [number, number]),
+  );
+  const known = oldestFirst.filter((w) => w[s.key] != null);
+  const [first, last] = [known[0]?.[s.key], known.at(-1)?.[s.key]];
+  const trend =
+    first == null || last == null
+      ? ""
+      : first === last
+        ? `kekal ${rm(last)}`
+        : `${rm(first)} ke ${rm(last)}`;
+  return { ...s, points, path: linePath(points), trend };
+}).filter((s) => s.trend);
+const chartDesc = `${oldestFirst.length} minggu dari ${oldestFirst[0] ? fmtDay(oldestFirst[0].date, { day: "numeric", month: "long", year: "numeric" }) : ""}: ${chart.map((s) => `${s.label} ${s.trend}`).join("; ")}.`;
+const historyCols = FUELS.filter((f) =>
+  ["ron95", "ron97", "diesel", "diesel_eastmsia", "ron95_budi95"].includes(
+    f.key,
+  ),
+);
+---
+
+<PublicLayout
+  title="Harga Minyak Minggu Ini (RON95, RON97, Diesel) | Hafiz Bahtiar"
+  description="Harga runcit minyak di Malaysia minggu ini - RON95, RON97, diesel Semenanjung dan Malaysia Timur, BUDI95 - dengan perubahan dari minggu lepas. Data rasmi data.gov.my."
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1
+        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Harga Minyak"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Harga runcit minyak di Malaysia minggu ini, seliter.
+      </p>
+    </div>
+    {
+      now && (
+        <div class="line-y mt-4">
+          <p class="mx-2 font-mono text-sm/6 tracking-widest text-gray-500 uppercase">
+            Berkuat kuasa {period}
+          </p>
+        </div>
+      )
+    }
+
+    {
+      now ? (
+        <>
+          {[
+            { title: "Harga utama", items: main },
+            { title: "Harga bersubsidi", items: subsidised },
+          ]
+            .filter((g) => g.items.length)
+            .map((g) => (
+              <>
+                <div class="line-y mt-10">
+                  <p class="eyebrow mx-2">{g.title}</p>
+                </div>
+                <div class="line-y mt-4">
+                  <dl class="grid grid-cols-2 gap-px bg-gray-950/5 sm:grid-cols-4 dark:bg-white/10">
+                    {g.items.map((f) => (
+                      <div class="bg-white px-4 py-6 sm:px-6 dark:bg-gray-950">
+                        <dt class="sm:min-h-10">
+                          <span class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+                            {f.label}
+                          </span>
+                          {f.note && (
+                            <span class="block text-xs/5 text-gray-500 dark:text-gray-400">
+                              {f.note}
+                            </span>
+                          )}
+                        </dt>
+                        <dd class="mt-2 text-4xl font-medium tracking-tighter tabular-nums">
+                          {rm(f.price)}
+                        </dd>
+                        <dd
+                          class:list={[
+                            "mt-2 text-xs/5 font-medium tabular-nums",
+                            f.change == null || f.change === 0
+                              ? "text-gray-500 dark:text-gray-400"
+                              : f.change > 0
+                                ? "text-red-600 dark:text-red-400"
+                                : "text-emerald-600 dark:text-emerald-400",
+                          ]}
+                        >
+                          {f.change == null
+                            ? ""
+                            : f.change === 0
+                              ? "Tiada perubahan"
+                              : `${f.change > 0 ? "▲ naik" : "▼ turun"} ${rm(Math.abs(f.change))}`}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              </>
+            ))}
+
+          {axis && chart.length > 0 && (
+            <>
+              <div class="line-y mt-10">
+                <p class="eyebrow mx-2">Trend {oldestFirst.length} minggu</p>
+              </div>
+              <div class="line-y mt-4">
+                <div class="mx-2">
+                  <ul class="flex flex-wrap gap-x-5 gap-y-1 text-xs/5 text-gray-600 dark:text-gray-400">
+                    {chart.map((s) => (
+                      <li class="flex items-center gap-2">
+                        <svg width="20" height="6" aria-hidden="true">
+                          <line
+                            x1="1"
+                            y1="3"
+                            x2="19"
+                            y2="3"
+                            stroke={s.color}
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-dasharray={s.dash || undefined}
+                          />
+                        </svg>
+                        {s.label}
+                      </li>
+                    ))}
+                  </ul>
+                  <svg
+                    viewBox={`0 0 ${W} ${H}`}
+                    class="mt-3 h-auto w-full max-w-2xl text-gray-500 dark:text-gray-400"
+                    role="img"
+                    aria-labelledby="fuel-chart-title fuel-chart-desc"
+                  >
+                    <title id="fuel-chart-title">
+                      Harga minyak seliter, {oldestFirst.length} minggu (RM)
+                    </title>
+                    <desc id="fuel-chart-desc">{chartDesc}</desc>
+                    {axis.ticks.map((t) => (
+                      <g>
+                        <line
+                          x1={L}
+                          x2={W - R}
+                          y1={py(t)}
+                          y2={py(t)}
+                          class="stroke-gray-950/5 dark:stroke-white/10"
+                        />
+                        <text
+                          x={L - 6}
+                          y={py(t)}
+                          dy="0.32em"
+                          text-anchor="end"
+                          font-size="12"
+                          fill="currentColor"
+                          class="tabular-nums"
+                        >
+                          RM {t.toFixed(2)}
+                        </text>
+                      </g>
+                    ))}
+                    {oldestFirst.map((w, i) =>
+                      (oldestFirst.length - 1 - i) % 3 === 0 ? (
+                        <text
+                          x={px(i)}
+                          y={H - 6}
+                          text-anchor={
+                            i === 0
+                              ? "start"
+                              : i === oldestFirst.length - 1
+                                ? "end"
+                                : "middle"
+                          }
+                          font-size="12"
+                          fill="currentColor"
+                        >
+                          {fmtDay(w.date, { day: "numeric", month: "short" })}
+                        </text>
+                      ) : null,
+                    )}
+                    {chart.map((s) => (
+                      <g>
+                        <path
+                          d={s.path}
+                          fill="none"
+                          stroke={s.color}
+                          stroke-width="2"
+                          stroke-linejoin="round"
+                          stroke-linecap="round"
+                          stroke-dasharray={s.dash || undefined}
+                        />
+                        {s.points.map((p, i) =>
+                          p ? (
+                            <circle
+                              cx={p[0]}
+                              cy={p[1]}
+                              r="6"
+                              fill="transparent"
+                            >
+                              <title>{`${s.label}, ${fmtDay(oldestFirst[i].date, { day: "numeric", month: "short", year: "numeric" })}: ${rm(oldestFirst[i][s.key])}`}</title>
+                            </circle>
+                          ) : null,
+                        )}
+                      </g>
+                    ))}
+                  </svg>
+                  <p class="mt-2 text-xs/5 text-gray-500 dark:text-gray-400">
+                    Harga seliter. Butiran setiap minggu dalam jadual di bawah.
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
+          <div class="line-y mt-10">
+            <p class="eyebrow mx-2">12 minggu lepas</p>
+          </div>
+          <div class="line-y mt-4 overflow-x-auto">
+            <table class="w-full min-w-xl text-left text-sm/6 tabular-nums">
+              <thead class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+                <tr class="border-b border-gray-950/5 dark:border-white/10">
+                  <th class="px-2 py-2 font-medium">Berkuat kuasa</th>
+                  {historyCols.map((f) => (
+                    <th class="px-2 py-2 text-right font-medium">
+                      {f.label}
+                      {f.key === "diesel_eastmsia" && " (M. Timur)"}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {weeks.map((w, i) => (
+                  <tr
+                    class:list={[
+                      "border-b border-gray-950/5 dark:border-white/10",
+                      i === 0 && "bg-sky-500/5 font-medium dark:bg-sky-400/10",
+                    ]}
+                  >
+                    <td class="px-2 py-1.5 whitespace-nowrap">
+                      {fmtDay(w.date, {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </td>
+                    {historyCols.map((f) => (
+                      <td class="px-2 py-1.5 text-right">
+                        {w[f.key] == null ? "-" : w[f.key]!.toFixed(2)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div class="line-y mt-4">
+            <p class="mx-2 text-xs/5 text-gray-500 dark:text-gray-400">
+              Harga seliter dalam RM. Sumber:{" "}
+              <a
+                href="https://data.gov.my/data-catalogue/fuelprice"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+              >
+                {data!.source}
+              </a>
+              {data!.stale &&
+                " (data simpanan - sumber tak dapat dicapai sekarang)"}
+              .
+            </p>
+          </div>
+        </>
+      ) : (
+        <div class="line-y mt-10">
+          <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+            Harga minyak tak dapat diambil dari data.gov.my sekarang. Cuba lagi
+            sebentar, atau semak terus di{" "}
+            <a
+              href="https://data.gov.my/data-catalogue/fuelprice"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-sky-600 hover:underline dark:text-sky-400"
+            >
+              data.gov.my
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
+    <div class="line-y mt-6">
+      <Disclaimer
+        class="mx-2"
+        sources={[
+          {
+            name: "data.gov.my",
+            href: "https://data.gov.my/data-catalogue/fuelprice",
+          },
+        ]}
+      >
+        <Fragment
+          set:html={`Rujuk pengumuman rasmi kerajaan untuk harga terkini dan syarat kelayakan harga bersubsidi (BUDI95, SKPS, SKDS).`}
+        />
+      </Disclaimer>
+    </div>
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>

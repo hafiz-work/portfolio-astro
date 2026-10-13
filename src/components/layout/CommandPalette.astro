@@ -1,5 +1,6 @@
 ---
 import { Search } from "lucide-react";
+import { RESUME_URL } from "../../lib/constants";
 /**
  * ⌘K / Ctrl+K quick search (tailwindcss.com's navbar search pill).
  * Static index of pages, homepage sections and actions - no API calls, so
@@ -17,17 +18,91 @@ type Item = {
 
 const items: Item[] = [
   { group: "Pages", label: "Home", hint: "/", href: "/" },
-  { group: "Pages", label: "Projects", hint: "/projects", href: "/projects", keywords: "work portfolio case study" },
-  { group: "Pages", label: "Blog", hint: "/blog", href: "/blog", keywords: "notes writing posts" },
-  { group: "Sections", label: "About", hint: "/#about", href: "/#about", keywords: "hero intro" },
-  { group: "Sections", label: "GitHub activity", hint: "/#about", href: "/#about", keywords: "contributions" },
-  { group: "Sections", label: "Stack", hint: "/#skills", href: "/#skills", keywords: "skills tech tools backend mobile" },
-  { group: "Sections", label: "Experience", hint: "/#experience", href: "/#experience", keywords: "jobs career map timeline" },
-  { group: "Sections", label: "Contact", hint: "/#contact", href: "/#contact", keywords: "hire email message form" },
-  { group: "Actions", label: "Copy email address", hint: "hafiz@hafizbahtiar.com", action: "copy-email", keywords: "mail" },
-  { group: "Actions", label: "Download resume", hint: "PDF", href: "/docs/hafizbahtiar-resume-4-3.pdf", keywords: "cv" },
-  { group: "Actions", label: "GitHub", hint: "github.com/hafizbahtiar", href: "https://github.com/hafizbahtiar", external: true, keywords: "code" },
-  { group: "Actions", label: "LinkedIn", hint: "linkedin.com/in/hafizbahtiar", href: "https://www.linkedin.com/in/hafizbahtiar/", external: true },
+  {
+    group: "Pages",
+    label: "Projects",
+    hint: "/projects",
+    href: "/projects",
+    keywords: "work portfolio case study",
+  },
+  {
+    group: "Pages",
+    label: "Blog",
+    hint: "/blog",
+    href: "/blog",
+    keywords: "notes writing posts",
+  },
+  {
+    group: "Pages",
+    label: "Quotes",
+    hint: "/quotes",
+    href: "/quotes",
+    keywords: "quotes sayings anime books history",
+  },
+  {
+    group: "Sections",
+    label: "About",
+    hint: "/#about",
+    href: "/#about",
+    keywords: "hero intro",
+  },
+  {
+    group: "Sections",
+    label: "GitHub activity",
+    hint: "/#about",
+    href: "/#about",
+    keywords: "contributions",
+  },
+  {
+    group: "Sections",
+    label: "Stack",
+    hint: "/#skills",
+    href: "/#skills",
+    keywords: "skills tech tools backend mobile",
+  },
+  {
+    group: "Sections",
+    label: "Experience",
+    hint: "/#experience",
+    href: "/#experience",
+    keywords: "jobs career map timeline",
+  },
+  {
+    group: "Sections",
+    label: "Contact",
+    hint: "/#contact",
+    href: "/#contact",
+    keywords: "hire email message form",
+  },
+  {
+    group: "Actions",
+    label: "Copy email address",
+    hint: "hafiz@hafizbahtiar.com",
+    action: "copy-email",
+    keywords: "mail",
+  },
+  {
+    group: "Actions",
+    label: "Download resume",
+    hint: "PDF",
+    href: RESUME_URL,
+    keywords: "cv",
+  },
+  {
+    group: "Actions",
+    label: "GitHub",
+    hint: "github.com/hafizbahtiar",
+    href: "https://github.com/hafizbahtiar",
+    external: true,
+    keywords: "code",
+  },
+  {
+    group: "Actions",
+    label: "LinkedIn",
+    hint: "linkedin.com/in/hafizbahtiar",
+    href: "https://www.linkedin.com/in/hafizbahtiar/",
+    external: true,
+  },
 ];
 const groups = ["Pages", "Sections", "Actions"] as const;
 ---
@@ -37,11 +112,16 @@ const groups = ["Pages", "Sections", "Actions"] as const;
   aria-label="Quick search"
   class="m-0 h-full max-h-none w-full max-w-none bg-transparent p-0 backdrop:bg-gray-950/25 backdrop:backdrop-blur-[2px] dark:backdrop:bg-black/50"
 >
-  <div class="flex h-full items-start justify-center px-4 pt-[12vh]" data-cmdk-backdrop>
+  <div
+    class="flex h-full items-start justify-center px-4 pt-[12vh]"
+    data-cmdk-backdrop
+  >
     <div
       class="w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-gray-950/10 dark:bg-gray-900 dark:ring-white/10"
     >
-      <div class="flex items-center gap-3 border-b border-gray-950/5 px-4 dark:border-white/10">
+      <div
+        class="flex items-center gap-3 border-b border-gray-950/5 px-4 dark:border-white/10"
+      >
         <Search className="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
         <input
           id="cmdk-input"
@@ -54,10 +134,17 @@ const groups = ["Pages", "Sections", "Actions"] as const;
           aria-controls="cmdk-list"
           class="h-14 flex-1 bg-transparent text-base/6 text-gray-950 outline-none placeholder:text-gray-400 dark:text-white"
         />
-        <kbd class="rounded-md px-1.5 font-sans text-xs/5 text-gray-500 ring-1 ring-gray-950/10 dark:text-gray-400 dark:ring-white/15">Esc</kbd>
+        <kbd
+          class="rounded-md px-1.5 font-sans text-xs/5 text-gray-500 ring-1 ring-gray-950/10 dark:text-gray-400 dark:ring-white/15"
+          >Esc</kbd
+        >
       </div>
 
-      <ul id="cmdk-list" role="listbox" class="max-h-[min(60vh,26rem)] overflow-y-auto p-2">
+      <ul
+        id="cmdk-list"
+        role="listbox"
+        class="max-h-[min(60vh,26rem)] overflow-y-auto p-2"
+      >
         {
           groups.map((group) => (
             <li role="presentation" data-cmdk-group={group}>
@@ -80,7 +167,9 @@ const groups = ["Pages", "Sections", "Actions"] as const;
                       class="flex cursor-pointer items-center justify-between gap-4 rounded-lg px-3 py-2 text-sm/6 text-gray-950 aria-selected:bg-gray-950/5 dark:text-white dark:aria-selected:bg-white/10"
                     >
                       <span data-cmdk-label>{item.label}</span>
-                      <span class="truncate font-mono text-xs text-gray-500">{item.hint}</span>
+                      <span class="truncate font-mono text-xs text-gray-500">
+                        {item.hint}
+                      </span>
                     </li>
                   ))}
               </ul>
@@ -88,7 +177,12 @@ const groups = ["Pages", "Sections", "Actions"] as const;
           ))
         }
       </ul>
-      <p id="cmdk-empty" class="hidden px-4 py-10 text-center text-sm text-gray-500">No results.</p>
+      <p
+        id="cmdk-empty"
+        class="hidden px-4 py-10 text-center text-sm text-gray-500"
+      >
+        No results.
+      </p>
     </div>
   </div>
 </dialog>
@@ -98,7 +192,9 @@ const groups = ["Pages", "Sections", "Actions"] as const;
 
   const initCommandPalette = () => {
     const dialog = document.getElementById("cmdk") as HTMLDialogElement | null;
-    const input = document.getElementById("cmdk-input") as HTMLInputElement | null;
+    const input = document.getElementById(
+      "cmdk-input",
+    ) as HTMLInputElement | null;
     const empty = document.getElementById("cmdk-empty");
     if (!dialog || !input) return;
 
@@ -108,12 +204,16 @@ const groups = ["Pages", "Sections", "Actions"] as const;
     (window as any).__cmdkController = controller;
     const { signal } = controller;
 
-    const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+    const isMac = /Mac|iPhone|iPad/.test(
+      navigator.platform || navigator.userAgent,
+    );
     document.querySelectorAll("[data-cmdk-kbd]").forEach((k) => {
       k.textContent = isMac ? "⌘K" : "Ctrl K";
     });
 
-    const allItems = Array.from(dialog.querySelectorAll<HTMLElement>("[data-cmdk-item]"));
+    const allItems = Array.from(
+      dialog.querySelectorAll<HTMLElement>("[data-cmdk-item]"),
+    );
     let visible: HTMLElement[] = allItems;
     let active = 0;
 
@@ -130,7 +230,8 @@ const groups = ["Pages", "Sections", "Actions"] as const;
     const filter = () => {
       const q = input.value.trim().toLowerCase();
       visible = allItems.filter((el) => {
-        const match = !q || q.split(/\s+/).every((w) => el.dataset.search!.includes(w));
+        const match =
+          !q || q.split(/\s+/).every((w) => el.dataset.search!.includes(w));
         el.hidden = !match;
         return match;
       });
@@ -169,15 +270,17 @@ const groups = ["Pages", "Sections", "Actions"] as const;
       if (external) {
         window.open(href, "_blank", "noopener,noreferrer");
       } else if (href.startsWith("/#") && window.location.pathname === "/") {
-        document.querySelector(href.slice(1))?.scrollIntoView({ behavior: "smooth" });
+        document
+          .querySelector(href.slice(1))
+          ?.scrollIntoView({ behavior: "smooth" });
       } else {
         window.location.href = href;
       }
     };
 
-    document.querySelectorAll("[data-cmdk-open]").forEach((btn) =>
-      btn.addEventListener("click", open, { signal }),
-    );
+    document
+      .querySelectorAll("[data-cmdk-open]")
+      .forEach((btn) => btn.addEventListener("click", open, { signal }));
 
     document.addEventListener(
       "keydown",
@@ -209,7 +312,9 @@ const groups = ["Pages", "Sections", "Actions"] as const;
     );
 
     allItems.forEach((el) => {
-      el.addEventListener("mousemove", () => highlight(visible.indexOf(el)), { signal });
+      el.addEventListener("mousemove", () => highlight(visible.indexOf(el)), {
+        signal,
+      });
       el.addEventListener("click", () => run(el), { signal });
     });
 
@@ -217,7 +322,11 @@ const groups = ["Pages", "Sections", "Actions"] as const;
     dialog.addEventListener(
       "click",
       (e) => {
-        if ((e.target as HTMLElement).hasAttribute("data-cmdk-backdrop") || e.target === dialog) close();
+        if (
+          (e.target as HTMLElement).hasAttribute("data-cmdk-backdrop") ||
+          e.target === dialog
+        )
+          close();
       },
       { signal },
     );

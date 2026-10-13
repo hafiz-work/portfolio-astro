@@ -2,7 +2,6 @@
 import { Plus } from "lucide-react";
 import PrivateLayout from "../../../layouts/PrivateLayout.astro";
 import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
-import AlertToast from "../../../components/ui/AlertToast.astro";
 import { ProjectsCmsTable } from "../../../components/admin/projects/ProjectsCmsTable";
 ---
 
@@ -24,5 +23,4 @@ import { ProjectsCmsTable } from "../../../components/admin/projects/ProjectsCms
 
     <ProjectsCmsTable client:load />
   </div>
-  <AlertToast id="admin-alert" />
 </PrivateLayout>

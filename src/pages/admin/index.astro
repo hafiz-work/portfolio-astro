@@ -29,7 +29,7 @@ const cardClass = "admin-card";
   >
     <a
       href="/admin/projects"
-      class={`${cardClass} block hover:bg-gray-950/[0.025] dark:hover:bg-white/5 transition-colors group`}
+      class={`${cardClass} block hover:bg-gray-950/2.5 dark:hover:bg-white/5 transition-colors group`}
     >
       <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">
         Projects
@@ -42,7 +42,7 @@ const cardClass = "admin-card";
         >
         <span
           id="kpi-projects-sub"
-          class="text-xs px-2 py-1 rounded-full bg-gray-950/[0.03] dark:bg-white/[0.03] text-sky-600 dark:text-sky-400"
+          class="text-xs px-2 py-1 rounded-full bg-gray-950/3 dark:bg-white/3 text-sky-600 dark:text-sky-400"
           >-</span
         >
       </div>
@@ -50,7 +50,7 @@ const cardClass = "admin-card";
 
     <a
       href="/admin/contact"
-      class={`${cardClass} block hover:bg-gray-950/[0.025] dark:hover:bg-white/5 transition-colors group`}
+      class={`${cardClass} block hover:bg-gray-950/2.5 dark:hover:bg-white/5 transition-colors group`}
     >
       <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">
         Messages
@@ -63,7 +63,7 @@ const cardClass = "admin-card";
         >
         <span
           id="kpi-messages-sub"
-          class="text-xs px-2 py-1 rounded-full bg-gray-950/[0.03] dark:bg-white/[0.03] text-yellow-700 dark:text-yellow-400"
+          class="text-xs px-2 py-1 rounded-full bg-gray-950/3 dark:bg-white/3 text-yellow-700 dark:text-yellow-400"
           >-</span
         >
       </div>
@@ -71,7 +71,7 @@ const cardClass = "admin-card";
 
     <a
       href="/admin/blog"
-      class={`${cardClass} block hover:bg-gray-950/[0.025] dark:hover:bg-white/5 transition-colors group`}
+      class={`${cardClass} block hover:bg-gray-950/2.5 dark:hover:bg-white/5 transition-colors group`}
     >
       <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">
         Blog Posts
@@ -83,7 +83,7 @@ const cardClass = "admin-card";
           >-</span
         >
         <span
-          class="text-xs px-2 py-1 rounded-full bg-gray-950/[0.03] dark:bg-white/[0.03] text-emerald-600 dark:text-emerald-400"
+          class="text-xs px-2 py-1 rounded-full bg-gray-950/3 dark:bg-white/3 text-emerald-600 dark:text-emerald-400"
           >total</span
         >
       </div>
@@ -91,7 +91,7 @@ const cardClass = "admin-card";
 
     <a
       href="/admin/experiences"
-      class={`${cardClass} block hover:bg-gray-950/[0.025] dark:hover:bg-white/5 transition-colors group`}
+      class={`${cardClass} block hover:bg-gray-950/2.5 dark:hover:bg-white/5 transition-colors group`}
     >
       <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">
         Experiences
@@ -103,7 +103,7 @@ const cardClass = "admin-card";
           >-</span
         >
         <span
-          class="text-xs px-2 py-1 rounded-full bg-gray-950/[0.03] dark:bg-white/[0.03] text-purple-500 dark:text-purple-400"
+          class="text-xs px-2 py-1 rounded-full bg-gray-950/3 dark:bg-white/3 text-purple-500 dark:text-purple-400"
           >total</span
         >
       </div>
@@ -120,7 +120,7 @@ const cardClass = "admin-card";
           >-</span
         >
         <span
-          class="text-xs px-2 py-1 rounded-full bg-gray-950/[0.03] dark:bg-white/[0.03] text-sky-600 dark:text-sky-400"
+          class="text-xs px-2 py-1 rounded-full bg-gray-950/3 dark:bg-white/3 text-sky-600 dark:text-sky-400"
           >downloads</span
         >
       </div>
@@ -281,7 +281,7 @@ const cardClass = "admin-card";
       const a = document.createElement("a");
       a.href = `/admin/projects`;
       a.className =
-        "flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 -mx-2 hover:bg-gray-950/[0.025] dark:hover:bg-white/10 transition-colors";
+        "flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 -mx-2 hover:bg-gray-950/2.5 dark:hover:bg-white/10 transition-colors";
       const title = document.createElement("span");
       title.className = "text-sm text-gray-700 dark:text-gray-200 truncate";
       title.textContent = p.title;
@@ -310,7 +310,7 @@ const cardClass = "admin-card";
       const a = document.createElement("a");
       a.href = `/admin/contact`;
       a.className =
-        "block rounded-lg px-2 py-1.5 -mx-2 hover:bg-gray-950/[0.025] dark:hover:bg-white/10 transition-colors";
+        "block rounded-lg px-2 py-1.5 -mx-2 hover:bg-gray-950/2.5 dark:hover:bg-white/10 transition-colors";
 
       const top = document.createElement("div");
       top.className = "flex items-center justify-between gap-3";
@@ -406,7 +406,11 @@ const cardClass = "admin-card";
 
       const meta = document.createElement("div");
       meta.className = "text-xs text-gray-500 dark:text-gray-400 truncate";
-      meta.textContent = [countryFlag(d.country), shortDevice(d.userAgent), d.source]
+      meta.textContent = [
+        countryFlag(d.country),
+        shortDevice(d.userAgent),
+        d.source,
+      ]
         .filter(Boolean)
         .join(" · ");
 

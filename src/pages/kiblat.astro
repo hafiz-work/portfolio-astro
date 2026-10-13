@@ -1,0 +1,398 @@
+---
+import Disclaimer from "../components/ui/Disclaimer.astro";
+export const prerender = true;
+import KiblatMap from "../components/kiblat/KiblatMap";
+import Alert from "../components/ui/Alert.astro";
+import TechHeading from "../components/layout/TechHeading.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+
+// No server data: location, bearing and compass all run on the device
+// (src/lib/kiblat.ts in the script below). Nothing is sent anywhere.
+---
+
+<PublicLayout
+  title="Kompas Kiblat - Arah Kiblat dari Lokasi Anda | Hafiz Bahtiar"
+  description="Cari arah kiblat dari lokasi anda dengan kompas telefon. Bearing dan jarak ke Kaabah dikira terus di peranti anda."
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <div class="line-y">
+      <h1
+        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Kompas Kiblat"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Arah kiblat dari lokasi anda, dengan kompas telefon.
+      </p>
+    </div>
+
+    <div class="line-y mt-6">
+      <Alert variant="info" title="Sebelum mula" class="mx-2">
+        <ul>
+          <li><strong>Hidupkan Lokasi (GPS)</strong> pada telefon anda.</li>
+          <li>
+            Tekan <strong>Cari arah kiblat</strong>, kemudian pilih <strong
+              >Benarkan</strong
+            > bila pelayar meminta lokasi. "Benarkan sekali" (Allow once) pun cukup
+            - lokasi hanya dibaca <strong>sekali</strong>, tidak dijejak dan
+            tidak dihantar ke mana-mana.
+          </li>
+          <li>
+            Di iPhone, benarkan juga <strong>Gerakan &amp; Orientasi</strong> (Motion
+            &amp; Orientation) supaya kompas berfungsi.
+          </li>
+          <li>Pegang telefon rata, jauh dari besi atau magnet.</li>
+        </ul>
+      </Alert>
+    </div>
+
+    <div class="line-y mt-10">
+      <div
+        id="kiblat"
+        data-state="idle"
+        class="mx-2 grid place-items-center gap-6 py-6"
+      >
+        <!-- Dial: turns with the phone so N stays north; the Kaabah mark sits at the
+             qibla bearing. The fixed notch at the top is where the phone points. -->
+        <div class="relative size-72 sm:size-80">
+          <span
+            class="absolute -top-3 left-1/2 z-10 size-0 -translate-x-1/2 border-x-8 border-t-12 border-x-transparent border-t-gray-950 dark:border-t-white"
+            aria-hidden="true"></span>
+          <div
+            id="kiblat-dial"
+            class="relative size-full rounded-full bg-white ring-1 ring-gray-950/10 transition-transform duration-200 ease-out motion-reduce:transition-none dark:bg-gray-950 dark:ring-white/10"
+            aria-hidden="true"
+          >
+            {
+              Array.from({ length: 72 }, (_, i) => (
+                <span
+                  class="absolute top-0 left-1/2 h-1/2 w-px origin-bottom"
+                  style={`transform: translateX(-50%) rotate(${i * 5}deg)`}
+                >
+                  <span
+                    class:list={[
+                      "block w-px bg-gray-950/20 dark:bg-white/25",
+                      i % 6 === 0
+                        ? "h-4 bg-gray-950/40 dark:bg-white/50"
+                        : "h-2",
+                    ]}
+                  />
+                </span>
+              ))
+            }
+            {
+              [
+                ["U", 0],
+                ["T", 90],
+                ["S", 180],
+                ["B", 270],
+              ].map(([l, d]) => (
+                <span
+                  class="absolute inset-0"
+                  style={`transform: rotate(${d}deg)`}
+                >
+                  <span
+                    class:list={[
+                      "absolute top-6 left-1/2 -translate-x-1/2 font-mono text-sm font-semibold",
+                      l === "U"
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-gray-500",
+                    ]}
+                  >
+                    {l}
+                  </span>
+                </span>
+              ))
+            }
+            <span
+              id="kiblat-mark"
+              class="absolute inset-0 hidden data-show:block"
+            >
+              <span
+                class="absolute top-1/2 left-1/2 h-[42%] w-1 -translate-x-1/2 -translate-y-full rounded-full bg-sky-500"
+              ></span>
+              <span
+                class="absolute top-[8%] left-1/2 flex size-9 -translate-x-1/2 items-center justify-center rounded-lg bg-gray-950 text-xs font-semibold text-white ring-2 ring-sky-500 dark:bg-white dark:text-gray-950"
+                >🕋</span
+              >
+            </span>
+            <span
+              class="absolute top-1/2 left-1/2 size-3 -translate-1/2 rounded-full bg-gray-950 dark:bg-white"
+            ></span>
+          </div>
+        </div>
+
+        <div class="text-center">
+          <p
+            id="kiblat-bearing"
+            class="text-4xl font-medium tracking-tighter tabular-nums"
+          >
+            --° --′
+          </p>
+          <p
+            id="kiblat-status"
+            class="mt-2 max-w-md text-sm/6 text-gray-600 dark:text-gray-400"
+            aria-live="polite"
+          >
+            Tekan butang di bawah. Lokasi dan kompas digunakan dalam telefon
+            anda sahaja.
+          </p>
+        </div>
+        <button
+          type="button"
+          id="kiblat-start"
+          class="btn-pill btn-pill-primary">Cari arah kiblat</button
+        >
+      </div>
+    </div>
+
+    <!-- Shown by the script for the matching location error (or a denied permission). -->
+    <div class="line-y mt-4 hidden" id="kiblat-help">
+      <div data-help="denied" hidden class="mx-2">
+        <Alert variant="warning" title="Lokasi disekat untuk laman ini">
+          <p>
+            Benarkan lokasi untuk hafizbahtiar.com, kemudian muat semula
+            halaman:
+          </p>
+          <ul>
+            <li>
+              <strong>iPhone (Safari):</strong> tekan <strong>aA</strong> di bar alamat
+              → Tetapan Laman Web → Lokasi → Benarkan. Atau Tetapan → Privasi &amp;
+              Keselamatan → Perkhidmatan Lokasi → Laman Web Safari → Semasa Menggunakan
+              Apl.
+            </li>
+            <li>
+              <strong>Android (Chrome):</strong> tekan ikon tetapan di sebelah alamat
+              → Kebenaran → Lokasi → Benarkan.
+            </li>
+            <li>
+              <strong>Komputer:</strong> klik ikon di sebelah alamat laman → Lokasi
+              → Benarkan.
+            </li>
+          </ul>
+          <p>
+            Tanpa lokasi, arah kiblat ikut zon JAKIM masih ada di <a
+              href="/waktu-solat">Waktu Solat</a
+            >.
+          </p>
+        </Alert>
+      </div>
+      <div data-help="off" hidden class="mx-2">
+        <Alert variant="warning" title="Lokasi tak dapat dikesan">
+          <ul>
+            <li>
+              <strong>iPhone:</strong> Tetapan → Privasi &amp; Keselamatan → Perkhidmatan
+              Lokasi → hidupkan.
+            </li>
+            <li>
+              <strong>Android:</strong> leret dari atas skrin → hidupkan <strong
+                >Lokasi</strong
+              >.
+            </li>
+            <li>
+              Di dalam bangunan, cuba dekat tingkap, kemudian tekan <strong
+                >Cari arah kiblat</strong
+              > sekali lagi.
+            </li>
+          </ul>
+        </Alert>
+      </div>
+    </div>
+
+    <!-- Great-circle line to the Kaabah: appears after "Cari arah kiblat" finds the
+         location - for where the phone compass is unreliable. -->
+    <div class="line-y mt-4 has-[astro-island:empty]:hidden">
+      <KiblatMap client:only="react" />
+    </div>
+
+    <div class="line-y mt-4">
+      <p class="mx-2 max-w-3xl text-xs/5 text-gray-500 dark:text-gray-400">
+        Pegang telefon rata dan jauh dari besi atau magnet, kemudian pusing
+        badan sehingga 🕋 berada di anak panah atas. Kompas telefon boleh
+        tersasar beberapa darjah - gerakkan telefon dalam bentuk angka 8 untuk
+        kalibrasi. Bearing dikira dari arah utara benar (great-circle ke
+        Kaabah); arah rasmi bagi setiap zon ada di <a
+          href="/waktu-solat"
+          class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+          >Waktu Solat</a
+        >.
+      </p>
+    </div>
+    <div class="line-y mt-6">
+      <Disclaimer class="mx-2" sources={[]}>
+        <Fragment
+          set:html={`Arah kiblat ialah <strong>anggaran</strong> berdasarkan GPS dan kompas telefon, yang boleh tersasar. Untuk pembinaan atau pengukuran masjid dan surau, rujuk pihak berkuasa agama negeri.`}
+        />
+      </Disclaimer>
+    </div>
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>
+
+<script>
+  import { formatBearing, qiblaBearing, qiblaDistanceKm } from "../lib/kiblat";
+
+  type OrientEvent = DeviceOrientationEvent & { webkitCompassHeading?: number };
+  type PermissionApi = {
+    requestPermission?: () => Promise<"granted" | "denied">;
+  };
+
+  let stop: (() => void) | null = null;
+
+  const init = () => {
+    stop?.();
+    stop = null;
+    const root = document.getElementById("kiblat");
+    const btn = document.getElementById(
+      "kiblat-start",
+    ) as HTMLButtonElement | null;
+    if (!root || !btn || btn.dataset.bound === "1") return;
+    btn.dataset.bound = "1";
+    const dial = document.getElementById("kiblat-dial")!;
+    const mark = document.getElementById("kiblat-mark")!;
+    const bearingEl = document.getElementById("kiblat-bearing")!;
+    const status = document.getElementById("kiblat-status")!;
+    let qibla = 0;
+    let place = "";
+    let gotHeading = false;
+    let shown = 0; // unwrapped dial angle, so 359° -> 1° turns 2°, not 358°
+
+    const onHeading = (heading: number) => {
+      gotHeading = true;
+      const target = -heading;
+      shown += ((((target - shown) % 360) + 540) % 360) - 180;
+      dial.style.transform = `rotate(${shown}deg)`;
+      const off = ((((qibla - heading) % 360) + 540) % 360) - 180;
+      const aligned = Math.abs(off) <= 3;
+      root.toggleAttribute("data-aligned", aligned);
+      status.textContent = aligned
+        ? "Anda menghadap kiblat."
+        : `Pusing ${Math.round(Math.abs(off))}° ke ${off > 0 ? "kanan" : "kiri"}. ${place}`;
+    };
+
+    const onOrient = (e: Event) => {
+      const o = e as OrientEvent;
+      const screenAngle = screen.orientation?.angle ?? 0;
+      // iOS gives a compass heading; others give alpha (counter-clockwise) on the absolute event.
+      const heading =
+        typeof o.webkitCompassHeading === "number"
+          ? o.webkitCompassHeading
+          : (e.type === "deviceorientationabsolute" || o.absolute) &&
+              o.alpha != null
+            ? 360 - o.alpha
+            : null;
+      if (heading != null) onHeading((heading + screenAngle) % 360);
+    };
+
+    const startCompass = async () => {
+      const api = DeviceOrientationEvent as unknown as PermissionApi;
+      if (typeof api?.requestPermission === "function") {
+        // iOS: must be asked from the tap itself.
+        if ((await api.requestPermission().catch(() => "denied")) !== "granted")
+          return false;
+      }
+      // Both: Chrome Android heads the absolute one; iOS/Firefox use the plain one.
+      window.addEventListener("deviceorientationabsolute", onOrient);
+      window.addEventListener("deviceorientation", onOrient);
+      stop = () => {
+        window.removeEventListener("deviceorientationabsolute", onOrient);
+        window.removeEventListener("deviceorientation", onOrient);
+      };
+      return true;
+    };
+
+    // Location help: "denied" (permission) or "off" (no fix / GPS off).
+    const help = document.getElementById("kiblat-help")!;
+    const showHelp = (which: "denied" | "off" | null) => {
+      help
+        .querySelectorAll<HTMLElement>("[data-help]")
+        .forEach((h) => (h.hidden = h.dataset.help !== which));
+      help.classList.toggle("hidden", !which);
+    };
+    // Already blocked from an earlier visit: say so before the tap.
+    navigator.permissions
+      ?.query({ name: "geolocation" })
+      .then((p) => {
+        if (p.state === "denied") {
+          status.textContent =
+            "Lokasi disekat untuk laman ini - lihat cara membenarkannya di bawah.";
+          showHelp("denied");
+        }
+      })
+      .catch(() => {});
+
+    btn.addEventListener("click", async () => {
+      showHelp(null);
+      if (!("geolocation" in navigator))
+        return void (status.textContent = "Peranti ini tak menyokong lokasi.");
+      btn.disabled = true;
+      status.textContent = "Mencari lokasi…";
+      // Start the compass inside the tap (iOS permission), then wait for GPS.
+      const compass =
+        typeof DeviceOrientationEvent !== "undefined"
+          ? await startCompass()
+          : false;
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => {
+          qibla = qiblaBearing(coords.latitude, coords.longitude);
+          const km = Math.round(
+            qiblaDistanceKm(coords.latitude, coords.longitude),
+          ).toLocaleString("ms-MY");
+          place = `Kaabah ${km} km dari sini.`;
+          window.dispatchEvent(
+            new CustomEvent("kiblat:lokasi", {
+              detail: { lat: coords.latitude, lng: coords.longitude },
+            }),
+          );
+          const noCompass = () =>
+            `${place} Kompas tiada pada peranti ini - arah ditunjuk dari utara (U) di atas.`;
+          bearingEl.textContent = formatBearing(qibla);
+          mark.style.transform = `rotate(${qibla}deg)`;
+          mark.toggleAttribute("data-show", true);
+          btn.hidden = true;
+          status.textContent = compass
+            ? `${place} Menunggu kompas… (gerakkan telefon sedikit)`
+            : noCompass();
+          // Desktop browsers may expose the event but never fire it.
+          if (compass)
+            setTimeout(
+              () => !gotHeading && (status.textContent = noCompass()),
+              4000,
+            );
+        },
+        (err) => {
+          btn.disabled = false;
+          const denied = err.code === err.PERMISSION_DENIED;
+          status.textContent = denied
+            ? "Akses lokasi ditolak."
+            : err.code === err.TIMEOUT
+              ? "Lokasi mengambil masa terlalu lama."
+              : "Lokasi tak dapat dikesan.";
+          showHelp(denied ? "denied" : "off");
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 10 * 60 * 1000,
+        },
+      );
+    });
+  };
+
+  init();
+  document.addEventListener("astro:page-load", init);
+  document.addEventListener("astro:before-swap", () => stop?.());
+</script>
+
+<style>
+  #kiblat[data-aligned] #kiblat-dial {
+    box-shadow: 0 0 0 4px var(--color-sky-500);
+  }
+</style>

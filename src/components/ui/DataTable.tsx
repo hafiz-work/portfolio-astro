@@ -17,7 +17,6 @@ import {
     ChevronRight,
     ChevronsUpDown,
     Inbox,
-    Loader2,
     Search,
 } from "lucide-react";
 
@@ -140,13 +139,13 @@ export function DataTable<TData, TValue>({
 
     const loadingState = (
         <div className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-gray-500 dark:text-gray-400">
-            <Loader2 className="h-5 w-5 animate-spin text-sky-500" aria-hidden="true" />
+            <span className="terminal-loader" aria-hidden="true" />
             <p className="text-sm">Loading…</p>
         </div>
     );
 
     return (
-        <div className="rounded-xl bg-white ring-1 ring-gray-950/5 dark:bg-white/[0.03] dark:ring-white/10">
+        <div className="rounded-xl bg-white ring-1 ring-gray-950/5 dark:bg-white/3 dark:ring-white/10">
             {/* Toolbar - part of the card, not a floating box */}
             <div className="flex flex-col gap-3 border-b border-gray-950/5 px-4 py-3 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-wrap items-center gap-3">
@@ -197,7 +196,7 @@ export function DataTable<TData, TValue>({
             {/* Desktop table */}
             <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left text-sm">
-                    <thead className="border-b border-gray-950/5 bg-gray-950/[0.02] dark:border-white/10 dark:bg-white/[0.02]">
+                    <thead className="border-b border-gray-950/5 bg-gray-950/2 dark:border-white/10 dark:bg-white/2">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <tr key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
@@ -251,7 +250,7 @@ export function DataTable<TData, TValue>({
                                     className={
                                         row.getIsSelected()
                                             ? "bg-sky-500/5"
-                                            : "transition-colors hover:bg-gray-950/[0.02] dark:hover:bg-white/[0.02]"
+                                            : "transition-colors hover:bg-gray-950/2 dark:hover:bg-white/2"
                                     }
                                 >
                                     {row.getVisibleCells().map((cell) => (
@@ -361,7 +360,7 @@ export function DataTable<TData, TValue>({
                     <button
                         type="button"
                         aria-label="Previous page"
-                        className="inline-flex size-8 items-center justify-center rounded-full text-gray-600 ring-1 ring-gray-950/10 ring-inset transition-colors hover:bg-gray-950/[0.03] hover:text-gray-950 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-300 dark:ring-white/15 dark:hover:bg-white/5 dark:hover:text-white"
+                        className="inline-flex size-8 items-center justify-center rounded-full text-gray-600 ring-1 ring-gray-950/10 ring-inset transition-colors hover:bg-gray-950/3 hover:text-gray-950 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-300 dark:ring-white/15 dark:hover:bg-white/5 dark:hover:text-white"
                         onClick={() => table.previousPage()}
                         disabled={!table.getCanPreviousPage()}
                     >
@@ -370,7 +369,7 @@ export function DataTable<TData, TValue>({
                     <button
                         type="button"
                         aria-label="Next page"
-                        className="inline-flex size-8 items-center justify-center rounded-full text-gray-600 ring-1 ring-gray-950/10 ring-inset transition-colors hover:bg-gray-950/[0.03] hover:text-gray-950 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-300 dark:ring-white/15 dark:hover:bg-white/5 dark:hover:text-white"
+                        className="inline-flex size-8 items-center justify-center rounded-full text-gray-600 ring-1 ring-gray-950/10 ring-inset transition-colors hover:bg-gray-950/3 hover:text-gray-950 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-300 dark:ring-white/15 dark:hover:bg-white/5 dark:hover:text-white"
                         onClick={() => table.nextPage()}
                         disabled={!table.getCanNextPage()}
                     >

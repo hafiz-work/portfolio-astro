@@ -158,6 +158,8 @@ type MapProps = {
   onViewportChange?: (viewport: MapViewport) => void;
   /** Fired once when the map has loaded its initial style and is ready for layer operations. */
   onLoad?: () => void;
+  /** Text shown in place of the map when WebGL is unavailable. */
+  fallbackLabel?: string;
 } & Omit<MapLibreGL.MapOptions, "container" | "style">;
 
 type MapRef = MapLibreGL.Map;
@@ -182,6 +184,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     viewport,
     onViewportChange,
     onLoad,
+    fallbackLabel = "Kuala Lumpur, Malaysia",
     ...props
   },
   ref
@@ -344,7 +347,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
         {initFailed ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400 dark:text-gray-500">
             <MapPin className="w-5 h-5" aria-hidden="true" />
-            <span className="text-xs font-medium">Kuala Lumpur, Malaysia</span>
+            <span className="text-xs font-medium">{fallbackLabel}</span>
           </div>
         ) : (
           !isLoaded && <DefaultLoader />
@@ -603,7 +606,7 @@ function MarkerPopup({
   return createPortal(
     <div
       className={cn(
-        "relative rounded-md border bg-popover p-3 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95",
+        "relative rounded-md border border-gray-950/10 bg-white p-3 text-gray-950 shadow-md animate-in fade-in-0 zoom-in-95 dark:border-white/10 dark:bg-gray-900 dark:text-white",
         className
       )}
     >
@@ -611,7 +614,7 @@ function MarkerPopup({
         <button
           type="button"
           onClick={handleClose}
-          className="absolute top-1 right-1 z-10 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          className="absolute top-1 right-1 z-10 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
           aria-label="Close popup"
         >
           <X className="h-4 w-4" />
@@ -689,7 +692,7 @@ function MarkerTooltip({
   return createPortal(
     <div
       className={cn(
-        "rounded-md bg-foreground px-2 py-1 text-xs text-background shadow-md animate-in fade-in-0 zoom-in-95",
+        "rounded-md bg-gray-950 px-2 py-1 text-xs text-white shadow-md animate-in fade-in-0 zoom-in-95 dark:bg-white dark:text-gray-950",
         className
       )}
     >
@@ -722,7 +725,7 @@ function MarkerLabel({
     <div
       className={cn(
         "absolute left-1/2 -translate-x-1/2 whitespace-nowrap",
-        "text-[10px] font-medium text-foreground",
+        "text-[10px] font-medium",
         positionClasses[position],
         className
       )}
@@ -1044,7 +1047,7 @@ function MapPopup({
   return createPortal(
     <div
       className={cn(
-        "relative rounded-md border bg-popover p-3 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95",
+        "relative rounded-md border border-gray-950/10 bg-white p-3 text-gray-950 shadow-md animate-in fade-in-0 zoom-in-95 dark:border-white/10 dark:bg-gray-900 dark:text-white",
         className
       )}
     >
@@ -1052,7 +1055,7 @@ function MapPopup({
         <button
           type="button"
           onClick={handleClose}
-          className="absolute top-1 right-1 z-10 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          className="absolute top-1 right-1 z-10 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
           aria-label="Close popup"
         >
           <X className="h-4 w-4" />

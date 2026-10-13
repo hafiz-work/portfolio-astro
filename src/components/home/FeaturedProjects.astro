@@ -26,8 +26,6 @@ const visible = projects.slice(0, 5);
           imageUrl={project.imageUrl}
           imageVariant={project.imageVariant}
           previewFrame={project.previewFrame}
-          imageLoading={index === 0 ? "eager" : "lazy"}
-          imageFetchPriority={index === 0 ? "high" : "auto"}
           tags={
             project.technologies?.length
               ? project.technologies

@@ -11,7 +11,7 @@ interface Props {
   ancestryDepth?: number;
   progenyDepth?: number;
   onSelect: (id: string) => void;
-  apiRefOut: React.MutableRefObject<FamilyChartApi | null>;
+  apiRefOut: React.RefObject<FamilyChartApi | null>;
 }
 
 export const FamilyTreeCanvas = ({

@@ -1,0 +1,22 @@
+---
+import { ArrowLeft } from "lucide-react";
+import PrivateLayout from "../../../layouts/PrivateLayout.astro";
+import AdminPageHeader from "../../../components/admin/AdminPageHeader.astro";
+import { RoleDetail } from "../../../components/admin/access/RoleDetail";
+---
+
+<PrivateLayout title="Role">
+  <div class="space-y-6">
+    <AdminPageHeader title="Role" description="Who has it and what it may do.">
+      <a
+        slot="actions"
+        href="/admin/roles"
+        class="admin-btn admin-btn-secondary"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to list
+      </a>
+    </AdminPageHeader>
+    <RoleDetail client:load />
+  </div>
+</PrivateLayout>
