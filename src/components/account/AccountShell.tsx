@@ -68,7 +68,7 @@ export function AccountShell({
       <AccountSidebar path={path} me={me} />
       <SidebarInset>
         {/* Sticky: stays while the page scrolls; opaque so content slides under it. */}
-        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 bg-background px-4 md:rounded-t-[10px]">
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b border-border/60 bg-background px-4 md:rounded-t-[10px]">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"

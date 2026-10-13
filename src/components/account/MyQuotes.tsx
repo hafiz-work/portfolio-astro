@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/shadcn/ui/button";
 import { Alert, AlertDescription } from "@/components/shadcn/ui/alert";
-import { Badge } from "@/components/shadcn/ui/badge";
 import { accountService, errorText } from "../../lib/account";
 import type { Quote } from "../../types/quotes";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ConfirmDelete } from "./ConfirmDelete";
-import { AccountDataTable, asDate } from "./AccountDataTable";
+import { StatusBadge } from "./StatusBadge";
+import { AccountDataTable, RowAction, asDate } from "./AccountDataTable";
 
 // /account/quotes: the signed-in user's own quotes. Live on /quotes at once; a
 // moderator can reject them (they then show the reason). Create/edit live on their
@@ -45,10 +46,7 @@ export function MyQuotes() {
     { accessorKey: "author", header: "Author", meta: { className: "whitespace-normal" } },
     {
       id: "status", accessorFn: (q) => q.status ?? "published", header: "Status",
-      cell: ({ getValue }) => {
-        const st = getValue<string>();
-        return <Badge variant={st === "rejected" ? "destructive" : "default"} className="capitalize">{st}</Badge>;
-      },
+      cell: ({ getValue }) => <StatusBadge status={getValue<string>()} />,
     },
     { accessorKey: "createdAt", header: "Date", meta: { className: "hidden sm:table-cell" }, cell: ({ getValue }) => asDate(getValue<string>()) },
     {
@@ -56,9 +54,7 @@ export function MyQuotes() {
       cell: ({ row: { original: q } }) => (
         <div className="flex justify-end gap-1">
           {q.status !== "rejected" && (
-            <Button asChild variant="ghost" size="sm">
-              <a href={`/account/quotes/${q.id}/edit`}>Edit</a>
-            </Button>
+            <RowAction label="Edit" icon={<Pencil />} href={`/account/quotes/${q.id}/edit`} />
           )}
           <ConfirmDelete what="this quote" onConfirm={() => void remove(q)} />
         </div>
