@@ -3,6 +3,7 @@ import { Check, Circle } from "lucide-react";
 import { Button } from "@/components/shadcn/ui/button";
 import { Input } from "@/components/shadcn/ui/input";
 import { Label } from "@/components/shadcn/ui/label";
+import { Progress } from "@/components/shadcn/ui/progress";
 import { Alert, AlertDescription } from "@/components/shadcn/ui/alert";
 import { authService } from "../../lib/auth";
 import { createTurnstile } from "../../lib/turnstile";
@@ -16,11 +17,16 @@ const PASSWORD_HINTS: { label: string; test: (p: string) => boolean; required?: 
   { label: "A number", test: (p) => /\d/.test(p) },
   { label: "A symbol", test: (p) => /[^A-Za-z0-9]/.test(p) },
 ];
+// One shadcn Progress instead of the old 4 segments: score 0..3 -> 0/33/67/100, so an empty
+// password shows an empty bar. progress.tsx tints its own indicator (bg-primary), so the parent
+// re-tints it through the indicator's data-slot.
+// ponytail: Weak/Fair keep a hue (destructive token, amber has no token), Good/Strong fall back
+// to primary - the bar length and the label carry the last step.
 const STRENGTH = [
-  { label: "Weak", bar: "bg-red-500" },
-  { label: "Fair", bar: "bg-amber-500" },
-  { label: "Good", bar: "bg-sky-500" },
-  { label: "Strong", bar: "bg-sky-600 dark:bg-sky-400" },
+  { label: "Weak", value: 0, indicator: "[&_[data-slot=progress-indicator]]:bg-destructive" },
+  { label: "Fair", value: 33, indicator: "[&_[data-slot=progress-indicator]]:bg-amber-500" },
+  { label: "Good", value: 67, indicator: "[&_[data-slot=progress-indicator]]:bg-primary" },
+  { label: "Strong", value: 100, indicator: "[&_[data-slot=progress-indicator]]:bg-primary" },
 ];
 // ponytail: naive length + character-variety score; swap in zxcvbn if it ever matters.
 const strengthOf = (p: string) => {
@@ -159,11 +165,15 @@ export function RegisterForm({ siteKey, mode }: { siteKey: string; mode: "regist
               <div id="password-hints" className="grid gap-2">
                 {form.password && (
                   <div className="flex items-center gap-3">
-                    <div className="grid flex-1 grid-cols-4 gap-1" aria-hidden="true">
-                      {STRENGTH.map((_, i) => (
-                        <div key={i} className={`h-1 rounded-full ${i <= strengthOf(form.password) ? strength.bar : "bg-muted"}`} />
-                      ))}
-                    </div>
+                    <Progress
+                      value={strength.value}
+                      aria-label="Password strength"
+                      // progress.tsx uses `value` for the bar's transform but doesn't pass it to the
+                      // Radix root, so mirror it - else the bar reads as an indeterminate progressbar.
+                      aria-valuenow={strength.value}
+                      aria-valuetext={strength.label}
+                      className={`h-1 flex-1 ${strength.indicator}`}
+                    />
                     <span className="w-14 text-right text-xs font-medium text-muted-foreground" aria-live="polite">{strength.label}</span>
                   </div>
                 )}

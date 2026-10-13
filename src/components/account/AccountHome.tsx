@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/shadcn/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/shadcn/ui/card";
 import { Input } from "@/components/shadcn/ui/input";
 import { Label } from "@/components/shadcn/ui/label";
 import { Textarea } from "@/components/shadcn/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/shadcn/ui/alert";
 import { Badge } from "@/components/shadcn/ui/badge";
+import { cn } from "@/lib/utils";
 import { authService, type Me } from "../../lib/auth";
 import { accountService, errorText, type ModerationEntry } from "../../lib/account";
 import type { ColumnDef } from "@tanstack/react-table";
 import { AccountDataTable, asDate } from "./AccountDataTable";
 
-// /account: profile, password, and what moderation did to my content (and why).
 const FIELDS = [
   ["displayName", "Display name", "Shown on your posts"],
   ["location", "Location", ""],
@@ -36,18 +36,17 @@ const moderationColumns: ColumnDef<ModerationEntry>[] = [
   { accessorKey: "reason", header: "Reason", enableSorting: false, meta: { className: "min-w-48 whitespace-normal" } },
 ];
 
-type Msg = { ok: boolean; text: string } | null;
-const Notice = ({ msg }: { msg: Msg }) =>
-  msg ? (
-    <Alert variant={msg.ok ? "default" : "destructive"} aria-live="polite"><AlertDescription>{msg.text}</AlertDescription></Alert>
-  ) : null;
+const SectionHeading = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <div className="grid gap-1">
+    <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+    <p className="text-sm text-muted-foreground">{children}</p>
+  </div>
+);
 
 export function AccountHome() {
   const [me, setMe] = useState<Me | null>(null);
   const [profile, setProfile] = useState<Record<string, string>>({});
-  const [profileMsg, setProfileMsg] = useState<Msg>(null);
   const [pw, setPw] = useState({ current: "", next: "" });
-  const [pwMsg, setPwMsg] = useState<Msg>(null);
   const [moderation, setModeration] = useState<{ strikes: number; history: ModerationEntry[] }>({ strikes: 0, history: [] });
 
   useEffect(() => {
@@ -62,7 +61,6 @@ export function AccountHome() {
 
   const saveProfile = async (e: React.SubmitEvent) => {
     e.preventDefault();
-    // Empty link fields clear the link; empty text fields are left unchanged.
     const data = Object.fromEntries(
       Object.entries(profile)
         .filter(([k, v]) => v.trim() || isLink(k))
@@ -70,25 +68,24 @@ export function AccountHome() {
     );
     try {
       await accountService.updateProfile(data);
-      setProfileMsg({ ok: true, text: "Profile saved." });
+      toast.success("Profile saved");
     } catch (err) {
-      setProfileMsg({ ok: false, text: errorText(err) });
+      toast.error(errorText(err));
     }
   };
 
   const savePassword = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (pw.next.length < 12) {
-      setPwMsg({ ok: false, text: "The new password needs at least 12 characters." });
+      toast.error("The new password needs at least 12 characters.");
       return;
     }
     try {
       await accountService.updatePassword(pw.current, pw.next);
-      // Every session was revoked, this one included.
       authService.clearAuthState();
       window.location.href = "/login";
     } catch (err) {
-      setPwMsg({ ok: false, text: errorText(err) });
+      toast.error(errorText(err));
     }
   };
 
@@ -96,35 +93,31 @@ export function AccountHome() {
 
   return (
     <div className="grid gap-6">
-      <div>
+      <header className="grid gap-1 border-b border-border pb-6">
         <h1 className="text-2xl font-semibold tracking-tight">Your account</h1>
         <p className="text-sm text-muted-foreground">Signed in as {me.email}</p>
-      </div>
+      </header>
 
       {moderation.history.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Moderation history</CardTitle>
-            <CardDescription>What moderators did to your posts and quotes, and why.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <Alert variant={moderation.strikes > 0 ? "destructive" : "default"}>
-              <AlertTitle>{moderation.strikes} strike{moderation.strikes === 1 ? "" : "s"} in 90 days</AlertTitle>
-              <AlertDescription>Repeated strikes can lead to a ban.</AlertDescription>
-            </Alert>
-            <AccountDataTable columns={moderationColumns} data={moderation.history} filterPlaceholder="Filter notices…" pageSize={5} />
-          </CardContent>
-        </Card>
+        <section className="grid gap-6">
+          <SectionHeading title="Moderation history">What moderators did to your posts and quotes, and why.</SectionHeading>
+          <Alert variant={moderation.strikes > 0 ? "destructive" : "default"}>
+            <AlertTitle>{moderation.strikes} strike{moderation.strikes === 1 ? "" : "s"} in 90 days</AlertTitle>
+            <AlertDescription>Repeated strikes can lead to a ban.</AlertDescription>
+          </Alert>
+          <AccountDataTable columns={moderationColumns} data={moderation.history} filterPlaceholder="Filter notices…" pageSize={5} />
+        </section>
       )}
 
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 @4xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile</CardTitle>
-            <CardDescription>Your display name appears on your posts and quotes.</CardDescription>
-          </CardHeader>
-          <form onSubmit={saveProfile}>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
+      {/* The header's border-b is this page's first hairline, so the columns only add one when moderation sits above them. */}
+      <div className={cn(
+        "grid grid-cols-[minmax(0,1fr)] gap-6 @4xl:grid-cols-[minmax(0,1fr)_22rem]",
+        moderation.history.length > 0 && "border-t border-border pt-6",
+      )}>
+        <section className="grid gap-6">
+          <SectionHeading title="Profile">Your display name appears on your posts and quotes.</SectionHeading>
+          <form onSubmit={saveProfile} className="grid gap-6">
+            <div className="grid gap-4 sm:grid-cols-2">
               {FIELDS.map(([key, text, placeholder]) => (
                 <div key={key} className="grid gap-2">
                   <Label htmlFor={key}>{text}</Label>
@@ -137,19 +130,17 @@ export function AccountHome() {
                 <Textarea id="bio" rows={3} maxLength={1000} value={profile.bio ?? ""}
                   onChange={(e) => setProfile({ ...profile, bio: e.target.value })} />
               </div>
-              <div className="sm:col-span-2"><Notice msg={profileMsg} /></div>
-            </CardContent>
-            <CardFooter><Button type="submit">Save profile</Button></CardFooter>
+            </div>
+            <div className="flex flex-wrap gap-2 border-t border-border pt-6">
+              <Button type="submit">Save profile</Button>
+            </div>
           </form>
-        </Card>
+        </section>
 
-        <Card className="self-start">
-          <CardHeader>
-            <CardTitle>Password</CardTitle>
-            <CardDescription>Changing it signs you out everywhere.</CardDescription>
-          </CardHeader>
-          <form onSubmit={savePassword}>
-            <CardContent className="grid gap-4">
+        <section className="grid gap-6 border-t border-border pt-6 @4xl:border-t-0 @4xl:border-l @4xl:pt-0 @4xl:pl-6">
+          <SectionHeading title="Password">Changing it signs you out everywhere.</SectionHeading>
+          <form onSubmit={savePassword} className="grid gap-6">
+            <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="pw-current">Current password</Label>
                 <Input id="pw-current" type="password" autoComplete="current-password" value={pw.current}
@@ -160,11 +151,12 @@ export function AccountHome() {
                 <Input id="pw-next" type="password" autoComplete="new-password" minLength={12} value={pw.next}
                   onChange={(e) => setPw({ ...pw, next: e.target.value })} />
               </div>
-              <Notice msg={pwMsg} />
-            </CardContent>
-            <CardFooter><Button type="submit" variant="outline">Change password</Button></CardFooter>
+            </div>
+            <div className="flex flex-wrap gap-2 border-t border-border pt-6">
+              <Button type="submit" variant="outline">Change password</Button>
+            </div>
           </form>
-        </Card>
+        </section>
       </div>
     </div>
   );

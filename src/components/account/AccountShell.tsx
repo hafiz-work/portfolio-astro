@@ -9,9 +9,10 @@ import {
   BreadcrumbSeparator,
 } from "@/components/shadcn/ui/breadcrumb";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/shadcn/ui/resizable";
-import { AccountHeader } from "./AccountHeader";
+import { Toaster } from "@/components/shadcn/ui/sonner";
+import { AccountNavbar } from "./AccountNavbar";
 import { AccountSidebar } from "./AccountSidebar";
-import { ACCOUNT_LINKS } from "./account-nav";
+import { activeAccountLink } from "./AccountHeader";
 
 const LAYOUT_KEY = "react-resizable-panels:account-shell";
 
@@ -28,11 +29,17 @@ const writeOnlyStorage = {
   },
 };
 
-// The whole signed-in account screen: shadcn background, the session guard (AccountHeader,
-// which also covers /me and the mobile tabs+menu bar), then sidebar | content. lg and up
-// the sidebar is a resizable panel (layout remembered per browser); below lg the group
-// falls back to a plain block. One tree at every size, so the page's nested islands
-// (children) never remount.
+const humanize = (segment: string) =>
+  decodeURIComponent(segment)
+    .replace(/[-_]+/g, " ")
+    .replace(/\b[a-z]/g, (c) => c.toUpperCase());
+
+// The whole signed-in account screen: shadcn background, the full-width top navbar
+// (session guard + identity + account menu + the mobile section drawer), then
+// sidebar | content edge to edge. lg and up the sidebar is a resizable panel (layout
+// remembered per browser); below lg the group falls back to a plain block and the
+// navbar drawer carries the section nav. One tree at every size, so the page's nested
+// islands (children) never remount.
 export function AccountShell({ path, children }: { path: string; children?: ReactNode }) {
   const layout = useDefaultLayout({ id: "account-shell", storage: writeOnlyStorage, onlySaveAfterUserInteractions: true });
   const groupRef = useGroupRef();
@@ -46,18 +53,21 @@ export function AccountShell({ path, children }: { path: string; children?: Reac
     });
     return () => cancelAnimationFrame(id);
   }, []);
-  const current = ACCOUNT_LINKS.find((l) => l.href === path);
+  const section = activeAccountLink(path);
+  const leaf = section
+    ? path
+      .slice(section.href.length)
+      .split("/")
+      .filter(Boolean)
+      .filter((segment) => !/^\d+$/.test(segment))
+      .pop()
+    : undefined;
 
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
-      {/* Small screens: tabs + account menu bar. lg and up: the side navigation. */}
-      <div className="border-b border-border bg-card lg:hidden">
-        <div className="mx-auto max-w-6xl px-4 py-2 sm:px-6">
-          <AccountHeader path={path} />
-        </div>
-      </div>
+      <AccountNavbar path={path} />
 
-      <div className="mx-auto w-full max-w-6xl grow px-4 py-8 sm:px-6 sm:py-12">
+      <div className="w-full grow px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <ResizablePanelGroup
           orientation="horizontal"
           groupRef={groupRef}
@@ -67,29 +77,49 @@ export function AccountShell({ path, children }: { path: string; children?: Reac
           style={{ height: "auto", overflow: "visible" }}
           className="max-lg:block!"
         >
-          <ResizablePanel id="nav" defaultSize="22%" minSize="16%" maxSize="32%" style={{ overflow: "visible" }}>
-            {/* Below lg the sidebar is hidden (AccountHeader's tabs bar takes over). */}
-            <div className="sticky top-12 pr-4 max-lg:hidden">
+          <ResizablePanel id="nav" defaultSize="22%" minSize={200} maxSize={360} style={{ overflow: "visible" }}>
+            {/* Below lg the sidebar is hidden (the navbar drawer takes over). */}
+            <div className="sticky top-20 pr-4 max-lg:hidden xl:pr-6">
               <AccountSidebar path={path} />
             </div>
           </ResizablePanel>
-          <ResizableHandle withHandle className="max-lg:hidden" />
+          <ResizableHandle className="max-lg:hidden" />
           <ResizablePanel id="main" minSize="50%">
             {/* @container: pages lay out by the panel's width (it resizes), not the viewport's. */}
             <main className="@container min-w-0 lg:pl-8">
-              {current && (
-                <Breadcrumb className="mb-6">
-                  <BreadcrumbList>
+              <Breadcrumb className="mb-6">
+                <BreadcrumbList>
+                  {section ? (
                     <BreadcrumbItem>
                       <BreadcrumbLink href="/account">Account</BreadcrumbLink>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator />
+                  ) : (
                     <BreadcrumbItem>
-                      <BreadcrumbPage>{current.label}</BreadcrumbPage>
+                      <BreadcrumbPage>Account</BreadcrumbPage>
                     </BreadcrumbItem>
-                  </BreadcrumbList>
-                </Breadcrumb>
-              )}
+                  )}
+                  {section && (
+                    <>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        {section.href === path ? (
+                          <BreadcrumbPage>{section.label}</BreadcrumbPage>
+                        ) : (
+                          <BreadcrumbLink href={section.href}>{section.label}</BreadcrumbLink>
+                        )}
+                      </BreadcrumbItem>
+                    </>
+                  )}
+                  {leaf && (
+                    <>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        <BreadcrumbPage>{humanize(leaf)}</BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </>
+                  )}
+                </BreadcrumbList>
+              </Breadcrumb>
               {children}
             </main>
           </ResizablePanel>
@@ -99,6 +129,9 @@ export function AccountShell({ path, children }: { path: string; children?: Reac
       <footer className="py-6 text-center text-xs text-muted-foreground">
         <a href="/" className="hover:text-foreground">hafizbahtiar.com</a>
       </footer>
+
+      {/* Action feedback (save/delete) surfaces as toasts; one Toaster for the whole app shell. */}
+      <Toaster />
     </div>
   );
 }

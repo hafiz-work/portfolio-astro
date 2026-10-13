@@ -3,9 +3,18 @@ import {
   flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable,
   type ColumnDef, type RowData, type SortingState,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Inbox, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/shadcn/ui/button";
 import { Input } from "@/components/shadcn/ui/input";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/shadcn/ui/empty";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/shadcn/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/ui/table";
 
 declare module "@tanstack/react-table" {
@@ -23,8 +32,10 @@ type Props<T> = {
   empty?: string;
 };
 
-/** Account-area list: sortable headers, text filter (only past 5 rows), pagination. */
-export function AccountDataTable<T>({ columns, data, filterPlaceholder = "Filter…", pageSize = 10, empty = "Nothing here yet." }: Props<T>) {
+/** Account-area list: sortable headers, text filter (only past 5 rows), pagination.
+ *  Borderless by design - header rule + row dividers carry the structure.
+ *  Below md the same rows render as stacked blocks instead of a scrolling table. */
+export function AccountDataTable<T>({ columns, data, filterPlaceholder = "Filter…", pageSize = 10, empty = "Nothing here yet" }: Props<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [filter, setFilter] = useState("");
   const table = useReactTable({
@@ -41,57 +52,124 @@ export function AccountDataTable<T>({ columns, data, filterPlaceholder = "Filter
   const rows = table.getRowModel().rows;
 
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-4">
       {data.length > 5 && (
         <Input placeholder={filterPlaceholder} aria-label={filterPlaceholder} value={filter}
           onChange={(e) => setFilter(e.target.value)} className="max-w-xs" />
       )}
-      <div className="rounded-md ring-1 ring-border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id}>
-                {hg.headers.map((h) => {
-                  const sorted = h.column.getIsSorted();
-                  const label = flexRender(h.column.columnDef.header, h.getContext());
-                  return (
-                    <TableHead key={h.id} className={h.column.columnDef.meta?.className}>
-                      {h.isPlaceholder ? null : h.column.getCanSort() ? (
-                        <Button variant="ghost" size="sm" className="-ml-2" onClick={h.column.getToggleSortingHandler()}>
-                          {label}
-                          {sorted === "asc" ? <ArrowUp /> : sorted === "desc" ? <ArrowDown /> : <ArrowUpDown className="opacity-50" />}
-                        </Button>
-                      ) : label}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {rows.length ? rows.map((row) => (
-              <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className={cell.column.columnDef.meta?.className}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
+      {rows.length ? (
+        <>
+          {/* md and up: the regular table. */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((hg) => (
+                  <TableRow key={hg.id} className="hover:bg-transparent">
+                    {hg.headers.map((h) => {
+                      const sorted = h.column.getIsSorted();
+                      const label = flexRender(h.column.columnDef.header, h.getContext());
+                      return (
+                        <TableHead key={h.id} className={cn("text-muted-foreground", h.column.columnDef.meta?.className)}>
+                          {h.isPlaceholder ? null : h.column.getCanSort() ? (
+                            <Button variant="ghost" size="sm"
+                              className="-ml-2.5 h-8 gap-1.5 px-2 font-medium text-muted-foreground hover:text-foreground"
+                              onClick={h.column.getToggleSortingHandler()}>
+                              {label}
+                              {sorted === "asc" ? <ArrowUp /> : sorted === "desc" ? <ArrowDown /> : <ArrowUpDown className="opacity-40" />}
+                            </Button>
+                          ) : label}
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
                 ))}
-              </TableRow>
-            )) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-20 text-center text-muted-foreground">
-                  {data.length ? "No matches." : empty}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              </TableHeader>
+              <TableBody>
+                {rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className={cell.column.columnDef.meta?.className}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          {/* Below md: one stacked block per row, built from the same columns - no horizontal scroller. */}
+          <ul className="divide-y divide-border text-sm md:hidden">
+            {rows.map((row) => {
+              const cells = row.getVisibleCells();
+              const primary = cells[0];
+              const rest = cells.slice(1);
+              const actions = rest.find((cell) => cell.column.id === "actions");
+              const details = rest.filter((cell) => cell.column.id !== "actions");
+              return (
+                <li key={row.id} className="py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      {primary && flexRender(primary.column.columnDef.cell, primary.getContext())}
+                    </div>
+                    {/* "actions" sits top-right on the row. */}
+                    {actions && (
+                      <div className="shrink-0 text-right">
+                        {flexRender(actions.column.columnDef.cell, actions.getContext())}
+                      </div>
+                    )}
+                  </div>
+                  {details.length > 0 && (
+                    <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2">
+                      {details.map((cell) => (
+                        <div key={cell.id} className="min-w-0">
+                          <dt className="font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
+                            {typeof cell.column.columnDef.header === "string" ? cell.column.columnDef.header : cell.column.id}
+                          </dt>
+                          <dd className="mt-0.5 break-words">
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      ) : (
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">{data.length ? <Search /> : <Inbox />}</EmptyMedia>
+            <EmptyTitle>{data.length ? "No matches" : empty.replace(/\.$/, "")}</EmptyTitle>
+            {data.length > 0 && <EmptyDescription>Try a different search.</EmptyDescription>}
+          </EmptyHeader>
+        </Empty>
+      )}
       {table.getPageCount() > 1 && (
-        <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
-          <span className="mr-auto">Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}</span>
-          <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Previous</Button>
-          <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Next</Button>
+        <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
+          <span className="tabular-nums">
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+          </span>
+          {/* shadcn Pagination renders links, so an unavailable end is a non-navigating stub. */}
+          <Pagination className="mx-0 w-auto justify-end">
+            <PaginationContent>
+              <PaginationItem>
+                {table.getCanPreviousPage() ? (
+                  <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); table.previousPage(); }} />
+                ) : (
+                  <PaginationPrevious aria-disabled tabIndex={-1} className="pointer-events-none opacity-50" />
+                )}
+              </PaginationItem>
+              <PaginationItem>
+                {table.getCanNextPage() ? (
+                  <PaginationNext href="#" onClick={(e) => { e.preventDefault(); table.nextPage(); }} />
+                ) : (
+                  <PaginationNext aria-disabled tabIndex={-1} className="pointer-events-none opacity-50" />
+                )}
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/shadcn/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/shadcn/ui/card";
 import { Input } from "@/components/shadcn/ui/input";
 import { Label } from "@/components/shadcn/ui/label";
 import { Textarea } from "@/components/shadcn/ui/textarea";
@@ -25,17 +25,19 @@ export function MyPosts() {
   const [editing, setEditing] = useState<{ id: number | null; data: MyPostInput } | null>(null);
   const [tagsText, setTagsText] = useState("");
   const [preview, setPreview] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
+  // The initial list fetch is a page-level LOAD error: it stays inline. Save and
+  // delete outcomes are ACTIONS, so they surface as toasts instead.
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = async () => {
     try { setPosts(await accountService.listPosts()); }
-    catch (e) { setMsg(errorText(e)); }
+    catch (e) { setLoadError(errorText(e)); }
     finally { setLoading(false); }
   };
   useEffect(() => { void load(); }, []);
 
   const open = async (summary?: BlogPostSummary) => {
-    setMsg(null);
+    setLoadError(null);
     setPreview(false);
     // The list has no body; fetch the one post being edited.
     const post: BlogPost | null = summary ? await accountService.getPost(summary.id).catch(() => null) : null;
@@ -55,16 +57,17 @@ export function MyPosts() {
     try {
       if (editing.id) await accountService.updatePost(editing.id, data);
       else await accountService.createPost(data);
+      toast.success(editing.id ? "Post updated" : "Post created");
       setEditing(null);
       await load();
     } catch (err) {
-      setMsg(errorText(err));
+      toast.error(errorText(err));
     }
   };
 
   const remove = async (post: BlogPostSummary) => {
-    try { await accountService.deletePost(post.id); await load(); }
-    catch (err) { setMsg(errorText(err)); }
+    try { await accountService.deletePost(post.id); toast.success("Post deleted"); await load(); }
+    catch (err) { toast.error(errorText(err)); }
   };
 
   const columns: ColumnDef<BlogPostSummary>[] = [
@@ -104,13 +107,13 @@ export function MyPosts() {
   if (editing) {
     const set = (patch: Partial<MyPostInput>) => setEditing({ ...editing, data: { ...editing.data, ...patch } });
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{editing.id ? "Edit post" : "New post"}</CardTitle>
-          <CardDescription>Published posts appear on the blog straight away. Moderators may remove posts that break the rules.</CardDescription>
-        </CardHeader>
-        <form onSubmit={save}>
-          <CardContent className="grid gap-4">
+      <div className="grid gap-6">
+        <header className="grid gap-1 border-b border-border pb-6">
+          <h1 className="text-2xl font-semibold tracking-tight">{editing.id ? "Edit post" : "New post"}</h1>
+          <p className="text-sm text-muted-foreground">Published posts appear on the blog straight away. Moderators may remove posts that break the rules.</p>
+        </header>
+        <form onSubmit={save} className="grid gap-6">
+          <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="title">Title</Label>
               <Input id="title" maxLength={200} required value={editing.data.title} onChange={(e) => set({ title: e.target.value })} />
@@ -120,12 +123,12 @@ export function MyPosts() {
               <Textarea id="excerpt" rows={2} maxLength={500} required value={editing.data.excerpt} onChange={(e) => set({ excerpt: e.target.value })} />
             </div>
             <div className="grid gap-2">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <Label htmlFor="body">Post (Markdown)</Label>
                 <Button type="button" variant="link" size="sm" onClick={() => setPreview(!preview)}>{preview ? "Edit" : "Preview"}</Button>
               </div>
               {preview ? (
-                <div className="prose prose-gray max-w-none rounded-md p-4 ring-1 ring-border dark:prose-invert" dangerouslySetInnerHTML={{ __html: html }} />
+                <div className="prose prose-gray max-w-none rounded-md bg-muted/40 p-4 dark:prose-invert" dangerouslySetInnerHTML={{ __html: html }} />
               ) : (
                 <Textarea id="body" rows={16} maxLength={50000} required className="font-mono text-sm" value={editing.data.bodyContent} onChange={(e) => set({ bodyContent: e.target.value })} />
               )}
@@ -134,34 +137,31 @@ export function MyPosts() {
               <Label htmlFor="tags">Tags</Label>
               <Input id="tags" placeholder="comma, separated" value={tagsText} onChange={(e) => setTagsText(e.target.value)} />
             </div>
-            <RadioGroup value={editing.data.status} onValueChange={(v) => set({ status: v as MyPostInput["status"] })} className="flex gap-6">
+            <RadioGroup value={editing.data.status} onValueChange={(v) => set({ status: v as MyPostInput["status"] })} className="flex flex-wrap gap-6">
               <div className="flex items-center gap-2"><RadioGroupItem value="published" id="st-pub" /><Label htmlFor="st-pub">Publish now</Label></div>
               <div className="flex items-center gap-2"><RadioGroupItem value="draft" id="st-draft" /><Label htmlFor="st-draft">Save as draft</Label></div>
             </RadioGroup>
-            {msg && <Alert variant="destructive"><AlertDescription>{msg}</AlertDescription></Alert>}
-          </CardContent>
-          <CardFooter className="gap-2">
+          </div>
+          <div className="flex flex-wrap gap-2 border-t border-border pt-6">
             <Button type="submit">Save</Button>
             <Button type="button" variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
-          </CardFooter>
+          </div>
         </form>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-3">
-        <div>
-          <CardTitle>Blog posts</CardTitle>
-          <CardDescription>{posts.length} {posts.length === 1 ? "post" : "posts"} · written in Markdown</CardDescription>
+    <div className="grid gap-6">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-6">
+        <div className="grid gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Blog posts</h1>
+          <p className="text-sm text-muted-foreground">{posts.length} {posts.length === 1 ? "post" : "posts"} · written in Markdown</p>
         </div>
         <Button onClick={() => void open()}>New post</Button>
-      </CardHeader>
-      <CardContent>
-        {msg && <Alert variant="destructive" className="mb-4"><AlertDescription>{msg}</AlertDescription></Alert>}
-        <AccountDataTable columns={columns} data={posts} filterPlaceholder="Filter posts…" empty="No posts yet." />
-      </CardContent>
-    </Card>
+      </header>
+      {loadError && <Alert variant="destructive"><AlertDescription>{loadError}</AlertDescription></Alert>}
+      <AccountDataTable columns={columns} data={posts} filterPlaceholder="Filter posts…" empty="No posts yet." />
+    </div>
   );
 }
