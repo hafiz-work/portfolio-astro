@@ -80,7 +80,8 @@ function NavUser({ me }: { me: Me }) {
   const signOut = async () => {
     if (!(await confirm({ title: "Sign out?", description: "You'll need to sign in again to manage your posts and quotes.", confirmLabel: "Sign out", destructive: true }))) return;
     await authService.logout();
-    window.location.href = "/";
+    // replace, like admin: Back must not return to a signed-out /account page.
+    window.location.replace("/login");
   };
 
   const identity = (
@@ -121,7 +122,7 @@ function NavUser({ me }: { me: Me }) {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <a href="/account">
+                <a href="/account/profile">
                   <UserRound />
                   Profile
                 </a>

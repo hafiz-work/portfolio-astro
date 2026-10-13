@@ -11,6 +11,7 @@ import { accountService, errorText } from "../../lib/account";
 import type { Quote } from "../../types/quotes";
 import { PageLoading } from "./PageLoading";
 import { BackButton, useFormGuard } from "./FormGuard";
+import { rememberQuote } from "./quotes-cache";
 
 const empty = { text: "", author: "", source: "" };
 const LIST = "/account/quotes";
@@ -65,11 +66,11 @@ export function QuoteForm({ id = null }: { id?: number | null }) {
       source: draft.source.trim() || null,
     };
     try {
-      if (quote) await accountService.updateQuote(quote.id, data);
-      else await accountService.createQuote(data);
+      const saved = quote ? await accountService.updateQuote(quote.id, data) : await accountService.createQuote(data);
+      if (saved) rememberQuote(saved);
       toast.success(quote ? "Quote updated" : "Quote shared");
       // Let the toast land before the navigation swaps the page out.
-      setTimeout(() => window.location.assign(LIST), 600);
+      setTimeout(() => void navigate(LIST), 600);
     } catch (err) {
       toast.error(errorText(err));
       setSaving(false);

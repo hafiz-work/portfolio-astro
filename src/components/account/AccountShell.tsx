@@ -76,32 +76,29 @@ export function AccountShell({
           />
           <Breadcrumb>
             <BreadcrumbList>
-              {path !== "/account" ? (
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/account">Account</BreadcrumbLink>
-                </BreadcrumbItem>
-              ) : (
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Account</BreadcrumbPage>
-                </BreadcrumbItem>
+              {/* /account is the dashboard: just "Dashboard". Elsewhere: Account / section / leaf. */}
+              {path !== "/account" && (
+                <>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href="/account">Account</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                </>
               )}
               {section && (
-                <>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    {section.href === path ? (
-                      <BreadcrumbPage>{section.label}</BreadcrumbPage>
-                    ) : (
-                      <BreadcrumbLink href={section.href}>
-                        {section.label}
-                      </BreadcrumbLink>
-                    )}
-                  </BreadcrumbItem>
-                </>
+                <BreadcrumbItem>
+                  {section.href === path ? (
+                    <BreadcrumbPage>{section.label}</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink href={section.href}>
+                      {section.label}
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
               )}
               {leaf && (
                 <>
-                  <BreadcrumbSeparator />
+                  {section && <BreadcrumbSeparator />}
                   <BreadcrumbItem>
                     <BreadcrumbPage>{humanize(leaf)}</BreadcrumbPage>
                   </BreadcrumbItem>
@@ -112,10 +109,21 @@ export function AccountShell({
           <div className="ml-auto flex items-center gap-1">
             <ModeToggle />
             {me && (
-              <Button asChild variant="ghost" size="icon" className="rounded-full">
-                <a href="/account" aria-label="Profile" title={me.profile?.displayName || me.name}>
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+              >
+                <a
+                  href="/account/profile"
+                  aria-label="Profile"
+                  title={me.profile?.displayName || me.name}
+                >
                   <Avatar className="size-8">
-                    <AvatarFallback className="text-xs">{initials(me)}</AvatarFallback>
+                    <AvatarFallback className="text-xs">
+                      {initials(me)}
+                    </AvatarFallback>
                   </Avatar>
                 </a>
               </Button>
@@ -124,7 +132,9 @@ export function AccountShell({
         </header>
         {/* SidebarInset is the <main>. @container: pages lay out by this column's width
             (the sidebar collapses), not the viewport's. */}
-        <div className="@container flex flex-1 flex-col p-4 md:p-6 lg:p-8">{children}</div>
+        <div className="@container flex flex-1 flex-col p-4 md:p-6 lg:p-8">
+          {children}
+        </div>
       </SidebarInset>
 
       {/* Action feedback (save/delete) surfaces as toasts; one Toaster for the whole app shell. */}

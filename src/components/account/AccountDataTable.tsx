@@ -43,6 +43,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/shadcn/ui/tooltip";
+import { Skeleton } from "@/components/shadcn/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/shadcn/ui/select";
 
 declare module "@tanstack/react-table" {
   // Extra classes for a column's <th> and <td> (e.g. "hidden sm:table-cell", "whitespace-normal").
@@ -56,9 +64,15 @@ type Props<T> = {
   data: T[];
   filterPlaceholder?: string;
   pageSize?: number;
-  empty?: string;
-  /** Shown in the empty state when there's no data at all (not for "no matches"), e.g. a "New" button. */
-  emptyAction?: ReactNode;
+  /** Empty state when there's no data at all (shadcn Empty). "No matches" for a filter is built in. */
+  empty?: {
+    title: string;
+    description?: string;
+    icon?: ReactNode;
+    action?: ReactNode;
+  };
+  /** First fetch in flight: skeleton rows under the real headers instead of the empty state. */
+  loading?: boolean;
 };
 
 /** Account-area list: sortable headers, text filter (only past 5 rows), pagination.
@@ -69,8 +83,8 @@ export function AccountDataTable<T>({
   data,
   filterPlaceholder = "Filter…",
   pageSize = 10,
-  empty = "Nothing here yet",
-  emptyAction,
+  empty = { title: "Nothing here yet" },
+  loading = false,
 }: Props<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [filter, setFilter] = useState("");
@@ -87,22 +101,31 @@ export function AccountDataTable<T>({
     initialState: { pagination: { pageIndex: 0, pageSize } },
   });
   const rows = table.getRowModel().rows;
+  // The caller's default plus the usual steps.
+  const sizes = [...new Set([pageSize, 5, 10, 20, 50])].sort((a, b) => a - b);
+  // Rows exist but the filter hides them all -> "no matches", else the caller's empty state.
+  const state = data.length
+    ? {
+      title: "No matches",
+      description: `Nothing matches “${filter}”. Try a different search or clear the filter.`,
+      icon: <Search />,
+      action: (
+        <Button variant="outline" size="sm" onClick={() => setFilter("")}>
+          Clear filter
+        </Button>
+      ),
+    }
+    : { icon: <Inbox />, ...empty };
   const emptyState = (
     <Empty>
       <EmptyHeader>
-        <EmptyMedia variant="icon">
-          {data.length ? <Search /> : <Inbox />}
-        </EmptyMedia>
-        <EmptyTitle>
-          {data.length ? "No matches" : empty.replace(/\.$/, "")}
-        </EmptyTitle>
-        {data.length > 0 && (
-          <EmptyDescription>Try a different search.</EmptyDescription>
+        <EmptyMedia variant="icon">{state.icon}</EmptyMedia>
+        <EmptyTitle>{state.title}</EmptyTitle>
+        {state.description && (
+          <EmptyDescription>{state.description}</EmptyDescription>
         )}
       </EmptyHeader>
-      {!data.length && emptyAction && (
-        <EmptyContent>{emptyAction}</EmptyContent>
-      )}
+      {state.action && <EmptyContent>{state.action}</EmptyContent>}
     </Empty>
   );
 
@@ -166,7 +189,19 @@ export function AccountDataTable<T>({
                 ))}
               </TableHeader>
               <TableBody>
-                {!rows.length && (
+                {loading &&
+                  Array.from({ length: 5 }, (_, i) => (
+                    <TableRow key={i} className="hover:bg-transparent">
+                      {columns.map((_, j) => (
+                        <TableCell key={j}>
+                          <Skeleton
+                            className={j ? "h-4 w-16" : "h-4 w-full max-w-64"}
+                          />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                {!loading && !rows.length && (
                   <TableRow className="hover:bg-transparent">
                     <TableCell colSpan={columns.length} className="p-0">
                       {emptyState}
@@ -192,7 +227,16 @@ export function AccountDataTable<T>({
             </Table>
           </div>
           {/* Below md: one stacked block per row, built from the same columns - no horizontal scroller. */}
-          {!rows.length && <div className="md:hidden">{emptyState}</div>}
+          {loading && (
+            <div className="grid gap-2 md:hidden" aria-hidden="true">
+              {Array.from({ length: 3 }, (_, i) => (
+                <Skeleton key={i} className="h-20 rounded-[10px]" />
+              ))}
+            </div>
+          )}
+          {!loading && !rows.length && (
+            <div className="md:hidden">{emptyState}</div>
+          )}
           <ul className="grid gap-2 text-sm md:hidden">
             {rows.map((row) => {
               const cells = row.getVisibleCells();
@@ -246,51 +290,76 @@ export function AccountDataTable<T>({
             })}
           </ul>
         </>
-        {table.getPageCount() > 1 && (
-          <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
-            <span className="tabular-nums">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
-            </span>
-            {/* shadcn Pagination renders links, so an unavailable end is a non-navigating stub. */}
-            <Pagination className="mx-0 w-auto justify-end">
-              <PaginationContent>
-                <PaginationItem>
-                  {table.getCanPreviousPage() ? (
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        table.previousPage();
-                      }}
-                    />
-                  ) : (
-                    <PaginationPrevious
-                      aria-disabled
-                      tabIndex={-1}
-                      className="pointer-events-none opacity-50"
-                    />
-                  )}
-                </PaginationItem>
-                <PaginationItem>
-                  {table.getCanNextPage() ? (
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        table.nextPage();
-                      }}
-                    />
-                  ) : (
-                    <PaginationNext
-                      aria-disabled
-                      tabIndex={-1}
-                      className="pointer-events-none opacity-50"
-                    />
-                  )}
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+        {/* Shown once there's more than the smallest page, so the size can be raised even on one page. */}
+        {table.getFilteredRowModel().rows.length > sizes[0]! && (
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="max-sm:hidden">Rows per page</span>
+              <Select
+                value={String(table.getState().pagination.pageSize)}
+                onValueChange={(v) => table.setPageSize(Number(v))}
+              >
+                <SelectTrigger
+                  size="sm"
+                  className="w-18"
+                  aria-label="Rows per page"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent side="top">
+                  {sizes.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="tabular-nums">
+                Page {table.getState().pagination.pageIndex + 1} of{" "}
+                {table.getPageCount()}
+              </span>
+              {/* shadcn Pagination renders links, so an unavailable end is a non-navigating stub. */}
+              <Pagination className="mx-0 w-auto justify-end">
+                <PaginationContent>
+                  <PaginationItem>
+                    {table.getCanPreviousPage() ? (
+                      <PaginationPrevious
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          table.previousPage();
+                        }}
+                      />
+                    ) : (
+                      <PaginationPrevious
+                        aria-disabled
+                        tabIndex={-1}
+                        className="pointer-events-none opacity-50"
+                      />
+                    )}
+                  </PaginationItem>
+                  <PaginationItem>
+                    {table.getCanNextPage() ? (
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          table.nextPage();
+                        }}
+                      />
+                    ) : (
+                      <PaginationNext
+                        aria-disabled
+                        tabIndex={-1}
+                        className="pointer-events-none opacity-50"
+                      />
+                    )}
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </div>
         )}
       </div>
