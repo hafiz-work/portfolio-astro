@@ -1,25 +1,25 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/shadcn/ui/button";
 import { Input } from "@/components/shadcn/ui/input";
 import { Label } from "@/components/shadcn/ui/label";
 import { Textarea } from "@/components/shadcn/ui/textarea";
 import { Alert, AlertDescription } from "@/components/shadcn/ui/alert";
-import { Badge } from "@/components/shadcn/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/shadcn/ui/radio-group";
 import { accountService, errorText, type MyPostInput } from "../../lib/account";
 import { PageLoading } from "./PageLoading";
+import { StatusBadge } from "./StatusBadge";
 import { renderUserMarkdown } from "../../lib/sanitize";
 import type { BlogPost, BlogPostSummary } from "../../types/blog";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ConfirmDelete } from "./ConfirmDelete";
-import { AccountDataTable, asDate } from "./AccountDataTable";
+import { AccountDataTable, RowAction, asDate } from "./AccountDataTable";
 import { BackButton, useFormGuard } from "./FormGuard";
 
 // /account/blog: own posts. Published posts go live at once; a moderator can reject
 // them (then they're read-only and show the reason).
 const empty: MyPostInput = { title: "", excerpt: "", bodyContent: "", tags: [], status: "published" };
-const statusVariant = { published: "default", draft: "secondary", rejected: "destructive" } as const;
 
 export function MyPosts() {
   const [posts, setPosts] = useState<BlogPostSummary[]>([]);
@@ -93,7 +93,7 @@ export function MyPosts() {
     {
       accessorKey: "status", header: "Status",
       cell: ({ row: { original: p } }) => (
-        <Badge variant={statusVariant[p.status as keyof typeof statusVariant] ?? "secondary"} className="capitalize">{p.status}</Badge>
+        <StatusBadge status={p.status} />
       ),
     },
     { id: "date", accessorFn: (p) => p.publishedDate ?? p.createdAt, header: "Date", meta: { className: "hidden sm:table-cell" }, cell: ({ getValue }) => asDate(getValue<string>()) },
@@ -101,7 +101,7 @@ export function MyPosts() {
       id: "actions", header: () => <span className="sr-only">Actions</span>, enableSorting: false,
       cell: ({ row: { original: p } }) => (
         <div className="flex justify-end gap-1">
-          {p.status !== "rejected" && <Button variant="ghost" size="sm" onClick={() => void open(p)}>Edit</Button>}
+          {p.status !== "rejected" && <RowAction label="Edit" icon={<Pencil />} onClick={() => void open(p)} />}
           <ConfirmDelete what={`"${p.title}"`} onConfirm={() => void remove(p)} />
         </div>
       ),

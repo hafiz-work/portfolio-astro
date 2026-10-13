@@ -5,10 +5,10 @@ import { Input } from "@/components/shadcn/ui/input";
 import { Label } from "@/components/shadcn/ui/label";
 import { Textarea } from "@/components/shadcn/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/shadcn/ui/alert";
-import { Badge } from "@/components/shadcn/ui/badge";
 import { cn } from "@/lib/utils";
 import { authService, type Me } from "../../lib/auth";
 import { PageLoading } from "./PageLoading";
+import { StatusBadge } from "./StatusBadge";
 import { accountService, errorText, type ModerationEntry } from "../../lib/account";
 import type { ColumnDef } from "@tanstack/react-table";
 import { AccountDataTable, asDate } from "./AccountDataTable";
@@ -22,7 +22,6 @@ const FIELDS = [
   ["twitterUrl", "X / Twitter", "https://x.com/…"],
 ] as const;
 const isLink = (k: string) => k.endsWith("Url") || k === "website";
-const actionVariant = { reject: "destructive", restore: "secondary", delete: "outline" } as const;
 const moderationColumns: ColumnDef<ModerationEntry>[] = [
   { accessorKey: "createdAt", header: "Date", cell: ({ getValue }) => asDate(getValue<string>()) },
   { id: "type", accessorFn: (h) => (h.contentType === "quote" ? "Quote" : "Blog post"), header: "Type", meta: { className: "hidden sm:table-cell" } },
@@ -31,7 +30,7 @@ const moderationColumns: ColumnDef<ModerationEntry>[] = [
     accessorKey: "action", header: "Action",
     cell: ({ getValue }) => {
       const a = getValue<ModerationEntry["action"]>();
-      return <Badge variant={actionVariant[a] ?? "outline"} className="capitalize">{a}</Badge>;
+      return <StatusBadge status={a} />;
     },
   },
   { accessorKey: "reason", header: "Reason", enableSorting: false, meta: { className: "min-w-48 whitespace-normal" } },
