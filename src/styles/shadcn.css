@@ -38,6 +38,9 @@
     --accent: oklch(96.7% 0.003 264.542);
     --accent-foreground: oklch(13% 0.028 261.692);
     --destructive: oklch(57.7% 0.245 27.325);
+    /* state colours: emerald / amber-600 (status palette, see STYLE.md) */
+    --success: oklch(59.6% 0.145 163.225);
+    --warning: oklch(66.6% 0.179 58.318);
     /* red-600 */
     --border: oklch(92.8% 0.006 264.531);
     /* gray-200 */
@@ -75,6 +78,8 @@
     --accent: oklch(27.8% 0.033 256.848);
     --accent-foreground: oklch(100% 0 0);
     --destructive: oklch(63.7% 0.237 25.331);
+    --success: oklch(76.5% 0.177 163.223);
+    --warning: oklch(82.8% 0.189 84.429);
     /* red-500 */
     --border: oklch(100% 0 0 / 10%);
     /* white/10 */
@@ -108,6 +113,8 @@
     --color-accent: var(--accent);
     --color-accent-foreground: var(--accent-foreground);
     --color-destructive: var(--destructive);
+    --color-success: var(--success);
+    --color-warning: var(--warning);
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);

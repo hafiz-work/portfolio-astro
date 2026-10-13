@@ -1,39 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Check, Circle } from "lucide-react";
 import { Button } from "@/components/shadcn/ui/button";
 import { Input } from "@/components/shadcn/ui/input";
 import { Label } from "@/components/shadcn/ui/label";
-import { Progress } from "@/components/shadcn/ui/progress";
 import { Alert, AlertDescription } from "@/components/shadcn/ui/alert";
 import { authService } from "../../lib/auth";
 import { createTurnstile } from "../../lib/turnstile";
-
-// Only length is enforced (backend: 12-200). The rest are hints - forced composition
-// rules push people to "Password1!" (NIST 800-63B).
-const PASSWORD_HINTS: { label: string; test: (p: string) => boolean; required?: boolean }[] = [
-  { label: "At least 12 characters", test: (p) => p.length >= 12, required: true },
-  { label: "An uppercase letter", test: (p) => /[A-Z]/.test(p) },
-  { label: "A lowercase letter", test: (p) => /[a-z]/.test(p) },
-  { label: "A number", test: (p) => /\d/.test(p) },
-  { label: "A symbol", test: (p) => /[^A-Za-z0-9]/.test(p) },
-];
-// One shadcn Progress instead of the old 4 segments: score 0..3 -> 0/33/67/100, so an empty
-// password shows an empty bar. progress.tsx tints its own indicator (bg-primary), so the parent
-// re-tints it through the indicator's data-slot.
-// ponytail: Weak/Fair keep a hue (destructive token, amber has no token), Good/Strong fall back
-// to primary - the bar length and the label carry the last step.
-const STRENGTH = [
-  { label: "Weak", value: 0, indicator: "[&_[data-slot=progress-indicator]]:bg-destructive" },
-  { label: "Fair", value: 33, indicator: "[&_[data-slot=progress-indicator]]:bg-amber-500" },
-  { label: "Good", value: 67, indicator: "[&_[data-slot=progress-indicator]]:bg-primary" },
-  { label: "Strong", value: 100, indicator: "[&_[data-slot=progress-indicator]]:bg-primary" },
-];
-// ponytail: naive length + character-variety score; swap in zxcvbn if it ever matters.
-const strengthOf = (p: string) => {
-  if (p.length < 12) return 0;
-  const variety = PASSWORD_HINTS.slice(1).filter((h) => h.test(p)).length;
-  return Math.min(3, Math.max(0, variety - 1 + (p.length >= 16 ? 1 : 0)));
-};
+import { PASSWORD_MIN, PasswordStrength } from "./PasswordStrength";
 
 type Field = "name" | "email" | "password" | "confirm";
 type FieldErrors = Partial<Record<Field, string>>;
@@ -64,7 +36,7 @@ export function RegisterForm({ siteKey, mode }: { siteKey: string; mode: "regist
     if (!resend && !form.name.trim()) found.name = "Enter your name.";
     if (!email) found.email = "Enter your email.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) found.email = "Enter a valid email address.";
-    if (!resend && form.password.length < 12) found.password = `Use at least 12 characters (${form.password.length} now).`;
+    if (!resend && form.password.length < PASSWORD_MIN) found.password = `Use at least 12 characters (${form.password.length} now).`;
     if (!resend && !found.password && form.password !== form.confirm) found.confirm = "Passwords don't match.";
     setErrors(found);
     setError(null);
@@ -119,7 +91,6 @@ export function RegisterForm({ siteKey, mode }: { siteKey: string; mode: "regist
     );
   }
 
-  const strength = STRENGTH[strengthOf(form.password)];
   const mismatch = form.confirm.length > 0 && form.confirm !== form.password;
   const confirmError = errors.confirm ?? (mismatch ? "Passwords don't match." : undefined);
   // Typing in a field clears its own error.
@@ -162,34 +133,7 @@ export function RegisterForm({ siteKey, mode }: { siteKey: string; mode: "regist
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" autoComplete="new-password" minLength={12} maxLength={200} placeholder="At least 12 characters" value={form.password} onChange={set("password")} aria-invalid={!!errors.password} aria-describedby={errors.password ? "password-error password-hints" : "password-hints"} required />
               <FieldError id="password" message={errors.password} />
-              <div id="password-hints" className="grid gap-2">
-                {form.password && (
-                  <div className="flex items-center gap-3">
-                    <Progress
-                      value={strength.value}
-                      aria-label="Password strength"
-                      // progress.tsx uses `value` for the bar's transform but doesn't pass it to the
-                      // Radix root, so mirror it - else the bar reads as an indeterminate progressbar.
-                      aria-valuenow={strength.value}
-                      aria-valuetext={strength.label}
-                      className={`h-1 flex-1 ${strength.indicator}`}
-                    />
-                    <span className="w-14 text-right text-xs font-medium text-muted-foreground" aria-live="polite">{strength.label}</span>
-                  </div>
-                )}
-                <ul className="grid gap-1 text-xs">
-                  {PASSWORD_HINTS.map((h) => {
-                    const ok = h.test(form.password);
-                    return (
-                      <li key={h.label} className={`flex items-center gap-1.5 ${ok ? "text-sky-700 dark:text-sky-400" : "text-muted-foreground"}`}>
-                        {ok ? <Check className="size-3.5" aria-hidden="true" /> : <Circle className="size-3.5" aria-hidden="true" />}
-                        {h.label}{h.required ? " (required)" : ""}
-                        <span className="sr-only">{ok ? " - done" : " - not yet"}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
+              <PasswordStrength id="password-hints" password={form.password} />
             </div>
           )}
           {!resend && (

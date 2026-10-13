@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { navigate } from "astro:transitions/client";
 import { toast } from "sonner";
 import { normalizeAuthor, normalizeQuote } from "@/lib/quote-text";
 import { Button } from "@/components/shadcn/ui/button";
@@ -8,12 +9,15 @@ import { Textarea } from "@/components/shadcn/ui/textarea";
 import { Alert, AlertDescription } from "@/components/shadcn/ui/alert";
 import { accountService, errorText } from "../../lib/account";
 import type { Quote } from "../../types/quotes";
+import { PageLoading } from "./PageLoading";
+import { BackButton, useFormGuard } from "./FormGuard";
 
 const empty = { text: "", author: "", source: "" };
 const LIST = "/account/quotes";
 
 export function QuoteForm({ id = null }: { id?: number | null }) {
   const [quote, setQuote] = useState<Quote | null>(null);
+  const [initial, setInitial] = useState(empty);
   const [draft, setDraft] = useState(empty);
   const [loading, setLoading] = useState(id != null);
   const [saving, setSaving] = useState(false);
@@ -34,7 +38,9 @@ export function QuoteForm({ id = null }: { id?: number | null }) {
           return;
         }
         setQuote(found);
-        setDraft({ text: found.text, author: found.author, source: found.source ?? "" });
+        const loaded = { text: found.text, author: found.author, source: found.source ?? "" };
+        setInitial(loaded);
+        setDraft(loaded);
       } catch (e) {
         if (active) setLoadError(errorText(e));
       } finally {
@@ -45,6 +51,10 @@ export function QuoteForm({ id = null }: { id?: number | null }) {
       active = false;
     };
   }, [id]);
+
+  // Saving disarms it, so the redirect after a successful save doesn't prompt.
+  const leave = useFormGuard(!saving && JSON.stringify(draft) !== JSON.stringify(initial));
+  const toList = () => void leave(() => void navigate(LIST));
 
   const save = async (e: React.SubmitEvent) => {
     e.preventDefault();
@@ -66,13 +76,14 @@ export function QuoteForm({ id = null }: { id?: number | null }) {
     }
   };
 
-  if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (loading) return <PageLoading />;
 
   const editing = quote != null;
 
   return (
     <div className="grid gap-6">
       <header className="grid gap-1 border-b border-border pb-6">
+        <BackButton onClick={toList}>Quotes</BackButton>
         <h1 className="text-2xl font-semibold tracking-tight">{editing ? "Edit quote" : "Share a quote"}</h1>
         <p className="text-sm text-muted-foreground">
           {editing ? "Your changes appear on the quotes page straight away." : "Shared quotes appear on the quotes page straight away."}
@@ -96,7 +107,7 @@ export function QuoteForm({ id = null }: { id?: number | null }) {
         {loadError && <Alert variant="destructive"><AlertDescription>{loadError}</AlertDescription></Alert>}
         <div className="flex flex-wrap gap-2 border-t border-border pt-6">
           <Button type="submit" disabled={saving}>{editing ? "Save" : "Share"}</Button>
-          <Button type="button" variant="ghost" onClick={() => window.location.assign(LIST)}>Cancel</Button>
+          <Button type="button" variant="ghost" onClick={toList}>Cancel</Button>
         </div>
       </form>
     </div>

@@ -78,7 +78,7 @@ export function MyQuotes() {
         </Button>
       </header>
       {loadError && <Alert variant="destructive"><AlertDescription>{loadError}</AlertDescription></Alert>}
-      <AccountDataTable columns={columns} data={quotes} filterPlaceholder="Filter quotes…" empty="No quotes yet." />
+      <AccountDataTable columns={columns} data={quotes} filterPlaceholder="Filter quotes…" empty="No quotes yet." emptyAction={<Button asChild><a href="/account/quotes/new">New quote</a></Button>} />
     </div>
   );
 }
