@@ -1,6 +1,6 @@
 # Public User Profile Spec
 
-**Status:** PROPOSED 2026-10-13 - not started. Needs backend work; the frontend is blocked on it.
+**Status:** APPROVED 2026-10-13 - decisions D1-D6 taken as recommended, `authorUsername` links (§2.5, §3.3) in scope. Not started; backend first, the frontend is blocked on it.
 **Repos:** `hono-workers` (backend - username, visibility, public read) + `portfolio-astro` (settings UI, public page).
 **Depends on:** `user-registration-spec.md` (accounts, `GET /me`), `user-content-moderation-spec.md` (own posts/quotes, `rejected`, bans).
 **Backend path:** CLAUDE.md says `/Users/hafiz/Developments/hono-workers` - not present on the 2026-10-13 machine; confirm the path before Phase 1.
@@ -9,11 +9,11 @@ A signed-in user gets a shareable public page with their profile, links, posts a
 
 ---
 
-## 1. Decisions (owner - answer before Phase 1)
+## 1. Decisions (owner approved 2026-10-13 - all as recommended)
 
 | # | Question | Recommendation |
 |---|---|---|
-| D1 | URL | **`/u/{username}`**. The request said `/me/{username}`, but `/me/*` is already the API's *authenticated, own-data* namespace (`GET /me`, `/me/blog`, `/me/quotes`) and reads as "my" - a public page for someone else under `/me` confuses both people and code. `/@username` is a second option (needs an Astro route `[handle].astro` matching `@…`, collides with nothing today). |
+| D1 | URL | **`/u/{username}`** (decided). The request said `/me/{username}`, but `/me/*` is already the API's *authenticated, own-data* namespace (`GET /me`, `/me/blog`, `/me/quotes`) and reads as "my" - a public page for someone else under `/me` confuses both people and code. `/@username` was the alternative - not taken. |
 | D2 | Visibility default | **Off (opt-in).** PDPA: a profile becomes public only when the user turns it on. Existing users stay private. |
 | D3 | Username rules | 3-30 chars, `^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$` (lowercase letters, digits, single hyphens inside), stored lowercase, unique. Reserved list (§2.3). |
 | D4 | Username changes | Allowed any time; the old one is freed at once (no redirects). Shortcut - add a redirect table only if people complain about dead shared links. |
@@ -67,9 +67,16 @@ Anything that is or may become a site path or role: `admin`, `owner`, `account`,
 - Cache like the other public endpoints (colo cache + `Cache-Control`, short - e.g. 5 min) and purge/skip-cache on the owner's own profile update if the cache layer allows.
 - Rate limit with the existing public limiter. No list endpoint - **no user directory** (anti-scraping).
 
-### 2.5 Verify (backend)
+### 2.5 `authorUsername` on public blog / quote DTOs
 
-Script in `scripts/` (house style: assert-based, `bun scripts/verify-…`): username validator (good/bad/reserved/case), 409 on duplicate (case-insensitive), 400 public-without-username, public read returns 404 for private / banned / unverified / unknown and the DTO has exactly the whitelisted keys.
+- Public blog list + detail (`authorName` today) and public quotes (`submittedBy` today) gain `authorUsername: string | null`.
+- **Non-null only when that author's profile is public** (`profile_public = 1`, verified, not banned) - otherwise `null`, so the field never reveals a private user's username. Owner's own posts/quotes: `null` (they have no user profile).
+- Same join the endpoints already do for the display name; no extra query per row.
+- Purge/expire the public blog/quotes caches when a user flips `profilePublic` or changes `username`, else old links point at a 404 for one cache period (acceptable if purge isn't available - say so in the verify notes).
+
+### 2.6 Verify (backend)
+
+Script in `scripts/` (house style: assert-based, `bun scripts/verify-…`): username validator (good/bad/reserved/case), 409 on duplicate (case-insensitive), 400 public-without-username, public read returns 404 for private / banned / unverified / unknown and the DTO has exactly the whitelisted keys; `authorUsername` is `null` for a private author and set for a public one, on blog list, blog detail and quotes.
 
 ## 3. Frontend (`portfolio-astro`)
 
@@ -94,13 +101,16 @@ New first section **"Public profile"** above "Change password":
 ### 3.3 Links into it
 
 - Account user menu (`AccountSidebar.tsx`): "Website" -> **"View public profile"** (`/u/{username}`) when public; keep "Website" otherwise.
-- Blog post author name and `/quotes` attribution link to the profile when the author's is public - needs `authorUsername` (null when private) on the public post/quote DTOs. Phase 3, optional.
+- Author links (needs §2.5): when `authorUsername` is set, link the name to `/u/{authorUsername}`, else plain text as today:
+  - `src/pages/blog/index.astro` ("by {authorName}") and `src/pages/blog/[slug]/index.astro` (byline; also add `url` to the JSON-LD `Person`);
+  - `src/pages/quotes.astro` ("shared by {submittedBy}").
+  - `src/types/blog.ts` / `src/types/quotes.ts` gain `authorUsername?: string | null`; validate it with D3's regex before building the href.
 
 ## 4. Phases
 
-1. **Backend:** migration, `/me` fields, profile update + validator + reserved list, public read, verify script. Local D1 only.
-2. **Frontend:** settings section, `/u/[username]` page, user menu link. `npm run build`.
-3. **Optional:** `authorUsername` on public blog/quote DTOs + links; per-profile OG image.
+1. **Backend:** migration, `/me` fields, profile update + validator + reserved list, public read, `authorUsername` on public blog/quote DTOs, verify script. Local D1 only.
+2. **Frontend:** settings section, `/u/[username]` page, user menu link, author links on blog + quotes. `npm run build`.
+3. **Later (not approved yet):** per-profile OG image.
 4. **Owner:** remote migration, deploy backend, then frontend.
 
 ## 5. Never

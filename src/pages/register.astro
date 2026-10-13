@@ -1,9 +1,7 @@
 ---
 import AccountLayout from "../layouts/AccountLayout.astro";
 import { RegisterForm } from "../components/account/RegisterForm";
-// Public Turnstile site key; fallback keeps production working without build-time env.
-const siteKey =
-  import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAAFD-PSk_u7NHAF-5";
+import { TURNSTILE_SITE_KEY as siteKey } from "../lib/constants";
 // ?resend=1 (from /login) re-sends the confirmation link.
 const mode =
   Astro.url.searchParams.get("resend") === "1" ? "resend" : "register";

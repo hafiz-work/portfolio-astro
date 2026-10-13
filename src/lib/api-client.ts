@@ -60,7 +60,9 @@ export class ApiClient {
         }
     }
 
-    protected async request<T>(endpoint: string, options?: RequestInit): Promise<T | null> {
+    // `retried`: a 401 gets one refresh + retry. Without the cap, an endpoint that keeps
+    // answering 401 while refresh succeeds loops forever (a rotating-token D1 write each lap).
+    protected async request<T>(endpoint: string, options?: RequestInit, retried = false): Promise<T | null> {
         try {
             // Absolute URL construction
             const baseUrl = this.baseUrl;
@@ -79,7 +81,7 @@ export class ApiClient {
                 credentials: 'include',
             });
 
-            if (response.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh')) {
+            if (response.status === 401 && !retried && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh')) {
                 if (!this.refreshTokenPromise) {
                     this.refreshTokenPromise = this.refreshAccessToken().finally(() => {
                         this.refreshTokenPromise = null;
@@ -88,7 +90,7 @@ export class ApiClient {
 
                 const refreshed = await this.refreshTokenPromise;
                 if (refreshed) {
-                    return this.request<T>(endpoint, options);
+                    return this.request<T>(endpoint, options, true);
                 }
 
                 this.clearAuthState();

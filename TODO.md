@@ -13,10 +13,10 @@ Sisi backend dan frontend dua-dua **dah live dan disahkan** (2026-09-26):
 
 Baki:
 
-- [ ] **Sahkan `TURNSTILE_SECRET` betul** dengan satu login (atau hantar contact) sebenar dalam browser biasa. Dari luar, "secret tak diset" dan "token tak sah" dua-dua pulang 400 yang sama, jadi ia kena disahkan dari dalam: login berjaya (atau sekurang-kurangnya masuk peringkat semak kredential) = secret sah. Challenge Turnstile **tidak selesai dalam browser automasi** (headless mahupun headed/CDP) - aku dah cuba, jadi ini kerja manusia. `wrangler tail` sambil cuba login akan tunjuk baris `Turnstile siteverify result:` kalau nak bukti log.
+- [ ] **Sahkan `TURNSTILE_SECRET` betul** (2026-10-13: sisi frontend produksi disahkan - `/login`, `/register`, `/admin/login` serve `api.js?render=explicit` + site key, CSP benarkan `challenges.cloudflare.com`; `wrangler` tak login di mesin ni, jadi nama secret pun belum disemak - `wrangler secret list` dalam `hono-workers` tunjuk sama ada ia wujud, bukan sama ada ia betul) dengan satu login (atau hantar contact) sebenar dalam browser biasa. Dari luar, "secret tak diset" dan "token tak sah" dua-dua pulang 400 yang sama, jadi ia kena disahkan dari dalam: login berjaya (atau sekurang-kurangnya masuk peringkat semak kredential) = secret sah. Challenge Turnstile **tidak selesai dalam browser automasi** (headless mahupun headed/CDP) - aku dah cuba, jadi ini kerja manusia. `wrangler tail` sambil cuba login akan tunjuk baris `Turnstile siteverify result:` kalau nak bukti log.
 - [ ] **Sahkan domain widget** dalam dashboard ada `localhost` (+ `127.0.0.1`) untuk dev lokal; produksi guna `hafizbahtiar.com` + `www.hafizbahtiar.com` (var `TURNSTILE_HOSTNAMES`).
 - [ ] Replay: token single-use - cubaan kedua dengan token yang sama sepatutnya ditolak.
-- [ ] Nota dev: `.env.development`/`.env.example` guna `PUBLIC_TURNSTILE_SITE_KEY`; biar kosong untuk matikan captcha lokal (backend skip bila secret tak diset).
+- [x] ~~Nota dev: biar kosong untuk matikan captcha lokal~~ - **salah** (disemak 2026-10-13): `login`/`register`/`admin/login`/`ContactSection` guna `PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAAFD-…"`, jadi kosong = key produksi, captcha tetap hidup. Cara betul (dah tulis dalam `.env.example`): test key Cloudflare `1x00000000000000000000BB` (sentiasa lulus, invisible) + backend `TURNSTILE_SECRET` tak diset atau test secret `1x0000000000000000000000000000000AA`. Kod sengaja kekal `||` - `??` akan matikan captcha produksi kalau env build wujud tapi kosong. Key default kini satu konstan: `TURNSTILE_SITE_KEY` dalam `src/lib/constants.ts`.
 
 ## P0 - Deploy & operasi
 
@@ -35,7 +35,7 @@ Baki:
 
 ## Security & hardening
 
-- [ ] **[P1] Lockout brute-force login hanya client-side.** `login.astro:402` (5 gagal → 60s dalam browser boleh dimatikan). Sahkan backend had kadar `/auth/login` (Turnstile dah membantu) - kerja `hono-workers`.
+- [ ] **[P1] Lockout brute-force login hanya client-side.** Risiko kos juga: setiap cubaan = hash password (request paling berat CPU) + bacaan D1. `login.astro:402` (5 gagal → 60s dalam browser boleh dimatikan). Sahkan backend had kadar `/auth/login` (Turnstile dah membantu) - kerja `hono-workers`.
 - [ ] **[P2] CSP `'unsafe-inline'` untuk script** (`middleware.ts:33`, diperlukan oleh inline theme-init `CoreLayout`). Risiko sync: CSP `middleware.ts` kena sepadan dengan `public/_headers` secara manual (`middleware.ts:11`).
 - [ ] **[P2] Token verify-email melalui query URL** (`verify-email.astro:14`) - standard untuk link email; ubah hanya kalau backend boleh terima POST.
 
@@ -47,22 +47,36 @@ Baki:
 
 ## Correctness / robustness
 
-- [ ] **[P2] `ApiClient` retry 401 boleh berpusing** (`api-client.ts:82-99`) - 401 berulang pada request yang di-retry mencetuskan refresh + retry lagi selagi refresh pulang OK. Tambah flag "retried once".
-      Nota dari sesi lepas: 404 → `null` hanya untuk GET/HEAD; write sekarang throw, jadi caller yang dulu anggap 404 sebagai `null` kena jangkakan exception.
+- Nota: `ApiClient` 404 → `null` hanya untuk GET/HEAD; write throw, jadi caller yang dulu anggap 404 sebagai `null` kena jangkakan exception. (Loop retry 401 dah dibaiki 2026-10-13 - sekali refresh + retry sahaja, `bun scripts/check-api-retry.ts`.)
 
 ## Dead code & cleanup
 
 - [ ] **[P2] Buang `src/data/kl-polygon.json` (37 KB)** - sifar import (hanya `fetch-kl.cjs` di root menyentuhnya).
 - [ ] **[P3] `lib/blog.ts` `getPublicPosts`/`getPublicPostBySlug` dah tak dipanggil** - public blog guna `public-content.ts`; buang supaya service tu tinggal admin sahaja.
 
+## Kos Cloudflare (audit 2026-10-13)
+
+Konteks: request Worker murah (paid: 10M/bulan termasuk, lepas tu ~$0.30/M; free: >100k/hari = error, bukan bil). Yang betul-betul spike ialah **loop** dan **write D1**. Data luar dah colo-cached (Cache API, percuma); HTML SSR **tak** di-cache - setiap view = satu invocation.
+
+- [ ] **[P1] Sahkan `TURNSTILE_SECRET` di produksi** (lihat seksyen Captcha) - tanpanya backend skip captcha dan brute-force login jadi kos CPU sepenuhnya. Pastikan juga backend rate-limit `/auth/login`.
+- [ ] **[Owner, dashboard] Semak plan Cloudflare (Free atau Workers Paid)** - menentukan dua item di bawah. Paid: kos request ~$0.30/M, isu kecil. Free: had 100k request/hari untuk **seluruh site** - bila habis, semua page error (bukan bil), jadi itu satu-satunya senario yang betul-betul bahaya.
+- [ ] **[P3] Widget embed boleh dipasang mana-mana site** (`/waktu-solat/embed`, `/ipu/embed`, `frame-ancestors *`) - setiap pageview site lain = satu invocation kita; widget IPU reload setiap 30 min selagi terbuka (~48/hari setiap widget). Dianalisa 2026-10-13, **kod sengaja tak diubah**:
+      - Cache HTML (Cache API / Cache Rule) **tak kurangkan invocation** - Worker jalan sebelum cache; ia cuma jimat CPU render (beberapa ms). Data (JAKIM/APIMS) dah colo-cached dalam `fallback.ts`.
+      - Cache HTML juga **merosakkan widget**: `data-server-now` + `data-today` dalam HTML - jam tersasar sebanyak umur cache, dan sekitar tengah malam `today` basi boleh buat widget reload berulang sampai cache tamat.
+      - Rate-limit per IP tak hentikan site popular (setiap pelawat IP lain) - ia hanya untuk bot/banjir dari satu sumber.
+      - **Kalau Free**: (1) Notifications -> usage alert Workers requests hampir had harian; (2) WAF rate-limit rule untuk `/*/embed` per IP (lawan bot). Kalau satu site hos betul-betul besar: naik ke Paid, atau widget perlukan key.
+      - **Kalau Paid**: biar. 1M pageview/bulan di site hos ≈ $0.30.
+      - Kalau nanti nak kurangkan request dari pelawat sama yang buka banyak page site hos: buang kebergantungan `serverNow` dalam embed (guna jam peranti), baru `Cache-Control` pendek selamat. Risiko pada jam widget + semakan tengah malam - belum berbaloi.
+- [ ] **[Owner, dashboard] Semua page awam SSR termasuk home** - setiap view, crawler atau bot = satu invocation + CPU render; data dah colo-cached (`fallback.ts`, `public-content.ts`), jadi D1/upstream tak terkesan. Disemak 2026-10-13: **prerender tak membantu** - home, `/blog`, `/quotes`, `/projects` perlukan data API (prerender = data beku sampai build seterusnya, dan build kena capai API - sebab asal semuanya SSR); `/tarikh-hijri`, `/register`, `/verify-email` guna query; `/kiraan-detik` + app Showcase data langsung. Hanya `/404` dan `/login` tiada kebergantungan, tapi URL tak dikenali tetap panggil Worker, jadi jimat sikit CPU sahaja. Tindakan sebenar di dashboard: **Security -> Bots -> Bot Fight Mode** hidup; WAF custom rule block laluan scanner (`/wp-*`, `*.php`, `/.env`, `/.git`) - site ni tiada satu pun; rate-limit rule umum per IP. Free plan: usage alert sama seperti di atas.
+- [ ] **[P2] D1 rows-read untuk akaun (`hono-workers`)**: `/me/blog`, `/me/quotes`, `/me/moderation` pulang senarai penuh dan dashboard panggil ketiga-tiganya. Sahkan ada index `created_by_user_id` (dan untuk kiraan strike 90 hari) - tanpa index setiap panggilan baca seluruh table. Kalau senarai membesar: endpoint ringkasan untuk dashboard.
+- [ ] **[P3] Setiap full page load akaun/admin buat `tryRefresh`** = satu write D1 (refresh token berputar). ClientRouter elak ni; jangan tukar navigasi dalaman jadi full reload.
+
 ## Akaun - profil awam (`/u/{username}`)
 
-Spec: `docs/specs/public-user-profile-spec.md`. Frontend tersekat sampai backend siap.
+Spec: `docs/specs/public-user-profile-spec.md` - **diluluskan 2026-10-13** (D1-D6 ikut cadangan: `/u/{username}`, opt-in, peraturan username D3, tiada redirect bila tukar, apa yang dipapar D5, diindeks; link `authorUsername` masuk skop). Frontend tersekat sampai backend siap.
 
-- [ ] **[P2] Owner putuskan D1-D6 dalam spec** - URL (`/u/{username}` disyorkan; `/me/*` dah jadi namespace API milik sendiri), visibility opt-in, peraturan username, apa yang dipapar.
-- [ ] **[P2] Backend (`hono-workers`)**: migration `username` + `profile_public` (D1 lokal sahaja), `GET /me` + update profile terima dua field tu (409 `username_taken`), senarai username terpelihara, `GET /public/profiles/:username` (DTO whitelist, 404 seragam untuk private/banned/belum verify), skrip verify.
-- [ ] **[P2] Frontend**: seksyen "Public profile" dalam `/account/settings` (username + `Switch` + salin URL), page `src/pages/u/[username].astro` (`PublicLayout`, map ke DTO tempatan sebelum render), menu user "Website" -> "View public profile".
-- [ ] **[P3] Pilihan**: `authorUsername` dalam DTO blog/quote awam supaya nama penulis link ke profil.
+- [ ] **[P2] Backend (`hono-workers`)**: migration `username` + `profile_public` (D1 lokal sahaja), `GET /me` + update profile terima dua field tu (409 `username_taken`), senarai username terpelihara, `GET /public/profiles/:username` (DTO whitelist, 404 seragam untuk private/banned/belum verify), `authorUsername` dalam DTO blog/quote awam (spec §2.5 - `null` bila profil penulis private), skrip verify.
+- [ ] **[P2] Frontend**: seksyen "Public profile" dalam `/account/settings` (username + `Switch` + salin URL), page `src/pages/u/[username].astro` (`PublicLayout`, map ke DTO tempatan sebelum render), menu user "Website" -> "View public profile", link nama penulis ke `/u/{authorUsername}` di `/blog`, `/blog/[slug]` dan `/quotes` (spec §3.3).
 - [ ] **Owner**: migrate remote + deploy backend, baru deploy frontend.
 
 ## Backend (`hono-workers`)
