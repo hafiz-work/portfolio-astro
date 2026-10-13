@@ -33,7 +33,7 @@ type Field = "name" | "email" | "password" | "confirm";
 type FieldErrors = Partial<Record<Field, string>>;
 
 const FieldError = ({ id, message }: { id: string; message?: string }) =>
-  message ? <p id={`${id}-error`} className="text-xs text-red-600 dark:text-red-400">{message}</p> : null;
+  message ? <p id={`${id}-error`} className="text-xs text-destructive">{message}</p> : null;
 
 // mode "resend" (from /login: ?resend=1) asks only for the email and re-sends the link.
 export function RegisterForm({ siteKey, mode }: { siteKey: string; mode: "register" | "resend" }) {
@@ -102,7 +102,7 @@ export function RegisterForm({ siteKey, mode }: { siteKey: string; mode: "regist
       <div className="grid gap-6">
         <div className="grid gap-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">Check your email</h1>
-          <p className="text-sm text-balance text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-balance text-muted-foreground">
             If {sentTo} can be registered, a confirmation link is on its way. It expires in 24 hours.
           </p>
         </div>
@@ -130,7 +130,7 @@ export function RegisterForm({ siteKey, mode }: { siteKey: string; mode: "regist
     <div className="grid gap-6">
       <div className="grid gap-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">{resend ? "Resend confirmation" : "Create an account"}</h1>
-        <p className="text-sm text-balance text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-balance text-muted-foreground">
           {resend ? "We'll send the confirmation link again." : "Write blog posts and share quotes. Posts go live straight away and are moderated."}
         </p>
       </div>
@@ -161,17 +161,17 @@ export function RegisterForm({ siteKey, mode }: { siteKey: string; mode: "regist
                   <div className="flex items-center gap-3">
                     <div className="grid flex-1 grid-cols-4 gap-1" aria-hidden="true">
                       {STRENGTH.map((_, i) => (
-                        <div key={i} className={`h-1 rounded-full ${i <= strengthOf(form.password) ? strength.bar : "bg-gray-950/10 dark:bg-white/10"}`} />
+                        <div key={i} className={`h-1 rounded-full ${i <= strengthOf(form.password) ? strength.bar : "bg-muted"}`} />
                       ))}
                     </div>
-                    <span className="w-14 text-right text-xs font-medium text-gray-600 dark:text-gray-400" aria-live="polite">{strength.label}</span>
+                    <span className="w-14 text-right text-xs font-medium text-muted-foreground" aria-live="polite">{strength.label}</span>
                   </div>
                 )}
                 <ul className="grid gap-1 text-xs">
                   {PASSWORD_HINTS.map((h) => {
                     const ok = h.test(form.password);
                     return (
-                      <li key={h.label} className={`flex items-center gap-1.5 ${ok ? "text-sky-700 dark:text-sky-400" : "text-gray-500 dark:text-gray-400"}`}>
+                      <li key={h.label} className={`flex items-center gap-1.5 ${ok ? "text-sky-700 dark:text-sky-400" : "text-muted-foreground"}`}>
                         {ok ? <Check className="size-3.5" aria-hidden="true" /> : <Circle className="size-3.5" aria-hidden="true" />}
                         {h.label}{h.required ? " (required)" : ""}
                         <span className="sr-only">{ok ? " - done" : " - not yet"}</span>
@@ -195,7 +195,7 @@ export function RegisterForm({ siteKey, mode }: { siteKey: string; mode: "regist
           <Button type="submit" className="w-full" disabled={busy}>
             {busy ? "Sending..." : resend ? "Send link" : "Create account"}
           </Button>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Already have an account? <a href="/login" className="underline underline-offset-4">Sign in</a>
           </p>
         </div>

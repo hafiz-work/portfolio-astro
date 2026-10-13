@@ -92,13 +92,13 @@ export function AccountHome() {
     }
   };
 
-  if (!me) return <p className="text-sm text-gray-500">Loading…</p>;
+  if (!me) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   return (
     <div className="grid gap-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Your account</h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Signed in as {me.email}</p>
+        <p className="text-sm text-muted-foreground">Signed in as {me.email}</p>
       </div>
 
       {moderation.history.length > 0 && (

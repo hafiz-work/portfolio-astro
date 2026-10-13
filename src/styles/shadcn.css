@@ -1,11 +1,13 @@
 /*
- * shadcn/ui tokens - consumed ONLY by components in src/components/shadcn/.
+ * shadcn/ui tokens - consumed ONLY by components in src/components/shadcn/ and
+ * src/components/account/ (the account area is a shadcn-only screen).
  * Values are our palette (gray ink, sky accent; STYLE.md), not shadcn's
  * defaults, so shadcn parts sit naturally next to ours.
  *
  * Isolation rules (see src/components/shadcn/README.md):
  * - Never use these token classes (bg-background, text-muted-foreground,
- *   border-border, ring-ring, ...) outside src/components/shadcn/.
+ *   border-border, ring-ring, ...) outside src/components/shadcn/ or
+ *   src/components/account/.
  * - No base layer here: shadcn's `* { @apply border-border }` and
  *   `body { @apply bg-background }` would restyle the whole site.
  * - No --radius-* overrides: they would change every rounded-* class site-wide.
