@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, Plus, Quote as QuoteIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/shadcn/ui/button";
 import { Alert, AlertDescription } from "@/components/shadcn/ui/alert";
@@ -8,13 +8,20 @@ import type { Quote } from "../../types/quotes";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ConfirmDelete } from "./ConfirmDelete";
 import { StatusBadge } from "./StatusBadge";
+import { quotesCache } from "./quotes-cache";
 import { AccountDataTable, RowAction, asDate } from "./AccountDataTable";
 
 // /account/quotes: the signed-in user's own quotes. Live on /quotes at once; a
 // moderator can reject them (they then show the reason). Create/edit live on their
 // own pages (/account/quotes/new, /account/quotes/[id]/edit).
 export function MyQuotes() {
-  const [quotes, setQuotes] = useState<Quote[]>([]);
+  // Skeleton only on a first load; coming back from the form, the cached list shows
+  // at once and the refetch below swaps in fresh data silently.
+  const [quotes, setQuotes] = useState<Quote[]>(quotesCache.list ?? []);
+  const [loading, setLoading] = useState(quotesCache.list == null);
+  useEffect(() => {
+    if (!loading) quotesCache.list = quotes;
+  }, [quotes, loading]);
   // The list fetch is a page-level LOAD error: it stays inline. Delete outcomes are
   // ACTIONS, so they surface as toasts instead.
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -22,11 +29,12 @@ export function MyQuotes() {
   const load = async () => {
     try { setQuotes(await accountService.listQuotes()); }
     catch (e) { setLoadError(errorText(e)); }
+    finally { setLoading(false); }
   };
   useEffect(() => { void load(); }, []);
 
   const remove = async (q: Quote) => {
-    try { await accountService.deleteQuote(q.id); toast.success("Quote deleted"); await load(); }
+    try { await accountService.deleteQuote(q.id); setQuotes((list) => list.filter((x) => x.id !== q.id)); toast.success("Quote deleted"); }
     catch (err) { toast.error(errorText(err)); }
   };
 
@@ -67,14 +75,20 @@ export function MyQuotes() {
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-6">
         <div className="grid gap-1">
           <h1 className="text-2xl font-semibold tracking-tight">Quotes</h1>
-          <p className="text-sm text-muted-foreground">{quotes.length} {quotes.length === 1 ? "quote" : "quotes"} shared</p>
+          <p className="text-sm text-muted-foreground">{loading ? "Loading…" : `${quotes.length} ${quotes.length === 1 ? "quote" : "quotes"} shared`}</p>
         </div>
         <Button asChild>
           <a href="/account/quotes/new">New quote</a>
         </Button>
       </header>
       {loadError && <Alert variant="destructive"><AlertDescription>{loadError}</AlertDescription></Alert>}
-      <AccountDataTable columns={columns} data={quotes} filterPlaceholder="Filter quotes…" empty="No quotes yet." emptyAction={<Button asChild><a href="/account/quotes/new">New quote</a></Button>} />
+      <AccountDataTable columns={columns} data={quotes} filterPlaceholder="Filter quotes…" loading={loading}
+        empty={{
+          title: "No quotes yet",
+          description: "Share a line worth keeping. It appears on the quotes page straight away.",
+          icon: <QuoteIcon />,
+          action: <Button asChild><a href="/account/quotes/new"><Plus />New quote</a></Button>,
+        }} />
     </div>
   );
 }

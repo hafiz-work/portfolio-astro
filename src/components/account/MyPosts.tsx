@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Pencil } from "lucide-react";
+import { FileText, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/shadcn/ui/button";
 import { Input } from "@/components/shadcn/ui/input";
@@ -8,7 +8,6 @@ import { Textarea } from "@/components/shadcn/ui/textarea";
 import { Alert, AlertDescription } from "@/components/shadcn/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/shadcn/ui/radio-group";
 import { accountService, errorText, type MyPostInput } from "../../lib/account";
-import { PageLoading } from "./PageLoading";
 import { StatusBadge } from "./StatusBadge";
 import { renderUserMarkdown } from "../../lib/sanitize";
 import type { BlogPost, BlogPostSummary } from "../../types/blog";
@@ -36,7 +35,13 @@ export function MyPosts() {
     catch (e) { setLoadError(errorText(e)); }
     finally { setLoading(false); }
   };
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    void load();
+    if (new URLSearchParams(location.search).has("new")) {
+      history.replaceState(null, "", location.pathname);
+      void open();
+    }
+  }, []);
 
   const open = async (summary?: BlogPostSummary) => {
     setLoadError(null);
@@ -61,18 +66,20 @@ export function MyPosts() {
     if (!editing) return;
     const data = { ...editing.data, tags: tagsText.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 10) };
     try {
-      if (editing.id) await accountService.updatePost(editing.id, data);
-      else await accountService.createPost(data);
-      toast.success(editing.id ? "Post updated" : "Post created");
+      const id = editing.id;
+      const saved = id ? await accountService.updatePost(id, data) : await accountService.createPost(data);
+      // Show the list at once with the saved post in it; the refetch then syncs silently.
+      if (saved) setPosts((list) => (id ? list.map((p) => (p.id === saved.id ? saved : p)) : [saved, ...list]));
+      toast.success(id ? "Post updated" : "Post created");
       setEditing(null);
-      await load();
+      void load();
     } catch (err) {
       toast.error(errorText(err));
     }
   };
 
   const remove = async (post: BlogPostSummary) => {
-    try { await accountService.deletePost(post.id); toast.success("Post deleted"); await load(); }
+    try { await accountService.deletePost(post.id); setPosts((list) => list.filter((x) => x.id !== post.id)); toast.success("Post deleted"); }
     catch (err) { toast.error(errorText(err)); }
   };
 
@@ -107,8 +114,6 @@ export function MyPosts() {
       ),
     },
   ];
-
-  if (loading) return <PageLoading />;
 
   if (editing) {
     const set = (patch: Partial<MyPostInput>) => setEditing({ ...editing, data: { ...editing.data, ...patch } });
@@ -163,12 +168,18 @@ export function MyPosts() {
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-6">
         <div className="grid gap-1">
           <h1 className="text-2xl font-semibold tracking-tight">Blog posts</h1>
-          <p className="text-sm text-muted-foreground">{posts.length} {posts.length === 1 ? "post" : "posts"} · written in Markdown</p>
+          <p className="text-sm text-muted-foreground">{loading ? "Loading…" : `${posts.length} ${posts.length === 1 ? "post" : "posts"} · written in Markdown`}</p>
         </div>
         <Button onClick={() => void open()}>New post</Button>
       </header>
       {loadError && <Alert variant="destructive"><AlertDescription>{loadError}</AlertDescription></Alert>}
-      <AccountDataTable columns={columns} data={posts} filterPlaceholder="Filter posts…" empty="No posts yet." emptyAction={<Button onClick={() => void open()}>New post</Button>} />
+      <AccountDataTable columns={columns} data={posts} filterPlaceholder="Filter posts…" loading={loading}
+        empty={{
+          title: "No posts yet",
+          description: "Write your first post in Markdown. Published posts appear on the blog straight away.",
+          icon: <FileText />,
+          action: <Button onClick={() => void open()}><Plus />New post</Button>,
+        }} />
     </div>
   );
 }
