@@ -76,7 +76,7 @@ export function MyPosts() {
             {p.status === "published" ? <a href={`/blog/${p.slug}`} className="hover:underline">{p.title}</a> : p.title}
           </p>
           {p.status === "rejected" && (
-            <p className="text-sm text-red-600 dark:text-red-400">Removed by a moderator: {p.moderationReason}</p>
+            <p className="text-sm text-destructive">Removed by a moderator: {p.moderationReason}</p>
           )}
         </>
       ),
@@ -99,7 +99,7 @@ export function MyPosts() {
     },
   ];
 
-  if (loading) return <p className="text-sm text-gray-500">Loading…</p>;
+  if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   if (editing) {
     const set = (patch: Partial<MyPostInput>) => setEditing({ ...editing, data: { ...editing.data, ...patch } });
@@ -125,7 +125,7 @@ export function MyPosts() {
                 <Button type="button" variant="link" size="sm" onClick={() => setPreview(!preview)}>{preview ? "Edit" : "Preview"}</Button>
               </div>
               {preview ? (
-                <div className="prose prose-gray max-w-none rounded-md p-4 ring-1 ring-gray-950/10 dark:prose-invert dark:ring-white/10" dangerouslySetInnerHTML={{ __html: html }} />
+                <div className="prose prose-gray max-w-none rounded-md p-4 ring-1 ring-border dark:prose-invert" dangerouslySetInnerHTML={{ __html: html }} />
               ) : (
                 <Textarea id="body" rows={16} maxLength={50000} required className="font-mono text-sm" value={editing.data.bodyContent} onChange={(e) => set({ bodyContent: e.target.value })} />
               )}

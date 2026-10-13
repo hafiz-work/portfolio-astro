@@ -9,6 +9,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/shadcn/ui/breadcrumb";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/shadcn/ui/resizable";
+import { AccountHeader } from "./AccountHeader";
 import { AccountSidebar } from "./AccountSidebar";
 import { ACCOUNT_LINKS } from "./account-nav";
 
@@ -27,9 +28,11 @@ const writeOnlyStorage = {
   },
 };
 
-// lg and up: resizable sidebar | content (layout remembered per browser). Below lg the
-// group falls back to a plain block (sidebar + handle hidden; AccountHeader's tabs take
-// over). One tree at every size, so the page's nested islands (children) never remount.
+// The whole signed-in account screen: shadcn background, the session guard (AccountHeader,
+// which also covers /me and the mobile tabs+menu bar), then sidebar | content. lg and up
+// the sidebar is a resizable panel (layout remembered per browser); below lg the group
+// falls back to a plain block. One tree at every size, so the page's nested islands
+// (children) never remount.
 export function AccountShell({ path, children }: { path: string; children?: ReactNode }) {
   const layout = useDefaultLayout({ id: "account-shell", storage: writeOnlyStorage, onlySaveAfterUserInteractions: true });
   const groupRef = useGroupRef();
@@ -46,41 +49,56 @@ export function AccountShell({ path, children }: { path: string; children?: Reac
   const current = ACCOUNT_LINKS.find((l) => l.href === path);
 
   return (
-    <ResizablePanelGroup
-      orientation="horizontal"
-      groupRef={groupRef}
-      defaultLayout={layout.defaultLayout}
-      onLayoutChanged={layout.onLayoutChanged}
-      // Library default is overflow:hidden, which would break the sticky sidebar.
-      style={{ height: "auto", overflow: "visible" }}
-      className="max-lg:block!"
-    >
-      <ResizablePanel id="nav" defaultSize="22%" minSize="16%" maxSize="32%" style={{ overflow: "visible" }}>
-        {/* Below lg the sidebar is hidden (AccountHeader's tabs bar takes over). */}
-        <div className="sticky top-20 pr-4 max-lg:hidden">
-          <AccountSidebar path={path} />
+    <div className="flex min-h-dvh flex-col bg-background text-foreground">
+      {/* Small screens: tabs + account menu bar. lg and up: the side navigation. */}
+      <div className="border-b border-border bg-card lg:hidden">
+        <div className="mx-auto max-w-6xl px-4 py-2 sm:px-6">
+          <AccountHeader path={path} />
         </div>
-      </ResizablePanel>
-      <ResizableHandle withHandle className="max-lg:hidden" />
-      <ResizablePanel id="main" minSize="50%">
-        {/* @container: pages lay out by the panel's width (it resizes), not the viewport's. */}
-        <main className="@container min-w-0 lg:pl-8">
-          {current && (
-            <Breadcrumb className="mb-6">
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/account">Account</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{current.label}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          )}
-          {children}
-        </main>
-      </ResizablePanel>
-    </ResizablePanelGroup>
+      </div>
+
+      <div className="mx-auto w-full max-w-6xl grow px-4 py-8 sm:px-6 sm:py-12">
+        <ResizablePanelGroup
+          orientation="horizontal"
+          groupRef={groupRef}
+          defaultLayout={layout.defaultLayout}
+          onLayoutChanged={layout.onLayoutChanged}
+          // Library default is overflow:hidden, which would break the sticky sidebar.
+          style={{ height: "auto", overflow: "visible" }}
+          className="max-lg:block!"
+        >
+          <ResizablePanel id="nav" defaultSize="22%" minSize="16%" maxSize="32%" style={{ overflow: "visible" }}>
+            {/* Below lg the sidebar is hidden (AccountHeader's tabs bar takes over). */}
+            <div className="sticky top-12 pr-4 max-lg:hidden">
+              <AccountSidebar path={path} />
+            </div>
+          </ResizablePanel>
+          <ResizableHandle withHandle className="max-lg:hidden" />
+          <ResizablePanel id="main" minSize="50%">
+            {/* @container: pages lay out by the panel's width (it resizes), not the viewport's. */}
+            <main className="@container min-w-0 lg:pl-8">
+              {current && (
+                <Breadcrumb className="mb-6">
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink href="/account">Account</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage>{current.label}</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
+              )}
+              {children}
+            </main>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
+
+      <footer className="py-6 text-center text-xs text-muted-foreground">
+        <a href="/" className="hover:text-foreground">hafizbahtiar.com</a>
+      </footer>
+    </div>
   );
 }

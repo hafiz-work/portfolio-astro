@@ -89,7 +89,7 @@ export function LoginForm({ siteKey }: { siteKey: string }) {
     <div className="grid gap-6">
       <div className="grid gap-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-        <p className="text-sm text-balance text-gray-600 dark:text-gray-400">Welcome back to hafizbahtiar.com.</p>
+        <p className="text-sm text-balance text-muted-foreground">Welcome back to hafizbahtiar.com.</p>
       </div>
       <form onSubmit={submit} noValidate>
         <div className="grid gap-4">
@@ -123,7 +123,7 @@ export function LoginForm({ siteKey }: { siteKey: string }) {
         </div>
         <div className="mt-6 flex flex-col gap-3">
           <Button type="submit" className="w-full" disabled={busy}>{busy ? "Signing in..." : "Sign in"}</Button>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-muted-foreground">
             No account yet? <a href="/register" className="underline underline-offset-4">Create one</a>
           </p>
         </div>

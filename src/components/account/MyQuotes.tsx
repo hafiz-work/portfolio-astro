@@ -54,9 +54,9 @@ export function MyQuotes() {
       cell: ({ row: { original: q } }) => (
         <>
           <p className="line-clamp-3 font-medium whitespace-pre-line" title={q.text}>“{q.text}”</p>
-          {q.source && <p className="text-sm text-gray-500">{q.source}</p>}
+          {q.source && <p className="text-sm text-muted-foreground">{q.source}</p>}
           {q.status === "rejected" && (
-            <p className="text-sm text-red-600 dark:text-red-400">Removed by a moderator: {q.moderationReason}</p>
+            <p className="text-sm text-destructive">Removed by a moderator: {q.moderationReason}</p>
           )}
         </>
       ),

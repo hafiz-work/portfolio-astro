@@ -23,7 +23,7 @@ export function VerifyEmail() {
         <h1 className="text-2xl font-semibold tracking-tight">
           {state === "pending" ? "Confirming your email…" : state === "ok" ? "Email confirmed" : "Link not valid"}
         </h1>
-        <p className="text-sm text-balance text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-balance text-muted-foreground">
           {state === "ok" ? "You can sign in now." : state === "failed" ? "This link is invalid or has expired." : "One moment."}
         </p>
       </div>

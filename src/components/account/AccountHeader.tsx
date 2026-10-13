@@ -67,7 +67,7 @@ export function AccountHeader({ path }: { path: string }) {
           {me && (
             <DropdownMenuLabel className="font-normal">
               <p className="truncate text-sm font-medium">{me.profile?.displayName || me.name}</p>
-              <p className="truncate text-xs text-gray-500 dark:text-gray-400">{me.email}</p>
+              <p className="truncate text-xs text-muted-foreground">{me.email}</p>
             </DropdownMenuLabel>
           )}
           <DropdownMenuSeparator />
