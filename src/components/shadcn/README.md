@@ -19,7 +19,7 @@ After each add:
 
 ## Rules
 
-- **Token classes are shadcn-only.** `bg-background`, `text-muted-foreground`, `border-border`, `ring-ring`, `bg-primary`, … are defined in `src/styles/shadcn.css` (mapped to our gray/sky palette) and may only appear in files under this folder.
+- **Token classes are shadcn-only.** `bg-background`, `text-muted-foreground`, `border-border`, `ring-ring`, `bg-primary`, … are defined in `src/styles/shadcn.css` (mapped to our gray/sky palette) and may only appear in files under this folder or `src/components/account/` (the account area is a shadcn-only screen).
 - **Use as React islands.** Mount from `.astro` with a `client:*` directive, or import inside an existing React island. They render in light/dark automatically (`.dark` on `<html>`).
 - **Icons:** lucide only (already configured).
 - **Don't fork our primitives.** If `src/components/ui/` already has the thing (Select, DataTable, AlertToast, ConfirmModal), use ours unless you are deliberately replacing it. A replacement is a separate, explicit task that migrates every call site.

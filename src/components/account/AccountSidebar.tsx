@@ -30,8 +30,8 @@ export function AccountSidebar({ path }: { path: string }) {
           <AvatarFallback>{me ? initials(me) : ""}</AvatarFallback>
         </Avatar>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-gray-950 dark:text-white">{me ? me.profile?.displayName || me.name : "…"}</p>
-          <p className="truncate text-xs text-gray-500 dark:text-gray-400">{me?.email ?? ""}</p>
+          <p className="truncate text-sm font-medium text-foreground">{me ? me.profile?.displayName || me.name : "…"}</p>
+          <p className="truncate text-xs text-muted-foreground">{me?.email ?? ""}</p>
         </div>
       </div>
       <Separator />

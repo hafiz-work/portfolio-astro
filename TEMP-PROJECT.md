@@ -1,9 +1,9 @@
-# eZPay Kiosk (Public Users) — input untuk admin form
+# eZPay Kiosk (Public Users) - input untuk admin form
 
 Rujukan: `/admin/projects/new` → `ProjectEditor`. Ikut tab: **Basics → Case Study → Media → Tech Stack → Links & SEO → Publish**.
 Cara: isi **Title / Slug / Short description** dulu → tekan **Create draft**. Lepas tu baru tab lain terbuka.
 
-Nota: copy dalam English (ikut gaya projek sedia ada — ayat fakta, "I built…"). Setiap tanda ⚠️ = kena sahkan/ganti dengan fakta sebenar.
+Nota: copy dalam English (ikut gaya projek sedia ada - ayat fakta, "I built…"). Setiap tanda ⚠️ = kena sahkan/ganti dengan fakta sebenar.
 
 ---
 
@@ -35,10 +35,10 @@ Nota: copy dalam English (ikut gaya projek sedia ada — ayat fakta, "I built…
 |---|---|
 | **Problem** | `Paying in person at DBKL meant queueing at a counter, and the counter was the only channel for cash, card and licence payments.` ⚠️ |
 | **Solution** | `A self-service kiosk takes the whole transaction: the customer looks up what they owe, pays by card or QR, and walks away with a printed receipt - no staff at the screen.` ⚠️ |
-| **My contribution** | `Built the kiosk app from scratch: the whole screen flow (reference lookup → payment → receipt), card payment driven through the bank terminal, QR confirmation, receipt printing, and recovery for payments interrupted mid-transaction. Payment and printing sit behind an adaptive interface, so another kiosk model is a new adapter rather than changes across every screen.` ⚠️ **WAJIB ganti dengan apa kau betul-betul buat** — senarai di atas cadangan. |
+| **My contribution** | `Built the kiosk app from scratch: the whole screen flow (reference lookup → payment → receipt), card payment driven through the bank terminal, QR confirmation, receipt printing, and recovery for payments interrupted mid-transaction. Payment and printing sit behind an adaptive interface, so another kiosk model is a new adapter rather than changes across every screen.` ⚠️ **WAJIB ganti dengan apa kau betul-betul buat** - senarai di atas cadangan. |
 | **Architecture / tech decisions** | `Payment and printing sit behind one adaptive interface, so another kiosk model is a new adapter rather than a rewrite. An idle-reset state machine returns the kiosk to the start screen on timeout, so the next customer never sees the previous session, and an interrupted transaction is treated as recoverable, not failed.` ⚠️ |
 | **Results / impact** | ⚠️ Letak angka sebenar kalau ada (cth. "X% bayaran walk-in pindah ke kiosk", "masa urus niaga turun dari A ke B"). Kalau tiada angka: `Payments the public can complete without staff, with receipts and a recoverable path when a transaction is interrupted.` |
-| **Full description (HTML)** | Biar kosong (optional) — projek EzPay terminal pun kosong. |
+| **Full description (HTML)** | Biar kosong (optional) - projek EzPay terminal pun kosong. |
 
 ### Custom sections (optional)
 Jenis dibenarkan: `problem` · `solution` · `contribution` · `architecture` · `challenges` · `results` · `custom`.
@@ -57,7 +57,7 @@ Satu-satu tekan **Add feature**. Cadangan 4:
 | `Card & QR payment` | `Card transactions go to the bank terminal; QR and e-wallet payments are confirmed before the receipt prints.` ⚠️ |
 | `Receipt & recovery` | `Receipt prints on completion, and a payment interrupted mid-transaction is recovered instead of lost.` |
 
-Icon: pilih dari senarai dalam CMS (cth. check / credit-card / printer / user) — kosong pun okay.
+Icon: pilih dari senarai dalam CMS (cth. check / credit-card / printer / user) - kosong pun okay.
 
 ---
 
@@ -114,9 +114,9 @@ Link types: `source` · `demo` · `app_store` · `play_store` · `case_study` ·
 ## ⚠️ Andaian aku (sahkan sebelum publish)
 
 1. Kiosk ni **Android**, dan app kiosk ni kau bangunkan **dari kosong** (repo sendiri, bukan lanjutan app pegawai).
-2. Jenis bayaran di kiosk = kompaun + lesen (cadangan — tambah/buang ikut sebenar, cth. cukai taksiran, sewa).
+2. Jenis bayaran di kiosk = kompaun + lesen (cadangan - tambah/buang ikut sebenar, cth. cukai taksiran, sewa).
 3. Ada bayaran kad melalui bank terminal + mungkin QR/e-wallet, **dan** cetakan resit.
 4. Tahun `2026`, Role `Mobile Developer`, Client `DBKL`, Public ON.
-5. **"My contribution" tu cadangan** — bahagian ini paling penting untuk kau betulkan, sebab itu yang orang baca.
+5. **"My contribution" tu cadangan** - bahagian ini paling penting untuk kau betulkan, sebab itu yang orang baca.
 
-Kalau mana-mana andaian salah, bagitau — aku kemas balik draf tu.
+Kalau mana-mana andaian salah, bagitau - aku kemas balik draf tu.

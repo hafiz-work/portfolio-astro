@@ -46,7 +46,7 @@ export function AccountDataTable<T>({ columns, data, filterPlaceholder = "Filter
         <Input placeholder={filterPlaceholder} aria-label={filterPlaceholder} value={filter}
           onChange={(e) => setFilter(e.target.value)} className="max-w-xs" />
       )}
-      <div className="rounded-md ring-1 ring-gray-950/10 dark:ring-white/10">
+      <div className="rounded-md ring-1 ring-border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
@@ -79,7 +79,7 @@ export function AccountDataTable<T>({ columns, data, filterPlaceholder = "Filter
               </TableRow>
             )) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-20 text-center text-gray-500">
+                <TableCell colSpan={columns.length} className="h-20 text-center text-muted-foreground">
                   {data.length ? "No matches." : empty}
                 </TableCell>
               </TableRow>
@@ -88,7 +88,7 @@ export function AccountDataTable<T>({ columns, data, filterPlaceholder = "Filter
         </Table>
       </div>
       {table.getPageCount() > 1 && (
-        <div className="flex items-center justify-end gap-2 text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
           <span className="mr-auto">Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}</span>
           <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Previous</Button>
           <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Next</Button>
