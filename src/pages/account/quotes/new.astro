@@ -1,0 +1,9 @@
+---
+export const prerender = false;
+import AccountLayout from "../../../layouts/AccountLayout.astro";
+import { QuoteForm } from "../../../components/account/QuoteForm";
+---
+
+<AccountLayout title="Share a quote">
+  <QuoteForm client:load />
+</AccountLayout>
