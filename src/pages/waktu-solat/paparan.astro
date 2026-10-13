@@ -859,9 +859,35 @@ const controlClass =
     };
     tick();
     timer = window.setInterval(tick, 1000);
-    // JAKIM was down when the page rendered: try again in 5 minutes.
-    if (!cells.length)
-      window.setTimeout(() => location.reload(), 5 * 60 * 1000);
+    // JAKIM was down when the page rendered (and no stored copy): try again with
+    // backoff 5 -> 10 -> 20 -> 30 min (capped), +-20% jitter so every mosque screen
+    // doesn't reload in the same second when JAKIM comes back. The attempt count
+    // survives the reload in sessionStorage and resets once times show again.
+    const RETRY_KEY = "paparan-retry";
+    const attempt = (() => {
+      try {
+        return Number(sessionStorage.getItem(RETRY_KEY)) || 0;
+      } catch {
+        return 0;
+      }
+    })();
+    if (!cells.length) {
+      const minutes =
+        Math.min(5 * 2 ** attempt, 30) * (0.8 + Math.random() * 0.4);
+      window.setTimeout(
+        () => {
+          try {
+            sessionStorage.setItem(RETRY_KEY, String(attempt + 1));
+          } catch {}
+          location.reload();
+        },
+        minutes * 60 * 1000,
+      );
+    } else if (attempt) {
+      try {
+        sessionStorage.removeItem(RETRY_KEY);
+      } catch {}
+    }
 
     // Idle cursor/controls (never while the settings dialog is open).
     let idle = 0;

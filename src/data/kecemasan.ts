@@ -8,6 +8,11 @@
 // 991 / 994 as separate lines (999.gov.my lists only 999), Talian HEAL 15555
 // (KKM site unreadable; news only), MCMC phone 1-800-188-030 (suspended in 2021,
 // no official word since). Highway hotlines: LLM's directory (all 33 listed 2026-10-12).
+// Insurers/takaful (checked 2026-10-13), left out: PIAM Accident Assist 15500 /
+// 1-300-22-1188 (ended 31 Dec 2022 - kurnia.com/node/6997), Tokio Marine and Liberty
+// (official pages block automated reads - number not seen on them), Takaful Ikhlas
+// (no official page found), Berjaya Sompo (site points to the MySOMPO app; the only
+// number is in a 2018 notice).
 
 export interface Contact {
   name: string;
@@ -34,6 +39,8 @@ export interface Group {
 const V = "2026-10-11";
 /** Highway hotlines from LLM's official directory (llm.gov.my/awam/highway), checked: */
 const V2 = "2026-10-12";
+/** Insurer / takaful roadside lines, each from the company's own site, checked: */
+const V3 = "2026-10-13";
 
 export const KECEMASAN: Group[] = [
   {
@@ -209,6 +216,69 @@ export const KECEMASAN: Group[] = [
         note: "Hotline info trafik LLM - untuk lebuh raya lain yang tidak disenaraikan di sini.",
         source: "https://www.llm.gov.my",
         verified: V,
+      },
+    ],
+  },
+  {
+    id: "insurans",
+    title: "Tunda dan bantuan jalan raya (insurans / takaful)",
+    intro:
+      "Kereta rosak atau kemalangan? Hubungi talian bantuan penanggung insurans atau pengendali takaful motor anda - mereka hantar lori tunda panel dan bantuan baiki kecil. Had tunda dan kelayakan bergantung pada polisi atau sijil anda. Jangan serah kenderaan kepada lori tunda yang datang tanpa dipanggil. Jika ada kecederaan atau bahaya, hubungi 999. Setiap nombor daripada laman rasmi syarikat itu.",
+    contacts: [
+      {
+        name: "AIA Auto Assist / AIA Roadside Assist",
+        number: "1800-88-8733",
+        hours: "24 jam",
+        note: "AIA General. Talian alternatif: +603-7989 0352.",
+        source: "https://www.aia.com.my/en/help-support/contact-us/overview.html",
+        verified: V3,
+      },
+      {
+        name: "Allianz Road Rangers",
+        number: "1800-22-5542",
+        hours: "24 jam",
+        note: "Allianz General. Bantuan selepas kemalangan dan kerosakan.",
+        source: "https://www.allianz.com.my/a-z-reads/automotive/end-to-end-assistance-after-an-accident-anytime-anywhere",
+        verified: V3,
+      },
+      {
+        name: "Etiqa Auto Assist",
+        number: "1-800-88-6491",
+        hours: "24 jam",
+        note: "Tunda dan bantuan kerosakan kereta. Dari Singapura, Thailand atau Brunei: +603-2296 8600.",
+        source: "https://www.etiqa.com.my/etiqa-auto-assist",
+        verified: V3,
+      },
+      {
+        name: "Kurnia Auto Assist",
+        number: "1 800 88 3833",
+        hours: "24 jam",
+        note: "Bantuan kemalangan dan kerosakan di jalan raya.",
+        source: "https://www.kurnia.com/contact-us",
+        verified: V3,
+      },
+      {
+        name: "MSIG Motor Assist",
+        number: "1-300-880-833",
+        hours: "24 jam",
+        note: "Bantuan kemalangan dan kerosakan motor.",
+        source: "https://www.msig.com.my/contact-us",
+        verified: V3,
+      },
+      {
+        name: "Takaful Malaysia - Tele Bantuan",
+        number: "1-800 888 788",
+        note: "Syarikat Takaful Malaysia. Waktu operasi tidak dinyatakan di laman rasmi.",
+        source: "https://www.takaful-malaysia.com.my/contact-us",
+        verified: V3,
+      },
+      {
+        name: "Zurich Roadside Assistance",
+        number: "1-300-88-5566",
+        hours: "24 jam",
+        note: "WhatsApp (dan panggilan dari talian tetap tempatan): +603-7989 0345.",
+        source: "https://www.zurich.com.my/en",
+        verified: V3,
       },
     ],
   },
