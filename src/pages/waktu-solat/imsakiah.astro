@@ -59,11 +59,11 @@ const daysLeft = data
   title={`${title} - ${zone.daerah} | Hafiz Bahtiar`}
   description={`Jadual imsak, sahur dan berbuka puasa Ramadan ${hYear}H untuk ${zone.daerah}, ${zone.negeri}, mengikut waktu solat JAKIM. Boleh dicetak.`}
 >
-  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+  <div class="relative mx-auto mt-8 max-lg:max-w-2xl sm:mt-24">
     <BackLink href={`/waktu-solat?zone=${zone.code}`} label="Waktu Solat" />
     <div class="line-y">
       <h1
-        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+        class="mx-2 text-4xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
       >
         <TechHeading
           text="Imsakiah"
@@ -283,7 +283,7 @@ const daysLeft = data
         agama Islam negeri.
       </Disclaimer>
     </div>
-    <div class="mb-46"></div>
+    <div class="mb-16 sm:mb-46"></div>
   </div>
 </PublicLayout>
 

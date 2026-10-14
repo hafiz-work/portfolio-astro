@@ -25,10 +25,10 @@ const chipClass =
   <!-- Same layout as /blog (tailwindcss.com/blog): big title + lead on hairline
        rows, then one row per quote - [author | divider | quote, source, tags] -
        with spacer rows between so the column dividers run the full list. -->
-  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+  <div class="relative mx-auto mt-8 max-lg:max-w-2xl sm:mt-24">
     <div class="line-y">
       <h1
-        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+        class="mx-2 text-4xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
       >
         <TechHeading
           text="Words worth keeping"
@@ -75,7 +75,7 @@ const chipClass =
               </div>
             </div>
           )}
-          <div class="mt-12 mb-46 grid grid-cols-1 lg:grid-cols-[24rem_2.5rem_minmax(0,1fr)]">
+          <div class="mt-12 mb-16 sm:mb-46 grid grid-cols-1 lg:grid-cols-[24rem_2.5rem_minmax(0,1fr)]">
             {quotes.map((quote, i) => (
               <div
                 class="contents"
@@ -166,7 +166,7 @@ const chipClass =
           </div>
         </>
       ) : (
-        <div class="line-y mt-12 mb-46">
+        <div class="line-y mt-12 mb-16 sm:mb-46">
           <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
             The first quotes are on the way. Meanwhile,{" "}
             <a

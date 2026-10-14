@@ -28,7 +28,7 @@ const corners = [
 <!-- tailwindcss.com line: flat, full-width, hairline bottom, sticky. -->
 <nav
     id="main-nav"
-    class="sticky top-0 z-50 w-full overflow-x-clip bg-canvas/95 backdrop-blur-sm dark:bg-pub-dark/95"
+    class="sticky top-0 z-50 w-full overflow-x-clip pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] bg-canvas/95 backdrop-blur-sm dark:bg-pub-dark/95"
 >
     <div
         class="line-b flex h-14 items-center justify-between gap-4 px-4 sm:px-6"
@@ -68,18 +68,6 @@ const corners = [
             >
                 <Search className="h-4 w-4" aria-hidden="true" />
                 <kbd class="font-sans text-xs/5" data-cmdk-kbd>⌘K</kbd>
-            </button>
-            <button
-                type="button"
-                data-cmdk-open
-                class="inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-950 hover:bg-gray-950/5 md:hidden dark:text-white dark:hover:bg-white/10"
-                aria-label="Search"
-            >
-                <Search
-                    className="h-5 w-5"
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                />
             </button>
 
             <div class="hidden items-center gap-6 md:flex" id="navbar-default">

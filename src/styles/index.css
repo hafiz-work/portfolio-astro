@@ -89,6 +89,8 @@ html[data-theme-switching]::view-transition-new(root) {
     .page-shell {
         @apply grid grow grid-cols-1;
         overflow-x: clip;
+        /* Landscape phones: keep content clear of the notch (PublicLayout is viewport-fit=cover). */
+        padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
     }
 
     .page-col {
@@ -97,6 +99,13 @@ html[data-theme-switching]::view-transition-new(root) {
 
     .gutter {
         @apply hidden;
+    }
+
+    /* Phones: room for the floating MobileTabBar (h-16 + its bottom gap / home indicator). */
+    @media (max-width: 767px) {
+        .page-shell {
+            padding-bottom: calc(4.75rem + max(0.75rem, env(safe-area-inset-bottom)));
+        }
     }
 
     @media (min-width: 768px) {
@@ -186,7 +195,7 @@ html[data-theme-switching]::view-transition-new(root) {
     /* Hero display type */
     .display {
         /* Keep in sync with the "display" preset in Annot.astro. */
-        @apply text-5xl font-medium tracking-tighter text-balance text-gray-950 sm:text-7xl lg:text-8xl dark:text-white;
+        @apply text-4xl font-medium tracking-tighter text-balance text-gray-950 sm:text-7xl lg:text-8xl dark:text-white;
     }
 
     .eyebrow {
