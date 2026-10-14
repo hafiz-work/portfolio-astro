@@ -20,7 +20,9 @@ let detail: PublicFamilyTreeDetail | null = null;
 let loadError = false;
 
 try {
-  trees = await getPublicFamilyTrees();
+  // Defense-in-depth: the API hides non-public trees, but never fetch details for
+  // one flagged `false` (undefined stays in, so a DTO change cannot blank the page).
+  trees = (await getPublicFamilyTrees()).filter((t) => t.isPublic !== false);
   const details = (
     await Promise.all(trees.map((tree) => getPublicFamilyTreeBySlug(tree.slug)))
   ).filter((treeDetail): treeDetail is FamilyTreeDetail => treeDetail !== null);

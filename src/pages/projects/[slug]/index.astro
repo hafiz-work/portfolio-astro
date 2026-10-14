@@ -138,7 +138,9 @@ const hasLegal = !!(policy?.privacyPolicy || policy?.termsAndConditions);
 
 // CTAs come exclusively from structured project_links (active + public only;
 // broken/hidden/private links are excluded server-side + by the backfill).
-const links = project.links ?? [];
+// Defense-in-depth: only absolute http(s) URLs may render (a javascript: or
+// data: url would execute on click; the backend filter is the only other gate).
+const links = (project.links ?? []).filter((link) => /^https?:\/\//i.test(link.url));
 const hasPublicLinks = links.length > 0;
 const isClientWork = project.projectType === "work";
 const contactCtaLabel = isClientWork

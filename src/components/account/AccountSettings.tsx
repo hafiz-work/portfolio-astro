@@ -29,8 +29,9 @@ export function AccountSettings() {
     setSaving(true);
     try {
       await accountService.updatePassword(pw.current, pw.next);
-      authService.clearAuthState();
-      window.location.href = "/login";
+      // Revoke the server session too - the copy promises a sign-out everywhere.
+      const revoked = await authService.logout();
+      window.location.href = revoked ? "/login" : "/login?session=unrevoked";
     } catch (err) {
       toast.error(errorText(err));
       setSaving(false);

@@ -1,6 +1,7 @@
 -- Family page Phase 0 D1 verification/remediation note.
+-- Names below are redacted; <person-a>/<person-b>/<person-c> are placeholders.
 -- Status: not applied by Codex from portfolio-astro.
--- Run from /Users/hafiz/Developments/hono-workers against local first, then remote
+-- Run from <hono-workers-checkout> against local first, then remote
 -- only after reviewing the SELECT output.
 
 -- 1) Inventory public family identities.
@@ -28,18 +29,18 @@ HAVING COUNT(*) > 1
 -- 3) Idempotent backfill for known cross-tree keys if any rows are missing them.
 -- Review before applying; this relies on the current family seed naming.
 UPDATE family_people
-SET global_key = 'muhamad-nurhafiz'
-WHERE lower(display_name) = 'muhamad nurhafiz'
+SET global_key = '<person-a>'
+WHERE lower(display_name) = '<person-a>'
   AND (global_key IS NULL OR trim(global_key) = '');
 
 UPDATE family_people
-SET global_key = 'mohd-bahtiar'
-WHERE lower(display_name) = 'mohd bahtiar'
+SET global_key = '<person-b>'
+WHERE lower(display_name) = '<person-b>'
   AND (global_key IS NULL OR trim(global_key) = '');
 
 UPDATE family_people
-SET global_key = 'zarina'
-WHERE lower(display_name) = 'zarina'
+SET global_key = '<person-c>'
+WHERE lower(display_name) = '<person-c>'
   AND (global_key IS NULL OR trim(global_key) = '');
 
 -- 4) Verify the parent bridge rows exist in trees that contain all people.
@@ -53,8 +54,8 @@ JOIN family_trees t ON t.id = r.tree_id
 JOIN family_people parent ON parent.id = r.person_id
 JOIN family_people child ON child.id = r.related_person_id
 WHERE r.relationship_type = 'parent'
-  AND parent.global_key IN ('mohd-bahtiar', 'zarina')
-  AND child.global_key = 'muhamad-nurhafiz'
+  AND parent.global_key IN ('<person-b>', '<person-c>')
+  AND child.global_key = '<person-a>'
 ORDER BY t.slug, parent.global_key;
 
 -- 5) Idempotent remediation for the expected bahtiar-family parent rows.
@@ -69,9 +70,9 @@ SELECT
   1
 FROM family_trees t
 JOIN family_people parent
-  ON parent.tree_id = t.id AND parent.global_key = 'mohd-bahtiar'
+  ON parent.tree_id = t.id AND parent.global_key = '<person-b>'
 JOIN family_people child
-  ON child.tree_id = t.id AND child.global_key = 'muhamad-nurhafiz'
+  ON child.tree_id = t.id AND child.global_key = '<person-a>'
 WHERE t.slug = 'bahtiar-family';
 
 INSERT OR IGNORE INTO family_relationships
@@ -84,7 +85,7 @@ SELECT
   1
 FROM family_trees t
 JOIN family_people parent
-  ON parent.tree_id = t.id AND parent.global_key = 'zarina'
+  ON parent.tree_id = t.id AND parent.global_key = '<person-c>'
 JOIN family_people child
-  ON child.tree_id = t.id AND child.global_key = 'muhamad-nurhafiz'
+  ON child.tree_id = t.id AND child.global_key = '<person-a>'
 WHERE t.slug = 'bahtiar-family';

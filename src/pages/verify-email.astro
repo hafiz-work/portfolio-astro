@@ -7,35 +7,57 @@ import { Image } from "astro:assets";
 //
 // MARC_API_URL sengaja BUKAN prefix PUBLIC_ - cuma dibaca frontmatter
 // (server-side), tak pernah masuk client bundle.
+//
+// Confirm HANYA pada POST: GET (prefetch/mail scanner) tak boleh bakar token
+// single-use. GET dengan token cuma render form POST biasa (jalan tanpa JS).
 import CoreLayout from "../layouts/CoreLayout.astro";
 import Background from "../components/layout/Background.astro";
 
+// Fallback staging DEV sahaja - production build tanpa MARC_API_URL tak boleh
+// hantar token sebenar ke host staging.
 const MARC_API_URL =
-  import.meta.env.MARC_API_URL || "https://marc-go-staging.up.railway.app";
+  import.meta.env.MARC_API_URL ||
+  (import.meta.env.DEV ? "https://marc-go-staging.up.railway.app" : "");
 
-const token = Astro.url.searchParams.get("token");
+const isPost = Astro.request.method === "POST";
+
+// Token dari query string pada GET (link emel), dari body form pada POST.
+let token = Astro.url.searchParams.get("token");
+if (isPost) {
+  // A non-form body (JSON, empty) makes formData() throw - treat it as no token.
+  const value = await Astro.request.formData().then((f) => f.get("token"), () => null);
+  token = typeof value === "string" ? value : null;
+}
 
 let success = false;
+let showForm = false;
 let message = "Pautan tidak sah.";
 
-if (token) {
-  try {
-    const res = await fetch(`${MARC_API_URL}/auth/verify-email/confirm`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-    });
+if (!MARC_API_URL) {
+  message = "Konfigurasi server tidak lengkap. Sila hubungi pentadbir.";
+} else if (isPost) {
+  if (token) {
+    try {
+      const res = await fetch(`${MARC_API_URL}/auth/verify-email/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
 
-    if (res.ok) {
-      success = true;
-      message = "Email anda berjaya disahkan. Boleh kembali ke app MARC.";
-    } else {
-      const data = await res.json().catch(() => ({}) as { error?: string });
-      message = data.error || "Token tidak sah atau sudah luput.";
+      if (res.ok) {
+        success = true;
+        message = "Email anda berjaya disahkan. Boleh kembali ke app MARC.";
+      } else {
+        const data = await res.json().catch(() => ({}) as { error?: string });
+        message = data.error || "Token tidak sah atau sudah luput.";
+      }
+    } catch {
+      message = "Gagal hubungi server. Sila cuba lagi sebentar.";
     }
-  } catch {
-    message = "Gagal hubungi server. Sila cuba lagi sebentar.";
   }
+} else if (token) {
+  showForm = true;
+  message = "Klik butang di bawah untuk sahkan email anda.";
 }
 ---
 
@@ -76,6 +98,22 @@ if (token) {
                   />
                 </svg>
               </div>
+            ) : showForm ? (
+              <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-500/10">
+                <svg
+                  class="h-6 w-6 text-sky-600 dark:text-sky-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
             ) : (
               <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-500/10">
                 <svg
@@ -98,11 +136,29 @@ if (token) {
           <h1
             class="text-xl font-medium tracking-tight text-gray-950 dark:text-white"
           >
-            {success ? "Email disahkan" : "Pengesahan gagal"}
+            {success
+              ? "Email disahkan"
+              : showForm
+                ? "Pengesahan email"
+                : "Pengesahan gagal"}
           </h1>
           <p class="mt-2 text-sm/6 text-gray-600 dark:text-gray-400">
             {message}
           </p>
+
+          {
+            showForm && (
+              <form method="post" action="/verify-email" class="mt-6">
+                <input type="hidden" name="token" value={token ?? ""} />
+                <button
+                  type="submit"
+                  class="btn-pill btn-pill-primary w-full justify-center"
+                >
+                  Sahkan email
+                </button>
+              </form>
+            )
+          }
 
           <a
             href="/"

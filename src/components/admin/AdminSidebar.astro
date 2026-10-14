@@ -532,8 +532,11 @@ const currentPath = Astro.url.pathname;
       try {
         logoutConfirmBtn?.setAttribute("disabled", "true");
         logoutCancelBtn?.setAttribute("disabled", "true");
-        await authService.logout();
-        window.location.replace("/admin/login");
+        const revoked = await authService.logout();
+        // The unrevoked warning rides the URL - a toast would die on this navigation.
+        window.location.replace(
+          revoked ? "/admin/login" : "/admin/login?session=unrevoked",
+        );
       } catch (error) {
         console.error("Logout failed", error);
         authService.clearAuthState();
