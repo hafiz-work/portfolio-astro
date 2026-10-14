@@ -22,7 +22,7 @@ interface Props {
 
 const PRESETS: Record<NonNullable<Props["preset"]>, Omit<Props, "preset" | "class" | "style">> = {
   display: {
-    sizes: { base: "text-5xl", sm: "text-7xl", lg: "text-8xl" },
+    sizes: { base: "text-4xl", sm: "text-7xl", lg: "text-8xl" },
     color: { light: "text-gray-950", dark: "text-white" },
     rest: "font-medium tracking-tighter text-balance",
   },

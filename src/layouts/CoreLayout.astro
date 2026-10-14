@@ -12,6 +12,8 @@ interface Props {
   class?: string;
   /** Keep this page out of search results (e.g. an empty legal page). */
   noindex?: boolean;
+  /** Draw under the notch / home indicator (the page pads with env(safe-area-inset-*)). */
+  edgeToEdge?: boolean;
 }
 
 const {
@@ -23,6 +25,7 @@ const {
   publishedTime,
   class: className = "",
   noindex = false,
+  edgeToEdge = false,
 } = Astro.props;
 
 // Absolute URLs for canonical + social cards. Astro.site is set in astro.config.
@@ -37,7 +40,10 @@ const socialImageURL = new URL(image, siteOrigin);
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content={description} />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content={`width=device-width, initial-scale=1${edgeToEdge ? ", viewport-fit=cover" : ""}`}
+    />
     <link rel="canonical" href={canonicalURL} />
     {noindex && <meta name="robots" content="noindex, follow" />}
 

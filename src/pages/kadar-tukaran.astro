@@ -40,10 +40,10 @@ const session = data?.session ? `${data.session.slice(0, 2)}:${data.session.slic
   title="Kadar Tukaran Wang Hari Ini (Bank Negara Malaysia) | Hafiz Bahtiar"
   description="Kadar pertukaran asing rasmi Bank Negara Malaysia untuk 27 mata wang, dengan penukar RM. Dikemas kini setiap sesi BNM."
 >
-  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+  <div class="relative mx-auto mt-8 max-lg:max-w-2xl sm:mt-24">
     <BackLink />
     <div class="line-y">
-      <h1 class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl">
+      <h1 class="mx-2 text-4xl tracking-tighter text-balance sm:text-7xl lg:text-8xl">
         <TechHeading text="Kadar Tukaran" fontSize={96} fontWeight={400} box="-my-12 h-48" />
       </h1>
     </div>
@@ -189,7 +189,7 @@ const session = data?.session ? `${data.session.slice(0, 2)}:${data.session.slic
         <Fragment set:html={`Kadar yang dipaparkan ialah kadar rujukan, <strong>bukan kadar urus niaga</strong> bank atau pengurup wang, dan bukan nasihat kewangan.`} />
       </Disclaimer>
     </div>
-    <div class="mb-46"></div>
+    <div class="mb-16 sm:mb-46"></div>
   </div>
 </PublicLayout>
 
