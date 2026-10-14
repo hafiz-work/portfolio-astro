@@ -6,7 +6,7 @@ import PublicLayout from "../layouts/PublicLayout.astro";
 
 // Full disclaimer for the Showcase apps. Each app page shows the short version
 // (src/components/ui/Disclaimer.astro) and links here - keep the two in step.
-const UPDATED = "13 Oktober 2026";
+const UPDATED = "14 Oktober 2026";
 
 const SOURCES: {
   app: string;
@@ -54,6 +54,16 @@ const SOURCES: {
         name: "Rates By Exchange Rate API",
         href: "https://www.exchangerate-api.com",
         note: "sandaran",
+      },
+    ],
+  },
+  {
+    app: "Kalkulator Gaji",
+    items: [
+      {
+        name: "KWSP - Jadual Ketiga (gaji Oktober 2025 dan seterusnya)",
+        href: "https://www.kwsp.gov.my/en/employer/responsibilities/mandatory-contribution",
+        note: "jadual disimpan dalam laman ini; pengiraan dalam peranti anda",
       },
     ],
   },
@@ -107,6 +117,36 @@ const SOURCES: {
         name: "Laman rasmi setiap agensi dan syarikat insurans / takaful",
         href: "https://999.gov.my",
         note: "sumber dan tarikh semakan dipaparkan di sebelah setiap nombor",
+      },
+    ],
+  },
+  {
+    app: "Kalkulator Bil Elektrik",
+    items: [
+      {
+        name: "Tenaga Nasional Berhad (myTNB - Tarif Elektrik)",
+        href: "https://www.mytnb.com.my/tariff",
+        note: "tarif domestik 1 Julai 2025 dan AFA bulanan yang diumumkan; dikira dalam peranti anda",
+      },
+    ],
+  },
+  {
+    app: "Kalkulator Cukai Jalan",
+    items: [
+      {
+        name: "Jabatan Pengangkutan Jalan (JPJ) - garis panduan kadar LKM",
+        href: "https://www.jpj.gov.my/pusat-media-3/informasi-perkhidmatan-jpj/kenderaan/panduan-pengiraan-kadar-lkm/",
+        note: "petrol/diesel (pindaan selepas Bajet 2009) dan kenderaan elektrik (1 April 2026); dikira dalam peranti anda",
+      },
+    ],
+  },
+  {
+    app: "Takwim Persekolahan",
+    items: [
+      {
+        name: "Kementerian Pendidikan Malaysia - Kalendar Akademik",
+        href: "https://www.moe.gov.my/kalendar-akademik-semasa",
+        note: "disalin dengan tangan daripada PDF rasmi KPM; dikemas kini setahun sekali",
       },
     ],
   },
@@ -241,9 +281,12 @@ const SOURCES: {
               999 dalam kecemasan. Bacaan IPU bukan nasihat perubatan.
             </li>
             <li>
-              <strong>Kewangan (kadar tukaran, OPR, harga minyak).</strong> Kadar
-              BNM ialah kadar rujukan, bukan kadar urus niaga bank atau pengurup wang.
-              Harga dan kadar boleh berubah; ia bukan nasihat kewangan atau pelaburan.
+              <strong
+                >Kewangan (kadar tukaran, OPR, harga minyak, caruman KWSP).</strong
+              > Kadar BNM ialah kadar rujukan, bukan kadar urus niaga bank atau pengurup
+              wang. Harga dan kadar boleh berubah; ia bukan nasihat kewangan, cukai
+              atau pelaburan. Caruman KWSP ialah anggaran; potongan sebenar mengikut
+              sistem gaji majikan.
             </li>
             <li>
               <strong>Ayat dan hadis.</strong> Teks dan terjemahan diambil daripada

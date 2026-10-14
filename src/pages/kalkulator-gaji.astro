@@ -1,0 +1,216 @@
+---
+import Disclaimer from "../components/ui/Disclaimer.astro";
+import BackLink from "../components/ui/BackLink.astro";
+export const prerender = true; // the calculation runs in the browser
+import TechHeading from "../components/layout/TechHeading.astro";
+import Combobox from "../components/ui/Combobox.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+
+const KWSP_URL =
+  "https://www.kwsp.gov.my/en/employer/responsibilities/mandatory-contribution";
+const row = "flex items-baseline justify-between gap-4 px-2 py-3";
+---
+
+<PublicLayout
+  title="Kalkulator Gaji (KWSP) | Hafiz Bahtiar"
+  description="Kira caruman KWSP majikan dan pekerja mengikut Jadual Ketiga (gaji Oktober 2025 dan seterusnya)."
+>
+  <div class="relative mx-auto mt-8 max-lg:max-w-2xl sm:mt-24">
+    <BackLink />
+    <div class="line-y">
+      <h1
+        class="mx-2 text-4xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Kalkulator Gaji"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Caruman KWSP majikan dan pekerja bagi gaji sebulan. Dikira dalam pelayar
+        anda - tiada data gaji dihantar ke mana-mana. PCB akan ditambah
+        kemudian.
+      </p>
+    </div>
+
+    <div class="line-y mt-10">
+      <form id="kwsp" class="mx-2 grid gap-4 sm:grid-cols-2 sm:items-end">
+        <label class="grid gap-1.5 text-sm/6 font-medium">
+          Gaji bulanan (RM)
+          <input
+            id="kwsp-gaji"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            max="1000000"
+            step="0.01"
+            value="3000"
+            class="field h-10"
+          />
+        </label>
+        <div class="grid gap-1.5">
+          <label for="kwsp-status" class="text-sm/6 font-medium">Status</label>
+          <Combobox
+            id="kwsp-status"
+            listLabel="Status"
+            searchPlaceholder="Cari status…"
+            value="warganegara"
+            options={[
+              { value: "warganegara", label: "Warganegara" },
+              {
+                value: "pr",
+                label:
+                  "Penduduk Tetap (PR) atau bukan warganegara berdaftar sebelum 1 Ogos 1998",
+              },
+              { value: "asing", label: "Bukan warganegara" },
+            ]}
+          />
+        </div>
+        <label
+          class="flex items-center gap-2 text-sm/6 font-medium sm:col-span-2"
+        >
+          <input
+            id="kwsp-umur60"
+            type="checkbox"
+            class="size-4 accent-sky-500"
+          />
+          Umur 60 tahun ke atas
+        </label>
+        <p
+          id="kwsp-error"
+          role="alert"
+          class="text-sm/6 font-medium text-red-600 empty:hidden sm:col-span-2 dark:text-red-400"
+        >
+        </p>
+      </form>
+    </div>
+
+    <div class="line-y mt-10">
+      <dl
+        class="divide-y divide-gray-950/5 text-sm/6 tabular-nums dark:divide-white/10"
+        aria-live="polite"
+      >
+        <div class={row}>
+          <dt class="text-gray-600 dark:text-gray-400">Jadual Ketiga</dt>
+          <dd id="kwsp-bahagian" class="font-medium">-</dd>
+        </div>
+        <div class={row} data-split>
+          <dt class="text-gray-600 dark:text-gray-400">Caruman majikan</dt>
+          <dd id="kwsp-majikan" class="font-medium">-</dd>
+        </div>
+        <div class={row} data-split>
+          <dt class="text-gray-600 dark:text-gray-400">Caruman pekerja</dt>
+          <dd id="kwsp-pekerja" class="font-medium">-</dd>
+        </div>
+        <div class={row}>
+          <dt class="text-gray-600 dark:text-gray-400">Jumlah caruman</dt>
+          <dd id="kwsp-jumlah" class="font-medium">-</dd>
+        </div>
+        <div class={row} data-split>
+          <dt class="text-gray-600 dark:text-gray-400">
+            Gaji selepas KWSP pekerja
+            <span class="block text-xs/5 text-gray-500"
+              >sebelum PCB, PERKESO dan SIP</span
+            >
+          </dt>
+          <dd
+            id="kwsp-bersih"
+            class="text-2xl font-medium tracking-tight text-gray-950 dark:text-white"
+          >
+            -
+          </dd>
+        </div>
+      </dl>
+      <p
+        id="kwsp-nota-f"
+        hidden
+        class="mx-2 mt-3 text-sm/6 text-gray-600 dark:text-gray-400"
+      >
+        Bahagian F: 2% majikan + 2% pekerja, jumlah dibundarkan ke ringgit
+        seterusnya. Cara pembundaran itu dibahagi antara majikan dan pekerja
+        belum disahkan dengan KWSP, jadi hanya jumlah dipaparkan.
+      </p>
+    </div>
+
+    <div class="line-y mt-6">
+      <p class="mx-2 text-sm/6 text-gray-600 dark:text-gray-400">
+        Sumber: <a
+          href={KWSP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+          >Jadual Ketiga KWSP</a
+        >, berkuat kuasa bagi gaji Oktober 2025 dan seterusnya. Gaji sehingga
+        RM20,000 ikut jadual julat gaji; atas RM20,000 ikut peratus, dibundarkan
+        ke ringgit seterusnya.
+      </p>
+    </div>
+
+    <div class="line-y mt-6">
+      <Disclaimer
+        class="mx-2"
+        sources={[{ name: "KWSP (Jadual Ketiga)", href: KWSP_URL }]}
+      >
+        <Fragment
+          set:html={`Ini <strong>bukan nasihat kewangan atau cukai</strong>. Potongan sebenar mengikut sistem gaji majikan anda.`}
+        />
+      </Disclaimer>
+    </div>
+    <div class="mb-16 sm:mb-46"></div>
+  </div>
+</PublicLayout>
+
+<script>
+  import { caruman, type StatusKwsp } from "../lib/kwsp";
+
+  const initKwsp = () => {
+    const form = document.getElementById("kwsp");
+    if (!form || form.dataset.bound === "1") return;
+    form.dataset.bound = "1";
+    const gaji = document.getElementById("kwsp-gaji") as HTMLInputElement;
+    const status = document.getElementById("kwsp-status") as HTMLSelectElement;
+    const umur60 = document.getElementById("kwsp-umur60") as HTMLInputElement;
+    const error = document.getElementById("kwsp-error")!;
+    const notaF = document.getElementById("kwsp-nota-f")!;
+    const out = (id: string, text: string) =>
+      (document.getElementById(`kwsp-${id}`)!.textContent = text);
+    const rm = (sen: number) =>
+      `RM ${(sen / 100).toLocaleString("ms-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    const update = () => {
+      const n = gaji.valueAsNumber;
+      const ok = Number.isFinite(n) && n >= 0 && n <= 1_000_000;
+      error.textContent =
+        ok || gaji.value === ""
+          ? ""
+          : "Masukkan gaji antara RM0 dan RM1,000,000.";
+      if (!ok)
+        return ["bahagian", "majikan", "pekerja", "jumlah", "bersih"].forEach(
+          (id) => out(id, "-"),
+        );
+      const sen = Math.round(n * 100);
+      const r = caruman(sen, status.value as StatusKwsp, umur60.checked);
+      const f = r.bahagian === "F";
+      out("bahagian", `Bahagian ${r.bahagian}`);
+      out("majikan", rm(r.majikan));
+      out("pekerja", rm(r.pekerja));
+      out("jumlah", rm(r.jumlah));
+      out("bersih", rm(sen - r.pekerja));
+      document
+        .querySelectorAll<HTMLElement>("[data-split]")
+        .forEach((el) => (el.hidden = f));
+      notaF.hidden = !f;
+    };
+    gaji.addEventListener("input", update);
+    status.addEventListener("change", update);
+    umur60.addEventListener("change", update);
+    form.addEventListener("submit", (e) => e.preventDefault());
+    update();
+  };
+  initKwsp();
+  document.addEventListener("astro:page-load", initKwsp);
+</script>

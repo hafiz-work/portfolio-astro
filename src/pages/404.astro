@@ -1,36 +1,71 @@
 ---
+export const prerender = false;
+
 import PublicLayout from "../layouts/PublicLayout.astro";
+import AccountLayout from "../layouts/AccountLayout.astro";
+import PrivateLayout from "../layouts/PrivateLayout.astro";
 import Annot from "../components/layout/Annot.astro";
+import AdminPageHeader from "../components/admin/AdminPageHeader.astro";
+import { PageNotFound } from "../components/account/PageNotFound";
+
+// One fallback route serves every unmatched URL, so the shell follows the
+// module the path belongs to: /admin/* -> admin shell, /account/* -> account
+// shell (shadcn), everything else -> the public site.
+const path = Astro.url.pathname;
+const isAdmin = path.startsWith("/admin/");
+const isAccount = path.startsWith("/account/");
 ---
 
-<PublicLayout
-  title="Page Not Found | Hafiz Bahtiar"
-  description="The page you are looking for could not be found."
->
-  <section
-    class="flex min-h-[calc(100vh-3.5rem)] flex-col justify-center py-16"
-  >
-    <div class="line-y">
-      <p class="eyebrow container-main">Error 404</p>
-    </div>
-    <Annot preset="display" class="mt-4" />
-    <div class="line-y">
-      <h1 class="display container-main">Page not found.</h1>
-    </div>
-    <Annot preset="lead" class="mt-4" />
-    <div class="line-y">
-      <p class="lead container-main">
-        The page may have moved, or the link might be incorrect. Try{" "}
-        <code class="token">/</code> or <code class="token">/projects</code>.
-      </p>
-    </div>
-    <div class="h-10"></div>
-    <div class="line-y">
-      <div class="container-main flex flex-wrap gap-3">
-        <a href="/" class="btn-pill btn-pill-primary">Back home</a>
-        <a href="/projects" class="btn-pill btn-pill-ghost">View projects</a>
-      </div>
-    </div>
-    <div class="pattern line-b mt-16 h-24 sm:h-32" aria-hidden="true"></div>
-  </section>
-</PublicLayout>
+{
+  isAdmin ? (
+    <PrivateLayout title="Page not found">
+      <AdminPageHeader
+        title="Page not found"
+        description="The admin page you’re looking for doesn’t exist or may have moved."
+      >
+        <a slot="actions" href="/admin" class="admin-btn admin-btn-primary">
+          Back to dashboard
+        </a>
+      </AdminPageHeader>
+    </PrivateLayout>
+  ) : isAccount ? (
+    <AccountLayout title="Page not found">
+      <PageNotFound client:load />
+    </AccountLayout>
+  ) : (
+    <PublicLayout
+      title="Page Not Found | Hafiz Bahtiar"
+      description="The page you are looking for could not be found."
+    >
+      <section class="flex min-h-[calc(100vh-3.5rem)] flex-col justify-center py-16">
+        <div class="line-y">
+          <p class="eyebrow container-main">Error 404</p>
+        </div>
+        <Annot preset="display" class="mt-4" />
+        <div class="line-y">
+          <h1 class="display container-main">Page not found.</h1>
+        </div>
+        <Annot preset="lead" class="mt-4" />
+        <div class="line-y">
+          <p class="lead container-main">
+            The page may have moved, or the link might be incorrect. Try{" "}
+            <code class="token">/</code> or <code class="token">/projects</code>
+            .
+          </p>
+        </div>
+        <div class="h-10" />
+        <div class="line-y">
+          <div class="container-main flex flex-wrap gap-3">
+            <a href="/" class="btn-pill btn-pill-primary">
+              Back home
+            </a>
+            <a href="/projects" class="btn-pill btn-pill-ghost">
+              View projects
+            </a>
+          </div>
+        </div>
+        <div class="pattern line-b mt-16 h-24 sm:h-32" aria-hidden="true" />
+      </section>
+    </PublicLayout>
+  )
+}
