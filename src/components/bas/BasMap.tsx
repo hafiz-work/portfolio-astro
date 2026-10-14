@@ -174,7 +174,7 @@ function BusView({ feed, feeds, feedSelect }: { feed: string; feeds: Feed[]; fee
           options={[{ value: "", label: `Semua laluan (${routes.length})` }, ...routes]}
           className="w-full sm:w-96"
         />
-        <p className="text-sm/6 text-gray-600 dark:text-gray-400" aria-live="polite">
+        <p className="py-2 text-sm/6 text-gray-600 dark:text-gray-400" aria-live="polite">
           {loading
             ? "Memuatkan…"
             : `${shown.length} kenderaan · ${paused ? "kemas kini dijeda (tiada aktiviti) - sentuh atau tatal untuk sambung" : "dikemas kini setiap 30 saat"}${data?.stale ? " · data simpanan" : ""}${route && lines.length ? " · garisan laluan dipaparkan" : ""}`}
@@ -253,7 +253,7 @@ function RailView({ feedSelect }: { feedSelect: React.ReactNode }) {
           ]}
           className="w-full sm:w-96"
         />
-        <p className="text-sm/6 text-gray-600 dark:text-gray-400">
+        <p className="py-2 text-sm/6 text-gray-600 dark:text-gray-400">
           Peta rangkaian dan stesen. Kedudukan tren langsung tidak disediakan oleh data.gov.my.
         </p>
       </div>

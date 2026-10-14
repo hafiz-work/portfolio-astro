@@ -76,19 +76,28 @@ const SOURCES: {
     ],
   },
   {
-    app: "Amaran Cuaca, Gempa Bumi, cuaca di Paparan Masjid",
+    app: "Ramalan Cuaca, Amaran Cuaca, Gempa Bumi, cuaca di Paparan Masjid",
     items: [
       {
         name: "Jabatan Meteorologi Malaysia (MET)",
         href: "https://www.met.gov.my",
       },
       { name: "melalui data.gov.my", href: "https://developer.data.gov.my" },
+      {
+        name: "Open-Meteo (CC BY 4.0)",
+        href: "https://open-meteo.com",
+        note: "sandaran Ramalan Cuaca bila MET tak dapat dicapai - anggaran model global, bukan ramalan rasmi; koordinat lokasi daripada geocoder Open-Meteo",
+      },
     ],
   },
   {
     app: "Bas Langsung",
     items: [
-      { name: "data.gov.my - GTFS Realtime dan GTFS statik", href: "https://developer.data.gov.my/realtime-api/gtfs-realtime", note: "data operator Prasarana, KTMB dan myBAS" },
+      {
+        name: "data.gov.my - GTFS Realtime dan GTFS statik",
+        href: "https://developer.data.gov.my/realtime-api/gtfs-realtime",
+        note: "data operator Prasarana, KTMB dan myBAS",
+      },
     ],
   },
   {

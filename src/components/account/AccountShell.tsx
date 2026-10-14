@@ -54,6 +54,16 @@ export function AccountShell({
     })();
   }, []);
 
+  // Back after sign-out can restore this page from the back/forward cache (no request,
+  // effects don't re-run). No session flag any more -> leave at once.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted && !authService.isAuthenticated()) window.location.replace("/login");
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
+
   const section = activeAccountLink(path);
   // Pages outside the sidebar sections (e.g. /account/settings) hang off "Account".
   const leaf = path

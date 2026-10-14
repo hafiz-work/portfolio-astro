@@ -7,6 +7,11 @@ import {
   TriangleAlertIcon,
 } from "lucide-react"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
+// sonner injects its CSS into <head> once, at module load. ClientRouter swaps <head> on
+// every navigation and drops that <style>, so after the first in-site navigation the
+// toaster rendered unstyled (a full-height flex column beside the content). Imported
+// here, the stylesheet is bundled into each page's <head> and survives swaps.
+import "sonner/dist/styles.css"
 
 // Theme lives on <html> (see CoreLayout.astro), not next-themes. Follow the root
 // class so a manual light/dark choice wins over the OS setting.

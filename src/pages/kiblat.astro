@@ -1,5 +1,6 @@
 ---
 import Disclaimer from "../components/ui/Disclaimer.astro";
+import BackLink from "../components/ui/BackLink.astro";
 export const prerender = true;
 import KiblatMap from "../components/kiblat/KiblatMap";
 import Alert from "../components/ui/Alert.astro";
@@ -15,6 +16,7 @@ import PublicLayout from "../layouts/PublicLayout.astro";
   description="Cari arah kiblat dari lokasi anda dengan kompas telefon. Bearing dan jarak ke Kaabah dikira terus di peranti anda."
 >
   <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <BackLink />
     <div class="line-y">
       <h1
         class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
