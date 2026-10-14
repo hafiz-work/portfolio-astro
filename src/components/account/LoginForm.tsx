@@ -40,6 +40,12 @@ export function LoginForm({ siteKey }: { siteKey: string }) {
 
   useEffect(() => {
     turnstile.current = createTurnstile("turnstile-login", siteKey, "login");
+    // Notice carried over from a sign-out that could not revoke the server
+    // session (a toast would die on the navigation that delivered us here).
+    if (new URLSearchParams(window.location.search).get("session") === "unrevoked") {
+      setStatus({ kind: "error", text: "Server session may not be revoked. Sign in and out again once you're back online." });
+      window.history.replaceState(null, "", window.location.pathname);
+    }
     // Already signed in (refresh cookie still valid)? Go home.
     if (authService.isAuthenticated()) {
       void authService.tryRefresh().then(async (ok) => {

@@ -288,8 +288,33 @@ import { TURNSTILE_SITE_KEY as turnstileSiteKey } from "../../lib/constants";
     if (statusDisplay) statusDisplay.classList.add("hidden");
   };
 
+  // Notices carried over from sign-out / password change (toasts die on the
+  // hard navigation that delivers them). Shown on every pageshow so the
+  // initial load and a bfcache restore behave the same.
+  const showNotice = () => {
+    const notice = new URLSearchParams(window.location.search);
+    if (notice.get("session") === "unrevoked") {
+      showStatus(
+        "Server session may not be revoked. Sign in and out again once you're back online.",
+        "error",
+        errorIcon,
+      );
+    } else if (notice.get("password") === "changed") {
+      showStatus(
+        "Password updated successfully. Sign in with your new password.",
+        "success",
+        successIcon,
+      );
+    }
+    if (notice.has("session") || notice.has("password")) {
+      history.replaceState(null, "", window.location.pathname);
+    }
+  };
   resetUI();
-  window.addEventListener("pageshow", resetUI);
+  window.addEventListener("pageshow", () => {
+    resetUI();
+    showNotice();
+  });
 
   // Map backend/API errors to clean user-facing copy. Never surface raw
   // technical messages on the login screen.

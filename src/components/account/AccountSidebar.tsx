@@ -79,9 +79,10 @@ function NavUser({ me }: { me: Me }) {
 
   const signOut = async () => {
     if (!(await confirm({ title: "Sign out?", description: "You'll need to sign in again to manage your posts and quotes.", confirmLabel: "Sign out", destructive: true }))) return;
-    await authService.logout();
+    const revoked = await authService.logout();
     // replace, like admin: Back must not return to a signed-out /account page.
-    window.location.replace("/login");
+    // The unrevoked warning rides the URL - a toast would die on this navigation.
+    window.location.replace(revoked ? "/login" : "/login?session=unrevoked");
   };
 
   const identity = (

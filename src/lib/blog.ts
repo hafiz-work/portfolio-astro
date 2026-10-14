@@ -14,7 +14,7 @@ export class BlogService extends ApiClient {
     }
 
     async getPublicPostBySlug(slug: string): Promise<BlogPost | null> {
-        return this.get<BlogPost>(`blog/${slug}`);
+        return this.get<BlogPost>(`blog/${encodeURIComponent(slug)}`);
     }
 
     async getAdminPosts(): Promise<BlogPostSummary[]> {

@@ -15,7 +15,12 @@ let loadError = false;
 
 try {
   const loadedDetail = await getPublicFamilyTreeBySlug(slug);
-  detail = loadedDetail ? sanitizeFamilyDetailForPublic(loadedDetail) : null;
+  // Defense-in-depth: the API hides non-public trees, but never render one flagged
+  // `false` (undefined stays in, so a DTO change cannot blank the page).
+  detail =
+    loadedDetail && loadedDetail.tree.isPublic !== false
+      ? sanitizeFamilyDetailForPublic(loadedDetail)
+      : null;
 } catch (error) {
   console.error(`Failed to load family tree "${slug}":`, error);
   loadError = true;
