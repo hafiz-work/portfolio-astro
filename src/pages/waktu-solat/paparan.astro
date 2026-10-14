@@ -1,5 +1,6 @@
 ---
 export const prerender = false;
+import { ArrowLeft, Maximize, Settings } from "lucide-react";
 import CoreLayout from "../../layouts/CoreLayout.astro";
 import { SOLAT_ZONES } from "../../data/solat-zones";
 import {
@@ -438,7 +439,8 @@ const controlClass =
         </dl>
       ) : (
         <p class="text-center text-[calc(2*var(--u))] text-(--pm-muted)">
-          Waktu solat tak dapat diambil dari JAKIM. Cuba semula dalam 5 minit.
+          Waktu solat tak dapat diambil dari JAKIM. Skrin akan cuba semula
+          sebentar lagi.
         </p>
       )
     }
@@ -451,30 +453,42 @@ const controlClass =
       } · hafizbahtiar.com/waktu-solat
     </p>
 
-    <!-- Operator controls: hidden in full screen and while the mouse is idle. -->
+    <!-- Operator controls: hidden in full screen and while idle. Landscape (TV): icon +
+         label, floating top-right. Portrait (phone): icon-only round buttons in their own
+         row above the header, so they never sit on the zone / mosque name. -->
     <div
       id="display-controls"
-      class="absolute top-(--u) right-(--u) flex gap-2 transition-opacity"
+      class="absolute top-(--u) right-(--u) flex gap-2 transition-opacity portrait:static portrait:order-first portrait:mb-[4vw] portrait:justify-end"
     >
       <a
+        id="display-exit"
         href={`/waktu-solat?zone=${zone.code}`}
-        class="rounded-full bg-(--pm-card) px-4 py-2 text-sm ring-1 ring-(--pm-ring) hover:ring-(--pm-accent)"
+        aria-label="Keluar"
+        title="Keluar"
+        class="inline-flex items-center gap-2 rounded-full bg-(--pm-card) px-4 py-2 text-sm ring-1 ring-(--pm-ring) hover:ring-(--pm-accent) portrait:size-11 portrait:justify-center portrait:p-0"
       >
-        Keluar
+        <ArrowLeft className="size-4" aria-hidden="true" />
+        <span class="portrait:sr-only">Keluar</span>
       </a>
       <button
         id="display-open-settings"
         type="button"
-        class="rounded-full bg-(--pm-card) px-4 py-2 text-sm ring-1 ring-(--pm-ring) hover:ring-(--pm-accent)"
+        aria-label="Tetapan"
+        title="Tetapan"
+        class="inline-flex items-center gap-2 rounded-full bg-(--pm-card) px-4 py-2 text-sm ring-1 ring-(--pm-ring) hover:ring-(--pm-accent) portrait:size-11 portrait:justify-center portrait:p-0"
       >
-        Tetapan
+        <Settings className="size-4" aria-hidden="true" />
+        <span class="portrait:sr-only">Tetapan</span>
       </button>
       <button
         id="display-fullscreen"
         type="button"
-        class="rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600"
+        aria-label="Skrin penuh"
+        title="Skrin penuh"
+        class="inline-flex items-center gap-2 rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 portrait:size-11 portrait:justify-center portrait:p-0"
       >
-        Skrin penuh
+        <Maximize className="size-4" aria-hidden="true" />
+        <span class="portrait:sr-only">Skrin penuh</span>
       </button>
     </div>
 
@@ -741,6 +755,8 @@ const controlClass =
 </style>
 
 <script>
+  import { navigate } from "astro:transitions/client";
+
   const IDLE_MS = 3000;
   const AZAN_BANNER_S = 10 * 60; // "Telah masuk waktu …" for 10 minutes
   // Pengumuman rotation (seconds). ponytail: fixed; make them Tetapan if mosques ask.
@@ -900,7 +916,33 @@ const controlClass =
       );
     };
     screen.addEventListener("pointermove", wake);
+    // A tap on a phone doesn't reliably fire pointermove.
+    screen.addEventListener("pointerdown", wake);
     screen.addEventListener("keydown", wake);
+
+    // Keluar: go back to where the screen was opened from instead of stacking a new
+    // history entry (device Back would land on the display again). ClientRouter's state
+    // index > 0 = an in-site page is behind us; opened directly (bookmark on the mosque
+    // TV) = replace this entry.
+    const exit = document.getElementById(
+      "display-exit",
+    ) as HTMLAnchorElement | null;
+    exit?.addEventListener("click", (e) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+      e.preventDefault();
+      if ((history.state?.index ?? 0) > 0) history.back();
+      else void navigate(exit.href, { history: "replace" });
+    });
+    // Saving Tetapan reloads with new params - replace, so each save isn't a Back step.
+    settings.querySelector("form")?.addEventListener("submit", (e) => {
+      const form = e.currentTarget as HTMLFormElement;
+      e.preventDefault();
+      const url = new URL(location.pathname, location.href);
+      url.search = new URLSearchParams(
+        new FormData(form, e.submitter) as any,
+      ).toString();
+      void navigate(url.toString(), { history: "replace" });
+    });
     wake();
 
     document
@@ -916,12 +958,13 @@ const controlClass =
         wakeLock = await (navigator as any).wakeLock?.request("screen");
       } catch {}
     };
-    document
-      .getElementById("display-fullscreen")
-      ?.addEventListener("click", () => {
-        void document.documentElement.requestFullscreen?.();
-        void lock();
-      });
+    const fullscreen = document.getElementById("display-fullscreen");
+    // iPhone Safari has no page full screen - don't show a button that does nothing.
+    if (fullscreen && !document.fullscreenEnabled) fullscreen.hidden = true;
+    fullscreen?.addEventListener("click", () => {
+      void document.documentElement.requestFullscreen?.();
+      void lock();
+    });
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible" && wakeLock) void lock();
     });

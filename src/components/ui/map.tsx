@@ -232,7 +232,9 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       map = new MapLibreGL.Map({
         container: containerRef.current,
         style: initialStyle,
-        renderWorldCopies: false,
+        // Wrap around the antimeridian, so the Pacific can be crossed (Malaysia -> the
+        // Americas) instead of hitting the 180-degree edge. Callers can override via props.
+        renderWorldCopies: true,
         attributionControl: {
           compact: true,
         },

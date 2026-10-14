@@ -1,5 +1,6 @@
 ---
 import Disclaimer from "../components/ui/Disclaimer.astro";
+import BackLink from "../components/ui/BackLink.astro";
 export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
@@ -101,6 +102,7 @@ const historyCols = FUELS.filter((f) =>
   description="Harga runcit minyak di Malaysia minggu ini - RON95, RON97, diesel Semenanjung dan Malaysia Timur, BUDI95 - dengan perubahan dari minggu lepas. Data rasmi data.gov.my."
 >
   <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <BackLink />
     <div class="line-y">
       <h1
         class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"

@@ -1,11 +1,12 @@
 ---
 export const prerender = true; // static and small: opens fast on a weak signal
 import TechHeading from "../components/layout/TechHeading.astro";
+import BackLink from "../components/ui/BackLink.astro";
 import Alert from "../components/ui/Alert.astro";
 import Disclaimer from "../components/ui/Disclaimer.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
 import GridFillers from "../components/ui/GridFillers.astro";
-import { KECEMASAN, telHref } from "../data/kecemasan";
+import { KECEMASAN, telHref, vcardSlug } from "../data/kecemasan";
 import { isoToDmy } from "../lib/date-my";
 
 // Every number comes from src/data/kecemasan.ts with its official source and the
@@ -29,6 +30,7 @@ const report = `mailto:hafiz@hafizbahtiar.com?subject=${encodeURIComponent("Nomb
   description="Himpunan nombor kecemasan Malaysia: 999, talian lebuh raya (PLUS, LLM), NSRC 997 untuk scam, sokongan emosi dan APM. Setiap nombor dengan sumber rasmi."
 >
   <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <BackLink />
     <div class="line-y">
       <h1
         class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
@@ -90,6 +92,27 @@ const report = `mailto:hafiz@hafizbahtiar.com?subject=${encodeURIComponent("Nomb
           >
         </p>
       </div>
+      <!-- Filter chips: hidden until the script runs (no JS = everything shows). -->
+      <div
+        id="kecemasan-tapis"
+        role="group"
+        aria-label="Tapis kategori"
+        class="mx-2 mt-4 flex flex-wrap gap-2"
+        hidden
+      >
+        {
+          [{ id: "", short: "Semua" }, ...KECEMASAN].map((g) => (
+            <button
+              type="button"
+              data-chip={g.id}
+              aria-pressed={g.id === "" ? "true" : "false"}
+              class="rounded-full px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-950/10 hover:bg-gray-950/5 aria-pressed:bg-gray-950 aria-pressed:text-white aria-pressed:ring-gray-950 dark:text-gray-300 dark:ring-white/15 dark:hover:bg-white/5 dark:aria-pressed:bg-white dark:aria-pressed:text-gray-950 dark:aria-pressed:ring-white"
+            >
+              {g.short}
+            </button>
+          ))
+        }
+      </div>
     </div>
 
     {
@@ -107,7 +130,7 @@ const report = `mailto:hafiz@hafizbahtiar.com?subject=${encodeURIComponent("Nomb
           )}
           <div class="line-y mt-4">
             <ul class="grid grid-cols-1 gap-px bg-gray-950/5 sm:grid-cols-2 lg:grid-cols-3 dark:bg-white/10">
-              {g.contacts.map((c) => (
+              {g.contacts.map((c, i) => (
                 <li
                   data-contact
                   data-text={[g.title, g.intro, c.name, c.number, c.note]
@@ -158,6 +181,17 @@ const report = `mailto:hafiz@hafizbahtiar.com?subject=${encodeURIComponent("Nomb
                         Salin
                       </button>
                     )}
+                    {c.number && (
+                      <a
+                        href={`/kecemasan/${vcardSlug(g, i)}.vcf`}
+                        download={`${c.name.slice(0, 40)}.vcf`}
+                        data-astro-reload
+                        aria-label={`Simpan ${c.name} ke kenalan`}
+                        class="relative z-10 inline-flex items-center rounded-full px-3 py-2 text-sm font-medium text-gray-600 ring-1 ring-gray-950/10 hover:bg-gray-950/5 dark:text-gray-300 dark:ring-white/15 dark:hover:bg-white/5"
+                      >
+                        Simpan
+                      </a>
+                    )}
                     {c.href && (
                       <a
                         href={c.href}
@@ -201,11 +235,7 @@ const report = `mailto:hafiz@hafizbahtiar.com?subject=${encodeURIComponent("Nomb
     </div>
 
     <div class="line-y mt-10">
-      <Alert
-        variant="info"
-        title="Kereta rosak di lebuh raya"
-        class="mx-2"
-      >
+      <Alert variant="info" title="Kereta rosak di lebuh raya" class="mx-2">
         <ul>
           <li>
             Berhenti di lorong kecemasan sejauh mungkin ke kiri, hidupkan lampu
@@ -241,35 +271,66 @@ const report = `mailto:hafiz@hafizbahtiar.com?subject=${encodeURIComponent("Nomb
 </PublicLayout>
 
 <script>
-  // Search: filter contacts by text; hide empty groups.
+  // Search + category chips: a contact shows when it matches the words AND sits in the
+  // picked category ("" = Semua); empty groups hide. #<group id> picks a chip on load.
   const init = () => {
     const input = document.getElementById(
       "kecemasan-cari",
     ) as HTMLInputElement | null;
-    if (!input || input.dataset.bound === "1") return;
+    const chipRow = document.getElementById("kecemasan-tapis");
+    if (!input || !chipRow || input.dataset.bound === "1") return;
     input.dataset.bound = "1";
     input.hidden = false;
+    chipRow.hidden = false;
     const groups = [...document.querySelectorAll<HTMLElement>("[data-group]")];
+    const chips = [
+      ...chipRow.querySelectorAll<HTMLButtonElement>("[data-chip]"),
+    ];
     const empty = document.getElementById("kecemasan-kosong")!;
-    input.addEventListener("input", () => {
+    const fromHash = location.hash.slice(1);
+    let active = groups.some((g) => g.id === fromHash) ? fromHash : "";
+
+    const apply = () => {
       const words = input.value.toLowerCase().split(/\s+/).filter(Boolean);
       let shown = 0;
       for (const g of groups) {
         let inGroup = 0;
+        const inCategory = !active || g.id === active;
         for (const c of g.querySelectorAll<HTMLElement>("[data-contact]")) {
-          const hit = words.every((w) => c.dataset.text!.includes(w));
+          const hit =
+            inCategory && words.every((w) => c.dataset.text!.includes(w));
           c.hidden = !hit;
           if (hit) inGroup++;
         }
         g.hidden = inGroup === 0;
         shown += inGroup;
       }
-      // Fillers are sized for the full list; hide them while filtering.
+      // Fillers are sized for a full group; hide them while the words filter cuts it.
       document
         .querySelectorAll<HTMLElement>("[data-group] li.pattern")
         .forEach((f) => (f.style.display = words.length ? "none" : ""));
       empty.classList.toggle("hidden", shown > 0);
+      chips.forEach((c) =>
+        c.setAttribute("aria-pressed", String(c.dataset.chip === active)),
+      );
+    };
+
+    input.addEventListener("input", apply);
+    chipRow.addEventListener("click", (e) => {
+      const chip = (e.target as HTMLElement).closest<HTMLButtonElement>(
+        "[data-chip]",
+      );
+      if (!chip) return;
+      active = chip.dataset.chip ?? "";
+      // Shareable (#bank) without adding a Back step or jumping the page.
+      history.replaceState(
+        history.state,
+        "",
+        active ? `#${active}` : location.pathname + location.search,
+      );
+      apply();
     });
+    apply();
   };
   // "Salin": for desktops, where tel: links have no phone to open.
   document.addEventListener("click", async (e) => {

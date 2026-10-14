@@ -1,0 +1,247 @@
+---
+import Disclaimer from "../components/ui/Disclaimer.astro";
+import BackLink from "../components/ui/BackLink.astro";
+import Alert from "../components/ui/Alert.astro";
+import Combobox from "../components/ui/Combobox.astro";
+import GridFillers from "../components/ui/GridFillers.astro";
+import TechHeading from "../components/layout/TechHeading.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { LOKASI } from "../data/cuaca-lokasi";
+import { getRamalan, MET_SOURCE, todayMY } from "../lib/ramalan-cuaca";
+import { activeWarnings, getWarnings } from "../lib/amaran-cuaca";
+export const prerender = false;
+
+// ?lokasi= is checked against MET's own list before it reaches the upstream URL.
+const DEFAULT = "Tn079"; // Kuala Lumpur (bandar)
+const asked = Astro.url.searchParams.get("lokasi");
+const loc =
+  LOKASI.find((l) => l.id === asked) ?? LOKASI.find((l) => l.id === DEFAULT)!;
+
+const [data, warn] = await Promise.all([getRamalan(loc), getWarnings()]);
+const days = data?.data ?? [];
+const warnings = warn ? activeWarnings(warn.warnings) : [];
+
+// Combobox: MET's own location types as groups, most useful first.
+const ORDER = ["Bandar", "Daerah", "Negeri", "Bahagian (Sarawak)", "Rekreasi"];
+const options = [...LOKASI]
+  .sort(
+    (a, b) =>
+      ORDER.indexOf(a.type) - ORDER.indexOf(b.type) ||
+      a.name.localeCompare(b.name, "ms"),
+  )
+  .map((l) => ({
+    value: l.id,
+    label: l.name,
+    group: l.type,
+    keywords: l.type,
+  }));
+
+const today = todayMY();
+const tomorrow = todayMY(new Date(Date.now() + 86_400_000));
+const weekday = new Intl.DateTimeFormat("ms-MY", {
+  weekday: "long",
+  timeZone: "UTC",
+});
+const dayName = (ymd: string) =>
+  ymd === today
+    ? "Hari ini"
+    : ymd === tomorrow
+      ? "Esok"
+      : weekday.format(new Date(`${ymd}T00:00:00Z`));
+const dmy = (ymd: string) => ymd.split("-").reverse().join("/");
+const fromMet = data?.source === MET_SOURCE;
+const link = "font-medium text-sky-600 hover:underline dark:text-sky-400";
+---
+
+<PublicLayout
+  title={`Ramalan Cuaca ${loc.name} - 7 Hari | Hafiz Bahtiar`}
+  description={`Ramalan cuaca 7 hari untuk ${loc.name} dari Jabatan Meteorologi Malaysia: pagi, petang, malam dan suhu minimum/maksimum.`}
+>
+  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <BackLink />
+    <div class="line-y">
+      <h1
+        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Ramalan Cuaca"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Ramalan 7 hari untuk {loc.name} ({loc.type.toLowerCase()}) dari MET
+        Malaysia.
+      </p>
+    </div>
+
+    <div class="line-y mt-10">
+      <form method="get" class="mx-2 grid max-w-md gap-2">
+        <label
+          for="lokasi"
+          class="text-sm font-medium text-gray-950 dark:text-white"
+          >Lokasi</label
+        >
+        <Combobox
+          id="lokasi"
+          name="lokasi"
+          listLabel="Lokasi"
+          searchPlaceholder="Cari bandar, daerah, negeri…"
+          emptyText="Tiada lokasi sepadan."
+          submitOnPick
+          value={loc.id}
+          options={options}
+        />
+        <noscript>
+          <button type="submit" class="btn-pill btn-pill-primary">Tukar</button>
+        </noscript>
+      </form>
+    </div>
+
+    {
+      warnings.length > 0 && (
+        <div class="line-y mt-6">
+          <Alert
+            variant="warning"
+            title={`${warnings.length} amaran cuaca aktif di Malaysia`}
+            class="mx-2"
+          >
+            <p>
+              Semak sama ada ia meliputi kawasan anda di{" "}
+              <a href="/amaran-cuaca">Amaran Cuaca</a>.
+            </p>
+          </Alert>
+        </div>
+      )
+    }
+
+    {
+      days.length ? (
+        <>
+          <div class="line-y mt-10">
+            <ul class="grid grid-cols-1 gap-px bg-gray-950/5 sm:grid-cols-2 lg:grid-cols-3 dark:bg-white/10">
+              {days.map((d) => (
+                <li class="flex flex-col gap-3 bg-white px-4 py-5 sm:px-6 dark:bg-gray-950">
+                  <div class="flex items-baseline justify-between gap-3">
+                    <p class="font-medium text-gray-950 dark:text-white">
+                      {dayName(d.date)}
+                    </p>
+                    <p class="font-mono text-xs tracking-widest text-gray-500 tabular-nums dark:text-gray-400">
+                      {dmy(d.date)}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-xl/7 font-medium tracking-tight text-gray-950 dark:text-white">
+                      {d.summary}
+                    </p>
+                    {d.when && (
+                      <p class="text-sm text-gray-600 dark:text-gray-400">
+                        {d.when}
+                      </p>
+                    )}
+                  </div>
+                  {(d.morning || d.afternoon || d.night) && (
+                    <dl class="grid grid-cols-3 gap-2 text-xs/5">
+                      {[
+                        ["Pagi", d.morning],
+                        ["Petang", d.afternoon],
+                        ["Malam", d.night],
+                      ].map(([t, v]) => (
+                        <div>
+                          <dt class="font-mono tracking-widest text-gray-500 uppercase dark:text-gray-400">
+                            {t}
+                          </dt>
+                          <dd class="text-gray-700 dark:text-gray-300">
+                            {v ?? "-"}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                  <p class="mt-auto text-2xl font-medium tracking-tight text-gray-950 tabular-nums dark:text-white">
+                    {d.min}°{" "}
+                    <span class="text-gray-400 dark:text-gray-500">-</span>{" "}
+                    {d.max}°C
+                  </p>
+                </li>
+              ))}
+              <GridFillers count={days.length} />
+            </ul>
+          </div>
+          <div class="line-y mt-6">
+            <p class="mx-2 max-w-3xl text-xs/5 text-gray-500 dark:text-gray-400">
+              Sumber:{" "}
+              {fromMet ? (
+                <>
+                  <a
+                    href="https://www.met.gov.my"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class={link}
+                  >
+                    MET Malaysia
+                  </a>{" "}
+                  melalui data.gov.my
+                </>
+              ) : (
+                <>
+                  <a
+                    href="https://open-meteo.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class={link}
+                  >
+                    Open-Meteo
+                  </a>{" "}
+                  (CC BY 4.0) - MET Malaysia tak dapat dicapai, jadi ini
+                  anggaran model cuaca global, bukan ramalan rasmi
+                </>
+              )}
+              {data?.stale &&
+                " · data simpanan - semua sumber tak dapat dicapai sekarang"}
+              .
+            </p>
+          </div>
+        </>
+      ) : (
+        <div class="line-y mt-10">
+          <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+            Ramalan cuaca tak dapat diambil sekarang. Cuba lagi sebentar, atau
+            semak terus di{" "}
+            <a
+              href="https://www.met.gov.my"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-sky-600 hover:underline dark:text-sky-400"
+            >
+              laman MET Malaysia
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
+
+    <div class="line-y mt-6">
+      <Disclaimer
+        class="mx-2"
+        sources={[
+          {
+            name: "Jabatan Meteorologi Malaysia (MET)",
+            href: "https://www.met.gov.my",
+          },
+          { name: "data.gov.my", href: "https://developer.data.gov.my" },
+          { name: "Open-Meteo (sandaran)", href: "https://open-meteo.com" },
+        ]}
+      >
+        <Fragment
+          set:html={`Ramalan boleh berubah - untuk amaran rasmi rujuk <a href="/amaran-cuaca">Amaran Cuaca</a> dan MET Malaysia. Dalam kecemasan, hubungi <strong>999</strong>.`}
+        />
+      </Disclaimer>
+    </div>
+    <div class="mb-46"></div>
+  </div>
+</PublicLayout>

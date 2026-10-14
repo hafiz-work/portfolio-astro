@@ -91,6 +91,12 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
 
   const response = await next();
 
+  // Signed-in pages must not be restored from the HTTP or back/forward cache: after a
+  // sign-out, Back would otherwise show the old page before the client guard reacts.
+  // no-store makes Back ask the server, which redirects above (and keeps private data
+  // off shared computers' disk cache).
+  if (isAdminRoute || isAccountRoute) response.headers.set("Cache-Control", "no-store");
+
   // Only decorate HTML documents - never JSON/asset responses the Worker emits.
   const contentType = response.headers.get("content-type") ?? "";
   if (contentType.includes("text/html")) {

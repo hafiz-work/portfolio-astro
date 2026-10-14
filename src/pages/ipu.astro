@@ -1,5 +1,6 @@
 ---
 import Disclaimer from "../components/ui/Disclaimer.astro";
+import BackLink from "../components/ui/BackLink.astro";
 export const prerender = false;
 import GridFillers from "../components/ui/GridFillers.astro";
 import TechHeading from "../components/layout/TechHeading.astro";
@@ -61,6 +62,7 @@ const points: MapPoint[] = stations.map((s) => ({
   description="Bacaan Indeks Pencemaran Udara (IPU) terkini dari stesen Jabatan Alam Sekitar di seluruh Malaysia, dengan stesen terdekat anda."
 >
   <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+    <BackLink />
     <div class="line-y">
       <h1 class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl">
         <TechHeading text="Kualiti Udara" fontSize={96} fontWeight={400} box="-my-12 h-48" />

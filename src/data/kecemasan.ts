@@ -13,6 +13,11 @@
 // (official pages block automated reads - number not seen on them), Takaful Ikhlas
 // (no official page found), Berjaya Sompo (site points to the MySOMPO app; the only
 // number is in a 2018 notice).
+// Banks (checked 2026-10-13), left out: Maybank (every official page blocks automated
+// reads - number not seen), BSN (no 24-hour fraud line - its page points to NSRC 997),
+// Bank Rakyat and OCBC (no official page with the number found).
+// NSRC 997 hours: nfcc.jpm.gov.my (operator, updated 10 Aug 2026) says 8 pagi - 8 malam;
+// malaysia.gov.my (31 Jul 2026) and some banks say 24 jam. We follow the operator.
 
 export interface Contact {
   name: string;
@@ -32,6 +37,8 @@ export interface Contact {
 export interface Group {
   id: string;
   title: string;
+  /** Filter chip label on /kecemasan. */
+  short: string;
   intro?: string;
   contacts: Contact[];
 }
@@ -39,12 +46,13 @@ export interface Group {
 const V = "2026-10-11";
 /** Highway hotlines from LLM's official directory (llm.gov.my/awam/highway), checked: */
 const V2 = "2026-10-12";
-/** Insurer / takaful roadside lines, each from the company's own site, checked: */
+/** Insurer / takaful roadside lines and bank fraud lines, each from the company's own site, checked: */
 const V3 = "2026-10-13";
 
 export const KECEMASAN: Group[] = [
   {
     id: "utama",
+    short: "Utama",
     title: "Kecemasan utama",
     contacts: [
       {
@@ -59,6 +67,7 @@ export const KECEMASAN: Group[] = [
   },
   {
     id: "lebuh-raya",
+    short: "Lebuh raya",
     title: "Lebuh raya",
     intro:
       "Kereta rosak atau kemalangan di lebuh raya? Hubungi operator lebuh raya tersebut - cari nama lebuh raya di kotak carian. Jika tidak pasti, hubungi LLM. Jika ada kecederaan atau bahaya, hubungi 999. Nombor daripada direktori rasmi Lembaga Lebuhraya Malaysia.",
@@ -221,6 +230,7 @@ export const KECEMASAN: Group[] = [
   },
   {
     id: "insurans",
+    short: "Tunda",
     title: "Tunda dan bantuan jalan raya (insurans / takaful)",
     intro:
       "Kereta rosak atau kemalangan? Hubungi talian bantuan penanggung insurans atau pengendali takaful motor anda - mereka hantar lori tunda panel dan bantuan baiki kecil. Had tunda dan kelayakan bergantung pada polisi atau sijil anda. Jangan serah kenderaan kepada lori tunda yang datang tanpa dipanggil. Jika ada kecederaan atau bahaya, hubungi 999. Setiap nombor daripada laman rasmi syarikat itu.",
@@ -284,6 +294,7 @@ export const KECEMASAN: Group[] = [
   },
   {
     id: "scam",
+    short: "Penipuan",
     title: "Penipuan (scam) dan siber",
     contacts: [
       {
@@ -314,7 +325,71 @@ export const KECEMASAN: Group[] = [
     ],
   },
   {
+    id: "bank",
+    short: "Bank",
+    title: "Bank - penipuan dan kad hilang",
+    intro:
+      "Disyaki ditipu, akaun digodam atau kad hilang? Hubungi talian bank anda segera supaya akaun atau kad dapat dibekukan, kemudian NSRC 997 dan buat laporan polis. Banyak aplikasi bank ada butang kill switch untuk bekukan akses serta-merta. Bank tidak akan meminta kata laluan, PIN, TAC atau OTP. Setiap nombor daripada laman rasmi bank itu.",
+    contacts: [
+      {
+        name: "AmBank",
+        number: "+603 2178 8888",
+        hours: "24 jam untuk lapor penipuan atau kad hilang",
+        note: "Talian am Pusat Hubungan 9 pagi - 9 malam mulai 1 Ogos 2026; laporan penipuan dan kad hilang kekal 24/7.",
+        source: "https://www.ambank.com.my/announcements/2026/revision-to-ambank-contact-centre-operating-hours",
+        verified: V3,
+      },
+      {
+        name: "Bank Islam",
+        number: "03-2690 0900",
+        note: "Lapor transaksi tanpa kebenaran dengan segera. Waktu operasi tidak dinyatakan di halaman ini.",
+        source: "https://www.bankislam.com/seft/",
+        verified: V3,
+      },
+      {
+        name: "CIMB",
+        number: "+603 6204 7788",
+        hours: "24 jam",
+        note: "Penipuan atau aktiviti mencurigakan pada akaun.",
+        source: "https://www.cimb.com.my/en/personal/help-support/security-and-fraud/money-muling.html",
+        verified: V3,
+      },
+      {
+        name: "Hong Leong Bank",
+        number: "03-7626 8899",
+        hours: "24 jam",
+        note: "Pusat Hubungan HLB - lapor penipuan atau scam.",
+        source: "https://www.hlb.com.my/en/business-banking/connect-biz/report-a-scam-fraud.html",
+        verified: V3,
+      },
+      {
+        name: "Public Bank - kad ATM / debit hilang",
+        number: "603-2170 8000",
+        hours: "24 jam",
+        note: "Kad kredit Visa / Mastercard hilang: 603-2176 8555 (24 jam). Penipuan perbankan dalam talian: talian yang sama atau Case Management 03-2177 3555.",
+        source: "https://pbebank.com/en/cards/cards-help-centre/report-cancellation-of-lost-or-stolen-cards/",
+        verified: V3,
+      },
+      {
+        name: "RHB",
+        number: "03-9206-8118",
+        note: "Pusat Hubungan Pelanggan RHB - lapor penipuan. Waktu operasi tidak dinyatakan di halaman ini.",
+        source: "https://rhbgroup.com/others/fraud-awareness/FAQ/Credit-Cards/index.html",
+        verified: V3,
+      },
+      {
+        name: "UOB",
+        number: "+6 03-2612 8100",
+        hours: "24 jam",
+        note: "Talian Laporan Penipuan.",
+        source: "https://uob.com.my/default/security-alert.page",
+        verified: V3,
+      },
+    ],
+  },
+  {
     id: "sokongan",
+    short: "Sokongan",
     title: "Sokongan emosi dan kebajikan",
     contacts: [
       {
@@ -338,6 +413,7 @@ export const KECEMASAN: Group[] = [
   },
   {
     id: "apm",
+    short: "APM",
     title: "Angkatan Pertahanan Awam (APM) - talian 24 jam negeri",
     intro: "Untuk bencana seperti banjir. Dalam kecemasan, 999 tetap pilihan pertama.",
     contacts: [
@@ -375,3 +451,26 @@ export const telHref = (n: string) => {
   const d = dialString(n);
   return `tel:${/^0\d{8,}$/.test(d) ? `+60${d.slice(1)}` : d}`;
 };
+
+/** URL slug for a contact's vCard: group id + position (only contacts with a number get one). */
+export const vcardSlug = (g: Group, i: number) => `${g.id}-${i + 1}`;
+
+const vEsc = (s: string) => s.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/([,;])/g, "\\$1");
+
+/** vCard 3.0 (the version both iOS Contacts and Android's importer read) for one contact.
+ *  shortcut: long lines are not folded at 75 octets - both importers accept them; fold if one rejects. */
+export const vcard = (g: Group, c: Contact) =>
+  [
+    "BEGIN:VCARD",
+    "VERSION:3.0",
+    `N:;${vEsc(c.name)};;;`,
+    `FN:${vEsc(c.name)}`,
+    `ORG:${vEsc(g.title)}`,
+    c.number && `TEL;TYPE=WORK,VOICE:${telHref(c.number).slice(4)}`,
+    `URL:${vEsc(c.href?.startsWith("http") ? c.href : c.source)}`,
+    `NOTE:${vEsc([c.hours, c.note, `Sumber: ${c.source} (disemak ${c.verified})`].filter(Boolean).join("\n"))}`,
+    "CATEGORIES:Kecemasan",
+    "END:VCARD",
+  ]
+    .filter(Boolean)
+    .join("\r\n") + "\r\n";
