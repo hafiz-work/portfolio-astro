@@ -10,7 +10,8 @@ Data sources below were checked on 2026-10-11; ideas 14-19 checked on 2026-10-14
 (`/kiblat`), Mod Ramadan (Paparan Masjid), Amaran Cuaca, Gempa Bumi, Tarikh Hijri, OPR, cuaca on
 Paparan Masjid, Graf Harga Minyak, garisan kiblat pada peta, Widget IPU. Nombor Kecemasan (`/kecemasan`), Jadual Imsakiah (`/waktu-solat/imsakiah`), Bas Langsung (`/bas`),
 Kalkulator Bil Elektrik (`/kalkulator-bil-elektrik`), Kalkulator Cukai Jalan (`/kalkulator-cukai-jalan`),
-Takwim Persekolahan (`/takwim-sekolah`) - all 2026-10-14; see CLAUDE.md -> Showcase.
+Takwim Persekolahan (`/takwim-sekolah`), Inflasi (`/inflasi`), Derma Darah (`/derma-darah`),
+Cuti Umum (`/cuti-umum`) - all 2026-10-14; see CLAUDE.md -> Showcase.
 Next recommended: **2**.
 
 Nombor Kecemasan follow-ups: verify and add Talian HEAL 15555 (KKM), MCMC aduan, more highway
@@ -45,6 +46,10 @@ calculator (for the check), and how Part F rounding is split.
 
 ## 17. Zakat Fitrah (setiap negeri) - `/kalkulator-zakat-fitrah`
 
+**Ditangguh hingga Januari 2027** (diputuskan 2026-10-14): kadar 1448H diumumkan setiap negeri menjelang
+Ramadan (~Feb 2027); kadar 1447H sudah lepas dan tidak boleh dipaparkan. Bina sekali gus apabila
+negeri mula mengumumkan; negeri yang belum umum = "belum diumumkan", tiada angka.
+
 - **Data:** each state's Majlis Agama Islam / zakat authority rate for the year. No single official combined
   table - collect state by state (some states fix it per person, others per kg of rice eaten).
 - **Why:** every Muslim in Malaysia pays it in Ramadan; the rate changes by state and year.
@@ -53,28 +58,6 @@ calculator (for the check), and how Part F rounding is split.
 - **Fallback:** none - static table, dated per entry like `kecemasan`.
 - **Caution:** religious matter - official state sources only, never blogs/mirrors; ship with or after #6.
 - **Effort:** small-medium (data entry per state).
-
-## 18. Harga Getah Harian (LGM / MRE) - `/harga-getah`
-
-- **Data:** Malaysian Rubber Board's Malaysian Rubber Exchange prices:
-  `https://www.lgm.gov.my/webv2/sidenav/(mreDetails:mreprice)`. Page is JS-rendered (checked 2026-10-14) -
-  find a JSON endpoint first; **if there is none, drop this idea** rather than scrape a rendered page.
-- **Why:** smallholders and estates check daily prices; no friendly public viewer exists.
-- **Scope:** today's cup lump / latex / scrap prices + change from the previous day.
-- **Fallback:** stored copy (once an endpoint exists).
-- **Effort:** small after the endpoint is confirmed; blocked until then.
-
-## 19. Inflasi / IHP (DOSM) - `/inflasi`
-
-- **Data:** data.gov.my data catalogue, verified 2026-10-14:
-  `https://data.gov.my/data-catalogue/cpi_annual` (+ the monthly CPI series; pick the right dataset id
-  when building). Same host the site already uses for Harga Minyak.
-- **Why:** the monthly CPI release is news every month; a clean Malay viewer (headline % + by division)
-  beats scrolling DOSM tables.
-- **Scope:** latest month yoy % headline, list by division, a small 12-month trend.
-- **Fallback:** stored copy of the last release.
-- **Caution:** monthly release cadence - show the reference month prominently.
-- **Effort:** small-medium.
 
 ## Considered, not recommended
 
@@ -86,6 +69,9 @@ calculator (for the check), and how Part F rounding is split.
 - **Kalkulator Faraid** - inheritance shares depend on the whole family situation and on
   court practice; a wrong share is a legal and religious problem.
 - **Generic developer tools** (JSON formatter, URL shortener) - don't set the portfolio apart.
+- **Harga getah harian (LGM / MRE)** - checked 2026-10-14: every MRE and farmgate price API behind
+  `lgm.gov.my/webv2api` needs a login (401); the one open endpoint is filled by visitors' browsers and has
+  today only (no previous day). No data.gov.my dataset. Only route: ask LGM for official data access.
 - **Harga komoditi harian (KPK)** - published as a daily infographic image, not a table or API; an app
   would have to read a picture a day.
 - **Kalkulator tol (LLM)** - fares live in per-highway PDFs; hundreds of plaza × vehicle-class combos,
