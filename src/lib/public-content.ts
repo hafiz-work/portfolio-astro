@@ -143,7 +143,7 @@ export async function getPublicProjects(): Promise<Project[]> {
 export async function getPublicProjectDetail(
     slug: string,
 ): Promise<PublicProjectDetail | null> {
-    const data = await fetchJson<PublicProjectDetail>(`projects/${slug}`);
+    const data = await fetchJson<PublicProjectDetail>(`projects/${encodeURIComponent(slug)}`);
     if (data) {
         const copy = PROJECT_COPY[data.slug];
         return {
@@ -197,7 +197,7 @@ export async function getPublicPosts(): Promise<BlogPostSummary[]> {
 }
 
 export async function getPublicPostBySlug(slug: string): Promise<BlogPost | null> {
-    return await fetchJson<BlogPost>(`blog/${slug}`);
+    return await fetchJson<BlogPost>(`blog/${encodeURIComponent(slug)}`);
 }
 
 /** Quotes: same contract as getPublicPosts - `[]` on failure, API order (newest first). */
@@ -206,7 +206,7 @@ export async function getPublicQuotes(): Promise<Quote[]> {
 }
 
 export async function getPublicProjectPolicy(slug: string): Promise<ProjectPolicy | null> {
-    return await fetchJson<ProjectPolicy>(`projects/${slug}/policy`);
+    return await fetchJson<ProjectPolicy>(`projects/${encodeURIComponent(slug)}/policy`);
 }
 
 export async function getPublicExperiences(): Promise<Experience[]> {

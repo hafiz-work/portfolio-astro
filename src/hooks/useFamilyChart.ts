@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { Chart, Data } from "family-chart";
 import "family-chart/styles/family-chart.css";
+import { cardText } from "../lib/chart-data";
 
 export interface FamilyChartApi {
   setMain: (id: string) => void;
@@ -84,7 +85,7 @@ export function useFamilyChart({
       const card = chart.setCardHtml();
       card.setStyle("imageCircleRect");
       card.setCardImageField("avatar");
-      card.setCardDisplay([["label"], ["birthday"]]);
+      card.setCardDisplay([cardText("label"), cardText("birthday")]);
       card.setCardDim({ h: 80, w: 220 });
       card.setOnHoverPathToMain();
       card.setOnCardClick((_event: MouseEvent, datum: any) => {

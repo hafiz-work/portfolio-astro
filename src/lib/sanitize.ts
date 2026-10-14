@@ -96,7 +96,7 @@ const renderAttrs = (node: Element, tagName: string, ugc: boolean): string => {
     const name = rawName.toLowerCase();
     const value = rawValue.trim();
 
-    if (name in PRESET_ATTRS) {
+    if (Object.hasOwn(PRESET_ATTRS, name)) {
       if (PRESET_ATTRS[name].test(value)) {
         attrs.push(value ? `${name}="${escapeAttribute(value)}"` : name);
       }

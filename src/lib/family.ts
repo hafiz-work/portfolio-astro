@@ -41,7 +41,7 @@ export class FamilyService extends ApiClient {
   }
 
   async getPublicTreeBySlug(slug: string): Promise<FamilyTreeDetail | null> {
-    return this.publicGet<FamilyTreeDetail>(`family/${slug}`);
+    return this.publicGet<FamilyTreeDetail>(`family/${encodeURIComponent(slug)}`);
   }
 
   async getPublicPersonById(id: number): Promise<FamilyPerson | null> {

@@ -1,7 +1,26 @@
 import type { Data } from "family-chart";
 import type { PublicFamilyTreeDetail } from "./family-privacy";
 import type { FamilyTreeDetail } from "../types/family";
+import { escapeText } from "entities";
 import { displayYear } from "./family-format";
+
+// family-chart writes card text and <img src> into innerHTML unescaped, so
+// card rows go through these and avatars must be a parsed https URL
+// (URL.href percent-encodes quotes and angle brackets).
+export const cardText =
+  (...keys: string[]) =>
+  (d: { data: Record<string, unknown> }) =>
+    escapeText(keys.map((key) => d.data[key] ?? "").join(" ").trim());
+
+export const safeImageUrl = (url: string | null | undefined): string | undefined => {
+  if (!url) return undefined;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" ? parsed.href : undefined;
+  } catch {
+    return undefined;
+  }
+};
 
 export const mapGender = (gender: string): "M" | "F" =>
   gender === "female" ? "F" : "M";
@@ -44,7 +63,7 @@ export const buildChartData = (
           death: displayYear(person.deathDate) ?? undefined,
           status: person.isLiving ? "Living" : "Deceased",
           living: person.isLiving,
-          avatar: person.photoUrl || undefined,
+          avatar: safeImageUrl(person.photoUrl),
           gender: mapGender(person.gender),
           original_gender: person.gender,
         },
