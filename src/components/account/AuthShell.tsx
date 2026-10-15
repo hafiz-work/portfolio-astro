@@ -17,7 +17,8 @@ const perks = [
 ];
 
 /** Public auth screen (sign in / register / verify): brand panel left, form right.
- *  A self-contained shadcn/ui page - no public site navbar or gutters. */
+ *  A self-contained shadcn/ui page - full width, edge to edge, no public site
+ *  navbar or gutters. */
 export function AuthShell({
   title,
   switchTo,
@@ -28,37 +29,54 @@ export function AuthShell({
   children?: ReactNode;
 }) {
   return (
-    <div className="grid min-h-dvh bg-background text-foreground lg:grid-cols-2">
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-primary p-10 text-primary-foreground lg:flex">
+    <div className="grid min-h-dvh w-full bg-background text-foreground lg:grid-cols-2 lg:gap-2 lg:p-2">
+      {/* Brand panel. `muted` reads as a subtle tint in light (gray-100 on
+       *  white) and a raised surface in dark (gray-800 on gray-950), so the
+       *  pair is stable both ways - unlike `primary`, which flips to white in
+       *  dark and inverted next to the form column. */}
+      <aside className="relative hidden flex-col justify-between overflow-hidden rounded-[10px] bg-muted p-8 text-foreground lg:flex xl:p-16">
         <div
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,currentColor_1px,transparent_1px),linear-gradient(to_bottom,currentColor_1px,transparent_1px)] bg-size-[48px_48px] opacity-[0.08]"
           aria-hidden="true"
         />
         <span aria-hidden="true" />
         <div className="relative max-w-md">
-          <p className="font-mono text-xs tracking-widest text-primary-foreground/70 uppercase">
+          <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
             Community
           </p>
-          <h2 className="mt-4 text-4xl font-medium tracking-tighter text-balance">
+          <h2 className="mt-4 text-3xl font-medium tracking-tighter text-balance xl:text-4xl">
             Write, share, and keep the good lines.
           </h2>
-          <ul className="mt-8 grid gap-3 text-sm text-primary-foreground/80">
+          <ul className="mt-8 grid gap-3 text-sm text-muted-foreground">
             {perks.map((perk) => (
               <li key={perk} className="flex items-center gap-3">
-                <Check className="h-4 w-4 text-primary-foreground" />
+                <Check className="h-4 w-4 text-foreground" />
                 {perk}
               </li>
             ))}
           </ul>
         </div>
-        <p className="relative text-xs text-primary-foreground/60">
+        <p className="relative text-xs text-muted-foreground">
           &copy; {new Date().getFullYear()} Hafiz Bahtiar
         </p>
       </aside>
 
-      <main className="flex flex-col bg-background p-6 md:p-10">
+      <main className="flex w-full flex-col bg-background px-4 py-6 sm:px-6 md:p-8 lg:p-10 xl:p-12">
         <div className="flex items-center justify-between gap-4">
-          <Breadcrumb>
+          <a
+            href="/"
+            aria-label="Hafiz Bahtiar - home"
+            className="inline-flex items-center lg:hidden"
+          >
+            <img
+              src="/brand/wordmark.svg"
+              alt="hafizbahtiar"
+              width={383}
+              height={120}
+              className="h-8 w-auto"
+            />
+          </a>
+          <Breadcrumb className="max-lg:hidden">
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink href="/">Home</BreadcrumbLink>
@@ -75,7 +93,7 @@ export function AuthShell({
             </Button>
           )}
         </div>
-        <div className="flex grow items-center justify-center py-10">
+        <div className="flex grow items-center justify-center py-8 sm:py-10 lg:py-12">
           <div className="w-full max-w-sm">{children}</div>
         </div>
       </main>

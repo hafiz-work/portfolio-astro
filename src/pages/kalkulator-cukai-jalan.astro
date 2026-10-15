@@ -1,0 +1,289 @@
+---
+import Disclaimer from "../components/ui/Disclaimer.astro";
+import BackLink from "../components/ui/BackLink.astro";
+import Alert from "../components/ui/Alert.astro";
+import Combobox from "../components/ui/Combobox.astro";
+import TechHeading from "../components/layout/TechHeading.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+export const prerender = true;
+
+// Static JPJ tables (src/data/cukai-jalan.ts); the script below does the sums on the device.
+const GUIDE =
+  "https://www.jpj.gov.my/pusat-media-3/informasi-perkhidmatan-jpj/kenderaan/panduan-pengiraan-kadar-lkm/";
+---
+
+<PublicLayout
+  title="Kalkulator Cukai Jalan (LKM) - Kadar JPJ | Hafiz Bahtiar"
+  description="Kira cukai jalan (lesen kenderaan motor) setahun untuk kereta dan motosikal - petrol, diesel atau elektrik - mengikut garis panduan JPJ, dengan kiraan ditunjukkan."
+>
+  <div class="relative mx-auto mt-8 max-lg:max-w-2xl sm:mt-24">
+    <BackLink />
+    <div class="line-y">
+      <h1
+        class="mx-2 text-4xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Cukai Jalan"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Kadar lesen kenderaan motor (LKM) setahun untuk kereta dan motosikal
+        persendirian, mengikut garis panduan JPJ. Kiraan dibuat dalam peranti
+        anda.
+      </p>
+    </div>
+
+    <div class="line-y mt-10">
+      <form id="lkm" class="mx-2 grid gap-4 sm:grid-cols-2" novalidate>
+        <div class="grid gap-1.5">
+          <label for="lkm-kind" class="text-sm/6 font-medium">Kenderaan</label>
+          <Combobox
+            id="lkm-kind"
+            listLabel="Kenderaan"
+            value="saloon-individu"
+            options={[
+              {
+                value: "saloon-individu",
+                label: "Kereta salun - milik individu (AB)",
+              },
+              {
+                value: "saloon-syarikat",
+                label: "Kereta salun - milik syarikat (AC)",
+              },
+              {
+                value: "bukan-saloon",
+                label: "Kereta selain salun - individu atau syarikat (AD/AE)",
+              },
+              { value: "motosikal", label: "Motosikal (AA)" },
+            ]}
+          />
+        </div>
+        <div class="grid gap-1.5">
+          <label for="lkm-fuel" class="text-sm/6 font-medium">Enjin</label>
+          <Combobox
+            id="lkm-fuel"
+            listLabel="Enjin"
+            value="ice"
+            options={[
+              { value: "ice", label: "Petrol / diesel" },
+              { value: "ev", label: "Elektrik penuh (EV)" },
+            ]}
+          />
+        </div>
+        <div class="grid gap-1.5">
+          <label for="lkm-region" class="text-sm/6 font-medium"
+            >Kawasan pendaftaran</label
+          >
+          <Combobox
+            id="lkm-region"
+            listLabel="Kawasan"
+            value="semenanjung"
+            options={[
+              { value: "semenanjung", label: "Semenanjung Malaysia" },
+              { value: "langkawi", label: "Pulau Langkawi" },
+              { value: "pangkor", label: "Pulau Pangkor" },
+              { value: "sabah", label: "Sabah" },
+              { value: "labuan", label: "Labuan" },
+              { value: "sarawak", label: "Sarawak" },
+            ]}
+          />
+        </div>
+        <div class="grid gap-1.5">
+          <label for="lkm-size" class="text-sm/6 font-medium">
+            <span id="lkm-size-label">Kapasiti enjin (cc)</span>
+          </label>
+          <input
+            id="lkm-size"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            step="1"
+            value="1500"
+            class="field h-10"
+            aria-describedby="lkm-size-hint"
+          />
+          <p
+            id="lkm-size-hint"
+            class="text-xs/5 text-gray-500 dark:text-gray-400"
+          >
+            Seperti dalam geran kenderaan.
+          </p>
+        </div>
+        <label
+          id="lkm-4wd-row"
+          class="flex items-center gap-2 text-sm/6 sm:col-span-2"
+          hidden
+        >
+          <input id="lkm-4wd" type="checkbox" class="size-4 accent-sky-600" />
+          Diesel, pacuan empat roda (4x4)
+        </label>
+      </form>
+    </div>
+
+    <div class="line-y mt-10">
+      <div class="mx-2" aria-live="polite">
+        <p class="eyebrow">Cukai jalan setahun</p>
+        <p
+          id="lkm-amount"
+          class="mt-3 text-4xl font-medium tracking-tight tabular-nums sm:text-5xl"
+        >
+          -
+        </p>
+        <ol
+          id="lkm-steps"
+          class="mt-4 grid gap-1 text-sm/6 text-gray-600 tabular-nums dark:text-gray-400"
+        >
+        </ol>
+        <p id="lkm-ref" class="mt-3 text-xs/5 text-gray-500 dark:text-gray-400">
+        </p>
+        <p
+          id="lkm-error"
+          class="mt-3 text-sm/6 font-medium text-red-600 dark:text-red-400"
+          hidden
+        >
+        </p>
+      </div>
+    </div>
+
+    <div class="line-y mt-10">
+      <Alert variant="info" title="Tidak dikira di sini" class="mx-2">
+        <ul>
+          <li>
+            <strong>Motosikal 150cc dan ke bawah</strong> - JPJ hanya menyatakan kadar
+            ini "dikekalkan pada kadar sedia ada" tanpa mencetak amaunnya.
+          </li>
+          <li>
+            <strong>Kereta selain salun diesel 4x4 di Sabah</strong> - sama, "kadar
+            sedia ada".
+          </li>
+          <li><strong>Hibrid</strong> - tiada dalam garis panduan JPJ.</li>
+          <li>
+            <strong>EV di Pulau Pangkor</strong>, dan <strong
+              >motosikal EV melebihi 7.5 kW di Langkawi/Labuan</strong
+            > - garis panduan EV tidak menyatakannya dengan jelas.
+          </li>
+          <li>
+            Kenderaan barangan, perkhidmatan awam (teksi, bas, e-hailing),
+            treler, sekolah memandu dan kenderaan kerajaan.
+          </li>
+        </ul>
+      </Alert>
+    </div>
+
+    <div class="line-y mt-6">
+      <Disclaimer
+        class="mx-2"
+        sources={[{ name: "JPJ (garis panduan kadar LKM)", href: GUIDE }]}
+      >
+        Kadar mengikut garis panduan JPJ (petrol/diesel: pindaan selepas Bajet
+        2009; EV: 1 April 2026). Semak di MyJPJ atau JPJ sebelum membayar.
+        Insurans tidak termasuk.
+      </Disclaimer>
+    </div>
+    <div class="mb-16 sm:mb-46"></div>
+  </div>
+</PublicLayout>
+
+<script>
+  import { lkm, rm, type Kind, type Region } from "../lib/cukai-jalan";
+
+  const initLkm = () => {
+    const form = document.getElementById("lkm");
+    if (!form || form.dataset.bound === "1") return;
+    form.dataset.bound = "1";
+    const $ = <T extends HTMLElement>(id: string) =>
+      document.getElementById(id) as T;
+    const kind = $<HTMLSelectElement>("lkm-kind");
+    const fuel = $<HTMLSelectElement>("lkm-fuel");
+    const region = $<HTMLSelectElement>("lkm-region");
+    const size = $<HTMLInputElement>("lkm-size");
+    const fourWd = $<HTMLInputElement>("lkm-4wd");
+    const [amount, steps, ref, error] = [
+      "lkm-amount",
+      "lkm-steps",
+      "lkm-ref",
+      "lkm-error",
+    ].map((id) => $(id));
+    let wasEv = false;
+
+    const update = () => {
+      const ev = fuel.value === "ev";
+      if (ev !== wasEv) {
+        // Switching unit: start from a typical value instead of reading cc as kW.
+        size.value = ev
+          ? kind.value === "motosikal"
+            ? "5"
+            : "150"
+          : kind.value === "motosikal"
+            ? "250"
+            : "1500";
+        wasEv = ev;
+      }
+      $("lkm-size-label").textContent = ev
+        ? "Kuasa motor (kW)"
+        : "Kapasiti enjin (cc)";
+      $("lkm-size-hint").textContent = ev
+        ? "Kuasa motor elektrik dalam kilowatt, hingga 3 tempat perpuluhan."
+        : "Seperti dalam geran kenderaan.";
+      size.step = ev ? "0.001" : "1";
+      size.inputMode = ev ? "decimal" : "numeric";
+      $("lkm-4wd-row").hidden = ev || kind.value !== "bukan-saloon";
+
+      const raw = Number(size.value);
+      // EV input is kW; JPJ's bands are in watts.
+      const n = ev ? Math.round(raw * 1000) : raw;
+      const bad =
+        size.value.trim() === "" ||
+        !Number.isFinite(raw) ||
+        (ev && Math.abs(raw * 1000 - n) > 1e-6);
+      const r = bad
+        ? {
+            ok: false as const,
+            reason: ev
+              ? "Masukkan kuasa motor dalam kW (cth. 150 atau 7.5)."
+              : "Masukkan kapasiti enjin dalam cc (nombor bulat).",
+          }
+        : lkm({
+            kind: kind.value as Kind,
+            region: region.value as Region,
+            ev,
+            size: n,
+            diesel4wd: fourWd.checked,
+          });
+
+      size.setAttribute("aria-invalid", String(bad));
+      error.hidden = r.ok;
+      if (!r.ok) {
+        amount.textContent = "-";
+        steps.replaceChildren();
+        ref.textContent = "";
+        error.textContent = r.reason;
+        return;
+      }
+      amount.textContent = rm(r.sen);
+      steps.replaceChildren(
+        ...r.steps.map((s) =>
+          Object.assign(document.createElement("li"), { textContent: s }),
+        ),
+      );
+      ref.textContent =
+        `Rujukan: ${r.ref}.` +
+        (r.rounded
+          ? " Separuh daripada amaun sen ganjil - JPJ tidak menyatakan cara pembundaran; dibundarkan ke sen terdekat."
+          : "");
+    };
+
+    for (const el of [kind, fuel, region, fourWd])
+      el.addEventListener("change", update);
+    size.addEventListener("input", update);
+    form.addEventListener("submit", (e) => e.preventDefault());
+    update();
+  };
+  initLkm();
+  document.addEventListener("astro:page-load", initLkm);
+</script>

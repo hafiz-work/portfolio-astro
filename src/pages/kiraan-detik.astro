@@ -1,5 +1,6 @@
 ---
 import Disclaimer from "../components/ui/Disclaimer.astro";
+import BackLink from "../components/ui/BackLink.astro";
 export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
@@ -29,9 +30,10 @@ const left = (days: number) => (days === 0 ? "Hari ini" : days === 1 ? "Esok" : 
   title="Berapa Hari Lagi Ramadan & Hari Raya? Kiraan Detik | Hafiz Bahtiar"
   description="Kiraan detik ke Awal Ramadan, Hari Raya Aidilfitri, Aidiladha dan hari kebesaran Islam lain, mengikut takwim JAKIM."
 >
-  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+  <div class="relative mx-auto mt-8 max-lg:max-w-2xl sm:mt-24">
+    <BackLink />
     <div class="line-y">
-      <h1 class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl">
+      <h1 class="mx-2 text-4xl tracking-tighter text-balance sm:text-7xl lg:text-8xl">
         <TechHeading text="Kiraan Detik" fontSize={96} fontWeight={400} box="-my-12 h-48" />
       </h1>
     </div>
@@ -97,7 +99,7 @@ const left = (days: number) => (days === 0 ? "Hari ini" : days === 1 ? "Esok" : 
         <Fragment set:html={`Tarikh mengikut takwim JAKIM bila sudah diterbitkan; selepas itu ia <strong>anggaran</strong> kalendar Umm al-Qura dan boleh berbeza sehari. Tarikh sebenar Awal Ramadan dan Hari Raya ditentukan melalui rukyah dan diisytiharkan oleh Penyimpan Mohor Besar Raja-Raja.`} />
       </Disclaimer>
     </div>
-    <div class="mb-46"></div>
+    <div class="mb-16 sm:mb-46"></div>
   </div>
 </PublicLayout>
 

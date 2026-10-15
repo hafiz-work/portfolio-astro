@@ -11,12 +11,8 @@ import { Image } from "astro:assets";
 import CoreLayout from "../../layouts/CoreLayout.astro";
 import SectionHeader from "../../components/layout/SectionHeader.astro";
 
-// Cloudflare Turnstile (invisible until a challenge is needed). This site key is
-// public; keep it as a fallback so production login still works when build-time
-// env is absent.
-const DEFAULT_TURNSTILE_SITE_KEY = "0x4AAAAAAFD-PSk_u7NHAF-5";
-const turnstileSiteKey =
-  import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || DEFAULT_TURNSTILE_SITE_KEY;
+// Cloudflare Turnstile (invisible until a challenge is needed).
+import { TURNSTILE_SITE_KEY as turnstileSiteKey } from "../../lib/constants";
 ---
 
 <CoreLayout
@@ -292,8 +288,33 @@ const turnstileSiteKey =
     if (statusDisplay) statusDisplay.classList.add("hidden");
   };
 
+  // Notices carried over from sign-out / password change (toasts die on the
+  // hard navigation that delivers them). Shown on every pageshow so the
+  // initial load and a bfcache restore behave the same.
+  const showNotice = () => {
+    const notice = new URLSearchParams(window.location.search);
+    if (notice.get("session") === "unrevoked") {
+      showStatus(
+        "Server session may not be revoked. Sign in and out again once you're back online.",
+        "error",
+        errorIcon,
+      );
+    } else if (notice.get("password") === "changed") {
+      showStatus(
+        "Password updated successfully. Sign in with your new password.",
+        "success",
+        successIcon,
+      );
+    }
+    if (notice.has("session") || notice.has("password")) {
+      history.replaceState(null, "", window.location.pathname);
+    }
+  };
   resetUI();
-  window.addEventListener("pageshow", resetUI);
+  window.addEventListener("pageshow", () => {
+    resetUI();
+    showNotice();
+  });
 
   // Map backend/API errors to clean user-facing copy. Never surface raw
   // technical messages on the login screen.

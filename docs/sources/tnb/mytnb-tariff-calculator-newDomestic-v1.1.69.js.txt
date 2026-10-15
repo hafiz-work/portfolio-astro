@@ -1,0 +1,247 @@
+function calculateBill(type, consumption, afaPrev, afa) {
+  //console.log(type, consumption)
+  if (type === "newDomestic") {
+    const startDate = new Date(document.getElementById("startDate").value);
+    const endDate = new Date(document.getElementById("endDate").value);
+    const periods = getDomesticBillingPeriods(consumption, startDate, endDate);
+    const groups = getDomesticChargeGroups(periods);
+    const nonSTConsumption = periods.reduce((sum, period) => sum + period.nonST, 0);
+    const stConsumption = consumption - nonSTConsumption;
+    const isAboveSTThreshold = stConsumption > 0;
+    const isDifferent = periods.length > 1;
+
+    const energyCharges = calculateTieredCharge(consumption, 'energy', groups);
+    const fuelAdjustmentCharges = calculateDomesticPeriodAFA(periods, afaPrev, afa);
+    const capacityCharges = calculateTieredCharge(consumption, 'capacity', groups);
+    const networkCharges = calculateTieredCharge(consumption, 'network', groups);
+    const retailRate = DOMESTIC.RETAIL_CHARGE_AMOUNT;
+    const retailCharge = calculateDomesticRetailCharge(periods, retailRate);
+
+    // Select incentive tier from the full bill usage, never from prorated usage.
+    let totalEnergyEfficiencyIncentive = calculateEnergyEfficiencyIncentive(consumption);
+    let energyEfficiencyIncentiveNonST = totalEnergyEfficiencyIncentive;
+    let energyEfficiencyIncentiveST = 0;
+    if (groups.length > 1) {
+      const tier = DOMESTIC.INCENTIVE_TIERS.find(tier => consumption <= tier.max);
+      const incentiveRate = tier ? tier.rate : 0;
+      const incentiveFor = key => roundNum(groups.reduce((sum, group) =>
+        sum - Math.round(Math.abs(group[key] * incentiveRate) * 100) / 100, 0));
+      energyEfficiencyIncentiveNonST = incentiveFor('nonST');
+      energyEfficiencyIncentiveST = incentiveFor('st');
+      totalEnergyEfficiencyIncentive = roundNum(energyEfficiencyIncentiveNonST + energyEfficiencyIncentiveST);
+    } else if (isAboveSTThreshold) {
+      energyEfficiencyIncentiveNonST = totalEnergyEfficiencyIncentive * nonSTConsumption / consumption;
+      energyEfficiencyIncentiveST = totalEnergyEfficiencyIncentive * stConsumption / consumption;
+    }
+
+    // Current Month Usage Charge calculations
+    const currentMonthUsageChargeNonST = roundNum(
+      energyCharges.nonST +
+      fuelAdjustmentCharges.firstMonth.nonST +
+      fuelAdjustmentCharges.lastMonth.nonST +
+      capacityCharges.nonST +
+      networkCharges.nonST +
+      energyEfficiencyIncentiveNonST);
+
+    const currentMonthUsageChargeST = roundNum(
+      energyCharges.st +
+      fuelAdjustmentCharges.firstMonth.st +
+      fuelAdjustmentCharges.lastMonth.st +
+      capacityCharges.st +
+      networkCharges.st +
+      retailCharge +
+      energyEfficiencyIncentiveST);
+
+    // Period line totals are rounded independently of the displayed tax splits.
+    const currentMonthUsageCharge = groups.length > 1 ? roundNum(
+      energyCharges.total + capacityCharges.total + networkCharges.total +
+      fuelAdjustmentCharges.firstMonth.total + fuelAdjustmentCharges.lastMonth.total +
+      retailCharge + totalEnergyEfficiencyIncentive
+    ) : roundNum(currentMonthUsageChargeNonST + currentMonthUsageChargeST);
+
+    // Service Tax (8%)
+    const serviceTaxRate = periods.some(period => period.chargeable) ? 0.08 : 0;
+    const serviceTax = serviceTaxRate > 0 ? roundNum(currentMonthUsageChargeST * serviceTaxRate) : 0;
+
+    // KWTBB (1.6%)
+    const kwtbbRate = consumption > 300 ? 0.016 : 0;
+    const kwtbbBaseAmount =
+      energyCharges.total +
+      capacityCharges.total +
+      networkCharges.total +
+      totalEnergyEfficiencyIncentive;
+
+    const kwtbb = roundNum(kwtbbBaseAmount * kwtbbRate);
+
+    // Total Bill
+    const totalBill = roundNum(currentMonthUsageCharge + serviceTax + kwtbb);
+
+    const results = {
+      consumption,
+      consumptionNonST: nonSTConsumption,
+      consumptionST: stConsumption,
+      energyRate: energyCharges.rate,
+      energyCharge: energyCharges.total,
+      energyChargeNonST: energyCharges.nonST,
+      energyChargeST: energyCharges.st,
+      previousMonth: isDifferent,
+      fuelAdjustmentRatePrev: fuelAdjustmentCharges.firstMonth.rate,
+      fuelAdjustmentPrev: fuelAdjustmentCharges.firstMonth.total,
+      fuelAdjustmentNonSTPrev: fuelAdjustmentCharges.firstMonth.nonST,
+      fuelAdjustmentSTPrev: fuelAdjustmentCharges.firstMonth.st,
+      fuelAdjustmentRate: fuelAdjustmentCharges.lastMonth.rate,
+      fuelAdjustment: fuelAdjustmentCharges.lastMonth.total,
+      fuelAdjustmentNonST: fuelAdjustmentCharges.lastMonth.nonST,
+      fuelAdjustmentST: fuelAdjustmentCharges.lastMonth.st,
+      capacityChargeRate: capacityCharges.rate,
+      capacityCharge: capacityCharges.total,
+      capacityChargeNonST: capacityCharges.nonST,
+      capacityChargeST: capacityCharges.st,
+      networkChargeRate: networkCharges.rate,
+      networkCharge: networkCharges.total,
+      networkChargeNonST: networkCharges.nonST,
+      networkChargeST: networkCharges.st,
+      retailRate,
+      retailCharge,
+      energyEfficiencyIncentive: totalEnergyEfficiencyIncentive,
+      energyEfficiencyIncentiveNonST,
+      energyEfficiencyIncentiveST,
+      currentMonthUsageCharge,
+      currentMonthUsageChargeNonST,
+      currentMonthUsageChargeST,
+      serviceTax,
+      serviceTaxRate,
+      kwtbb,
+      kwtbbRate,
+      totalBill,
+    };
+
+    fillTable(results);
+  }
+
+  return null;
+}
+
+function formatResultValue(value, decimal = true) {
+  let num = Number(value);
+  if (value === null || value === '' || isNaN(num) || !isFinite(num)) {
+    return value;
+  }
+  num = Object.is(num, -0) ? 0 : num;
+  return num.toLocaleString(undefined, {
+    minimumFractionDigits: decimal ? 2 : 0,
+    maximumFractionDigits: decimal ? 2 : 0
+  });
+}
+
+function fillTable(results) {
+  // reset fields which are not required
+  document.getElementById("resultBeforeRoundingNote1DomesticID").hidden = false;
+  document.getElementById("resultBeforeRoundingNote2DomesticID").hidden = false;
+  document.getElementById("resultBeforeRoundingNote3DomesticID").hidden = false;
+  document.getElementById("resultBeforeRoundingNote4DomesticID").hidden = true;
+  document.getElementById("resultBeforeRoundingNote1NonDomesticID").hidden = true;
+  document.getElementById("resultBeforeRoundingNote2NonDomesticID").hidden = true;
+  document.getElementById("resultBeforeRoundingNote3NonDomesticID").hidden = true;
+
+  document.getElementById("usageRow").hidden = false;
+  document.getElementById("usagePeakRow").hidden = true;
+  document.getElementById("usageOffPeakRow").hidden = true;
+  document.getElementById("energyRow").hidden = false;
+  document.getElementById("energyPeakRow").hidden = true;
+  document.getElementById("energyOffPeakRow").hidden = true;
+  document.getElementById("energyOffPeakTotal").innerText = formatResultValue(0);
+  document.getElementById("energyOffPeakST").innerText = formatResultValue(0);
+  document.getElementById("stRow").hidden = false;
+
+  // Fill values directly into table cells
+  document.getElementById("tariffLabel").innerText = i18next.t('optionNewDomestic');
+  document.getElementById("consumptionNonST").innerText = formatResultValue(results.consumptionNonST);
+  document.getElementById("consumptionST").innerText = formatResultValue(results.consumptionST);
+  document.getElementById("consumptionTotal").innerText = formatResultValue(results.consumption);
+
+  document.getElementById("ratesEnergyRow").innerText = `${results.energyRate}/`;
+  document.getElementById("energyNonST").innerText = formatResultValue(results.energyChargeNonST);
+  document.getElementById("energyST").innerText = formatResultValue(results.energyChargeST);
+  document.getElementById("energyTotal").innerText = formatResultValue(results.energyCharge);
+
+  if (results.previousMonth) {
+    document.getElementById("afaPrevMonth").hidden = false;
+    document.getElementById("ratesAfaPrevMonth").innerText = `${results.fuelAdjustmentRatePrev}/`;
+    document.getElementById("fuelNonSTPrevMonth").innerText = formatResultValue(results.fuelAdjustmentNonSTPrev);
+    document.getElementById("fuelSTPrevMonth").innerText = formatResultValue(results.fuelAdjustmentSTPrev);
+    document.getElementById("fuelTotalPrevMonth").innerText = formatResultValue(results.fuelAdjustmentPrev);
+  } else {
+    document.getElementById("afaPrevMonth").hidden = true;
+  }
+
+  document.getElementById("ratesAfaCurrMonth").innerText = `${results.fuelAdjustmentRate}/`;
+  document.getElementById("fuelNonST").innerText = formatResultValue(results.fuelAdjustmentNonST);
+  document.getElementById("fuelST").innerText = formatResultValue(results.fuelAdjustmentST);
+  document.getElementById("fuelTotal").innerText = formatResultValue(results.fuelAdjustment);
+
+  document.getElementById("ratesResultCapacity").innerText = `${results.capacityChargeRate}/`;
+  document.getElementById("capacityNonST").innerText = formatResultValue(results.capacityChargeNonST);
+  document.getElementById("capacityST").innerText = formatResultValue(results.capacityChargeST);
+  document.getElementById("capacityTotal").innerText = formatResultValue(results.capacityCharge);
+
+  document.getElementById("ratesResultNetwork").innerText = `${results.networkChargeRate}/`;
+  document.getElementById("networkNonST").innerText = formatResultValue(results.networkChargeNonST);
+  document.getElementById("networkST").innerText = formatResultValue(results.networkChargeST);
+  document.getElementById("networkTotal").innerText = formatResultValue(results.networkCharge);
+
+  document.getElementById("ratesResultRetail").innerText = `${results.retailRate}/`;
+  document.getElementById("retailNonST").innerText = formatResultValue(0);
+  document.getElementById("retailST").innerText = formatResultValue(results.retailCharge);
+  document.getElementById("retailTotal").innerText = formatResultValue(results.retailCharge);
+
+  document.getElementById("energyEfficiencyIncentiveRow").hidden = false;
+  document.getElementById("incentiveNonST").innerText = formatResultValue(results.energyEfficiencyIncentiveNonST);
+  document.getElementById("incentiveST").innerText = formatResultValue(results.energyEfficiencyIncentiveST);
+  document.getElementById("incentiveTotal").innerText = formatResultValue((Number(formatResultValue(results.energyEfficiencyIncentiveNonST)) + Number(formatResultValue(results.energyEfficiencyIncentiveST))));
+
+  document.getElementById("subtotalNonST").innerText = formatResultValue(results.currentMonthUsageChargeNonST);
+  document.getElementById("subtotalST").innerText = formatResultValue(results.currentMonthUsageChargeST);
+  document.getElementById("subtotalTotal").innerText = formatResultValue(results.currentMonthUsageCharge);
+
+  document.getElementById("stRow").hidden = false;
+  document.getElementById("serviceTax").innerText = formatResultValue(results.serviceTax);
+  document.getElementById("kwtbb").innerText = formatResultValue(results.kwtbb);
+
+  document.getElementById("totalBill").innerText = formatResultValue(results.totalBill);
+
+  // Optional view switching
+  document.getElementById("input-section").style.display = "none";
+  document.getElementById("result-section").style.display = "block";
+}
+
+function calculateTieredCharge(consumption, chargeType, groups) {
+  const rate = consumption > DOMESTIC.HIGH_USAGE_THRESHOLD
+    ? DOMESTIC.RATES.tier2[chargeType] : DOMESTIC.RATES.tier1[chargeType];
+  const nonST = sumDomesticPeriodCharges(groups, 'nonST', rate);
+  const st = sumDomesticPeriodCharges(groups, 'st', rate);
+  const total = groups.length > 1 ? sumDomesticPeriodCharges(groups, 'usage', rate)
+    : roundNum(nonST + st);
+  return { rate, nonST, st, total };
+}
+
+function calculateFuelAdjustment(consumption, startDate, endDate, afaPrev, afa) {
+  return calculateDomesticPeriodAFA(
+    getDomesticBillingPeriods(consumption, startDate, endDate), afaPrev, afa);
+}
+
+function calculateEnergyEfficiencyIncentive(consumption) {
+  if (consumption < 0) return 0;
+
+  for (const tier of DOMESTIC.INCENTIVE_TIERS) {
+    if (consumption <= tier.max) {
+      //return consumption * tier.rate;
+	  return -Math.round(Math.abs(consumption * tier.rate) * 100) / 100;
+    }
+  }
+  return 0;
+}
+
+function roundNum(num) {
+  return roundDomesticAmount(num);
+}

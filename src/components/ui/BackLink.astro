@@ -1,0 +1,23 @@
+---
+import { ArrowLeft } from "lucide-react";
+/**
+ * Back link above a page's title row - every Showcase app points at /showcase
+ * (sub-pages at their parent app). Same hairline row as the rest of the column.
+ */
+interface Props {
+  href?: string;
+  label?: string;
+}
+
+const { href = "/showcase", label = "Showcase" } = Astro.props;
+---
+
+<div class="line-y mb-6 sm:mb-10" data-showcase-app>
+  <a
+    href={href}
+    class="mx-2 inline-flex items-center gap-1.5 rounded-full py-1 text-sm font-medium text-gray-600 hover:text-gray-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:text-gray-400 dark:hover:text-white"
+  >
+    <ArrowLeft className="size-4" aria-hidden="true" />
+    {label}
+  </a>
+</div>

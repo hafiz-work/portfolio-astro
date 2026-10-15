@@ -55,4 +55,10 @@ expect(renderUserMarkdown("![cat](https://x.example/cat.jpg)"), "users: no third
 expect(renderUserMarkdown("![cat](https://api.hafizbahtiar.com/api/v1/media/images/a1-b2.png)")).toContain('<img src="https://api.hafizbahtiar.com/api/v1/media/images/a1-b2.png" alt="cat"');
 expect(renderUserMarkdown("![b64](data:image/png;base64,AAAA)")).not.toContain("<img");
 
+// Inherited Object keys as attribute names must not crash the render (500 for every visitor).
+for (const name of ["constructor", "__proto__", "toString", "hasOwnProperty"]) {
+  expect(s(`<p ${name}="1">x</p>`), name).toBe("<p>x</p>");
+  expect(ugc(`<p ${name}="1">x</p>`), `ugc ${name}`).toBe("<p>x</p>");
+}
+
 console.log("sanitize: ok");

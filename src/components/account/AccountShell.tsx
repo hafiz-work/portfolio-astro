@@ -1,5 +1,4 @@
-import React, { useEffect, type ReactNode } from "react";
-import { useDefaultLayout, useGroupRef } from "react-resizable-panels";
+import React, { useEffect, useState, type ReactNode } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,97 +7,149 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/shadcn/ui/breadcrumb";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/shadcn/ui/resizable";
-import { AccountHeader } from "./AccountHeader";
+import { Avatar, AvatarFallback } from "@/components/shadcn/ui/avatar";
+import { Button } from "@/components/shadcn/ui/button";
+import { Separator } from "@/components/shadcn/ui/separator";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/shadcn/ui/sidebar";
+import { Toaster } from "@/components/shadcn/ui/sonner";
+import { authService, type Me } from "../../lib/auth";
 import { AccountSidebar } from "./AccountSidebar";
-import { ACCOUNT_LINKS } from "./account-nav";
+import { ConfirmHost } from "./ConfirmDialog";
+import { ModeToggle } from "./ModeToggle";
+import { activeAccountLink, initials } from "./account-nav";
 
-const LAYOUT_KEY = "react-resizable-panels:account-shell";
+const humanize = (segment: string) =>
+  decodeURIComponent(segment)
+    .replace(/[-_]+/g, " ")
+    .replace(/\b[a-z]/g, (c) => c.toUpperCase());
 
-// The library reads its saved layout while rendering. The server can't, so the
-// hydrated DOM would keep the default widths (React doesn't patch style attributes
-// on hydration). So: never read during render (same default on server and client),
-// write after a drag, and restore the saved widths once mounted (effect below).
-const writeOnlyStorage = {
-  getItem: () => null,
-  setItem: (key: string, value: string) => {
-    try {
-      localStorage.setItem(key, value);
-    } catch { }
-  },
-};
+// The signed-in account screen (shadcn sidebar-07): AccountSidebar + an inset with
+// the breadcrumb bar and the page. This is the session guard and the only /me
+// caller - one refresh at a time, the refresh token rotates.
+export function AccountShell({
+  path,
+  defaultOpen = true,
+  children,
+}: {
+  path: string;
+  defaultOpen?: boolean;
+  children?: ReactNode;
+}) {
+  const [me, setMe] = useState<Me | null>(null);
 
-// The whole signed-in account screen: shadcn background, the session guard (AccountHeader,
-// which also covers /me and the mobile tabs+menu bar), then sidebar | content. lg and up
-// the sidebar is a resizable panel (layout remembered per browser); below lg the group
-// falls back to a plain block. One tree at every size, so the page's nested islands
-// (children) never remount.
-export function AccountShell({ path, children }: { path: string; children?: ReactNode }) {
-  const layout = useDefaultLayout({ id: "account-shell", storage: writeOnlyStorage, onlySaveAfterUserInteractions: true });
-  const groupRef = useGroupRef();
   useEffect(() => {
-    // Next frame: the group registers its panels in its own effects first.
-    const id = requestAnimationFrame(() => {
-      try {
-        const saved = JSON.parse(localStorage.getItem(LAYOUT_KEY) ?? "null");
-        if (saved && typeof saved.nav === "number" && typeof saved.main === "number") groupRef.current?.setLayout(saved);
-      } catch { }
-    });
-    return () => cancelAnimationFrame(id);
+    void (async () => {
+      // No session -> /login (the middleware has already bounced cookieless visits).
+      if (!authService.isAuthenticated() && !(await authService.tryRefresh())) {
+        window.location.replace("/login");
+        return;
+      }
+      const who = await authService.me();
+      if (!who) window.location.replace("/login");
+      else setMe(who);
+    })();
   }, []);
-  const current = ACCOUNT_LINKS.find((l) => l.href === path);
+
+  // Back after sign-out can restore this page from the back/forward cache (no request,
+  // effects don't re-run). No session flag any more -> leave at once.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted && !authService.isAuthenticated()) window.location.replace("/login");
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
+
+  const section = activeAccountLink(path);
+  // Pages outside the sidebar sections (e.g. /account/settings) hang off "Account".
+  const leaf = path
+    .slice((section?.href ?? "/account").length)
+    .split("/")
+    .filter(Boolean)
+    .filter((segment) => !/^\d+$/.test(segment))
+    .pop();
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background text-foreground">
-      {/* Small screens: tabs + account menu bar. lg and up: the side navigation. */}
-      <div className="border-b border-border bg-card lg:hidden">
-        <div className="mx-auto max-w-6xl px-4 py-2 sm:px-6">
-          <AccountHeader path={path} />
-        </div>
-      </div>
-
-      <div className="mx-auto w-full max-w-6xl grow px-4 py-8 sm:px-6 sm:py-12">
-        <ResizablePanelGroup
-          orientation="horizontal"
-          groupRef={groupRef}
-          defaultLayout={layout.defaultLayout}
-          onLayoutChanged={layout.onLayoutChanged}
-          // Library default is overflow:hidden, which would break the sticky sidebar.
-          style={{ height: "auto", overflow: "visible" }}
-          className="max-lg:block!"
-        >
-          <ResizablePanel id="nav" defaultSize="22%" minSize="16%" maxSize="32%" style={{ overflow: "visible" }}>
-            {/* Below lg the sidebar is hidden (AccountHeader's tabs bar takes over). */}
-            <div className="sticky top-12 pr-4 max-lg:hidden">
-              <AccountSidebar path={path} />
-            </div>
-          </ResizablePanel>
-          <ResizableHandle withHandle className="max-lg:hidden" />
-          <ResizablePanel id="main" minSize="50%">
-            {/* @container: pages lay out by the panel's width (it resizes), not the viewport's. */}
-            <main className="@container min-w-0 lg:pl-8">
-              {current && (
-                <Breadcrumb className="mb-6">
-                  <BreadcrumbList>
-                    <BreadcrumbItem>
-                      <BreadcrumbLink href="/account">Account</BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                      <BreadcrumbPage>{current.label}</BreadcrumbPage>
-                    </BreadcrumbItem>
-                  </BreadcrumbList>
-                </Breadcrumb>
+    <SidebarProvider defaultOpen={defaultOpen}>
+      <AccountSidebar path={path} me={me} />
+      <SidebarInset>
+        {/* Sticky: stays while the page scrolls; opaque so content slides under it. */}
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b border-border/60 bg-background px-4 md:rounded-t-[10px]">
+          <SidebarTrigger className="-ml-1" />
+          <Separator
+            orientation="vertical"
+            className="mr-2 data-[orientation=vertical]:h-4"
+          />
+          <Breadcrumb>
+            <BreadcrumbList>
+              {/* /account is the dashboard: just "Dashboard". Elsewhere: Account / section / leaf. */}
+              {path !== "/account" && (
+                <>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href="/account">Account</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                </>
               )}
-              {children}
-            </main>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
+              {section && (
+                <BreadcrumbItem>
+                  {section.href === path ? (
+                    <BreadcrumbPage>{section.label}</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink href={section.href}>
+                      {section.label}
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
+              )}
+              {leaf && (
+                <>
+                  {section && <BreadcrumbSeparator />}
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{humanize(leaf)}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </>
+              )}
+            </BreadcrumbList>
+          </Breadcrumb>
+          <div className="ml-auto flex items-center gap-1">
+            <ModeToggle />
+            {me && (
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+              >
+                <a
+                  href="/account/profile"
+                  aria-label="Profile"
+                  title={me.profile?.displayName || me.name}
+                >
+                  <Avatar className="size-8">
+                    <AvatarFallback className="text-xs">
+                      {initials(me)}
+                    </AvatarFallback>
+                  </Avatar>
+                </a>
+              </Button>
+            )}
+          </div>
+        </header>
+        {/* SidebarInset is the <main>. @container: pages lay out by this column's width
+            (the sidebar collapses), not the viewport's. */}
+        <div className="@container flex flex-1 flex-col p-4 md:p-6 lg:p-8">
+          {children}
+        </div>
+      </SidebarInset>
 
-      <footer className="py-6 text-center text-xs text-muted-foreground">
-        <a href="/" className="hover:text-foreground">hafizbahtiar.com</a>
-      </footer>
-    </div>
+      {/* Action feedback (save/delete) surfaces as toasts; one Toaster for the whole app shell. */}
+      <Toaster />
+      <ConfirmHost />
+    </SidebarProvider>
   );
 }

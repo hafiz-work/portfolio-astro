@@ -1,0 +1,71 @@
+---
+import { FolderKanban, House, LayoutGrid, Newspaper, Search } from "lucide-react";
+/**
+ * App-style bottom tab bar, phones only (below md). The top Navbar keeps the full
+ * menu; these are the five things reached most. Active tab is set in the script
+ * (prerendered pages share one HTML, so it can't come from the request).
+ */
+const tabs = [
+  { key: "home", text: "Home", href: "/", reload: true, Icon: House },
+  { key: "projects", text: "Projects", href: "/projects", Icon: FolderKanban },
+  { key: "showcase", text: "Showcase", href: "/showcase", Icon: LayoutGrid },
+  { key: "blog", text: "Blog", href: "/blog", Icon: Newspaper },
+];
+// Active tab gets its own lighter glass bubble, like iOS 26's tab bar.
+const item =
+  "flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[10px]/3 font-medium text-gray-600 transition-colors aria-[current]:bg-white/70 aria-[current]:text-sky-600 aria-[current]:shadow-[inset_0_1px_0_rgb(255_255_255/0.9),0_1px_3px_rgb(0_0_0/0.08)] dark:text-gray-300 dark:aria-[current]:bg-white/15 dark:aria-[current]:text-sky-400 dark:aria-[current]:shadow-[inset_0_1px_0_rgb(255_255_255/0.15)]";
+---
+
+<!-- Floating "liquid glass" pill: translucent, blurred + saturated backdrop, a
+     bright top edge and a soft shadow. CSS only - real refraction needs an SVG
+     backdrop filter that Safari doesn't support. -->
+<nav
+  id="mobile-tabs"
+  aria-label="Main"
+  class="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
+>
+  <div
+    class="pointer-events-auto mx-auto flex h-16 max-w-md gap-1 rounded-full bg-white/55 p-1.5 shadow-[inset_0_1px_0_rgb(255_255_255/0.8),inset_0_-1px_0_rgb(0_0_0/0.04),0_8px_32px_rgb(0_0_0/0.12)] ring-1 ring-gray-950/5 backdrop-blur-xl backdrop-saturate-180 dark:bg-gray-900/55 dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_8px_32px_rgb(0_0_0/0.5)] dark:ring-white/10"
+  >
+    {
+      tabs.map(({ key, text, href, reload, Icon }) => (
+        <a
+          href={href}
+          data-tab={key}
+          data-astro-reload={reload || undefined}
+          class={item}
+        >
+          <Icon className="size-5.5" strokeWidth={1.75} aria-hidden="true" />
+          {text}
+        </a>
+      ))
+    }
+    <button type="button" data-cmdk-open class={item}>
+      <Search className="size-5.5" strokeWidth={1.75} aria-hidden="true" />
+      Search
+    </button>
+  </div>
+</nav>
+
+<script>
+  const setTab = () => {
+    const p = location.pathname;
+    // Showcase apps all start with a BackLink (data-showcase-app), sub-pages too.
+    const key =
+      p === "/"
+        ? "home"
+        : p.startsWith("/projects")
+          ? "projects"
+          : p.startsWith("/blog")
+            ? "blog"
+            : p === "/showcase" || document.querySelector("[data-showcase-app]")
+              ? "showcase"
+              : null;
+    document.querySelectorAll<HTMLAnchorElement>("[data-tab]").forEach((a) => {
+      if (a.dataset.tab === key) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+  };
+  setTab();
+  document.addEventListener("astro:page-load", setTab);
+</script>

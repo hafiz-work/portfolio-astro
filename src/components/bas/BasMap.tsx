@@ -5,7 +5,8 @@ import type { BusPosition } from "@/lib/bas";
 
 /**
  * /bas: live vehicles of one operator on PointsMap, refreshed every 30 s from
- * /bas/<feed>.json (paused while the tab is hidden). The feed sits in ?feed= so a
+ * /bas/<feed>.json (paused while the tab is hidden, and after IDLE_MS without a tap,
+ * scroll or key - a forgotten open tab would otherwise poll all day). The feed sits in ?feed= so a
  * link opens the same operator; a route filter refits the map to that route and
  * draws its line (public/data/bas/<feed>/<routeId>.json, scripts/bas/shapes.py).
  * The pseudo-feed "rel" shows the Rapid KL rail network instead (public/data/rel.json):
@@ -20,6 +21,8 @@ type Rail = {
 
 export const RAIL = "rel";
 const POLL_MS = 30_000;
+const IDLE_MS = 10 * 60_000;
+const ACTIVITY = ["pointerdown", "keydown", "wheel", "touchstart"] as const;
 const MAP_BOX = "mt-4 h-[70vh] max-h-180 min-h-96 overflow-hidden";
 
 const ago = (at: number, now: number) => {
@@ -58,10 +61,13 @@ function BusView({ feed, feeds, feedSelect }: { feed: string; feeds: Feed[]; fee
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(Date.now());
   const [lines, setLines] = useState<MapLine[]>([]);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     let stop = false;
     let timer = 0;
+    let lastActive = Date.now();
+    let idle = false;
     const ctrl = new AbortController();
     const load = async () => {
       try {
@@ -80,20 +86,37 @@ function BusView({ feed, feeds, feedSelect }: { feed: string; feeds: Feed[]; fee
     const schedule = () => {
       clearTimeout(timer);
       timer = window.setTimeout(async () => {
+        if (Date.now() - lastActive > IDLE_MS) {
+          // Nobody is looking: stop until the next tap/scroll/key (onActive).
+          idle = true;
+          setPaused(true);
+          return;
+        }
         if (!document.hidden) await load();
         if (!stop) schedule();
       }, POLL_MS);
     };
+    const onActive = () => {
+      lastActive = Date.now();
+      if (!idle) return;
+      idle = false;
+      setPaused(false);
+      load().then(schedule);
+    };
     const onVisible = () => {
-      if (!document.hidden) load().then(schedule);
+      if (document.hidden) return;
+      if (idle) onActive();
+      else load().then(schedule);
     };
     load().then(schedule);
     document.addEventListener("visibilitychange", onVisible);
+    for (const type of ACTIVITY) window.addEventListener(type, onActive, { passive: true });
     return () => {
       stop = true;
       ctrl.abort();
       clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisible);
+      for (const type of ACTIVITY) window.removeEventListener(type, onActive);
     };
   }, [feed]);
 
@@ -151,10 +174,10 @@ function BusView({ feed, feeds, feedSelect }: { feed: string; feeds: Feed[]; fee
           options={[{ value: "", label: `Semua laluan (${routes.length})` }, ...routes]}
           className="w-full sm:w-96"
         />
-        <p className="text-sm/6 text-gray-600 dark:text-gray-400" aria-live="polite">
+        <p className="py-2 text-sm/6 text-gray-600 dark:text-gray-400" aria-live="polite">
           {loading
             ? "Memuatkan…"
-            : `${shown.length} kenderaan · dikemas kini setiap 30 saat${data?.stale ? " · data simpanan" : ""}${route && lines.length ? " · garisan laluan dipaparkan" : ""}`}
+            : `${shown.length} kenderaan · ${paused ? "kemas kini dijeda (tiada aktiviti) - sentuh atau tatal untuk sambung" : "dikemas kini setiap 30 saat"}${data?.stale ? " · data simpanan" : ""}${route && lines.length ? " · garisan laluan dipaparkan" : ""}`}
         </p>
       </div>
       <div className={MAP_BOX}>
@@ -230,7 +253,7 @@ function RailView({ feedSelect }: { feedSelect: React.ReactNode }) {
           ]}
           className="w-full sm:w-96"
         />
-        <p className="text-sm/6 text-gray-600 dark:text-gray-400">
+        <p className="py-2 text-sm/6 text-gray-600 dark:text-gray-400">
           Peta rangkaian dan stesen. Kedudukan tren langsung tidak disediakan oleh data.gov.my.
         </p>
       </div>

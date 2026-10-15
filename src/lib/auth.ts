@@ -64,15 +64,17 @@ class AuthService extends ApiClient {
     return response;
   }
 
+  // false = the API call failed; local state is cleared either way.
   async logout(): Promise<boolean> {
     try {
       await this.post('/auth/logout', {});
+      return true;
     } catch (error) {
       console.error('Logout error:', error instanceof Error ? error.message : 'Unknown error');
+      return false;
     } finally {
       this.clearAuthState();
     }
-    return true;
   }
 
   // Registration (hono-workers /auth/register). The answer is the same whether or

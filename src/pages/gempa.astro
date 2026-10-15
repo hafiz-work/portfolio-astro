@@ -1,5 +1,6 @@
 ---
 import Disclaimer from "../components/ui/Disclaimer.astro";
+import BackLink from "../components/ui/BackLink.astro";
 export const prerender = false;
 import GridFillers from "../components/ui/GridFillers.astro";
 import TechHeading from "../components/layout/TechHeading.astro";
@@ -50,10 +51,11 @@ const points: MapPoint[] = quakes.map((q) => ({
   title="Gempa Bumi Terkini - MET Malaysia | Hafiz Bahtiar"
   description="Senarai dan peta gempa bumi terkini dari Jabatan Meteorologi Malaysia (MET Malaysia), dengan magnitud, kedalaman dan jarak dari Malaysia."
 >
-  <div class="relative mx-auto mt-24 max-lg:max-w-2xl">
+  <div class="relative mx-auto mt-8 max-lg:max-w-2xl sm:mt-24">
+    <BackLink />
     <div class="line-y">
       <h1
-        class="mx-2 text-6xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+        class="mx-2 text-4xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
       >
         <TechHeading
           text="Gempa Bumi"
@@ -244,7 +246,7 @@ const points: MapPoint[] = quakes.map((q) => ({
         />
       </Disclaimer>
     </div>
-    <div class="mb-46"></div>
+    <div class="mb-16 sm:mb-46"></div>
   </div>
 </PublicLayout>
 

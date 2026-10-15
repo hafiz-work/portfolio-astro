@@ -1,0 +1,11 @@
+---
+export const prerender = false;
+import AccountLayout from "../../../../layouts/AccountLayout.astro";
+import { QuoteForm } from "../../../../components/account/QuoteForm";
+
+const id = Number(Astro.params.id);
+---
+
+<AccountLayout title="Edit quote">
+  <QuoteForm id={id} client:load />
+</AccountLayout>

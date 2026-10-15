@@ -11,7 +11,8 @@ const apps = [
   {
     title: "Bas Langsung",
     href: "/bas",
-    description: "Lokasi langsung bas Rapid KL, Rapid Penang dan myBAS setiap 30 saat, garisan laluan, dan peta LRT/MRT/Monorel.",
+    description:
+      "Lokasi langsung bas Rapid KL, Rapid Penang dan myBAS setiap 30 saat, garisan laluan, dan peta LRT/MRT/Monorel.",
     tags: ["GTFS Realtime", "Peta", "14 operator"],
   },
   {
@@ -27,6 +28,13 @@ const apps = [
     description:
       "Waktu solat hari ini untuk setiap zon JAKIM, dengan Paparan Masjid untuk skrin di masjid.",
     tags: ["JAKIM e-solat", "Paparan Masjid", "60 zon"],
+  },
+  {
+    title: "Ramalan Cuaca",
+    href: "/ramalan-cuaca",
+    description:
+      "Ramalan 7 hari dari MET Malaysia untuk 440 lokasi: pagi, petang, malam dan suhu, dengan sandaran Open-Meteo.",
+    tags: ["MET Malaysia", "Open-Meteo", "Cuaca"],
   },
   {
     title: "Amaran Cuaca",
@@ -78,11 +86,60 @@ const apps = [
     tags: ["Bank Negara Malaysia", "27 mata wang", "Penukar RM"],
   },
   {
+    title: "Derma Darah",
+    href: "/derma-darah",
+    description:
+      "Jumlah derma darah di Malaysia semalam mengikut jenis darah A, B, AB dan O, dengan trend 30 hari. Data KKM / Pusat Darah Negara.",
+    tags: ["KKM", "Kesihatan", "data.gov.my"],
+  },
+  {
+    title: "Inflasi (IHP)",
+    href: "/inflasi",
+    description:
+      "Kadar inflasi Malaysia bulan terkini - IHP tahunan dan bulanan, mengikut 13 bahagian, dengan trend 12 bulan.",
+    tags: ["DOSM", "data.gov.my", "Bulanan"],
+  },
+  {
+    title: "Kalkulator Gaji",
+    href: "/kalkulator-gaji",
+    description:
+      "Caruman KWSP majikan dan pekerja mengikut Jadual Ketiga terkini - dikira terus di peranti, tiada data gaji dihantar.",
+    tags: ["KWSP", "Jadual Ketiga", "Tanpa API"],
+  },
+  {
+    title: "Kalkulator Bil Elektrik",
+    href: "/kalkulator-bil-elektrik",
+    description:
+      "Anggaran bil elektrik TNB rumah ikut tarif 1 Julai 2025: tenaga, kapasiti, rangkaian, AFA, insentif cekap tenaga, KWTBB dan cukai.",
+    tags: ["TNB", "Tarif Domestik", "AFA bulanan"],
+  },
+  {
+    title: "Kalkulator Cukai Jalan",
+    href: "/kalkulator-cukai-jalan",
+    description:
+      "Cukai jalan (LKM) setahun untuk kereta dan motosikal - petrol, diesel atau elektrik - mengikut garis panduan JPJ, dengan kiraan ditunjukkan.",
+    tags: ["JPJ", "Cukai jalan", "Kenderaan elektrik"],
+  },
+  {
     title: "Kiraan Detik",
     href: "/kiraan-detik",
     description:
       "Berapa hari lagi ke Ramadan, Hari Raya dan hari kebesaran Islam lain, mengikut takwim JAKIM.",
     tags: ["Takwim JAKIM", "Ramadan", "Hari Raya"],
+  },
+  {
+    title: "Cuti Umum",
+    href: "/cuti-umum",
+    description:
+      "Hari Kelepasan Am Persekutuan dan negeri bagi setiap negeri, daripada jadual rasmi Bahagian Kabinet JPM - dan berapa hari lagi ke cuti umum seterusnya.",
+    tags: ["BKPP JPM", "Cuti umum", "Ikut negeri"],
+  },
+  {
+    title: "Takwim Persekolahan",
+    href: "/takwim-sekolah",
+    description:
+      "Tarikh buka sekolah, cuti penggal, cuti akhir tahun dan cuti perayaan KPM mengikut negeri - Kumpulan A atau B - dan berapa hari lagi ke cuti seterusnya.",
+    tags: ["KPM", "Cuti sekolah", "Kumpulan A/B"],
   },
 ];
 ---
@@ -91,7 +148,7 @@ const apps = [
   title="Showcase | Hafiz Bahtiar"
   description="Small apps built and hosted on hafizbahtiar.com - free to use."
 >
-  <div class="h-16 sm:h-24"></div>
+  <div class="h-8 sm:h-24"></div>
   <SectionHeader
     as="h1"
     eyebrow="Showcase"
@@ -116,7 +173,7 @@ const apps = [
   <div class="h-4"></div>
 
   <div
-    class="line-y mb-46 grid grid-cols-1 gap-2 p-2 sm:grid-cols-2 lg:grid-cols-3"
+    class="line-y mb-16 sm:mb-46 grid grid-cols-1 gap-2 p-2 sm:grid-cols-2 lg:grid-cols-3"
   >
     {
       apps.map((app) => (

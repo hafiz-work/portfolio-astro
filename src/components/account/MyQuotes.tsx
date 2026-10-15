@@ -1,51 +1,41 @@
 import React, { useEffect, useState } from "react";
-import { normalizeAuthor, normalizeQuote } from "@/lib/quote-text";
+import { Pencil, Plus, Quote as QuoteIcon } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/shadcn/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/shadcn/ui/card";
-import { Input } from "@/components/shadcn/ui/input";
-import { Label } from "@/components/shadcn/ui/label";
-import { Textarea } from "@/components/shadcn/ui/textarea";
 import { Alert, AlertDescription } from "@/components/shadcn/ui/alert";
-import { Badge } from "@/components/shadcn/ui/badge";
 import { accountService, errorText } from "../../lib/account";
 import type { Quote } from "../../types/quotes";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ConfirmDelete } from "./ConfirmDelete";
-import { AccountDataTable, asDate } from "./AccountDataTable";
+import { StatusBadge } from "./StatusBadge";
+import { quotesCache } from "./quotes-cache";
+import { AccountDataTable, RowAction, asDate } from "./AccountDataTable";
 
-// /account/quotes: own quotes. Live on /quotes at once; a moderator can reject them.
-const empty = { text: "", author: "", source: "" };
-
+// /account/quotes: the signed-in user's own quotes. Live on /quotes at once; a
+// moderator can reject them (they then show the reason). Create/edit live on their
+// own pages (/account/quotes/new, /account/quotes/[id]/edit).
 export function MyQuotes() {
-  const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [draft, setDraft] = useState(empty);
-  const [editId, setEditId] = useState<number | null>(null);
-  const [msg, setMsg] = useState<string | null>(null);
+  // Skeleton only on a first load; coming back from the form, the cached list shows
+  // at once and the refetch below swaps in fresh data silently.
+  const [quotes, setQuotes] = useState<Quote[]>(quotesCache.list ?? []);
+  const [loading, setLoading] = useState(quotesCache.list == null);
+  useEffect(() => {
+    if (!loading) quotesCache.list = quotes;
+  }, [quotes, loading]);
+  // The list fetch is a page-level LOAD error: it stays inline. Delete outcomes are
+  // ACTIONS, so they surface as toasts instead.
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = async () => {
     try { setQuotes(await accountService.listQuotes()); }
-    catch (e) { setMsg(errorText(e)); }
+    catch (e) { setLoadError(errorText(e)); }
+    finally { setLoading(false); }
   };
   useEffect(() => { void load(); }, []);
 
-  const save = async (e: React.SubmitEvent) => {
-    e.preventDefault();
-    const data = { text: normalizeQuote(draft.text), author: normalizeAuthor(draft.author), source: draft.source.trim() || null };
-    try {
-      if (editId) await accountService.updateQuote(editId, data);
-      else await accountService.createQuote(data);
-      setDraft(empty);
-      setEditId(null);
-      setMsg(null);
-      await load();
-    } catch (err) {
-      setMsg(errorText(err));
-    }
-  };
-
   const remove = async (q: Quote) => {
-    try { await accountService.deleteQuote(q.id); await load(); }
-    catch (err) { setMsg(errorText(err)); }
+    try { await accountService.deleteQuote(q.id); setQuotes((list) => list.filter((x) => x.id !== q.id)); toast.success("Quote deleted"); }
+    catch (err) { toast.error(errorText(err)); }
   };
 
   const columns: ColumnDef<Quote>[] = [
@@ -64,10 +54,7 @@ export function MyQuotes() {
     { accessorKey: "author", header: "Author", meta: { className: "whitespace-normal" } },
     {
       id: "status", accessorFn: (q) => q.status ?? "published", header: "Status",
-      cell: ({ getValue }) => {
-        const st = getValue<string>();
-        return <Badge variant={st === "rejected" ? "destructive" : "default"} className="capitalize">{st}</Badge>;
-      },
+      cell: ({ getValue }) => <StatusBadge status={getValue<string>()} />,
     },
     { accessorKey: "createdAt", header: "Date", meta: { className: "hidden sm:table-cell" }, cell: ({ getValue }) => asDate(getValue<string>()) },
     {
@@ -75,7 +62,7 @@ export function MyQuotes() {
       cell: ({ row: { original: q } }) => (
         <div className="flex justify-end gap-1">
           {q.status !== "rejected" && (
-            <Button variant="ghost" size="sm" onClick={() => { setEditId(q.id); setDraft({ text: q.text, author: q.author, source: q.source ?? "" }); }}>Edit</Button>
+            <RowAction label="Edit" icon={<Pencil />} href={`/account/quotes/${q.id}/edit`} />
           )}
           <ConfirmDelete what="this quote" onConfirm={() => void remove(q)} />
         </div>
@@ -84,44 +71,24 @@ export function MyQuotes() {
   ];
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 @4xl:grid-cols-[22rem_minmax(0,1fr)]">
-      <Card className="self-start">
-        <CardHeader>
-          <CardTitle>{editId ? "Edit quote" : "Share a quote"}</CardTitle>
-          <CardDescription>Shared quotes appear on the quotes page straight away.</CardDescription>
-        </CardHeader>
-        <form onSubmit={save}>
-          <CardContent className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="q-text">Quote</Label>
-              <Textarea id="q-text" rows={3} maxLength={500} required value={draft.text} onChange={(e) => setDraft({ ...draft, text: e.target.value })} />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="q-author">Said by</Label>
-              <Input id="q-author" maxLength={120} required value={draft.author} onChange={(e) => setDraft({ ...draft, author: e.target.value })} />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="q-source">Source (optional)</Label>
-              <Input id="q-source" maxLength={120} placeholder="Book, film, speech…" value={draft.source} onChange={(e) => setDraft({ ...draft, source: e.target.value })} />
-            </div>
-            {msg && <Alert variant="destructive"><AlertDescription>{msg}</AlertDescription></Alert>}
-          </CardContent>
-          <CardFooter className="gap-2">
-            <Button type="submit">{editId ? "Save" : "Share"}</Button>
-            {editId && <Button type="button" variant="ghost" onClick={() => { setEditId(null); setDraft(empty); }}>Cancel</Button>}
-          </CardFooter>
-        </form>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Your quotes</CardTitle>
-          <CardDescription>{quotes.length} shared</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <AccountDataTable columns={columns} data={quotes} filterPlaceholder="Filter quotes…" empty="No quotes yet." />
-        </CardContent>
-      </Card>
+    <div className="grid gap-6">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-6">
+        <div className="grid gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Quotes</h1>
+          <p className="text-sm text-muted-foreground">{loading ? "Loading…" : `${quotes.length} ${quotes.length === 1 ? "quote" : "quotes"} shared`}</p>
+        </div>
+        <Button asChild>
+          <a href="/account/quotes/new">New quote</a>
+        </Button>
+      </header>
+      {loadError && <Alert variant="destructive"><AlertDescription>{loadError}</AlertDescription></Alert>}
+      <AccountDataTable columns={columns} data={quotes} filterPlaceholder="Filter quotes…" loading={loading}
+        empty={{
+          title: "No quotes yet",
+          description: "Share a line worth keeping. It appears on the quotes page straight away.",
+          icon: <QuoteIcon />,
+          action: <Button asChild><a href="/account/quotes/new"><Plus />New quote</a></Button>,
+        }} />
     </div>
   );
 }

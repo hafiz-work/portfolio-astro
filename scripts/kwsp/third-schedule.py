@@ -34,6 +34,9 @@ parts = {}
 for m in re.finditer(r"PART ([A-F])\s*\n(.*?)(?=PART [A-F]\s*\n|\Z)", text, re.S):
     rows = []
     for a, b, er, ee, tot in ROW.findall(m.group(2)):
+        # Bands must be contiguous: each starts 1 sen above the previous upper bound.
+        if rows and num(a) != rows[-1][0] + 1:
+            sys.exit(f"Part {m.group(1)}: gap before {a}")
         er, ee, tot = (0 if v == "NIL" else num(v) for v in (er, ee, tot))
         if er + ee != tot:
             sys.exit(f"Part {m.group(1)} {a}-{b}: {er}+{ee} != {tot}")
@@ -42,7 +45,6 @@ for m in re.finditer(r"PART ([A-F])\s*\n(.*?)(?=PART [A-F]\s*\n|\Z)", text, re.S
         parts[m.group(1)] = rows
 
 for part, rows in parts.items():
-    # Bands must be contiguous: each starts 1 sen above the previous upper bound.
     uppers = [r[0] for r in rows]
     if uppers != sorted(uppers) or uppers[-1] != 2_000_000:
         sys.exit(f"Part {part}: bands not increasing or not ending at RM20,000.00")

@@ -1,0 +1,459 @@
+const DOMESTIC = {
+  // Configuration variables for different tiers
+  RETAIL_CHARGE_AMOUNT: 10.0, // RM10/month
+  RETAIL_CHARGE_THRESHOLD: 600, // Base threshold; non-NEM uses the billing-period helper.
+  FUEL_ADJUSTMENT_THRESHOLD: 600, // Base threshold; non-NEM uses the billing-period helper.
+  ST_THRESHOLD: 600, // Base threshold; non-NEM uses the billing-period helper.
+  HIGH_USAGE_THRESHOLD: 1500, // Threshold for high usage rates
+  RATES: {
+    // Tier 1: 0-800 kWh (and 800-1500 kWh for most charges)
+    tier1: {
+      energy: 0.2703, // RM0.27250/kWh
+      fuel: +0.0361, // *update-monthly
+      capacity: 0.0455, // RM0.0455/kWh
+      network: 0.1285, // RM0.1395/kWh
+    },
+    // Tier 2: >1500 kWh
+    tier2: {
+      energy: 0.3703, // RM0.42250/kWh
+      fuel:  +0.0361, // *update-monthly
+      capacity: 0.0455, // RM0.04550/kWh
+      network: 0.1285, // RM0.13950/kWh
+    },
+  },
+  INCENTIVE_TIERS: [
+    { max: 200, rate: -0.25 },
+    { max: 250, rate: -0.245 },
+    { max: 300, rate: -0.225 },
+    { max: 350, rate: -0.21 },
+    { max: 400, rate: -0.17 },
+    { max: 450, rate: -0.145 },
+    { max: 500, rate: -0.12 },
+    { max: 550, rate: -0.105 },
+    { max: 600, rate: -0.09 },
+    { max: 650, rate: -0.075 },
+    { max: 700, rate: -0.055 },
+    { max: 750, rate: -0.045 },
+    { max: 800, rate: -0.04 },
+    { max: 850, rate: -0.025 },
+    { max: 900, rate: -0.01 },
+    { max: 1000, rate: -0.005 },
+    { max: 1500, rate: 0 },
+  ],
+};
+
+const NONDOMLVGEN = {
+  RETAIL_CHARGE_THRESHOLD: 0,
+  FUEL_ADJUSTMENT_THRESHOLD: 600,
+  ST_THRESHOLD: 600,
+  HIGH_USAGE_THRESHOLD: 1500,
+  RATES: {
+    energyCharge: 0.2703,
+    afa: +0.0361, // *update-monthly
+    capacity: 0.0883,
+    network: 0.1482,
+    fixedUserCharge: 20.00, //Caj tetap pengguna
+    tnbDiscount: 0.1, //DISKAUN TNB - 10%
+    kwtbb: 0.016, //1.6%
+    st: 0.08, //8%
+  },
+  INCENTIVE_TIERS: [{ max: 200, rate: -0.11 }],
+};
+
+const NONDOMLVGENNEM = {
+  RETAIL_CHARGE_THRESHOLD: 0,
+  FUEL_ADJUSTMENT_THRESHOLD: 600,
+  ST_THRESHOLD: 600,
+  HIGH_USAGE_THRESHOLD: 1500,
+  RATES: {
+    energyCharge: 0.2703,
+    afa: +0.0361, // *update-monthly
+    capacity: 0.0883,
+    network: 0.1482,
+    fixedUserCharge: 20.00, //Caj tetap pengguna
+    tnbDiscount: 0.1, //DISKAUN TNB - 10%
+    kwtbb: 0.016, //1.6%
+    st: 0.08, //8%
+  },
+  INCENTIVE_TIERS: [{ max: 200, rate: -0.11 }],
+};
+
+const DOMESTICNEM = {
+  // Configuration variables for different tiers
+  RETAIL_CHARGE_AMOUNT: 10.0, // RM10/month
+  RETAIL_CHARGE_THRESHOLD: 800, // Apply retail charge only if consumption > 800 kWh
+  FUEL_ADJUSTMENT_THRESHOLD: 800, // Apply fuel adjustment only if consumption > 800 kWh
+  ST_THRESHOLD: 800, // Split charges at 800 kWh for service tax calculation
+  HIGH_USAGE_THRESHOLD: 1500, // Threshold for high usage rates
+  RATES: {
+    // Tier 1: 0-800 kWh (and 600-1500 kWh for most charges)
+    tier1: {
+      energy: 0.2703, // RM0.27250/kWh
+      fuel: +0.0361, // *update-monthly
+      capacity: 0.0455, // RM0.0455/kWh
+      network: 0.1285, // RM0.1395/kWh
+    },
+    // Tier 2: >1500 kWh
+    tier2: {
+      energy: 0.3703, // RM0.42250/kWh
+      fuel: +0.0361, // *update-monthly
+      capacity: 0.0455, // RM0.04550/kWh
+      network: 0.1285, // RM0.13950/kWh
+    },
+  },
+  INCENTIVE_TIERS: [
+    { max: 200, rate: -0.25 },
+    { max: 250, rate: -0.245 },
+    { max: 300, rate: -0.225 },
+    { max: 350, rate: -0.21 },
+    { max: 400, rate: -0.17 },
+    { max: 450, rate: -0.145 },
+    { max: 500, rate: -0.12 },
+    { max: 550, rate: -0.105 },
+    { max: 600, rate: -0.09 },
+    { max: 650, rate: -0.075 },
+    { max: 700, rate: -0.055 },
+    { max: 750, rate: -0.045 },
+    { max: 800, rate: -0.04 },
+    { max: 850, rate: -0.025 },
+    { max: 900, rate: -0.01 },
+    { max: 1000, rate: -0.005 },
+    { max: 1500, rate: 0 },
+  ],
+};
+
+const NONDOMMVGEN = {
+  RETAIL_CHARGE_THRESHOLD: 0,
+  RATES: {
+    energyCharge: 0.2983,
+    afa: +0.0361, // *update-monthly
+    capacity: 29.43,
+    network: 59.84,
+    fixedUserCharge: 200.00, //Caj tetap pengguna
+    kwtbb: 0.016, //1.6%
+    st: 0.08, //8%
+  },
+};
+
+const NONDOMMVGENNEM = {
+  RETAIL_CHARGE_THRESHOLD: 0,
+  RATES: {
+    energyCharge: 0.2983,
+    afa: +0.0361, // *update-monthly
+    capacity: 29.43,
+    network: 59.84,
+    fixedUserCharge: 200.00, //Caj tetap pengguna
+    kwtbb: 0.016, //1.6%
+    st: 0.08, //8%
+  },
+};
+
+const NONDOMHVGEN = {
+  RETAIL_CHARGE_THRESHOLD: 0,
+  RATES: {
+    energyCharge: 0.4303,
+    afa: +0.0361, // *update-monthly
+    capacity: 16.68,
+    network: 14.53,
+    fixedUserCharge: 250.00, //Caj tetap pengguna
+    kwtbb: 0.016, //1.6%
+    st: 0.08, //8%
+  },
+};
+
+const DOMESTIC_TOU = {
+  USAGE_THRESHOLD: 600, // Base threshold; non-NEM uses the billing-period helper.
+  KWTBB_THRESHOLD: 300,
+  HIGH_USAGE_THRESHOLD: 1501, //>=
+  st: 0.08, //8%
+  kwtbb: 0.016, //1.6%
+  RATES: {
+    tier1: {
+      energyChargePeak: 0.2852,
+      energyChargeOffPeak: 0.2443,
+      afa: +0.0361, // *update-monthly
+      capacity: 0.0455,
+      network: 0.1285,
+      retailCharge: 10.00,
+      isl70: 18.00,
+      isl150: 18.00,
+      icptISL: 0.17,
+      get: 0.1,
+      icpt: 0.1,
+      tnbDiscount: 0.1, //DISKAUN TNB - 10%
+    },
+    tier2: {
+      energyChargePeak: 0.3852,
+      energyChargeOffPeak: 0.3443,
+      afa: +0.0361, // *update-monthly
+      capacity: 0.0455,
+      network: 0.1285,
+      retailCharge: 10.00,
+      isl70: 18.00,
+      isl150: 18.00,
+      icptISL: 0.17,
+      get: 0.1,
+      icpt: 0.1,
+      tnbDiscount: 0.1, //DISKAUN TNB - 10%
+    }
+  },
+  INCENTIVE_TIERS: [
+    { max: 200, rate: -0.25 },
+    { max: 250, rate: -0.245 },
+    { max: 300, rate: -0.225 },
+    { max: 350, rate: -0.21 },
+    { max: 400, rate: -0.17 },
+    { max: 450, rate: -0.145 },
+    { max: 500, rate: -0.12 },
+    { max: 550, rate: -0.105 },
+    { max: 600, rate: -0.09 },
+    { max: 650, rate: -0.075 },
+    { max: 700, rate: -0.055 },
+    { max: 750, rate: -0.045 },
+    { max: 800, rate: -0.04 },
+    { max: 850, rate: -0.025 },
+    { max: 900, rate: -0.01 },
+    { max: 1000, rate: -0.005 },
+    { max: 1500, rate: 0 }
+  ],
+};
+
+const DOMESTIC_TOU_NEM = {
+  USAGE_THRESHOLD: 800,
+  KWTBB_THRESHOLD: 300,
+  HIGH_USAGE_THRESHOLD: 1501, //>=
+  st: 0.08, //8%
+  kwtbb: 0.016, //1.6%
+  RATES: {
+    tier1: {
+      energyChargePeak: 0.2852,
+      energyChargeOffPeak: 0.2443,
+      afa: +0.0361, // *update-monthly
+      capacity: 0.0455,
+      network: 0.1285,
+      retailCharge: 10.00,
+      isl70: 18.00,
+      isl150: 18.00,
+      icptISL: 0.17,
+      get: 0.1,
+      icpt: 0.1,
+      tnbDiscount: 0.1, //DISKAUN TNB - 10%
+    },
+    tier2: {
+      energyChargePeak: 0.3852,
+      energyChargeOffPeak: 0.3443,
+      afa: +0.0361, // *update-monthly
+      capacity: 0.0455,
+      network: 0.1285,
+      retailCharge: 10.00,
+      isl70: 18.00,
+      isl150: 18.00,
+      icptISL: 0.17,
+      get: 0.1,
+      icpt: 0.1,
+      tnbDiscount: 0.1, //DISKAUN TNB - 10%
+    }
+  },
+  INCENTIVE_TIERS: [
+    { max: 200, rate: -0.25 },
+    { max: 250, rate: -0.245 },
+    { max: 300, rate: -0.225 },
+    { max: 350, rate: -0.21 },
+    { max: 400, rate: -0.17 },
+    { max: 450, rate: -0.145 },
+    { max: 500, rate: -0.12 },
+    { max: 550, rate: -0.105 },
+    { max: 600, rate: -0.09 },
+    { max: 650, rate: -0.075 },
+    { max: 700, rate: -0.055 },
+    { max: 750, rate: -0.045 },
+    { max: 800, rate: -0.04 },
+    { max: 850, rate: -0.025 },
+    { max: 900, rate: -0.01 },
+    { max: 1000, rate: -0.005 },
+    { max: 1500, rate: 0 }
+  ],
+};
+
+const NONDOMLVTOU = {
+  RETAIL_CHARGE_THRESHOLD: 0,
+  FUEL_ADJUSTMENT_THRESHOLD: 600,
+  ST_THRESHOLD: 600,
+  HIGH_USAGE_THRESHOLD: 1500,
+  RATES: {
+    energyChargePeak: 0.2852,
+    energyChargeOffPeak: 0.2443,
+    afa: +0.0361, // *update-monthly
+    capacity: 0.0883,
+    network: 0.1482,
+    fixedUserCharge: 20.00, //Caj tetap pengguna
+    tnbDiscount: 0.1, //DISKAUN TNB - 10%
+    kwtbb: 0.016, //1.6%
+    st: 0.08, //8%]
+  },
+  INCENTIVE_TIERS: [{ max: 200, rate: -0.11 }],
+};
+
+const NONDOMMVTOU = {
+  RETAIL_CHARGE_THRESHOLD: 0,
+  FUEL_ADJUSTMENT_THRESHOLD: 600,
+  ST_THRESHOLD: 600,
+  HIGH_USAGE_THRESHOLD: 1500,
+  RATES: {
+    energyChargePeak: 0.3132,
+    energyChargeOffPeak: 0.2723,
+    afa: +0.0361, // *update-monthly
+    capacity: 30.19,
+    network: 66.87,
+    fixedUserCharge: 200.00, //Caj tetap pengguna
+    tnbDiscount: 0, //DISKAUN TNB - 10%
+    kwtbb: 0.016, //1.6%
+    st: 0.08, //8%]
+  },
+  INCENTIVE_TIERS: [{ max: 200, rate: -0.11 }],
+};
+
+const NONDOMHVTOU = {
+  RETAIL_CHARGE_THRESHOLD: 0,
+  FUEL_ADJUSTMENT_THRESHOLD: 600,
+  ST_THRESHOLD: 600,
+  HIGH_USAGE_THRESHOLD: 1500,
+  RATES: {
+    energyChargePeak: 0.4452,
+    energyChargeOffPeak: 0.4043,
+    afa: +0.0361, // *update-monthly
+    capacity: 21.76,
+    network: 23.06,
+    fixedUserCharge: 250.00, //Caj tetap pengguna
+    tnbDiscount: 0, //DISKAUN TNB - 10%
+    kwtbb: 0.016, //1.6%
+    st: 0.08, //8%]
+  },
+  INCENTIVE_TIERS: [{ max: 200, rate: -0.11 }],
+};
+
+const FUEL_BY_MONTH = {
+  "2025-07": -0.0,
+  "2025-08": -0.0145,
+  "2025-09": -0.0110,
+  "2025-10": -0.0650,
+  "2025-11": -0.0891,
+  "2025-12": -0.0642,
+  "2026-01": -0.0499,
+  "2026-02": -0.0277,
+  "2026-03": -0.0215,
+  "2026-04": -0.0047,
+  "2026-05": +0.0138,
+  "2026-06": +0.0259,
+  "2026-07": +0.0359,
+  "2026-08": +0.0380,
+  "2026-09": +0.0367,
+  "2026-10": +0.0361,
+  "2026-11": +0.0427,
+  "2026-12": +0.0446,
+  "2027-01": +0.0759,
+};
+
+
+// Only Domestic General and Domestic TOU use this date-based protection.
+// NEM and Non-Domestic calculators retain their existing thresholds.
+const DOMESTIC_PROTECTION = {
+  BASE_THRESHOLD: 600,
+  EXPANDED_THRESHOLD: 800,
+  START_DATE: "2026-09-01",
+  END_DATE: "2026-12-31"
+};
+
+// Split usage and protection by calendar month. Unused protection in one month
+// must NOT shelter taxable usage in another month (e.g. August/September 2026).
+function getDomesticBillingPeriods(consumption, startDate, endDate) {
+  const dayMs = 86400000;
+  const start = Math.floor(new Date(startDate).getTime() / dayMs);
+  const end = Math.floor(new Date(endDate).getTime() / dayMs);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) {
+    throw new RangeError("A valid domestic billing start and end date is required.");
+  }
+  const totalDays = end - start + 1;
+  const protectionStart = Date.parse(DOMESTIC_PROTECTION.START_DATE) / dayMs;
+  const protectionEnd = Date.parse(DOMESTIC_PROTECTION.END_DATE) / dayMs;
+  const periods = [];
+  let allocatedUsage = 0;
+  for (let cursor = start; cursor <= end;) {
+    const date = new Date(cursor * dayMs);
+    const nextMonth = Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1) / dayMs;
+    const lastDay = Math.min(end, nextMonth - 1);
+    const days = lastDay - cursor + 1;
+    const threshold = cursor >= protectionStart && cursor <= protectionEnd
+      ? DOMESTIC_PROTECTION.EXPANDED_THRESHOLD : DOMESTIC_PROTECTION.BASE_THRESHOLD;
+    // Cumulative rounding preserves the entered kWh total, including half-kWh ties.
+    const cumulativeUsage = lastDay === end ? consumption
+      : Math.round(consumption * (lastDay - start + 1) / totalDays);
+    const usage = cumulativeUsage - allocatedUsage;
+    const allowance = Math.round(threshold * (lastDay - start + 1) / totalDays)
+      - Math.round(threshold * (cursor - start) / totalDays);
+    const nonST = Math.min(usage, allowance);
+    periods.push({
+      month: date.toISOString().slice(0, 7), days, totalDays,
+      threshold, allowance, usage, nonST, st: usage - nonST,
+      chargeable: consumption > threshold
+    });
+    allocatedUsage = cumulativeUsage;
+    cursor = lastDay + 1;
+  }
+  return periods;
+}
+
+// Retain the existing aggregate-charge rounding when protection does not change.
+// When the threshold changes, round each period's charge before adding it.
+function getDomesticChargeGroups(periods) {
+  if (periods.every(period => period.threshold === periods[0].threshold)) {
+    return [{
+      days: periods[0].totalDays, totalDays: periods[0].totalDays,
+      usage: periods.reduce((sum, period) => sum + period.usage, 0),
+      nonST: periods.reduce((sum, period) => sum + period.nonST, 0),
+      st: periods.reduce((sum, period) => sum + period.st, 0)
+    }];
+  }
+  return periods;
+}
+
+function roundDomesticAmount(value) {
+  // Decimal half-away-from-zero rounding, including binary floating-point ties.
+  return Math.sign(value) * Math.round((Math.abs(value) + Number.EPSILON * Math.max(1, Math.abs(value))) * 100) / 100;
+}
+
+function sumDomesticPeriodCharges(groups, usageKey, rate) {
+  return roundDomesticAmount(groups.reduce((sum, group) =>
+    sum + roundDomesticAmount(group[usageKey] * rate), 0));
+}
+
+function calculateDomesticRetailCharge(periods, amount) {
+  const chargeableDays = periods.reduce((sum, period) =>
+    sum + (period.chargeable ? period.days : 0), 0);
+  return roundDomesticAmount(amount * chargeableDays / periods[0].totalDays);
+}
+
+function calculateDomesticPeriodAFA(periods, afaPrev, afa) {
+  const zero = () => ({ rate: 0, nonST: 0, st: 0, total: 0 });
+  const charges = periods.map((period, index) => {
+    if (!period.chargeable) return zero();
+    // The current UI supplies rates for the first and last billing months.
+    // An intervening month (possible in a 31-day February cycle) uses history.
+    const rate = Number(index === periods.length - 1 ? afa
+      : index === 0 ? afaPrev : FUEL_BY_MONTH[period.month] || 0);
+    return {
+      rate,
+      nonST: roundDomesticAmount(period.nonST * rate),
+      st: roundDomesticAmount(period.st * rate),
+      total: roundDomesticAmount(period.usage * rate)
+    };
+  });
+  // Keep the existing two-row result interface; earlier months share its first row.
+  const firstMonth = charges.slice(0, -1).reduce((sum, charge) => ({
+    rate: charges[0].rate,
+    nonST: roundDomesticAmount(sum.nonST + charge.nonST),
+    st: roundDomesticAmount(sum.st + charge.st),
+    total: roundDomesticAmount(sum.total + charge.total)
+  }), zero());
+  return { firstMonth, lastMonth: charges[charges.length - 1] };
+}

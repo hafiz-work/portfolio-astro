@@ -1,0 +1,9 @@
+---
+export const prerender = false;
+import AccountLayout from "../../layouts/AccountLayout.astro";
+import { AccountProfile } from "../../components/account/AccountProfile";
+---
+
+<AccountLayout title="Profile">
+  <AccountProfile client:load />
+</AccountLayout>

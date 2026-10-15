@@ -3,6 +3,7 @@ import CoreLayout from "./CoreLayout.astro";
 import Navbar from "../components/layout/Navbar.astro";
 import Footer from "../components/layout/Footer.astro";
 import Background from "../components/layout/Background.astro";
+import MobileTabBar from "../components/layout/MobileTabBar.astro";
 
 interface Props {
   title?: string;
@@ -26,10 +27,12 @@ const { title, description, image, type, publishedTime, imageAlt, noindex } =
   publishedTime={publishedTime}
   imageAlt={imageAlt}
   noindex={noindex}
+  edgeToEdge
   class="font-inter text-gray-950 dark:text-white"
 >
   <Background />
   <Navbar />
+  <MobileTabBar />
   <!-- tailwindcss.com shell: hatched gutter | column | hatched gutter -->
   <div class="page-shell">
     <div class="gutter gutter-left" aria-hidden="true"></div>

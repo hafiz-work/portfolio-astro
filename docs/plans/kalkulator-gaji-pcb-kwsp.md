@@ -1,6 +1,6 @@
 # Pelan: Kalkulator Gaji - PCB dan KWSP (`/kalkulator-gaji`)
 
-Status: **pelan** (2026-10-11). Belum dibina.
+Status: **pelan** (2026-10-11), disemak semula 2026-10-14 - lihat §7 (susunan binaan terkini). Belum dibina.
 
 Matlamat: pekerja masukkan gaji dan status diri, dapat **caruman KWSP** (pekerja + majikan),
 **PCB** (potongan cukai bulanan) dan anggaran gaji bersih, dikira **mengikut formula rasmi**
@@ -157,3 +157,47 @@ spesifikasi PCB {tahun} LHDN".
 2. Sediakan 10-15 kes ujian dengan kalkulator rasmi LHDN (gaji berbeza × kategori × anak),
    rekod input dan jawapan PCB.
 3. Sahkan pembundaran Bahagian F (bukan warganegara) - siapa yang menanggung sen yang dibundarkan.
+
+## 7. Semakan 2026-10-14 dan pelan semula
+
+**Disahkan:**
+- SHA-256 PDF Jadual Ketiga = `c4904e44…58b1` (sama dengan skrip).
+- `src/data/kwsp/2025-10.ts`: Bahagian A/C/E, 401 julat setiap satu. Sempadan betul: RM10 = tiada;
+  A RM5,000 → 650/550 (13%/11%), RM5,000.01 → 612/561 (12%/11%); C RM5,000 → 325/275; E → 4%/0;
+  A RM5,500 → pekerja RM605 (sama dengan Exhibit 5).
+- Jadual 1: setiap B konsisten dengan cukai terkumpul pada M (−400/−800 = rebat RM400/RM800).
+- Exhibit 5, bulan biasa: K2 = (4,000 − 605) / 11 = 308.63 (dipotong), P = 4,895 + 5,191.37 × 11 −
+  (9,000 + 3 × 2,000) = 47,000.07 ✓.
+
+**Tidak disahkan:** kandungan PDF spesifikasi PCB 2026 (tiada dalam repo - simpan di
+`docs/sources/pcb/` seperti KWSP); dakwaan Belanjawan 2027 dalam §3.
+
+**Masalah dalam pelan asal:**
+1. **Bulan tiada dalam input.** PCB bergantung pada bulan (n, Σ(Y−K), X, had KWSP RM4,000 yang
+   habis pertengahan tahun). Penyelesaian: input `bulan` (lalai bulan semasa); untuk gaji tetap,
+   ulang Jan → bulan itu dan kumpul Σ(Y−K), K dan X sendiri (≤ 12 pusingan, tepat untuk v1).
+2. ✅ Skrip KWSP kini menolak julat yang tidak bersambung (dibaiki 2026-10-14; data dijana semula, tiada beza).
+3. Exhibit 5 ialah contoh bonus (v2); untuk v1 hanya langkah bulan biasa boleh diuji. Kes LHDN
+   (§6.2) masih belum ada - **ini penghalang** sebelum PCB boleh dipaparkan.
+
+**Laluan:** `/kalkulator-gaji` di top level, sama seperti app Showcase lain (folder dalam
+`pages` hanya untuk sub-halaman app). Diputuskan 2026-10-14.
+
+**Dipotong daripada v1:** potongan TP1 (LP), pecahan Bahagian F (paparkan jumlah sahaja),
+caruman sukarela. Kekal: kategori 1/2/3, anak mengikut jenis, OKU diri/pasangan, zakat,
+bukan pemastautin 30% (semuanya hanya menambah D atau satu baris).
+
+**Susunan binaan:**
+1. ✅ `src/lib/kwsp.ts` + `scripts/check-kwsp.ts` (2026-10-14). Atas RM20,000 dan Bahagian F, setiap
+   bahagian dibundarkan naik ke ringgit - check membuktikan semua 1,203 julat jadual mengikut peraturan
+   itu; masih perlu disahkan dengan KWSP untuk Bahagian F (§6.3).
+2. ✅ Halaman `/kalkulator-gaji` dengan KWSP sahaja + `Disclaimer` (2026-10-14). Bahagian F: jumlah
+   sahaja = 4% dibundarkan naik sekali (`jumlah` dalam `caruman`).
+3. ✅ PDF spesifikasi PCB 2026 di `docs/sources/pcb/spesifikasi-pcb-2026.pdf` (sha256 `a1618051…800c`).
+   **Masih perlu:** kes LHDN (§6.2).
+4. ✅ `src/data/pcb/2026.ts` + `src/lib/pcb.ts` + `scripts/check-pcb.ts` (2026-10-14): Exhibit 5 Jan + Feb
+   (Mac/Apr guna TP1 dan bonus - v2), bukan pemastautin, terma pembundaran, jadual zakat. Belum diuji:
+   kategori 1/2, anak ikut jenis, OKU, zakat dalam formula penuh. Tafsiran sendiri (bukan dari spesifikasi):
+   bukan pemastautin juga dibundarkan ke 5 sen; X = PCB bersih yang dipotong. **Tambah PCB ke halaman
+   hanya selepas kes LHDN lulus dalam check.**
+5. Spesifikasi PCB 2027 (Dis-Jan): tambah `src/data/pcb/2027.ts`, jalankan semula check.

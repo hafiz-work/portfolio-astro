@@ -9,12 +9,8 @@ import avatar from "../../assets/avatar.jpg";
 
 const AVATAR_URL = avatar.src;
 
-// Cloudflare Turnstile (invisible until a challenge is needed). This site key is
-// public; keep it as a fallback so production contact submissions still work
-// when build-time env is absent.
-const DEFAULT_TURNSTILE_SITE_KEY = "0x4AAAAAAFD-PSk_u7NHAF-5";
-const turnstileSiteKey =
-  import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || DEFAULT_TURNSTILE_SITE_KEY;
+// Cloudflare Turnstile (invisible until a challenge is needed).
+import { TURNSTILE_SITE_KEY as turnstileSiteKey } from "../../lib/constants";
 ---
 
 <section id="contact" class="scroll-offset">

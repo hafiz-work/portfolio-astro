@@ -1,27 +1,12 @@
 import React from "react";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
-  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/shadcn/ui/alert-dialog";
-import { Button } from "@/components/shadcn/ui/button";
+import { Trash2 } from "lucide-react";
+import { confirm } from "./ConfirmDialog";
+import { RowAction } from "./AccountDataTable";
 
-/** Delete button that asks first (shared by MyPosts / MyQuotes). */
+/** Delete row action that asks first (shared by MyPosts / MyQuotes). */
 export function ConfirmDelete({ what, onConfirm }: { what: string; onConfirm: () => void }) {
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="sm">Delete</Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete {what}?</AlertDialogTitle>
-          <AlertDialogDescription>This can't be undone.</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={onConfirm}>Delete</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
+  const ask = async () => {
+    if (await confirm({ title: `Delete ${what}?`, description: "This can't be undone.", confirmLabel: "Delete", destructive: true })) onConfirm();
+  };
+  return <RowAction label="Delete" icon={<Trash2 />} destructive onClick={() => void ask()} />;
 }

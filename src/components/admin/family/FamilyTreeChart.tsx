@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { Chart, Data } from "family-chart";
 import "family-chart/styles/family-chart.css";
 import type { FamilyGender, FamilyTreeDetail } from "../../../types/family";
-import { buildChartData } from "../../../lib/chart-data";
+import { buildChartData, cardText } from "../../../lib/chart-data";
 
 /**
  * Initial view fits the whole family into the canvas so the full tree is visible
@@ -184,10 +184,10 @@ export const FamilyTreeChart = ({
       card.setCardImageField("avatar");
       card.setOnHoverPathToMain();
       if (useLabelOnly) {
-        card.setCardDisplay([["label"]]);
+        card.setCardDisplay([cardText("label")]);
         card.setCardDim({ w: 220, h: 80 });
       } else {
-        card.setCardDisplay([["first name", "last name"], ["birthday"]]);
+        card.setCardDisplay([cardText("first name", "last name"), cardText("birthday")]);
         card.setCardDim({ w: 220, h: 80 });
       }
       chart.setDuplicateBranchToggle(true);

@@ -6,9 +6,12 @@ chain through `src/lib/fallback.ts`, useful to people in Malaysia, cheap to run.
 app gets its own top-level route and one entry in the `apps` array
 (`src/pages/showcase.astro`). See CLAUDE.md -> Showcase.
 
-Data sources below were checked on 2026-10-11. Done and removed: IPU (`/ipu`), Widget Waktu Solat (`/waktu-solat/embed`), Kompas Kiblat
+Data sources below were checked on 2026-10-11; ideas 14-19 checked on 2026-10-14. Done and removed: IPU (`/ipu`), Widget Waktu Solat (`/waktu-solat/embed`), Kompas Kiblat
 (`/kiblat`), Mod Ramadan (Paparan Masjid), Amaran Cuaca, Gempa Bumi, Tarikh Hijri, OPR, cuaca on
-Paparan Masjid, Graf Harga Minyak, garisan kiblat pada peta, Widget IPU. Nombor Kecemasan (`/kecemasan`), Jadual Imsakiah (`/waktu-solat/imsakiah`), Bas Langsung (`/bas`).
+Paparan Masjid, Graf Harga Minyak, garisan kiblat pada peta, Widget IPU. Nombor Kecemasan (`/kecemasan`), Jadual Imsakiah (`/waktu-solat/imsakiah`), Bas Langsung (`/bas`),
+Kalkulator Bil Elektrik (`/kalkulator-bil-elektrik`), Kalkulator Cukai Jalan (`/kalkulator-cukai-jalan`),
+Takwim Persekolahan (`/takwim-sekolah`), Inflasi (`/inflasi`), Derma Darah (`/derma-darah`),
+Cuti Umum (`/cuti-umum`) - all 2026-10-14; see CLAUDE.md -> Showcase.
 Next recommended: **2**.
 
 Nombor Kecemasan follow-ups: verify and add Talian HEAL 15555 (KKM), MCMC aduan, more highway
@@ -25,7 +28,7 @@ header comment in `src/data/kecemasan.ts`.
 - **Fallback:** stored copy (no other official Kijang Emas source).
 - **Effort:** small.
 
-## 6. Kalkulator Zakat
+## 6. Kalkulator Zakat - `/kalkulator-zakat`
 
 - **Data:** gold price from #2 (Kijang Emas) for nisab.
 - **Why:** searched often.
@@ -37,8 +40,24 @@ header comment in `src/data/kecemasan.ts`.
 ## 13. Kalkulator Gaji - PCB dan KWSP - `/kalkulator-gaji`
 
 Full plan with official sources, formulas and test cases: `docs/plans/kalkulator-gaji-pcb-kwsp.md`.
-KWSP Third Schedule downloaded and extracted (`src/data/kwsp/2025-10.ts`). Still needed:
-10-15 cases from LHDN's official PCB calculator (for the check), and how Part F rounding is split.
+Live with KWSP only (2026-10-14). PCB lib built and checked against the LHDN 2026 spec
+(`src/lib/pcb.ts`), not on the page yet. Still needed: 10-15 cases from LHDN's official PCB
+calculator (for the check), and how Part F rounding is split.
+
+## 17. Zakat Fitrah (setiap negeri) - `/kalkulator-zakat-fitrah`
+
+**Ditangguh hingga Januari 2027** (diputuskan 2026-10-14): kadar 1448H diumumkan setiap negeri menjelang
+Ramadan (~Feb 2027); kadar 1447H sudah lepas dan tidak boleh dipaparkan. Bina sekali gus apabila
+negeri mula mengumumkan; negeri yang belum umum = "belum diumumkan", tiada angka.
+
+- **Data:** each state's Majlis Agama Islam / zakat authority rate for the year. No single official combined
+  table - collect state by state (some states fix it per person, others per kg of rice eaten).
+- **Why:** every Muslim in Malaysia pays it in Ramadan; the rate changes by state and year.
+- **Scope:** state → this year's rate, who must pay, the deadline (before Aidilfitri prayer), link to the
+  state's official payment portal.
+- **Fallback:** none - static table, dated per entry like `kecemasan`.
+- **Caution:** religious matter - official state sources only, never blogs/mirrors; ship with or after #6.
+- **Effort:** small-medium (data entry per state).
 
 ## Considered, not recommended
 
@@ -50,3 +69,12 @@ KWSP Third Schedule downloaded and extracted (`src/data/kwsp/2025-10.ts`). Still
 - **Kalkulator Faraid** - inheritance shares depend on the whole family situation and on
   court practice; a wrong share is a legal and religious problem.
 - **Generic developer tools** (JSON formatter, URL shortener) - don't set the portfolio apart.
+- **Harga getah harian (LGM / MRE)** - checked 2026-10-14: every MRE and farmgate price API behind
+  `lgm.gov.my/webv2api` needs a login (401); the one open endpoint is filled by visitors' browsers and has
+  today only (no previous day). No data.gov.my dataset. Only route: ask LGM for official data access.
+- **Harga komoditi harian (KPK)** - published as a daily infographic image, not a table or API; an app
+  would have to read a picture a day.
+- **Kalkulator tol (LLM)** - fares live in per-highway PDFs; hundreds of plaza × vehicle-class combos,
+  and revisions keep coming, so a hand-kept table goes stale quickly.
+- **Peta masjid/surau (OpenStreetMap)** - no official dataset; coverage is uneven outside cities, and a
+  wrong pin sends people to the wrong place.

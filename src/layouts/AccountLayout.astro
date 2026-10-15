@@ -1,7 +1,7 @@
 ---
 // Account area (public sign-in/register/verify + signed-in /account/*): a
-// self-contained shadcn/ui screen - no public site navbar, gutters or sky/gray
-// palette. Everything here speaks shadcn tokens (see src/components/shadcn/README.md).
+// self-contained shadcn/ui screen - no public site navbar or gutters. Everything
+// here speaks shadcn tokens (see src/components/shadcn/README.md).
 // Admin signs in at /admin/login (its own page), never here.
 import CoreLayout from "./CoreLayout.astro";
 import { AuthShell } from "../components/account/AuthShell";
@@ -18,6 +18,8 @@ interface Props {
 
 const { title, description, variant = "app", switchTo } = Astro.props;
 const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+// The shadcn Sidebar remembers collapsed/expanded in this cookie; read it so SSR matches.
+const sidebarOpen = Astro.cookies.get("sidebar_state")?.value !== "false";
 ---
 
 <CoreLayout
@@ -32,7 +34,7 @@ const path = Astro.url.pathname.replace(/\/$/, "") || "/";
         <slot />
       </AuthShell>
     ) : (
-      <AccountShell client:load path={path}>
+      <AccountShell client:load path={path} defaultOpen={sidebarOpen}>
         <slot />
       </AccountShell>
     )
