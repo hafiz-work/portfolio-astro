@@ -1,0 +1,156 @@
+---
+import Disclaimer from "../components/ui/Disclaimer.astro";
+import BackLink from "../components/ui/BackLink.astro";
+export const prerender = false;
+import TechHeading from "../components/layout/TechHeading.astro";
+import Combobox from "../components/ui/Combobox.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { CUTI_UMUM } from "../data/cuti-umum";
+import { NEGERI, type NegeriId } from "../data/takwim-sekolah";
+import { cutiFor, nextCuti, tahunFor } from "../lib/cuti-umum";
+import { isoToDmy } from "../lib/date-my";
+import { isNegeri } from "../lib/takwim-sekolah";
+import { todayInMalaysia } from "../lib/waktu-solat";
+
+const today = todayInMalaysia();
+const q = Astro.url.searchParams;
+const negeri: NegeriId = isNegeri(q.get("negeri") ?? "") ? (q.get("negeri") as NegeriId) : "kuala-lumpur";
+const nama = NEGERI.find((n) => n.id === negeri)!.name;
+// ?tahun= must be a published year; default the current year, else the latest one.
+const tahun = tahunFor(Number(q.get("tahun"))) ?? tahunFor(Number(today.slice(0, 4))) ?? CUTI_UMUM.at(-1)!;
+const senarai = cutiFor(negeri, tahun.year);
+const next = nextCuti(negeri, today);
+
+const hari = (iso: string) =>
+  new Intl.DateTimeFormat("ms-MY", { weekday: "long", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
+const tarikh = (iso: string) => `${hari(iso)}, ${isoToDmy(iso)}`;
+const left = (d: number) => (d === 0 ? "Hari ini" : d === 1 ? "Esok" : `${d} hari lagi`);
+---
+
+<PublicLayout
+  title={`Cuti Umum ${nama} ${tahun.year} (Hari Kelepasan Am) | Hafiz Bahtiar`}
+  description="Senarai cuti umum (Hari Kelepasan Am) Persekutuan dan negeri bagi setiap negeri, daripada jadual rasmi Bahagian Kabinet JPM, dan berapa hari lagi ke cuti seterusnya."
+>
+  <div class="relative mx-auto mt-8 max-lg:max-w-2xl sm:mt-24">
+    <BackLink />
+    <div class="line-y">
+      <h1 class="mx-2 text-4xl tracking-tighter text-balance sm:text-7xl lg:text-8xl">
+        <TechHeading text="Cuti Umum" fontSize={96} fontWeight={400} box="-my-12 h-48" />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">Hari Kelepasan Am Persekutuan dan negeri {tahun.year} mengikut negeri.</p>
+    </div>
+
+    <div class="line-y mt-10">
+      <form method="get" class="mx-2 flex flex-wrap items-center gap-3">
+        <label for="negeri" class="text-sm/6 font-medium">Negeri</label>
+        <Combobox
+          id="negeri"
+          name="negeri"
+          class="max-w-xs"
+          listLabel="Negeri"
+          searchPlaceholder="Cari negeri…"
+          emptyText="Tiada negeri sepadan."
+          submitOnPick
+          value={negeri}
+          options={NEGERI.map((n) => ({ value: n.id, label: n.name }))}
+        />
+        <input type="hidden" name="tahun" value={tahun.year} />
+        <noscript>
+          <button type="submit" class="btn-pill btn-pill-primary">Tukar</button>
+        </noscript>
+        <nav aria-label="Tahun" class="flex gap-2">
+          {
+            CUTI_UMUM.map((t) => (
+              <a
+                href={`?negeri=${negeri}&tahun=${t.year}`}
+                aria-current={t.year === tahun.year ? "page" : undefined}
+                class:list={["btn-pill", t.year === tahun.year ? "btn-pill-primary" : "btn-pill-ghost"]}
+              >
+                {t.year}
+              </a>
+            ))
+          }
+        </nav>
+      </form>
+    </div>
+
+    <div class="line-y mt-10">
+      <div class="mx-2">
+        <p class="eyebrow">Cuti umum seterusnya · {nama}</p>
+        {
+          next ? (
+            <>
+              <p class="mt-2 text-3xl font-medium tracking-tight text-balance">{next.names.join(" · ")}</p>
+              <p class="mt-1 text-sm/6 text-gray-600 dark:text-gray-400">{tarikh(next.date)}</p>
+              <p class="mt-6 text-6xl font-medium tracking-tighter text-sky-600 tabular-nums dark:text-sky-400">
+                {left(next.daysLeft)}
+              </p>
+            </>
+          ) : (
+            <p class="mt-2 text-sm/6 text-gray-600 dark:text-gray-400">
+              Jadual tahun berikutnya belum diterbitkan oleh Bahagian Kabinet JPM.
+            </p>
+          )
+        }
+      </div>
+    </div>
+
+    <div class="line-y mt-10">
+      <h2 class="mx-2 text-2xl font-medium tracking-tight">
+        {nama} {tahun.year} · {senarai.length} hari kelepasan am
+      </h2>
+      <ol class="mt-4 divide-y divide-gray-950/5 border-y border-gray-950/5 dark:divide-white/10 dark:border-white/10">
+        {
+          senarai.map((c) => (
+            <li
+              class:list={[
+                "flex flex-wrap items-baseline gap-x-4 gap-y-1 px-2 py-3",
+                c.date < today && "text-gray-400 dark:text-gray-600",
+                c.date === today && "bg-sky-500/5 dark:bg-sky-400/10",
+              ]}
+              aria-current={c.date === today ? "date" : undefined}
+            >
+              <time datetime={c.date} class="w-44 shrink-0 text-sm/6 tabular-nums">
+                {tarikh(c.date)}
+              </time>
+              <span class="min-w-0 flex-1 font-medium">
+                {c.name}
+                {c.date === today && (
+                  <span class="ml-2 rounded-full bg-sky-500/10 px-2 font-mono text-[10px]/5 tracking-widest text-sky-700 uppercase dark:text-sky-400">
+                    Hari ini
+                  </span>
+                )}
+                {c.tentative && (
+                  <span class="mt-0.5 block text-xs/5 font-normal text-gray-500">Tertakluk kepada perubahan *</span>
+                )}
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+      <div class="mx-2 mt-3 space-y-1 text-xs/5 text-gray-500">
+        <p>* Ditanda "tertakluk kepada perubahan" dalam jadual rasmi; tarikh muktamad ikut pengumuman rasmi.</p>
+        <p>
+          Jadual rasmi tidak menyenaraikan cuti ganti atau hari rehat mingguan negeri, jadi kedua-duanya tidak dipaparkan di
+          sini.
+        </p>
+        <p>
+          Cuti sekolah? Lihat <a href={`/takwim-sekolah?negeri=${negeri}`} class="text-sky-700 underline dark:text-sky-400">Takwim Persekolahan</a>.
+        </p>
+      </div>
+    </div>
+
+    <div class="line-y mt-6">
+      <Disclaimer
+        class="mx-2"
+        sources={[{ name: "Bahagian Kabinet, Perlembagaan dan Perhubungan Antara Kerajaan, JPM", href: "https://www.kabinet.gov.my/hari-kelepasan-am/" }]}
+      >
+        Cuti umum tambahan boleh diisytiharkan dalam masa yang singkat. Tarikh cuti Islam mengikut pengumuman rasmi
+        (rukyah dan pengisytiharan Penyimpan Mohor Besar Raja-Raja).
+      </Disclaimer>
+    </div>
+    <div class="mb-16 sm:mb-46"></div>
+  </div>
+</PublicLayout>

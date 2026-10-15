@@ -1,0 +1,281 @@
+---
+import Disclaimer from "../components/ui/Disclaimer.astro";
+import BackLink from "../components/ui/BackLink.astro";
+export const prerender = false;
+import TechHeading from "../components/layout/TechHeading.astro";
+import PublicLayout from "../layouts/PublicLayout.astro";
+import { getInflation, monthLabel } from "../lib/inflasi";
+import { linePath, priceAxis } from "../lib/harga-minyak";
+
+const data = await getInflation();
+const CATALOGUE = "https://data.gov.my/data-catalogue/cpi_headline_inflation";
+
+const pct = (n: number) => `${n.toFixed(1)}%`;
+const signed = (n: number) => `${n > 0 ? "+" : ""}${pct(n)}`;
+const tone = (n: number) =>
+  n > 0
+    ? "text-gray-950 dark:text-white"
+    : n < 0
+      ? "text-sky-600 dark:text-sky-400"
+      : "text-gray-500 dark:text-gray-400";
+
+// 12-month headline yoy trend: server-rendered SVG like /harga-minyak, one sky series.
+const trend = data?.trend ?? [];
+const W = 400,
+  H = 200,
+  L = 44,
+  R = 8,
+  T = 8,
+  B = 24; // viewBox + plot margins
+const axis = trend.length ? priceAxis(trend.map((t) => t.yoy)) : null;
+const px = (i: number) =>
+  L +
+  (trend.length > 1 ? (i * (W - L - R)) / (trend.length - 1) : (W - L - R) / 2);
+const py = (v: number) =>
+  axis ? T + ((axis.max - v) * (H - T - B)) / (axis.max - axis.min) : 0;
+const points = trend.map((t, i) => [px(i), py(t.yoy)] as [number, number]);
+const chartDesc = trend.length
+  ? `Inflasi tahunan dari ${monthLabel(trend[0].month)} (${pct(trend[0].yoy)}) ke ${monthLabel(trend.at(-1)!.month)} (${pct(trend.at(-1)!.yoy)}).`
+  : "";
+---
+
+<PublicLayout
+  title="Inflasi Malaysia (IHP) Bulan Terkini | Hafiz Bahtiar"
+  description="Kadar inflasi Malaysia terkini - Indeks Harga Pengguna (IHP) tahunan dan bulanan, mengikut 13 bahagian, dengan trend 12 bulan. Data rasmi DOSM melalui data.gov.my."
+>
+  <div class="relative mx-auto mt-8 max-lg:max-w-2xl sm:mt-24">
+    <BackLink />
+    <div class="line-y">
+      <h1
+        class="mx-2 text-4xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Inflasi"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Kadar inflasi Malaysia mengikut Indeks Harga Pengguna (IHP), bulan
+        terkini yang diterbitkan DOSM.
+      </p>
+    </div>
+
+    {
+      data ? (
+        <>
+          <div class="line-y mt-4">
+            <p class="mx-2 font-mono text-sm/6 tracking-widest text-gray-500 uppercase">
+              Data bagi {monthLabel(data.month)}
+            </p>
+          </div>
+
+          <div class="line-y mt-10">
+            <dl class="grid grid-cols-2 gap-px bg-gray-950/5 dark:bg-white/10">
+              {[
+                {
+                  label: "Inflasi tahunan",
+                  note: "Berbanding 12 bulan lalu",
+                  value: data.overall.yoy,
+                },
+                {
+                  label: "Inflasi bulanan",
+                  note: "Berbanding bulan lalu",
+                  value: data.overall.mom,
+                },
+              ].map((c) => (
+                <div class="bg-white px-4 py-6 sm:px-6 dark:bg-gray-950">
+                  <dt>
+                    <span class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+                      {c.label}
+                    </span>
+                    <span class="block text-xs/5 text-gray-500 dark:text-gray-400">
+                      {c.note}
+                    </span>
+                  </dt>
+                  <dd class="mt-2 text-4xl font-medium tracking-tighter tabular-nums sm:text-5xl">
+                    {pct(c.value)}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          {axis && trend.length > 1 && (
+            <>
+              <div class="line-y mt-10">
+                <p class="eyebrow mx-2">
+                  Trend {trend.length} bulan (inflasi tahunan)
+                </p>
+              </div>
+              <div class="line-y mt-4">
+                <div class="mx-2">
+                  <svg
+                    viewBox={`0 0 ${W} ${H}`}
+                    class="h-auto w-full max-w-2xl text-gray-500 dark:text-gray-400"
+                    role="img"
+                    aria-labelledby="cpi-chart-title cpi-chart-desc"
+                  >
+                    <title id="cpi-chart-title">
+                      Inflasi tahunan IHP, {trend.length} bulan (%)
+                    </title>
+                    <desc id="cpi-chart-desc">{chartDesc}</desc>
+                    {axis.ticks.map((t) => (
+                      <g>
+                        <line
+                          x1={L}
+                          x2={W - R}
+                          y1={py(t)}
+                          y2={py(t)}
+                          class="stroke-gray-950/5 dark:stroke-white/10"
+                        />
+                        <text
+                          x={L - 6}
+                          y={py(t)}
+                          dy="0.32em"
+                          text-anchor="end"
+                          font-size="12"
+                          fill="currentColor"
+                          class="tabular-nums"
+                        >
+                          {t}%
+                        </text>
+                      </g>
+                    ))}
+                    {trend.map((t, i) =>
+                      (trend.length - 1 - i) % 3 === 0 ? (
+                        <text
+                          x={px(i)}
+                          y={H - 6}
+                          text-anchor={
+                            i === 0
+                              ? "start"
+                              : i === trend.length - 1
+                                ? "end"
+                                : "middle"
+                          }
+                          font-size="12"
+                          fill="currentColor"
+                        >
+                          {monthLabel(t.month, "short")}
+                        </text>
+                      ) : null,
+                    )}
+                    <path
+                      d={linePath(points)}
+                      fill="none"
+                      stroke="#0284c7"
+                      stroke-width="2"
+                      stroke-linejoin="round"
+                      stroke-linecap="round"
+                    />
+                    {points.map((p, i) => (
+                      <circle
+                        cx={p[0]}
+                        cy={p[1]}
+                        r={i === points.length - 1 ? 3.5 : 6}
+                        fill={
+                          i === points.length - 1 ? "#0284c7" : "transparent"
+                        }
+                      >
+                        <title>{`${monthLabel(trend[i].month)}: ${pct(trend[i].yoy)}`}</title>
+                      </circle>
+                    ))}
+                  </svg>
+                </div>
+              </div>
+            </>
+          )}
+
+          <div class="line-y mt-10">
+            <p class="eyebrow mx-2">Mengikut bahagian</p>
+          </div>
+          <div class="line-y mt-4">
+            <table class="w-full text-left text-sm/6 tabular-nums">
+              <thead class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+                <tr class="border-b border-gray-950/5 dark:border-white/10">
+                  <th class="px-2 py-2 font-medium">Bahagian</th>
+                  <th class="px-2 py-2 text-right font-medium">Tahunan</th>
+                  <th class="px-2 py-2 text-right font-medium">Bulanan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-gray-950/5 bg-sky-500/5 font-medium dark:border-white/10 dark:bg-sky-400/10">
+                  <td class="px-2 py-2">Keseluruhan</td>
+                  <td class="px-2 py-2 text-right">
+                    {signed(data.overall.yoy)}
+                  </td>
+                  <td class="px-2 py-2 text-right">
+                    {signed(data.overall.mom)}
+                  </td>
+                </tr>
+                {data.divisions.map((d) => (
+                  <tr class="border-b border-gray-950/5 dark:border-white/10">
+                    <td class="px-2 py-2">
+                      <span class="mr-2 font-mono text-xs text-gray-500">
+                        {d.code}
+                      </span>
+                      {d.name}
+                    </td>
+                    <td class:list={["px-2 py-2 text-right", tone(d.yoy)]}>
+                      {signed(d.yoy)}
+                    </td>
+                    <td class:list={["px-2 py-2 text-right", tone(d.mom)]}>
+                      {signed(d.mom)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div class="line-y mt-4">
+            <p class="mx-2 text-xs/5 text-gray-500 dark:text-gray-400">
+              Tahunan: perubahan IHP berbanding bulan yang sama tahun lalu.
+              Bulanan: berbanding bulan sebelumnya. Sumber:{" "}
+              <a
+                href={CATALOGUE}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+              >
+                {data.source}
+              </a>
+              {data.stale &&
+                " (data simpanan - sumber tak dapat dicapai sekarang)"}
+              .
+            </p>
+          </div>
+        </>
+      ) : (
+        <div class="line-y mt-10">
+          <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+            Data inflasi tak dapat diambil dari data.gov.my sekarang. Cuba lagi
+            sebentar, atau semak terus di{" "}
+            <a
+              href={CATALOGUE}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-semibold text-sky-600 hover:underline dark:text-sky-400"
+            >
+              data.gov.my
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
+    <div class="line-y mt-6">
+      <Disclaimer
+        class="mx-2"
+        sources={[{ name: "DOSM (data.gov.my)", href: CATALOGUE }]}
+      >
+        Ini statistik rasmi DOSM; angka boleh disemak semula oleh DOSM dalam
+        terbitan akan datang.
+      </Disclaimer>
+    </div>
+    <div class="mb-16 sm:mb-46"></div>
+  </div>
+</PublicLayout>
