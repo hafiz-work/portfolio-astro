@@ -74,7 +74,7 @@ function Recent({ title, href, empty, newHref, items }: {
       </CardHeader>
       <CardContent className="px-5">
         {items.length ? (
-          <ul className="grid gap-1">
+          <ul className="grid grid-cols-1 gap-1">
             {items.map((item) => (
               <li key={item.key} className="flex items-center gap-3 py-1.5 text-sm">
                 <span className="min-w-0 flex-1 truncate font-medium">{item.label}</span>
@@ -129,7 +129,7 @@ export function AccountDashboard() {
     <div className="grid gap-6">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-6">
         <div className="grid gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Welcome back, {me.profile?.displayName || me.name}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight wrap-anywhere">Welcome back, {me.profile?.displayName || me.name}</h1>
           <p className="text-sm text-muted-foreground">Your posts, quotes and account standing at a glance.</p>
         </div>
         <div className="flex flex-wrap gap-2">

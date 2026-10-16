@@ -13,6 +13,8 @@ export interface Profile {
   linkedinUrl?: string;
   githubUrl?: string;
   twitterUrl?: string;
+  telegramChatId?: string | null;
+  telegramLinkedAt?: string | null;
   createdAt: string;
 }
 
@@ -39,6 +41,14 @@ class ProfileService extends ApiClient {
       console.error('Update profile error:', error);
       throw error;
     }
+  }
+
+  async linkTelegram(chatId: string): Promise<void> {
+    await this.put('/owner/profile/telegram', { chatId });
+  }
+
+  async unlinkTelegram(): Promise<void> {
+    await this.delete('/owner/profile/telegram');
   }
 }
 

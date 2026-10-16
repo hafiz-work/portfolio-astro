@@ -1,4 +1,5 @@
 import type { Project, ProjectPolicy, UpdateProjectPolicyData } from '../types/project';
+import type { CmsProject } from '../types/project-cms';
 import { ApiClient } from './api-client';
 import { API_BASE_URL } from './config';
 
@@ -13,9 +14,8 @@ export class ProjectsService extends ApiClient {
         return result || [];
     }
 
-    async getAdminProjectById(id: number): Promise<Project | null> {
-        const projects = await this.getAdminProjects();
-        return projects.find(p => p.id === id) || null;
+    async getAdminProjectById(id: number): Promise<CmsProject | null> {
+        return this.get<CmsProject>(`owner/projects/${id}`);
     }
 
     async getAdminProjectPolicyById(id: number): Promise<ProjectPolicy | null> {

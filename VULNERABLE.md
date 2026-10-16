@@ -6,9 +6,9 @@ Backend `hono-workers` is out of scope per SECURITY.md.
 
 ## Needs backend (`hono-workers`) — can't be closed in this repo
 
-1. **Public family API returns full PII rows.** `src/lib/family.ts:21-26` fetches unauthenticated; the API returns `notes`, `metadata`, `firstName`, `lastName`, full living birthdates (confirmed by the repo's own note, `docs/brain/family-module-brain.md:140-146`). Fix = public DTO / server-side sanitize.
-2. **No server-side rate limit on `/auth/login`.** The frontend lockout is in-memory only (`src/components/account/LoginForm.tsx`, `src/pages/admin/login.astro`) and bypassable by reload or direct API calls. Fix = backend rate limit.
-3. **Session gate is client-side.** The `session_active` cookie is a documented UX gate (`src/middleware.ts:88`, `src/lib/auth.ts:61`); this Worker cannot read the API's httpOnly cookies. Fix = backend session check / BFF (optional — by design today).
+1. `[backend]` **Public family API returns full PII rows.** `src/lib/family.ts:21-26` fetches unauthenticated; the API returns `notes`, `metadata`, `firstName`, `lastName`, full living birthdates (confirmed by the repo's own note, `docs/brain/family-module-brain.md:140-146`). Fix = public DTO / server-side sanitize.
+2. `[backend]` **No server-side rate limit on `/auth/login`.** (2026-10-15: frontend re-checked - only the client lockout, 5 fails -> 60s; backend not checked.) The frontend lockout is in-memory only (`src/components/account/LoginForm.tsx`, `src/pages/admin/login.astro`) and bypassable by reload or direct API calls. Fix = backend rate limit.
+3. `[backend]` **Session gate is client-side.** The `session_active` cookie is a documented UX gate (`src/middleware.ts:88`, `src/lib/auth.ts:61`); this Worker cannot read the API's httpOnly cookies. Fix = backend session check / BFF (optional — by design today).
 
 ## Residuals / watch items
 
