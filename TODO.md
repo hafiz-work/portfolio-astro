@@ -28,14 +28,12 @@ Baki:
 ## Telegram (WIP - UI staged, backend plumbing siap)
 
 - [ ] **Remote belum konfigur** (`hono-workers`): `bunx wrangler secret put TELEGRAM_BOT_TOKEN` + `TELEGRAM_WEBHOOK_SECRET`, `bun run db:migrate:remote` (014), `bun run telegram:webhook`. Verifikasi lokal: `bun scripts/verify-telegram.ts` (24 checks, lulus); migration 014 dah apply di D1 lokal.
-- [ ] **[P2] Kemas UI Telegram**: `Profile` (`lib/profile.ts`) tak ada `telegramChatId`/`telegramLinkedAt`; `profile.astro` guna `new ApiClient(API_BASE_URL)` inline + `profile as any`. Pindah ke `profileService` (link/unlink/status) dan buang cast.
-- [ ] **[P3] Error Telegram guna `alert()`** (`profile.astro:543,557`) - admin lain guna `showToast`.
-- [ ] **[P3] `/owner/profile` kongsi `AUTH_RATE_LIMITER` (5/60s per IP)**: visit profile (GET) + link (PUT+GET) + save (PUT) = 4; 6 aksi pantas dalam 60s → 429. Pertimbang limiter berasingan untuk CRUD profile.
+- [ ] `[backend]` **[P3] `/owner/profile` kongsi `AUTH_RATE_LIMITER` (5/60s per IP)**: visit profile (GET) + link (PUT+GET) + save (PUT) = 4; 6 aksi pantas dalam 60s → 429. Pertimbang limiter berasingan untuk CRUD profile.
 - [ ] **[P3] Bot commands belum ada**: `/status`, `/stats`, `/recent`, `/mute` (chat owner cuma dapat help) + notifikasi contact message. Dijejak dalam TODO `hono-workers`.
 
 ## Security & hardening
 
-- [ ] **[P1] Lockout brute-force login hanya client-side.** Risiko kos juga: setiap cubaan = hash password (request paling berat CPU) + bacaan D1. `login.astro:402` (5 gagal → 60s dalam browser boleh dimatikan). Sahkan backend had kadar `/auth/login` (Turnstile dah membantu) - kerja `hono-workers`.
+- [ ] `[backend]` **[P1] Lockout brute-force login hanya client-side.** (Disemak semula 2026-10-15: `/login` -> `LoginForm.tsx`, `/admin/login` -> `login.astro`; dua-dua lockout dalam memori browser sahaja, reload = reset; backend belum disemak.) Risiko kos juga: setiap cubaan = hash password (request paling berat CPU) + bacaan D1. `login.astro:402` (5 gagal → 60s dalam browser boleh dimatikan). Sahkan backend had kadar `/auth/login` (Turnstile dah membantu) - kerja `hono-workers`.
 - [ ] **[P2] CSP `'unsafe-inline'` untuk script** (`middleware.ts:33`, diperlukan oleh inline theme-init `CoreLayout`). Risiko sync: CSP `middleware.ts` kena sepadan dengan `public/_headers` secara manual (`middleware.ts:11`).
 - [ ] **[P2] Token verify-email melalui query URL** (`verify-email.astro:14`) - standard untuk link email; ubah hanya kalau backend boleh terima POST.
 
@@ -43,24 +41,18 @@ Baki:
 
 - [ ] **[P1] Admin projects list buat N+1 `getProjectDetail`** untuk badge warning (`ProjectsCmsTable.tsx:57-66`) - perlu batch endpoint atau warnings disertakan dalam respons senarai (`hono-workers`).
 - [ ] **[P2] `kl-boundary.json` (15.8 KB) masuk bundle JS setiap pelawat** (`MapCanvas.tsx:14`, import statik dalam island `client:only`). Kecilkan titik atau ambil sebagai aset runtime.
-- [ ] **[P2] Admin policy editor muat senarai projek penuh untuk satu rekod** (`lib/projects.ts:30-33`) - guna `/owner/projects/{id}`.
 
 ## Correctness / robustness
 
 - Nota: `ApiClient` 404 → `null` hanya untuk GET/HEAD; write throw, jadi caller yang dulu anggap 404 sebagai `null` kena jangkakan exception. (Loop retry 401 dah dibaiki 2026-10-13 - sekali refresh + retry sahaja, `bun scripts/check-api-retry.ts`.)
-
-## Dead code & cleanup
-
-- [ ] **[P2] Buang `src/data/kl-polygon.json` (37 KB)** - sifar import (hanya `fetch-kl.cjs` di root menyentuhnya).
-- [ ] **[P3] `lib/blog.ts` `getPublicPosts`/`getPublicPostBySlug` dah tak dipanggil** - public blog guna `public-content.ts`; buang supaya service tu tinggal admin sahaja.
 
 ## Kos Cloudflare (audit 2026-10-13)
 
 Konteks: request Worker murah (paid: 10M/bulan termasuk, lepas tu ~$0.30/M; free: >100k/hari = error, bukan bil). Yang betul-betul spike ialah **loop** dan **write D1**. Data luar dah colo-cached (Cache API, percuma); HTML SSR **tak** di-cache - setiap view = satu invocation.
 
 - [ ] **[P1] Sahkan `TURNSTILE_SECRET` di produksi** (lihat seksyen Captcha) - tanpanya backend skip captcha dan brute-force login jadi kos CPU sepenuhnya. Pastikan juga backend rate-limit `/auth/login`.
-- [ ] **[Owner, dashboard] Semak plan Cloudflare (Free atau Workers Paid)** - menentukan dua item di bawah. Paid: kos request ~$0.30/M, isu kecil. Free: had 100k request/hari untuk **seluruh site** - bila habis, semua page error (bukan bil), jadi itu satu-satunya senario yang betul-betul bahaya.
-- [ ] **[P3] Widget embed boleh dipasang mana-mana site** (`/waktu-solat/embed`, `/ipu/embed`, `frame-ancestors *`) - setiap pageview site lain = satu invocation kita; widget IPU reload setiap 30 min selagi terbuka (~48/hari setiap widget). Dianalisa 2026-10-13, **kod sengaja tak diubah**:
+- [x] **[Owner, dashboard] Semak plan Cloudflare** - **Free** (disahkan owner 2026-10-15), jadi ikut cabang "Kalau Free" di bawah. Asal: Paid: kos request ~$0.30/M, isu kecil. Free: had 100k request/hari untuk **seluruh site** - bila habis, semua page error (bukan bil), jadi itu satu-satunya senario yang betul-betul bahaya.
+- [ ] **[Owner, dashboard] [P3] Widget embed boleh dipasang mana-mana site** (plan Free - buat langkah "Kalau Free") (`/waktu-solat/embed`, `/ipu/embed`, `frame-ancestors *`) - setiap pageview site lain = satu invocation kita; widget IPU reload setiap 30 min selagi terbuka (~48/hari setiap widget). Dianalisa 2026-10-13, **kod sengaja tak diubah**:
       - Cache HTML (Cache API / Cache Rule) **tak kurangkan invocation** - Worker jalan sebelum cache; ia cuma jimat CPU render (beberapa ms). Data (JAKIM/APIMS) dah colo-cached dalam `fallback.ts`.
       - Cache HTML juga **merosakkan widget**: `data-server-now` + `data-today` dalam HTML - jam tersasar sebanyak umur cache, dan sekitar tengah malam `today` basi boleh buat widget reload berulang sampai cache tamat.
       - Rate-limit per IP tak hentikan site popular (setiap pelawat IP lain) - ia hanya untuk bot/banjir dari satu sumber.

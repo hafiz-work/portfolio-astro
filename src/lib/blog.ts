@@ -8,15 +8,6 @@ export class BlogService extends ApiClient {
         super(API_BASE_URL);
     }
 
-    async getPublicPosts(): Promise<BlogPostSummary[]> {
-        const result = await this.get<BlogPostSummary[]>('blog');
-        return result || [];
-    }
-
-    async getPublicPostBySlug(slug: string): Promise<BlogPost | null> {
-        return this.get<BlogPost>(`blog/${encodeURIComponent(slug)}`);
-    }
-
     async getAdminPosts(): Promise<BlogPostSummary[]> {
         const result = await this.get<BlogPostSummary[]>('owner/blog');
         return result || [];

@@ -327,8 +327,6 @@ const profile: any = {}; // populated client-side after page load
     import { showToast } from "../../lib/admin-ui";
     import { profileService } from "../../lib/profile";
     import { uploadImage } from "../../lib/upload";
-    import { ApiClient } from "../../lib/api-client";
-    import { API_BASE_URL } from "../../lib/config";
 
     // <ClientRouter> runs a page's bundled script once per session, so a
     // second visit got a dead page (no data, no handlers). Init on every visit.
@@ -399,11 +397,7 @@ const profile: any = {}; // populated client-side after page load
             });
 
             // Telegram link state comes from the same profile payload.
-            const telegramProfile = profile as any;
-            renderTelegramStatus(
-              telegramProfile.telegramChatId,
-              telegramProfile.telegramLinkedAt,
-            );
+            renderTelegramStatus(profile.telegramChatId, profile.telegramLinkedAt);
           }
         } catch (error) {
           console.error("Failed to load profile", error);
@@ -493,9 +487,6 @@ const profile: any = {}; // populated client-side after page load
       form?.addEventListener("submit", handleSave);
 
       // --- Telegram ---
-      // ApiClient is instantiated here directly: the profile service has no Telegram
-      // methods yet (src/lib is outside this change).
-      const telegramApi = new ApiClient(API_BASE_URL);
       const telegramInput = document.getElementById(
         "telegram-chat-id",
       ) as HTMLInputElement | null;
@@ -534,7 +525,7 @@ const profile: any = {}; // populated client-side after page load
 
         telegramLinkBtn.disabled = true;
         try {
-          await telegramApi.put("/owner/profile/telegram", { chatId });
+          await profileService.linkTelegram(chatId);
           await loadProfile();
         } catch (error) {
           showToast({
@@ -549,7 +540,7 @@ const profile: any = {}; // populated client-side after page load
       telegramUnlinkBtn?.addEventListener("click", async () => {
         telegramUnlinkBtn.disabled = true;
         try {
-          await telegramApi.delete("/owner/profile/telegram");
+          await profileService.unlinkTelegram();
           await loadProfile();
         } catch (error) {
           showToast({
