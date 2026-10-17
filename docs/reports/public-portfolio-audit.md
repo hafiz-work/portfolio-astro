@@ -12,7 +12,7 @@
 | Area | Finding |
 |---|---|
 | Frontend | Astro 6 `output: "server"`, `@astrojs/cloudflare`, React 19 islands, Tailwind v4. Package manager **npm** (`package-lock.json`). |
-| Canonical origin | `astro.config.mjs` `site: https://hafizbahtiar.com` (apex). Sitemap, `<link rel=canonical>`, `og:url` all emit apex - verified live. |
+| Canonical origin | `astro.config.ts` `site: https://hafizbahtiar.com` (apex). Sitemap, `<link rel=canonical>`, `og:url` all emit apex - verified live. |
 | Backend | Hono on Workers, D1 (`hono_workers_db`), KV, R2. Custom domain `api.hafizbahtiar.com`. Migrations `001`–`009`, runner `scripts/migrate.js` tracks `schema_migrations`. |
 | Projects data | Flat `projects` table. `technologies`/`tags`/`features` stored as **JSON arrays inside columns**. No media gallery, no normalized tech, no sections, no links table. |
 | Public data flow | `src/lib/public-content.ts` fetches API with 4 s timeout + curated fallback from `src/data/portfolio-content.ts` (never throws, never empty). |

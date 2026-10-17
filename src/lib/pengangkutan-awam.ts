@@ -1,15 +1,15 @@
-// Live bus/train positions for /bas: data.gov.my GTFS Realtime (protobuf), decoded
-// by lib/gtfs-rt, route names from the generated src/data/bas-routes.ts.
+// Live bus/train positions for /pengangkutan-awam: data.gov.my GTFS Realtime (protobuf), decoded
+// by lib/gtfs-rt, route names from the generated src/data/pengangkutan-awam-routes.ts.
 // Positions are cached 20 s per feed (every viewer polls the same copy); the stored
 // copy lives only 2 minutes - an old bus position is worse than none.
 
-import { BAS_ROUTES } from "../data/bas-routes";
+import { BAS_ROUTES } from "../data/pengangkutan-awam-routes";
 import { withFallback } from "./fallback";
 import { decodeVehiclePositions } from "./gtfs-rt";
 
 const API = "https://api.data.gov.my/gtfs-realtime/vehicle-position/";
 
-/** Keep ids/paths in step with scripts/bas/feeds.py. */
+/** Keep ids/paths in step with scripts/pengangkutan-awam/feeds.py. */
 export const FEEDS = [
   { id: "rapid-bus-kl", label: "Rapid KL - bas", region: "Lembah Klang", path: "prasarana?category=rapid-bus-kl" },
   { id: "rapid-bus-mrtfeeder", label: "Rapid KL - bas perantara MRT", region: "Lembah Klang", path: "prasarana?category=rapid-bus-mrtfeeder" },
@@ -34,7 +34,7 @@ export interface BusPosition {
   lng: number;
   /** Route riders know ("300"); "-" when the feed sends none. */
   route: string;
-  /** GTFS route_id ("U3000") - names the route-line file public/data/bas/<feed>/<routeId>.json. */
+  /** GTFS route_id ("U3000") - names the route-line file public/data/pengangkutan-awam/<feed>/<routeId>.json. */
   routeId: string;
   routeName: string;
   plate: string;

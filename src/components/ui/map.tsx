@@ -164,12 +164,13 @@ type MapProps = {
 
 type MapRef = MapLibreGL.Map;
 
+// Skeleton over the map box until MapLibre has loaded its style.
 const DefaultLoader = () => (
-  <div className="absolute inset-0 flex items-center justify-center">
+  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 motion-safe:animate-pulse dark:bg-gray-900" aria-hidden="true">
     <div className="flex gap-1">
-      <span className="size-1.5 rounded-full bg-gray-400/60 animate-pulse" />
-      <span className="size-1.5 rounded-full bg-gray-400/60 animate-pulse [animation-delay:150ms]" />
-      <span className="size-1.5 rounded-full bg-gray-400/60 animate-pulse [animation-delay:300ms]" />
+      <span className="size-1.5 rounded-full bg-gray-400/60" />
+      <span className="size-1.5 rounded-full bg-gray-400/60" />
+      <span className="size-1.5 rounded-full bg-gray-400/60" />
     </div>
   </div>
 );
@@ -395,6 +396,8 @@ type MapMarkerProps = {
   onDrag?: (lngLat: { lng: number; lat: number }) => void;
   /** Callback when marker drag ends (requires draggable: true) */
   onDragEnd?: (lngLat: { lng: number; lat: number }) => void;
+  /** Glide to a new position over this many ms instead of jumping (live vehicles). Off under reduced motion. */
+  moveDuration?: number;
 } & Omit<MarkerOptions, "element">;
 
 function MapMarker({
@@ -408,6 +411,7 @@ function MapMarker({
   onDrag,
   onDragEnd,
   draggable = false,
+  moveDuration = 0,
   ...markerOptions
 }: MapMarkerProps) {
   const { map } = useMap();
@@ -484,13 +488,28 @@ function MapMarker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map]);
 
+  // Position: jump, or glide (ease-out) from wherever the marker is now.
+  const moveFrame = useRef(0);
   useLayoutEffect(() => {
-    if (
-      marker.getLngLat().lng !== longitude ||
-      marker.getLngLat().lat !== latitude
-    ) {
+    const from = marker.getLngLat();
+    if (from.lng === longitude && from.lat === latitude) return;
+    cancelAnimationFrame(moveFrame.current);
+    if (!moveDuration || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       marker.setLngLat([longitude, latitude]);
+      return;
     }
+    const start = performance.now();
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / moveDuration);
+      const e = t * (2 - t);
+      marker.setLngLat([from.lng + (longitude - from.lng) * e, from.lat + (latitude - from.lat) * e]);
+      if (t < 1) moveFrame.current = requestAnimationFrame(step);
+    };
+    moveFrame.current = requestAnimationFrame(step);
+  }, [marker, longitude, latitude, moveDuration]);
+  useEffect(() => () => cancelAnimationFrame(moveFrame.current), []);
+
+  useLayoutEffect(() => {
     if (marker.isDraggable() !== draggable) {
       marker.setDraggable(draggable);
     }

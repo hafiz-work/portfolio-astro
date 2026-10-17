@@ -1,4 +1,4 @@
-# Keep in step with FEEDS in src/lib/bas.ts (id + static path).
+# Keep in step with FEEDS in src/lib/pengangkutan-awam.ts (id + static path).
 FEEDS = [
     {"id": "rapid-bus-kl", "static": "prasarana?category=rapid-bus-kl"},
     {"id": "rapid-bus-mrtfeeder", "static": "prasarana?category=rapid-bus-mrtfeeder"},

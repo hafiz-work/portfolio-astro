@@ -149,6 +149,8 @@ document.addEventListener("astro:before-preparation", (ev) => {
   if (reduced() || !canvas()) return;
   if (SKIP.test(e.from.pathname) || SKIP.test(e.to.pathname)) return;
   if (e.from.pathname === e.to.pathname) return; // in-page hash scroll, nothing swaps
+  // Showcase <-> app: the card title morphs into the page h1 instead (PublicLayout).
+  if (e.from.pathname === "/showcase" || e.to.pathname === "/showcase") return;
   lastDir = pick(e);
   const load = e.loader;
   e.loader = async () => {

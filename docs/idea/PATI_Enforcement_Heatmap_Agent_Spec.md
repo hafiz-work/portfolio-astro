@@ -277,7 +277,7 @@ GET /api/v1/pati/events?from=2025-01-01&to=2025-12-31&state=Selangor&district=Pe
   added to the navbar; link them from the related project page in `/projects`
   instead, so the portfolio stays the entry point.
 - The sitemap picks the page up automatically once it is prerendered; keep it
-  out (add to `SITEMAP_EXCLUDE` in `astro.config.mjs`) until the data is reviewed.
+  out (add to `SITEMAP_EXCLUDE` in `astro.config.ts`) until the data is reviewed.
 - Keep sub-project code in its own folders so it can be moved out later without
   surgery: `src/pages/{sub-project}/`, `src/components/{sub-project}/`,
   `src/data/{sub-project}/`.

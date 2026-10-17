@@ -1,4 +1,3 @@
-// @ts-check
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
@@ -10,12 +9,11 @@ import cloudflare from '@astrojs/cloudflare';
 // (e.g. offline local build) just means a shorter sitemap, never a failed build.
 const SITE = 'https://hafizbahtiar.com';
 const API = 'https://api.hafizbahtiar.com/api/v1';
-/** @param {string} path @param {string} prefix @returns {Promise<string[]>} */
-const slugsFrom = async (path, prefix) => {
+const slugsFrom = async (path: string, prefix: string): Promise<string[]> => {
   try {
     const res = await fetch(`${API}/${path}`, { signal: AbortSignal.timeout(8000) });
     const { data } = await res.json();
-    return (Array.isArray(data) ? data : []).map((item) => `${SITE}${prefix}${item.slug}`);
+    return (Array.isArray(data) ? data : []).map((item: { slug: string }) => `${SITE}${prefix}${item.slug}`);
   } catch {
     return [];
   }

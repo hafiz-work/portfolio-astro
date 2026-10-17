@@ -4,6 +4,7 @@ import Navbar from "../components/layout/Navbar.astro";
 import Footer from "../components/layout/Footer.astro";
 import Background from "../components/layout/Background.astro";
 import MobileTabBar from "../components/layout/MobileTabBar.astro";
+import Alert from "../components/ui/Alert.astro";
 
 interface Props {
   title?: string;
@@ -38,6 +39,12 @@ const { title, description, image, type, publishedTime, imageAlt, noindex } =
     <div class="gutter gutter-left" aria-hidden="true"></div>
     <div class="page-col">
       <main class="grow">
+        <!-- Shown only when public/sw.js served this page from its cache (html[data-salinan]). -->
+        <div class="offline-copy line-y mt-8">
+          <Alert variant="warning" class="m-2">
+            <p>Anda di luar talian - ini salinan terakhir yang disimpan.</p>
+          </Alert>
+        </div>
         <slot />
       </main>
       <Footer />
@@ -53,8 +60,53 @@ const { title, description, image, type, publishedTime, imageAlt, noindex } =
 </CoreLayout>
 
 <script>
+  import type {
+    TransitionBeforePreparationEvent,
+    TransitionBeforeSwapEvent,
+  } from "astro:transitions/client";
   import { isResumePdfHref, trackResumeDownload } from "../lib/track";
   import "../lib/pixel-swipe";
+
+  // Offline copy of the Showcase apps (public/sw.js). Production only: in dev it
+  // would cache Vite's unbundled pages.
+  if (import.meta.env.PROD && "serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  } else if (import.meta.env.DEV) {
+    // `npm run preview` shares localhost:4321 - don't let its worker linger in dev.
+    navigator.serviceWorker
+      ?.getRegistrations()
+      .then((rs) => rs.forEach((r) => r.unregister()));
+  }
+
+  // Showcase <-> app: the card title morphs into the app's h1 (index.css names
+  // that h1 `app-title`). Names must be unique, so only the card for the other end
+  // of the navigation gets it. Lives here, not on /showcase, so Back works on a
+  // first visit that started on the app page.
+  const nameCard = (doc: Document, path: string) => {
+    doc.querySelectorAll<HTMLElement>("[data-app-card] h2").forEach((h) => {
+      h.style.viewTransitionName =
+        h.closest("a")?.getAttribute("href") === path ? "app-title" : "";
+    });
+  };
+  document.addEventListener("astro:before-preparation", (ev) => {
+    const e = ev as TransitionBeforePreparationEvent;
+    if (e.from.pathname === "/showcase") nameCard(document, e.to.pathname);
+
+    // Waktu Solat without ?zone= opens the zone picked last time (saved by the
+    // page itself); a hard load is handled by the page's inline script.
+    if (e.to.pathname === "/waktu-solat" && !e.to.searchParams.has("zone")) {
+      try {
+        const z = localStorage.getItem("waktu-solat-zone");
+        if (z && /^[A-Z]{3}\d{2}$/.test(z)) e.to.searchParams.set("zone", z);
+      } catch {
+        // storage blocked: default zone
+      }
+    }
+  });
+  document.addEventListener("astro:before-swap", (ev) => {
+    const e = ev as TransitionBeforeSwapEvent;
+    if (e.to.pathname === "/showcase") nameCard(e.newDocument, e.from.pathname);
+  });
 
   // Scroll-reveal: elements with [data-reveal] slide up when entering the
   // viewport. CSS handles prefers-reduced-motion (elements stay visible).

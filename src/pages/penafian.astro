@@ -6,7 +6,7 @@ import PublicLayout from "../layouts/PublicLayout.astro";
 
 // Full disclaimer for the Showcase apps. Each app page shows the short version
 // (src/components/ui/Disclaimer.astro) and links here - keep the two in step.
-const UPDATED = "14 Oktober 2026";
+const UPDATED = "17 Oktober 2026";
 
 const SOURCES: {
   app: string;
@@ -103,6 +103,15 @@ const SOURCES: {
         name: "Jabatan Alam Sekitar - APIMS",
         href: "https://eqms.doe.gov.my/APIMS/main",
       },
+      {
+        name: "Jabatan Meteorologi Malaysia (MET) melalui data.gov.my - ramalan cuaca lokasi MET terdekat",
+        href: "https://www.met.gov.my",
+      },
+      {
+        name: "Open-Meteo (CC BY 4.0)",
+        href: "https://open-meteo.com",
+        note: '"Anggaran sekarang" dalam panel stesen - model cuaca global, bukan cerapan rasmi',
+      },
     ],
   },
   {
@@ -121,7 +130,7 @@ const SOURCES: {
     ],
   },
   {
-    app: "Bas Langsung",
+    app: "Pengangkutan Awam",
     items: [
       {
         name: "data.gov.my - GTFS Realtime dan GTFS statik",

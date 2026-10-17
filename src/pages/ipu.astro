@@ -5,12 +5,32 @@ export const prerender = false;
 import GridFillers from "../components/ui/GridFillers.astro";
 import TechHeading from "../components/layout/TechHeading.astro";
 import Combobox from "../components/ui/Combobox.astro";
-import PointsMap, { type MapPoint } from "../components/ui/PointsMap";
+import IpuMap, { type IpuPoint } from "../components/ipu/IpuMap";
 import PublicLayout from "../layouts/PublicLayout.astro";
-import { BANDS, bandOf, getReadings, type Station } from "../lib/ipu";
+import { BANDS, bandOf, getReadings, getTrend, sparkline, type Station } from "../lib/ipu";
+import { PERIOD_LABEL, cuacaAt, getNowAt, getTodayAll, metDayAt, periodAt } from "../lib/cuaca";
+import { todayMY } from "../lib/ramalan-cuaca";
 
-const data = await getReadings();
+// Weather is MET's forecast for this part of the day at the nearest MET location
+// (lib/cuaca) - a forecast, not a rain reading. The page renders without it.
+const hourMY = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kuala_Lumpur", hour: "numeric", hourCycle: "h23" }).format(new Date()));
+const period = periodAt(hourMY);
+const readings = getReadings();
+const [data, met, now, trend] = await Promise.all([
+  readings,
+  getTodayAll(todayMY()),
+  readings.then((d) => getNowAt("ipu", d?.stations ?? [])),
+  getTrend(),
+]);
+const cuaca = (s: Station) => (met ? cuacaAt(met, s.lat, s.lng, period) : null);
+const wet = (s: Station) => {
+  const sky = cuaca(s)?.sky;
+  return sky === "ribut" ? "rain rain-storm" : sky === "hujan" ? "rain" : null;
+};
 const stations = data?.stations ?? [];
+// ?stesen= deep link: only an id from the station list reaches the island.
+const stesen = Astro.url.searchParams.get("stesen");
+const initialId = stations.some((s) => s.id === stesen) ? stesen! : undefined;
 const latest = Math.max(0, ...stations.map((s) => s.time).filter(Number.isFinite));
 const readingTime = latest
   ? new Intl.DateTimeFormat("ms-MY", {
@@ -26,6 +46,7 @@ const readingTime = latest
 const states = [...new Set(stations.map((s) => s.state))].sort((a, b) => a.localeCompare(b));
 const byState = (state: string) =>
   stations.filter((s) => s.state === state).sort((a, b) => a.location.localeCompare(b.location));
+const rainy = stations.filter((s) => wet(s)).length;
 const counts = BANDS.map((b) => ({ ...b, n: stations.filter((s) => bandOf(s.api)?.tone === b.tone).length }));
 
 // JAS's colour scale, with the site's sky in place of JAS blue (STYLE.md: no blue).
@@ -45,7 +66,11 @@ const markerClass = (s: Station) => {
   if (!band) return "bg-gray-400 text-white";
   return `${TONE[band.tone]} ${band.tone === "tidak-sihat" ? "text-gray-950" : "text-white"}`;
 };
-const points: MapPoint[] = stations.map((s) => ({
+const FILTER_BTN =
+  "flex items-center gap-2 rounded-full px-3 py-1 ring-1 ring-gray-950/10 hover:bg-gray-950/5 aria-pressed:bg-sky-500/10 aria-pressed:ring-sky-500 dark:ring-white/10 dark:hover:bg-white/5 dark:aria-pressed:bg-sky-400/10 dark:aria-pressed:ring-sky-400";
+const timeOf = (t: number) =>
+  Number.isFinite(t) ? new Intl.DateTimeFormat("ms-MY", { timeZone: "UTC", hour: "numeric", minute: "2-digit" }).format(new Date(t)) : "-";
+const points: IpuPoint[] = stations.map((s) => ({
   id: s.id,
   lat: s.lat,
   lng: s.lng,
@@ -54,6 +79,16 @@ const points: MapPoint[] = stations.map((s) => ({
   detail: s.api == null ? "Tiada bacaan" : `IPU ${s.api} · ${bandOf(s.api)!.label}${s.pollutant ? ` · ${s.pollutant}` : ""}`,
   badge: s.api ?? "-",
   markerClass: markerClass(s),
+  extra: cuaca(s) ? `${PERIOD_LABEL[period]}: ${cuaca(s)!.text} (ramalan MET, ${cuaca(s)!.place})` : undefined,
+  effect: cuaca(s)?.sky === "ribut" ? "storm" : cuaca(s)?.sky === "hujan" ? "rain" : undefined,
+  api: s.api,
+  band: bandOf(s.api)?.label ?? null,
+  pollutant: s.pollutant,
+  time: timeOf(s.time),
+  met: met ? metDayAt(met, s.lat, s.lng) : null,
+  now: now?.[s.id] ?? null,
+  tone: bandOf(s.api)?.tone ?? null,
+  trend: trend?.stations[s.id] ? sparkline(trend.stations[s.id], 100, 32) : null,
 }));
 ---
 
@@ -80,6 +115,11 @@ const points: MapPoint[] = stations.map((s) => ({
             Bacaan {readingTime}
             {data?.stale && " · data simpanan"}
           </p>
+          {met && (
+            <p class="mx-2 mt-1 text-sm/6 text-gray-600 dark:text-gray-400">
+              Cuaca {PERIOD_LABEL[period].toLowerCase()}: {rainy ? `${rainy} stesen dijangka hujan atau ribut petir` : "tiada hujan dijangka di kawasan stesen"} (ramalan MET Malaysia).
+            </p>
+          )}
         </div>
       )
     }
@@ -99,21 +139,29 @@ const points: MapPoint[] = stations.map((s) => ({
           </div>
 
           <div class="line-y mt-4">
-            <ul class="mx-2 flex flex-wrap gap-x-5 gap-y-2 text-sm/6" aria-label="Bilangan stesen mengikut kategori">
+            <!-- Band filter for the map and the list (none pressed = all); script below. -->
+            <ul id="ipu-filter" class="mx-2 flex flex-wrap gap-2 text-sm/6" aria-label="Tapis stesen mengikut kategori">
+              <li>
+                <button type="button" data-tone="" aria-pressed="true" class={FILTER_BTN}>
+                  Semua <span class="text-gray-500 tabular-nums">· {stations.length}</span>
+                </button>
+              </li>
               {counts.map((b) => (
-                <li class="flex items-center gap-2">
-                  <span class:list={["size-2.5 rounded-full", TONE[b.tone]]} aria-hidden="true" />
-                  {b.label}
-                  <span class="text-gray-500 tabular-nums">
-                    {b.max === Infinity ? ">300" : `≤${b.max}`} · {b.n} stesen
-                  </span>
+                <li>
+                  <button type="button" data-tone={b.tone} aria-pressed="false" class={FILTER_BTN}>
+                    <span class:list={["size-2.5 rounded-full", TONE[b.tone]]} aria-hidden="true" />
+                    {b.label}
+                    <span class="text-gray-500 tabular-nums">
+                      {b.max === Infinity ? ">300" : `≤${b.max}`} · {b.n} stesen
+                    </span>
+                  </button>
                 </li>
               ))}
             </ul>
           </div>
 
           <div class="line-y mt-10">
-            <div role="tablist" aria-label="Paparan" class="mx-2 inline-flex gap-1 rounded-full bg-gray-950/5 p-1 dark:bg-white/10">
+            <div id="ipu-tabs" role="tablist" aria-label="Paparan" class="mx-2 inline-flex gap-1 rounded-full bg-gray-950/5 p-1 dark:bg-white/10">
               {[
                 ["peta", "Peta"],
                 ["senarai", "Senarai"],
@@ -122,7 +170,7 @@ const points: MapPoint[] = stations.map((s) => ({
                   type="button"
                   role="tab"
                   id={`tab-${id}`}
-                  data-tab={id}
+                  data-ipu-tab={id}
                   aria-controls={`panel-${id}`}
                   aria-selected={i === 0 ? "true" : "false"}
                   class="rounded-full px-4 py-1.5 text-sm/6 font-medium text-gray-600 aria-selected:bg-white aria-selected:text-gray-950 aria-selected:shadow-sm dark:text-gray-400 dark:aria-selected:bg-gray-950 dark:aria-selected:text-white"
@@ -135,13 +183,13 @@ const points: MapPoint[] = stations.map((s) => ({
 
           <div id="panel-peta" role="tabpanel" aria-labelledby="tab-peta" class="line-y mt-4">
             <div class="h-[70vh] max-h-180 min-h-96 overflow-hidden">
-              <PointsMap client:only="react" points={points} fallbackLabel="Peta tak dapat dipapar di peranti ini" />
+              <IpuMap client:only="react" points={points} period={period} initialId={initialId} />
             </div>
           </div>
 
           <div id="panel-senarai" role="tabpanel" aria-labelledby="tab-senarai" hidden>
           {states.map((state) => (
-            <>
+            <div data-ipu-state>
               <div class="line-y mt-10">
                 <p class="eyebrow mx-2">{state}</p>
               </div>
@@ -155,8 +203,14 @@ const points: MapPoint[] = stations.map((s) => ({
                         data-lat={s.lat}
                         data-lng={s.lng}
                         data-name={town(s)}
-                        class="scroll-offset flex items-center gap-4 bg-white px-4 py-4 data-nearest:bg-sky-500/5 data-nearest:ring-2 data-nearest:ring-sky-500 data-nearest:ring-inset sm:px-6 dark:bg-gray-950 dark:data-nearest:bg-sky-400/10"
+                        data-tone={band?.tone ?? ""}
+                        class:list={[wet(s), "scroll-offset bg-white data-nearest:bg-sky-500/5 data-nearest:ring-2 data-nearest:ring-sky-500 data-nearest:ring-inset dark:bg-gray-950 dark:data-nearest:bg-sky-400/10"]}
                       >
+                        <button
+                          type="button"
+                          data-ipu-show={s.id}
+                          class="flex size-full items-center gap-4 px-4 py-4 text-left hover:bg-gray-950/2.5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sky-500 sm:px-6 dark:hover:bg-white/5"
+                        >
                         <span
                           class:list={[
                             "flex size-14 shrink-0 items-center justify-center rounded-xl text-xl font-semibold tabular-nums",
@@ -172,14 +226,21 @@ const points: MapPoint[] = stations.map((s) => ({
                             {band ? band.label : "Tiada bacaan"}
                             {s.pollutant && <span class="text-gray-500"> · {s.pollutant}</span>}
                           </p>
+                          {cuaca(s) && (
+                            <p class="text-xs/5 text-gray-600 dark:text-gray-300">
+                              {PERIOD_LABEL[period]}: {cuaca(s)!.text}
+                            </p>
+                          )}
+                          <span class="sr-only">, lihat di peta</span>
                         </div>
+                        </button>
                       </li>
                     );
                   })}
                   <GridFillers count={byState(state).length} />
                 </ul>
               </div>
-            </>
+            </div>
           ))}
           </div>
 
@@ -195,7 +256,7 @@ const points: MapPoint[] = stations.map((s) => ({
                 {data!.source}
               </a>
               {data!.stale && " (data simpanan - JAS tak dapat dicapai sekarang)"}. Bacaan dikemas kini setiap jam.
-              Kategori ikut julat IPU JAS: 0-50 Baik, 51-100 Sederhana, 101-200 Tidak sihat, 201-300 Sangat
+              Cuaca ialah ramalan MET Malaysia bagi lokasi MET terdekat (pagi/petang/malam), bukan bacaan hujan sebenar; "Anggaran sekarang" dalam panel stesen datang daripada model global Open-Meteo. Kategori ikut julat IPU JAS: 0-50 Baik, 51-100 Sederhana, 101-200 Tidak sihat, 201-300 Sangat
               tidak sihat, lebih 300 Berbahaya.
             </p>
           </div>
@@ -218,7 +279,7 @@ const points: MapPoint[] = stations.map((s) => ({
       )
     }
     <div class="line-y mt-6">
-      <Disclaimer class="mx-2" sources={[{ name: "Jabatan Alam Sekitar (APIMS)", href: "https://eqms.doe.gov.my/APIMS/main" }]}>
+      <Disclaimer class="mx-2" sources={[{ name: "Jabatan Alam Sekitar (APIMS)", href: "https://eqms.doe.gov.my/APIMS/main" }, { name: "MET Malaysia (ramalan cuaca)", href: "https://www.met.gov.my" }, { name: "Open-Meteo (CC BY 4.0, anggaran)", href: "https://open-meteo.com" }]}>
         <Fragment set:html={`Bacaan IPU <strong>bukan nasihat perubatan</strong>. Kanak-kanak, warga emas dan pesakit asma, paru-paru atau jantung patut mengikut nasihat Kementerian Kesihatan Malaysia.`} />
       </Disclaimer>
     </div>
@@ -301,6 +362,7 @@ const points: MapPoint[] = stations.map((s) => ({
           let best: HTMLElement | null = null;
           let bestKm = Infinity;
           for (const s of stations) {
+            if (s.hidden) continue; // hidden by the band filter
             const km = distanceKm(coords.latitude, coords.longitude, Number(s.dataset.lat), Number(s.dataset.lng));
             if (km < bestKm) [best, bestKm] = [s, km];
           }
@@ -319,21 +381,22 @@ const points: MapPoint[] = stations.map((s) => ({
   };
   // Peta (default) / Senarai tabs; #senarai opens the list directly.
   const initTabs = () => {
-    const tabs = [...document.querySelectorAll<HTMLButtonElement>("[data-tab]")];
+    const tabs = [...document.querySelectorAll<HTMLButtonElement>("#ipu-tabs [data-ipu-tab]")];
     if (!tabs.length || tabs[0].dataset.bound === "1") return;
     const show = (id: string) => {
       for (const t of tabs) {
-        const on = t.dataset.tab === id;
+        const on = t.dataset.ipuTab === id;
         t.setAttribute("aria-selected", String(on));
         t.tabIndex = on ? 0 : -1;
-        document.getElementById(`panel-${t.dataset.tab}`)!.hidden = !on;
+        document.getElementById(`panel-${t.dataset.ipuTab}`)!.hidden = !on;
       }
     };
     for (const t of tabs) {
       t.dataset.bound = "1";
       t.addEventListener("click", () => {
-        show(t.dataset.tab!);
-        history.replaceState(history.state, "", t.dataset.tab === "peta" ? location.pathname : "#senarai");
+        show(t.dataset.ipuTab!);
+        // Keep ?stesen= (the selected station) either way.
+        history.replaceState(history.state, "", t.dataset.ipuTab === "peta" ? location.pathname + location.search : "#senarai");
       });
       t.addEventListener("keydown", (e) => {
         if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
@@ -370,7 +433,52 @@ const points: MapPoint[] = stations.map((s) => ({
     });
   };
 
+  // List card -> Peta tab with that station selected (PointsMap hears points-map:focus).
+  const initShow = () => {
+    const list = document.getElementById("panel-senarai");
+    if (!list || list.dataset.bound === "1") return;
+    list.dataset.bound = "1";
+    list.addEventListener("click", (e) => {
+      const id = (e.target as Element).closest<HTMLElement>("[data-ipu-show]")?.dataset.ipuShow;
+      if (!id) return;
+      document.getElementById("tab-peta")?.click();
+      const map = document.getElementById("panel-peta")!;
+      map.scrollIntoView({ behavior: "smooth", block: "center" });
+      // After the panel is visible, so the map has its size before it flies.
+      requestAnimationFrame(() => window.dispatchEvent(new CustomEvent("points-map:focus", { detail: { id } })));
+    });
+  };
+
+  // Band filter: pressed bands show (none = all) on the map (ipu:filter) and in the list.
+  const initFilter = () => {
+    const bar = document.getElementById("ipu-filter");
+    if (!bar || bar.dataset.bound === "1") return;
+    bar.dataset.bound = "1";
+    const buttons = [...bar.querySelectorAll<HTMLButtonElement>("button[data-tone]")];
+    const on = new Set<string>();
+    bar.addEventListener("click", (e) => {
+      const tone = (e.target as Element).closest<HTMLButtonElement>("button[data-tone]")?.dataset.tone;
+      if (tone == null) return;
+      if (!tone) on.clear();
+      else if (!on.delete(tone)) on.add(tone);
+      for (const b of buttons) b.setAttribute("aria-pressed", String(b.dataset.tone ? on.has(b.dataset.tone) : !on.size));
+      for (const state of document.querySelectorAll<HTMLElement>("[data-ipu-state]")) {
+        let shown = 0;
+        for (const li of state.querySelectorAll<HTMLElement>("li[data-tone]")) {
+          li.hidden = on.size > 0 && !on.has(li.dataset.tone!);
+          if (!li.hidden) shown++;
+        }
+        state.hidden = !shown;
+        // Fillers are sized for the full list; drop them while filtered.
+        for (const f of state.querySelectorAll<HTMLElement>("li.pattern")) f.style.display = on.size ? "none" : "";
+      }
+      window.dispatchEvent(new CustomEvent("ipu:filter", { detail: { tones: [...on] } }));
+    });
+  };
+
   const init = () => {
+    initShow();
+    initFilter();
     initEmbed();
     initTabs();
     initLocate();

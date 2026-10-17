@@ -1,5 +1,5 @@
 // Minimal GTFS Realtime (protobuf) reader for vehicle positions - just the fields
-// /bas shows, no protobuf library. Wire format: each field is a varint key
+// /pengangkutan-awam shows, no protobuf library. Wire format: each field is a varint key
 // (field number << 3 | wire type); types used by GTFS-RT: 0 varint, 1 fixed64,
 // 2 length-delimited (strings, nested messages), 5 fixed32 (floats).
 // Spec: https://gtfs.org/realtime/reference/  Check: bun scripts/check-gtfs-rt.ts

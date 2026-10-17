@@ -138,7 +138,7 @@ import { TextEditor } from "../../../components/ui/TextEditor";
     const urlParams = new URLSearchParams(window.location.search);
     const projectId = Number(urlParams.get("id"));
     const tabButtons = Array.from(
-      document.querySelectorAll<HTMLButtonElement>("[data-tab]"),
+      document.querySelectorAll<HTMLButtonElement>("[role=tab][data-tab]"),
     );
     const tabPanels = Array.from(
       document.querySelectorAll<HTMLElement>("[data-tab-panel]"),

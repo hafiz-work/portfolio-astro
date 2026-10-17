@@ -254,7 +254,7 @@ const points: MapPoint[] = quakes.map((q) => ({
   // Peta (default) / Senarai tabs; #senarai opens the list directly.
   const initTabs = () => {
     const tabs = [
-      ...document.querySelectorAll<HTMLButtonElement>("[data-tab]"),
+      ...document.querySelectorAll<HTMLButtonElement>("[role=tab][data-tab]"),
     ];
     if (!tabs.length || tabs[0].dataset.bound === "1") return;
     const show = (id: string) => {

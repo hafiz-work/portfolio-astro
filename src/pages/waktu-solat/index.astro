@@ -16,6 +16,9 @@ import {
 import { getDailyReminder } from "../../lib/peringatan";
 
 const zone = resolveZone(Astro.url.searchParams.get("zone"));
+// Remember the zone (inline script below): only a zone the URL asked for is saved.
+const pickedZone = Astro.url.searchParams.has("zone") ? zone.code : null;
+const defaultZone = resolveZone(null).code;
 const today = todayInMalaysia();
 const [times, reminder] = await Promise.all([
   getPrayerTimes(zone.code),
@@ -72,6 +75,23 @@ const rows = day
   title="Waktu Solat Malaysia Hari Ini | Hafiz Bahtiar"
   description="Waktu solat hari ini untuk setiap zon JAKIM di Malaysia - Subuh, Zohor, Asar, Maghrib dan Isyak. Data rasmi e-solat JAKIM."
 >
+  <!-- Last picked zone: saved when the URL has ?zone=, reopened on a bare /waktu-solat.
+       Inline so a hard load redirects before the page paints; ClientRouter visits
+       get ?zone= added up front in PublicLayout. A bad saved zone just resolves to
+       the default server-side and is overwritten - no loop. -->
+  <script is:inline define:vars={{ pickedZone, defaultZone }}>
+    try {
+      const key = "waktu-solat-zone";
+      if (pickedZone) localStorage.setItem(key, pickedZone);
+      else {
+        const saved = localStorage.getItem(key);
+        if (saved && saved !== defaultZone && /^[A-Z]{3}\d{2}$/.test(saved))
+          location.replace(`?zone=${saved}${location.hash}`);
+      }
+    } catch {
+      // storage blocked: default zone
+    }
+  </script>
   <div class="relative mx-auto mt-8 max-lg:max-w-2xl sm:mt-24">
     <BackLink />
     <div class="line-y">

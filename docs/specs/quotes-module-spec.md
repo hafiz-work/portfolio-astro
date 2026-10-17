@@ -392,7 +392,7 @@ Template copy map:
 | `Navbar.astro` | add `{ text: "Quotes", href: "/quotes", reload: false, spy: "quotes" }` after Blog; extend the active-link check with a `/quotes` branch (mirrors the `/blog` branch) |
 | `Footer.astro` | "Writing" column: add `{ text: "Quotes", href: "/quotes" }` |
 | `CommandPalette.astro` | Pages: add `{ label: "Quotes", hint: "/quotes", href: "/quotes", keywords: "quotes sayings anime books history" }` |
-| `astro.config.mjs` | none |
+| `astro.config.ts` | none |
 | `src/middleware.ts` | none - the `/admin/*` guard already covers both admin routes |
 
 `Quote` and `Tags` icons exist in lucide-react (same import block as the other sidebar icons).

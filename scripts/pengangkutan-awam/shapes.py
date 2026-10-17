@@ -1,20 +1,21 @@
-"""Route lines for /bas: GTFS static shapes (data.gov.my) -> static JSON in public/.
+"""Route lines for /pengangkutan-awam: GTFS static shapes (data.gov.my) -> static JSON in public/.
 
-  public/data/bas/<feed>/<route_id>.json  - [[ [lng, lat], ... ], ...] one line per shape
-  public/data/rel.json                    - Rapid KL rail network: lines (colour, shapes,
+  public/data/pengangkutan-awam/<feed>/<route_id>.json  - [[ [lng, lat], ... ], ...] one line per shape
+  public/data/pengangkutan-awam/rel.json                    - Rapid KL rail network: lines (colour, shapes,
                                             scheduled headway) + stations
 
-Static files (served from the CDN, no Worker) fetched by the /bas island only when a
+Static files (served from the CDN, no Worker) fetched by the /pengangkutan-awam island only when a
 route or the rail view is picked. Shapes are simplified (Douglas-Peucker, ~3 m) and
 rounded to 5 decimals (~1 m). Re-run with routes.py when operators change routes:
 
-    python3 scripts/bas/shapes.py
+    python3 scripts/pengangkutan-awam/shapes.py
 """
 
 import csv
 import io
 import json
 import pathlib
+import re
 import shutil
 import urllib.request
 import zipfile
@@ -83,7 +84,7 @@ def route_shapes(z):
 
 
 # Bus (and any feed with shapes): one file per route.
-shutil.rmtree(OUT / "bas", ignore_errors=True)
+shutil.rmtree(OUT / "pengangkutan-awam", ignore_errors=True)
 for feed in FEEDS:
     try:
         z = load(feed["static"])
@@ -91,11 +92,28 @@ for feed in FEEDS:
         print(f"{feed['id']}: skipped ({e})")
         continue
     lines = route_shapes(z)
-    d = OUT / "bas" / feed["id"]
+    d = OUT / "pengangkutan-awam" / feed["id"]
     d.mkdir(parents=True, exist_ok=True)
     for route_id, shapes in lines.items():
         (d / f"{route_id}.json").write_text(json.dumps(shapes, separators=(",", ":")))
     print(f"{feed['id']}: {len(lines)} routes with shapes")
+
+# Prasarana's stops.txt quirks: Kajang Line stops say route "MRT" (routes.txt: "KGL"),
+# sponsor names ride along on some stations and one interchange is spelt two ways -
+# so interchanges match by name, names are cleaned here.
+STOP_ROUTE = {"MRT": "KGL"}
+SPONSOR = (" - UOB", " - REDONE", " - CBP COOPBANK PERTAMA")
+SPELLING = {"USJ7": "USJ 7"}
+ACRONYMS = {"KL", "KLCC", "PWTC", "USJ", "UOB", "TRX", "IOI", "MRT", "LRT", "BRT", "KTM", "SA", "UITM", "PJ", "LRT3", "KPJ", "UPM"}
+
+
+def station_name(raw):
+    n = raw.strip().upper()
+    for s in SPONSOR:
+        n = n.removesuffix(s)
+    n = SPELLING.get(n, n)
+    return re.sub(r"[A-Z0-9']+", lambda m: m[0] if m[0] in ACRONYMS else m[0].title(), " ".join(n.split()))
+
 
 # Rapid KL rail: no live positions on data.gov.my, so the network itself.
 z = load("prasarana?category=rapid-rail-kl")
@@ -122,15 +140,15 @@ rel = {
     "stations": [
         {
             "id": s["stop_id"],
-            "name": s["stop_name"].strip().title(),
+            "name": station_name(s["stop_name"]),
             "lat": round(float(s["stop_lat"]), 6),
             "lng": round(float(s["stop_lon"]), 6),
-            "line": s["route_id"],
+            "line": STOP_ROUTE.get(s["route_id"], s["route_id"]),
             "oku": s.get("isOKU", "").lower() == "true",
         }
         for s in rows(z, "stops.txt")
         if s.get("status", "valid") == "valid"
     ],
 }
-(OUT / "rel.json").write_text(json.dumps(rel, separators=(",", ":"), ensure_ascii=False))
+(OUT / "pengangkutan-awam" / "rel.json").write_text(json.dumps(rel, separators=(",", ":"), ensure_ascii=False))
 print(f"rel: {len(rel['lines'])} lines, {len(rel['stations'])} stations, {sum(len(l['shapes']) for l in rel['lines'])} shapes")

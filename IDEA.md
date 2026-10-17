@@ -8,7 +8,7 @@ app gets its own top-level route and one entry in the `apps` array
 
 Data sources below were checked on 2026-10-11; ideas 14-19 checked on 2026-10-14. Done and removed: IPU (`/ipu`), Widget Waktu Solat (`/waktu-solat/embed`), Kompas Kiblat
 (`/kiblat`), Mod Ramadan (Paparan Masjid), Amaran Cuaca, Gempa Bumi, Tarikh Hijri, OPR, cuaca on
-Paparan Masjid, Graf Harga Minyak, garisan kiblat pada peta, Widget IPU. Nombor Kecemasan (`/kecemasan`), Jadual Imsakiah (`/waktu-solat/imsakiah`), Bas Langsung (`/bas`),
+Paparan Masjid, Graf Harga Minyak, garisan kiblat pada peta, Widget IPU. Nombor Kecemasan (`/kecemasan`), Jadual Imsakiah (`/waktu-solat/imsakiah`), Pengangkutan Awam (`/pengangkutan-awam`),
 Kalkulator Bil Elektrik (`/kalkulator-bil-elektrik`), Kalkulator Cukai Jalan (`/kalkulator-cukai-jalan`),
 Takwim Persekolahan (`/takwim-sekolah`), Inflasi (`/inflasi`), Derma Darah (`/derma-darah`),
 Cuti Umum (`/cuti-umum`) - all 2026-10-14; see CLAUDE.md -> Showcase.

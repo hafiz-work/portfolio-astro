@@ -9,8 +9,8 @@ import Alert from "../components/ui/Alert.astro";
 // until there are enough of them (see CLAUDE.md -> Showcase).
 const apps = [
   {
-    title: "Bas Langsung",
-    href: "/bas",
+    title: "Pengangkutan Awam",
+    href: "/pengangkutan-awam",
     description:
       "Lokasi langsung bas Rapid KL, Rapid Penang dan myBAS setiap 30 saat, garisan laluan, dan peta LRT/MRT/Monorel.",
     tags: ["GTFS Realtime", "Peta", "14 operator"],
@@ -177,7 +177,7 @@ const apps = [
   >
     {
       apps.map((app) => (
-        <a href={app.href} class="frame group block">
+        <a href={app.href} class="frame group block" data-app-card>
           <div class="frame-inner h-full p-6 transition-colors group-hover:bg-gray-50 dark:group-hover:bg-white/5">
             <h2 class="text-xl font-medium tracking-tight text-gray-950 dark:text-white">
               {app.title}

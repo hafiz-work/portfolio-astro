@@ -1,7 +1,7 @@
 // bun scripts/check-gtfs-rt.ts - the hand-written protobuf reader against a feed
 // encoded here by hand (offline), plus the Malaysia filter.
 import { decodeVehiclePositions } from "../src/lib/gtfs-rt";
-import { inMalaysia } from "../src/lib/bas";
+import { inMalaysia } from "../src/lib/pengangkutan-awam";
 
 const varint = (n: number) => {
   const out: number[] = [];
