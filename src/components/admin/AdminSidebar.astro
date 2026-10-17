@@ -1,5 +1,6 @@
 ---
 import {
+  AppWindow,
   Briefcase,
   CircleUser,
   Folder,
@@ -100,6 +101,12 @@ const links = [
     icon: ShieldCheck,
   },
   {
+    text: "App Access",
+    href: "/admin/app-access",
+    perm: "roles.assign", // owner only: never grantable to another role
+    icon: AppWindow,
+  },
+  {
     text: "System Logs",
     href: "/admin/system",
     perm: "audit.read",
@@ -123,7 +130,7 @@ const groups = [
   { label: "Overview", items: links.slice(0, 1) },
   { label: "Content", items: links.slice(1, 9) },
   { label: "Inbox", items: links.slice(9, 11) }, // Contacts, Moderation
-  { label: "System", items: links.slice(11) }, // Users, Roles, System Logs, Settings, Profile
+  { label: "System", items: links.slice(11) }, // Users, Roles, App Access, System Logs, Settings, Profile
 ];
 
 const currentPath = Astro.url.pathname;
