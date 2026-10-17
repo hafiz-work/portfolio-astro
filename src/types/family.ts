@@ -96,5 +96,3 @@ export interface CreateFamilyRelationshipPayload {
   notes?: string | null;
 }
 
-export interface UpdateFamilyRelationshipPayload
-  extends Partial<CreateFamilyRelationshipPayload> { }

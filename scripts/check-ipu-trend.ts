@@ -1,10 +1,10 @@
 // bun scripts/check-ipu-trend.ts - APIMS trend rows -> 25 hourly slots, sparkline path.
+import { expect } from "bun:test";
 import { sparkline, toTrend, TREND_HOURS } from "../src/lib/ipu";
 
 const H = 3_600_000;
 const end = Date.UTC(2026, 9, 17, 0); // 00:00 "MYT as UTC"
-let fail = 0;
-const ok = (cond: boolean, msg: string) => (cond ? console.log("ok  ", msg) : (fail++, console.error("FAIL", msg)));
+const ok = (cond: boolean, msg: string) => (expect(cond, msg).toBe(true), console.log("ok  ", msg));
 
 const t = toTrend(
   [
@@ -32,5 +32,3 @@ ok(sp.min === 10 && sp.max === 30, "min/max");
 ok(sp.d === "M0.0,10.0M20.0,0.0L30.0,5.0", `gap breaks the line (${sp.d})`);
 ok(sparkline([5, null], 10, 10) === null, "one reading -> null");
 ok(sparkline([5, 5], 10, 10)!.d === "M0.0,10.0L10.0,10.0", "flat series stays in the box");
-
-if (fail) process.exit(1);

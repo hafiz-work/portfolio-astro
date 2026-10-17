@@ -3,6 +3,7 @@
 // publishes PDN's daily counts. The state dataset (`blood_donations_state`) has no API rows
 // (only a 12 MB CSV), so it is left out.
 import { getJson, withFallback } from "./fallback";
+import { formatIsoMs } from "./date-my";
 
 const DAYS = 30;
 // 5 rows a day ("all" + 4 blood types); one extra day so a short latest day still leaves 30.
@@ -56,12 +57,7 @@ export function parseDonations(rows: unknown): Donations | null {
 
 /** "2026-10-13" -> "13 Oktober 2026" (or "13 Okt" with `short`). */
 export const dayLabel = (ymd: string, short = false) =>
-  new Intl.DateTimeFormat("ms-MY", {
-    timeZone: "UTC",
-    day: "numeric",
-    month: short ? "short" : "long",
-    ...(short ? {} : { year: "numeric" }),
-  }).format(new Date(`${ymd}T00:00:00Z`));
+  formatIsoMs(ymd, { day: "numeric", month: short ? "short" : "long", ...(short ? {} : { year: "numeric" }) });
 
 export async function getDonations(): Promise<(Donations & { source: string; stale: boolean }) | null> {
   const got = await withFallback<Donations>(

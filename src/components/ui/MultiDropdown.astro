@@ -30,10 +30,7 @@ const {
   class={`tech-multi-dropdown-container space-y-2 ${className}`}
   data-name={name}
 >
-  <label
-    class="admin-label"
-    for={inputId}
-  >
+  <label class="admin-label" for={inputId}>
     {label}
   </label>
   <div class="relative">
@@ -46,19 +43,14 @@ const {
       data-placeholder={placeholder}
     />
 
-    <button
-      type="button"
-      class="dropdown-trigger field field-trigger"
-    >
-      <span
-        class="selected-text truncate text-gray-400 dark:text-gray-500"
-      >
+    <button type="button" class="dropdown-trigger field field-trigger">
+      <span class="selected-text truncate text-gray-400 dark:text-gray-500">
         {placeholder}
       </span>
-      <div
-        class="flex shrink-0 items-center text-gray-400"
-      >
-        <ChevronDown className="w-4 h-4 transform transition-transform duration-200" />
+      <div class="flex shrink-0 items-center text-gray-400">
+        <ChevronDown
+          className="w-4 h-4 transform transition-transform duration-200"
+        />
       </div>
     </button>
 
@@ -84,7 +76,6 @@ const {
     </div>
   </div>
 </div>
-
 
 <script>
   function setupMultiDropdowns() {
@@ -210,7 +201,7 @@ const {
         });
 
         if (!input.dataset.bound) {
-          input.dataset.bound = "true";
+          input.dataset.bound = "1";
           input.addEventListener("change", () => {
             const values = parseValues(input.value);
             updateSelectedText(values);
@@ -222,8 +213,8 @@ const {
       const items = container.querySelectorAll(".dropdown-item");
       items.forEach((item) => {
         const element = item as HTMLButtonElement & { dataset: DOMStringMap };
-        if (element.dataset.bound === "true") return;
-        element.dataset.bound = "true";
+        if (element.dataset.bound === "1") return;
+        element.dataset.bound = "1";
         item.addEventListener("click", (e) => {
           e.stopPropagation();
           const value = String(element.dataset.value || "");

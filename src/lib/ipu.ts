@@ -3,7 +3,7 @@
 // real-time source exists, so the only fallback is the last good copy - kept just
 // 6 hours, and the page always shows the reading time (old air data misleads).
 import { getJson, withFallback } from "./fallback";
-import { linePath } from "./harga-minyak";
+import { linePath } from "./chart";
 
 const APIMS =
   "https://eqms.doe.gov.my/api3/publicmapproxy/PUBLIC_DISPLAY/CAQM_MCAQM_Current_Reading/MapServer/0/query?where=1%3D1&outFields=STATION_ID,DATETIME,API,PARAM_SELECTED,STATION_LOCATION,PLACE,STATE_NAME,LATITUDE,LONGITUDE&f=json";

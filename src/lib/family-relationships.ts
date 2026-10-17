@@ -85,33 +85,6 @@ export const dedupeRelatedPeople = (people: RelatedPerson[]): RelatedPerson[] =>
 };
 
 /**
- * Distinct related-person count per person id. Reciprocal rows (A↔B) collapse to
- * a single relation, so the count reflects how many *people* are related, not how
- * many raw rows exist.
- */
-export const buildRelationCounts = (
-  detail: PublicFamilyTreeDetail,
-): Map<number, number> => {
-  const relatedByPerson = new Map<number, Set<number>>();
-  const add = (a: number, b: number) => {
-    if (a === b) return;
-    let set = relatedByPerson.get(a);
-    if (!set) {
-      set = new Set();
-      relatedByPerson.set(a, set);
-    }
-    set.add(b);
-  };
-  for (const rel of detail.relationships) {
-    add(rel.personId, rel.relatedPersonId);
-    add(rel.relatedPersonId, rel.personId);
-  }
-  const counts = new Map<number, number>();
-  for (const [id, set] of relatedByPerson) counts.set(id, set.size);
-  return counts;
-};
-
-/**
  * Derive a person's relationships into ordered, de-duplicated groups:
  * Father, Mother, Spouse, Son, Daughter, Brother, Sister
  * (with generic Parent / Child / Sibling fallbacks for unknown-gender relatives).

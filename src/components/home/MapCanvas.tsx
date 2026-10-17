@@ -175,8 +175,8 @@ const MapCanvas = ({
       moveTo(coordinates, Math.max(mapRef.current?.getZoom() ?? 13, 13));
     };
 
-    window.addEventListener("map-focus-marker", handleFocusMarker);
-    return () => window.removeEventListener("map-focus-marker", handleFocusMarker);
+    window.addEventListener("home-map:focus", handleFocusMarker);
+    return () => window.removeEventListener("home-map:focus", handleFocusMarker);
   }, [markerCoordinates]);
 
   // Listen for client-side marker/center updates (populated after fetch)
@@ -203,7 +203,7 @@ const MapCanvas = ({
     if (typeof cached?.focusedMarkerId === "number") {
       window.requestAnimationFrame(() => {
         window.dispatchEvent(
-          new CustomEvent("map-focus-marker", {
+          new CustomEvent("home-map:focus", {
             detail: { markerId: cached.focusedMarkerId },
           }),
         );

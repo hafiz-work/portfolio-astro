@@ -139,17 +139,11 @@ export class ProjectsCmsService extends ApiClient {
   }
 
   // ---- media assets (library) ----
-  async listMediaAssets(): Promise<MediaAsset[]> {
-    return (await this.get<MediaAsset[]>("owner/media-assets")) ?? [];
-  }
   createMediaAsset(data: MediaAssetInput): Promise<MediaAsset | null> {
     return this.post<MediaAsset>("owner/media-assets", data);
   }
   updateMediaAsset(id: number, data: MediaAssetInput): Promise<MediaAsset | null> {
     return this.patch<MediaAsset>(`owner/media-assets/${id}`, data);
-  }
-  deleteMediaAsset(id: number): Promise<unknown> {
-    return this.delete(`owner/media-assets/${id}`);
   }
 
   // ---- project media (carousel) ----

@@ -1,5 +1,5 @@
 ---
-import { RESUME_URL } from "../../lib/constants";
+import { CONTACT_EMAIL, RESUME_URL } from "../../lib/constants";
 const currentYear = new Date().getFullYear();
 
 type FooterLink = {
@@ -48,7 +48,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
                 href: "https://www.linkedin.com/in/hafizbahtiar/",
                 external: true,
             },
-            { text: "Email", href: "mailto:hafiz@hafizbahtiar.com" },
+            { text: "Email", href: `mailto:${CONTACT_EMAIL}` },
         ],
     },
 ];
@@ -238,37 +238,17 @@ const columns: { title: string; links: FooterLink[] }[] = [
 </style>
 
 <script>
-    // Theme preference: "system" = no localStorage key (CoreLayout's init
-    // script then follows prefers-color-scheme), else "light" / "dark".
-    type Pref = "system" | "light" | "dark";
+    import { apply, readPref, setPref, type ThemePref } from "../../lib/theme";
 
-    const readPref = (): Pref => {
-        try {
-            const v = localStorage.getItem("theme");
-            return v === "light" || v === "dark" ? v : "system";
-        } catch {
-            return "system";
-        }
-    };
-
-    const isDarkFor = (pref: Pref) =>
-        pref === "dark" ||
-        (pref === "system" &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches);
-
-    const applyPref = (pref: Pref) => {
-        document.documentElement.classList.toggle("dark", isDarkFor(pref));
-    };
+    let themeController: AbortController | null = null;
 
     const initThemeSwitcher = () => {
         const root = document.getElementById("theme-switcher");
         if (!root) return;
 
-        const existing = (window as any).__themeSwitcherController;
-        if (existing) existing.abort();
-        const controller = new AbortController();
-        (window as any).__themeSwitcherController = controller;
-        const { signal } = controller;
+        themeController?.abort();
+        themeController = new AbortController();
+        const { signal } = themeController;
 
         const buttons =
             root.querySelectorAll<HTMLButtonElement>("[data-theme-value]");
@@ -286,15 +266,8 @@ const columns: { title: string; links: FooterLink[] }[] = [
             button.addEventListener(
                 "click",
                 () => {
-                    const pref = button.dataset.themeValue as Pref;
-                    try {
-                        if (pref === "system") localStorage.removeItem("theme");
-                        else localStorage.setItem("theme", pref);
-                    } catch {
-                        /* storage blocked - still apply for this page */
-                    }
+                    setPref(button.dataset.themeValue as ThemePref);
                     sync();
-                    applyPref(pref);
                 },
                 { signal },
             );
@@ -304,7 +277,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
         window.matchMedia("(prefers-color-scheme: dark)").addEventListener(
             "change",
             () => {
-                if (readPref() === "system") applyPref("system");
+                if (readPref() === "system") apply("system");
             },
             { signal },
         );

@@ -1,5 +1,5 @@
 ---
-import { Check, X } from "lucide-react";
+import { Check, Mail, X } from "lucide-react";
 import { Image } from "astro:assets";
 // Landing page untuk link email verification MARC (app kelab, backend Go
 // berasingan). Server-side (bukan client fetch) - elak kena ubah CSP
@@ -25,7 +25,10 @@ const isPost = Astro.request.method === "POST";
 let token = Astro.url.searchParams.get("token");
 if (isPost) {
   // A non-form body (JSON, empty) makes formData() throw - treat it as no token.
-  const value = await Astro.request.formData().then((f) => f.get("token"), () => null);
+  const value = await Astro.request.formData().then(
+    (f) => f.get("token"),
+    () => null,
+  );
   token = typeof value === "string" ? value : null;
 }
 
@@ -84,51 +87,24 @@ if (!MARC_API_URL) {
           {
             success ? (
               <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/10">
-                <svg
-                  class="h-6 w-6 text-emerald-600 dark:text-emerald-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
+                <Check
+                  className="h-6 w-6 text-emerald-600 dark:text-emerald-400"
+                  aria-hidden="true"
+                />
               </div>
             ) : showForm ? (
               <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-500/10">
-                <svg
-                  class="h-6 w-6 text-sky-600 dark:text-sky-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
+                <Mail
+                  className="h-6 w-6 text-sky-600 dark:text-sky-400"
+                  aria-hidden="true"
+                />
               </div>
             ) : (
               <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-500/10">
-                <svg
-                  class="h-6 w-6 text-red-600 dark:text-red-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <X
+                  className="h-6 w-6 text-red-600 dark:text-red-400"
+                  aria-hidden="true"
+                />
               </div>
             )
           }
@@ -136,11 +112,13 @@ if (!MARC_API_URL) {
           <h1
             class="text-xl font-medium tracking-tight text-gray-950 dark:text-white"
           >
-            {success
-              ? "Email disahkan"
-              : showForm
-                ? "Pengesahan email"
-                : "Pengesahan gagal"}
+            {
+              success
+                ? "Email disahkan"
+                : showForm
+                  ? "Pengesahan email"
+                  : "Pengesahan gagal"
+            }
           </h1>
           <p class="mt-2 text-sm/6 text-gray-600 dark:text-gray-400">
             {message}

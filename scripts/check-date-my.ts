@@ -1,25 +1,23 @@
 // bun scripts/check-date-my.ts - dd/mm/yyyy parsing and the calendar grid.
+import { expect } from "bun:test";
 import { addMonths, dmyToIso, isoToDmy, monthGrid } from "../src/lib/date-my";
 
-const eq = (got: unknown, want: unknown, what: string) => {
-  if (JSON.stringify(got) !== JSON.stringify(want)) throw new Error(`${what}: got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
-};
-eq(isoToDmy("2027-02-08"), "08/02/2027", "iso -> dmy");
-eq(isoToDmy("bad"), "", "bad iso");
-eq(dmyToIso("08/02/2027"), "2027-02-08", "dmy");
-eq(dmyToIso("8/2/2027"), "2027-02-08", "short dmy");
-eq(dmyToIso("08-02-2027"), "2027-02-08", "dashes");
-eq(dmyToIso("08022027"), "2027-02-08", "digits only");
-eq(dmyToIso("29/02/2028"), "2028-02-29", "leap day");
-eq(dmyToIso("29/02/2027"), null, "not a leap year");
-eq(dmyToIso("31/04/2026"), null, "31 April");
-eq(dmyToIso("02/13/2026"), null, "month 13 (US order)");
-eq(dmyToIso(""), null, "empty");
+expect(isoToDmy("2027-02-08"), "iso -> dmy").toBe("08/02/2027");
+expect(isoToDmy("bad"), "bad iso").toBe("");
+expect(dmyToIso("08/02/2027"), "dmy").toBe("2027-02-08");
+expect(dmyToIso("8/2/2027"), "short dmy").toBe("2027-02-08");
+expect(dmyToIso("08-02-2027"), "dashes").toBe("2027-02-08");
+expect(dmyToIso("08022027"), "digits only").toBe("2027-02-08");
+expect(dmyToIso("29/02/2028"), "leap day").toBe("2028-02-29");
+expect(dmyToIso("29/02/2027"), "not a leap year").toBeNull();
+expect(dmyToIso("31/04/2026"), "31 April").toBeNull();
+expect(dmyToIso("02/13/2026"), "month 13 (US order)").toBeNull();
+expect(dmyToIso(""), "empty").toBeNull();
 const oct = monthGrid(2026, 10); // 1 Oct 2026 is a Thursday
-eq(oct.length, 42, "grid size");
-eq(oct[0].iso, "2026-09-28", "grid starts on Monday");
-eq(oct[3], { iso: "2026-10-01", day: 1, inMonth: true }, "1 Oct on Thursday");
-eq(oct.filter((c) => c.inMonth).length, 31, "31 days in Oct");
-eq(addMonths("2026-01-31", 1), "2026-02-28", "clamp to Feb");
-eq(addMonths("2026-01-15", -1), "2025-12-15", "back a year");
+expect(oct.length, "grid size").toBe(42);
+expect(oct[0].iso, "grid starts on Monday").toBe("2026-09-28");
+expect(oct[3], "1 Oct on Thursday").toEqual({ iso: "2026-10-01", day: 1, inMonth: true });
+expect(oct.filter((c) => c.inMonth).length, "31 days in Oct").toBe(31);
+expect(addMonths("2026-01-31", 1), "clamp to Feb").toBe("2026-02-28");
+expect(addMonths("2026-01-15", -1), "back a year").toBe("2025-12-15");
 console.log("date-my: ok");

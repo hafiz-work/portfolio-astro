@@ -6,6 +6,7 @@
 // stored copy never shows yesterday as "today".
 import type { Lokasi } from "../data/cuaca-lokasi";
 import { getJson, withFallback, type Fetched } from "./fallback";
+import { todayMY } from "./date-my";
 
 export interface Day {
   /** "YYYY-MM-DD" (Malaysia). */
@@ -96,9 +97,6 @@ export function parseOpenMeteo(body: OpenMeteo): Day[] {
       max: Math.round(x.max),
     }));
 }
-
-/** Today in Malaysia, "YYYY-MM-DD". */
-export const todayMY = (now = new Date()) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur" }).format(now);
 
 /** Drop days before `today` (a stored copy can be up to a day old). */
 export const fromToday = (days: Day[], today = todayMY()) => days.filter((d) => d.date >= today);

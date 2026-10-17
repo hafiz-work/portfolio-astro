@@ -3,17 +3,18 @@
 // Neither guide has a worked example, so the expected values are JPJ's printed numbers:
 // flat band rates, and each progressive band's top cc must land on the next band's
 // printed "Kadar Asas" (the tables are continuous - a strong check on transcription).
+import { expect } from "bun:test";
 import { EV_CAR, lkm, type Input } from "../src/lib/cukai-jalan";
 
 let n = 0;
 const want = (i: Input, sen: number, what: string) => {
   const r = lkm(i);
-  if (!r.ok || r.sen !== sen) throw new Error(`${what}: got ${r.ok ? r.sen : r.reason}, want ${sen}`);
+  expect(r.ok ? r.sen : r.reason, what).toBe(sen);
   n++;
 };
 const refuse = (i: Input, what: string) => {
   const r = lkm(i);
-  if (r.ok) throw new Error(`${what}: got ${r.sen}, want refusal`);
+  expect(r.ok && r.sen, `${what}: want refusal`).toBe(false);
   n++;
 };
 const car = (region: Input["region"], kind: Input["kind"], size: number, extra: Partial<Input> = {}): Input => ({
@@ -65,7 +66,7 @@ want(car("labuan", "bukan-saloon", 3000, { diesel4wd: true }), 45150, "Labuan AD
 want(car("labuan", "motosikal", 801), 2100, "Labuan AA 801cc = 50% of RM42");
 // 50% of an odd-sen amount: JPJ states no rounding rule, we round half up and say so.
 const odd = lkm(car("labuan", "saloon-individu", 1801));
-if (!odd.ok || !odd.rounded) throw new Error("Labuan 1801cc should be flagged as rounded");
+expect(odd.ok && odd.rounded, "Labuan 1801cc should be flagged as rounded").toBe(true);
 
 // EV cars (AB-AE, any owner) - B p1-3, by motor power in watts.
 const ev = (region: Input["region"], kind: Input["kind"], w: number): Input => ({ region, kind, size: w, ev: true });
@@ -92,8 +93,8 @@ refuse(ev("labuan", "motosikal", 10000), "EV AA Labuan >7.5kW");
 // Table shape: B's bands run in 10,000 W steps from 50,000 W and never go down.
 for (let i = 1; i < EV_CAR.bands.length - 1; i++) {
   const [a, b] = [EV_CAR.bands[i - 1], EV_CAR.bands[i]];
-  if (b.max !== a.max! + 10000) throw new Error(`EV band ${i} max ${b.max}`);
-  if (b.sen! < a.sen!) throw new Error(`EV band ${i} goes down`);
+  expect(b.max, `EV band ${i} max`).toBe(a.max! + 10000);
+  expect(b.sen!, `EV band ${i} goes down`).toBeGreaterThanOrEqual(a.sen!);
 }
 
 // Input validation.

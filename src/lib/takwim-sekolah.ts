@@ -1,5 +1,5 @@
 // School calendar logic over src/data/takwim-sekolah.ts - pure, dates are ISO
-// yyyy-mm-dd in Malaysian time (the page passes todayInMalaysia()).
+// yyyy-mm-dd in Malaysian time (the page passes todayMY()).
 // Check: bun scripts/check-takwim-sekolah.ts
 import { NEGERI, TAKWIM, type Hari, type Kalendar, type Kumpulan, type NegeriId } from "../data/takwim-sekolah";
 

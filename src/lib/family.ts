@@ -9,7 +9,6 @@ import type {
   FamilyTree,
   FamilyTreeDetail,
   UpdateFamilyPersonPayload,
-  UpdateFamilyRelationshipPayload,
   UpdateFamilyTreePayload,
 } from "../types/family";
 
@@ -42,17 +41,6 @@ export class FamilyService extends ApiClient {
 
   async getPublicTreeBySlug(slug: string): Promise<FamilyTreeDetail | null> {
     return this.publicGet<FamilyTreeDetail>(`family/${encodeURIComponent(slug)}`);
-  }
-
-  async getPublicPersonById(id: number): Promise<FamilyPerson | null> {
-    return this.publicGet<FamilyPerson>(`family/person/${id}`);
-  }
-
-  async getPublicTreesByGlobalKey(key: string): Promise<FamilyTree[]> {
-    const result = await this.publicGet<FamilyTree[]>(
-      `family/trees-by-global/${encodeURIComponent(key)}`,
-    );
-    return result || [];
   }
 
   async getAdminTrees(): Promise<FamilyTree[]> {
@@ -118,26 +106,6 @@ export class FamilyService extends ApiClient {
       data,
     );
   }
-
-  async updateRelationship(
-    relationshipId: number,
-    data: UpdateFamilyRelationshipPayload,
-  ): Promise<FamilyRelationship | null> {
-    return this.put<FamilyRelationship>(
-      `owner/family/relationships/${relationshipId}`,
-      data,
-    );
-  }
-
-  async deleteRelationship(relationshipId: number): Promise<boolean> {
-    try {
-      await this.delete(`owner/family/relationships/${relationshipId}`);
-      return true;
-    } catch (error) {
-      console.error("Failed to delete relationship:", error);
-      return false;
-    }
-  }
 }
 
 export const familyService = new FamilyService();
@@ -145,7 +113,3 @@ export const familyService = new FamilyService();
 export const getPublicFamilyTrees = () => familyService.getPublicTrees();
 export const getPublicFamilyTreeBySlug = (slug: string) =>
   familyService.getPublicTreeBySlug(slug);
-export const getPublicFamilyPersonById = (id: number) =>
-  familyService.getPublicPersonById(id);
-export const getPublicFamilyTreesByGlobalKey = (key: string) =>
-  familyService.getPublicTreesByGlobalKey(key);

@@ -1,7 +1,8 @@
 // Offline check for the parts of src/lib/harga-minyak.ts that do arithmetic/parsing.
 // Run: bun scripts/check-harga-minyak.ts
 import { expect } from "bun:test";
-import { linePath, parseFuelCsv, priceAxis, weeklyChange } from "../src/lib/harga-minyak.ts";
+import { parseFuelCsv, weeklyChange } from "../src/lib/harga-minyak.ts";
+import { linePath, priceAxis } from "../src/lib/chart.ts";
 
 const csv = `series_type,date,ron95,ron97,diesel,diesel_eastmsia,ron95_budi95,ron95_skps,diesel_skds,diesel_budi
 level,2026-09-24,4.57,5.05,5.42,2.15,1.99,2.05,2.15,2.1

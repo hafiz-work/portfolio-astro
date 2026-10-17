@@ -3,6 +3,7 @@ export const prerender = true;
 import TechHeading from "../components/layout/TechHeading.astro";
 import Alert from "../components/ui/Alert.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
+import { CONTACT_EMAIL } from "../lib/constants";
 
 // Full disclaimer for the Showcase apps. Each app page shows the short version
 // (src/components/ui/Disclaimer.astro) and links here - keep the two in step.
@@ -223,7 +224,7 @@ const SOURCES: {
       <p class="mx-2 max-w-3xl text-lg">
         Penafian ini terpakai kepada semua aplikasi di <a
           href="/showcase"
-          class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+          class="link"
           >Showcase</a
         >, termasuk widget yang dipasang di laman lain.
       </p>
@@ -367,7 +368,7 @@ const SOURCES: {
             Hak cipta dan syarat penggunaan data kekal milik pembekal
             masing-masing. Jika anda wakil agensi dan mahu data anda dipaparkan
             secara berbeza atau dikeluarkan, sila hubungi saya melalui e-mel <a
-              href="mailto:hafiz@hafizbahtiar.com">hafiz@hafizbahtiar.com</a
+              href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a
             >.
           </p>
         </section>

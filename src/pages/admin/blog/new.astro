@@ -37,8 +37,8 @@ const statusOptions = [
 </PrivateLayout>
 
 <script>
+  import { showToast, formatErrorMessage } from "../../../lib/admin-ui";
   import { blogService } from "../../../lib/blog";
-  import { ApiError } from "../../../lib/api-client";
   import { setupFormGuard } from "../../../lib/form-guard";
 
   // <ClientRouter> runs a page's bundled script once per session, so a
@@ -56,15 +56,8 @@ const statusOptions = [
       formGuard = setupFormGuard(form);
     }
 
-    const showAlert = (options: {
-      type?: "success" | "error" | "warning" | "info";
-      title?: string;
-      message?: string;
-      duration?: number;
-    }) => {
-      const registry = (window as any).__uiAlerts;
-      registry?.["blog-alert"]?.show(options);
-    };
+    const showAlert = (options: Omit<Parameters<typeof showToast>[0], "id">) =>
+      showToast({ ...options, id: "blog-alert" });
 
     const fieldLabels: Record<string, string> = {
       title: "Title",
@@ -89,18 +82,6 @@ const statusOptions = [
         return "bodyContent";
       }
       return field;
-    };
-
-    const formatErrorMessage = (error: unknown) => {
-      const apiError = error as ApiError & { data?: any };
-      const message =
-        apiError?.data?.error || apiError?.message || "Failed to create post.";
-      const field = apiError?.data?.field;
-      if (field) {
-        const label = fieldLabels[field] || field;
-        return { message: `${message} (Field: ${label})`, field };
-      }
-      return { message, field };
     };
 
     form?.addEventListener("submit", async (e) => {
@@ -164,7 +145,11 @@ const statusOptions = [
         }
       } catch (error) {
         console.error(error);
-        const { message, field } = formatErrorMessage(error);
+        const { message, field } = formatErrorMessage(
+          error,
+          "Failed to create post.",
+          fieldLabels,
+        );
         const focusFieldName = getFocusFieldName(field);
         if (focusFieldName) {
           const focusElement = form?.elements.namedItem(

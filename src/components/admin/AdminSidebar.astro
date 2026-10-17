@@ -497,7 +497,7 @@ const currentPath = Astro.url.pathname;
     const logoutCancelBtn = document.getElementById("logout-cancel-btn");
 
     if (!logoutBtn || !logoutModal || !logoutBackdrop || !logoutPanel) return;
-    if (logoutBtn.dataset.bound === "true") return;
+    if (logoutBtn.dataset.bound === "1") return;
     const modal = logoutModal;
     const backdrop = logoutBackdrop;
     const panel = logoutPanel;
@@ -564,7 +564,7 @@ const currentPath = Astro.url.pathname;
       await performLogout();
     });
 
-    logoutBtn.dataset.bound = "true";
+    logoutBtn.dataset.bound = "1";
   }
 
   bindLogoutModal();

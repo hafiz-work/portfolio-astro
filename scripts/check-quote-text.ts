@@ -1,19 +1,17 @@
 // bun scripts/check-quote-text.ts - quote/author tidying keeps proper nouns.
+import { expect } from "bun:test";
 import { normalizeAuthor, normalizeQuote, normalizeTagName } from "../src/lib/quote-text";
 
-const eq = (got: string, want: string, what: string) => {
-  if (got !== want) throw new Error(`${what}: got "${got}", want "${want}"`);
-};
-eq(normalizeQuote("  sabar itu   indah "), "Sabar itu indah", "spaces + first letter");
-eq(normalizeQuote("Allah tidak membebani seseorang melainkan sesuai kesanggupannya."), "Allah tidak membebani seseorang melainkan sesuai kesanggupannya.", "proper noun kept");
-eq(normalizeQuote("ilmu tanpa amal. AMAL tanpa ilmu."), "Ilmu tanpa amal. AMAL tanpa ilmu.", "mixed case left alone");
-eq(normalizeQuote("JANGAN BERPUTUS ASA. TERUS BERUSAHA!"), "Jangan berputus asa. Terus berusaha!", "shouting -> sentence case");
-eq(normalizeQuote("“stay hungry, stay foolish.”"), "“Stay hungry, stay foolish.”", "after opening quote mark");
-eq(normalizeQuote("AI"), "AI", "short caps (acronym) kept");
-eq(normalizeAuthor("steve jobs"), "Steve Jobs", "all lower -> title");
-eq(normalizeAuthor("STEVE JOBS"), "Steve Jobs", "all upper -> title");
-eq(normalizeAuthor("Imam al-Ghazali"), "Imam al-Ghazali", "mixed kept");
-eq(normalizeAuthor("  tun dr. mahathir "), "Tun Dr. Mahathir", "spaces + title");
-eq(normalizeTagName("  MOTIVASI "), "Motivasi", "tag upper");
-eq(normalizeTagName("self   IMPROVEMENT"), "Self improvement", "tag mixed");
+expect(normalizeQuote("  sabar itu   indah "), "spaces + first letter").toBe("Sabar itu indah");
+expect(normalizeQuote("Allah tidak membebani seseorang melainkan sesuai kesanggupannya."), "proper noun kept").toBe("Allah tidak membebani seseorang melainkan sesuai kesanggupannya.");
+expect(normalizeQuote("ilmu tanpa amal. AMAL tanpa ilmu."), "mixed case left alone").toBe("Ilmu tanpa amal. AMAL tanpa ilmu.");
+expect(normalizeQuote("JANGAN BERPUTUS ASA. TERUS BERUSAHA!"), "shouting -> sentence case").toBe("Jangan berputus asa. Terus berusaha!");
+expect(normalizeQuote("“stay hungry, stay foolish.”"), "after opening quote mark").toBe("“Stay hungry, stay foolish.”");
+expect(normalizeQuote("AI"), "short caps (acronym) kept").toBe("AI");
+expect(normalizeAuthor("steve jobs"), "all lower -> title").toBe("Steve Jobs");
+expect(normalizeAuthor("STEVE JOBS"), "all upper -> title").toBe("Steve Jobs");
+expect(normalizeAuthor("Imam al-Ghazali"), "mixed kept").toBe("Imam al-Ghazali");
+expect(normalizeAuthor("  tun dr. mahathir "), "spaces + title").toBe("Tun Dr. Mahathir");
+expect(normalizeTagName("  MOTIVASI "), "tag upper").toBe("Motivasi");
+expect(normalizeTagName("self   IMPROVEMENT"), "tag mixed").toBe("Self improvement");
 console.log("quote-text: ok");

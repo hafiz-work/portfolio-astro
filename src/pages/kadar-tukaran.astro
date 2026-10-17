@@ -6,6 +6,7 @@ import TechHeading from "../components/layout/TechHeading.astro";
 import Combobox from "../components/ui/Combobox.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
 import { CURRENCY_NAMES, getOpr, getRates } from "../lib/kadar-tukaran";
+import { formatIsoMs } from "../lib/date-my";
 
 const [data, opr] = await Promise.all([getRates(), getOpr()]);
 const rates = (data?.rates ?? []).filter((r) => r.middle ?? r.buy ?? r.sell);
@@ -15,20 +16,17 @@ const SOURCE_URL: Record<string, string> = {
   "Bank Pusat Eropah (Frankfurter)": "https://frankfurter.dev/",
   "open.er-api.com": "https://www.exchangerate-api.com",
 };
-const rm = (n: number | null) => (n == null ? "-" : n.toFixed(4));
+/** BNM rate, RM per `unit`, 4 dp. */
+const rate = (n: number | null) => (n == null ? "-" : n.toFixed(4));
 /** RM for one unit of the currency (BNM quotes some per 100). */
 const perOne = (r: (typeof rates)[number]) =>
   (r.middle ?? ((r.buy ?? 0) + (r.sell ?? 0)) / 2) / r.unit;
 
 const updated = data?.updated
-  ? new Intl.DateTimeFormat("ms-MY", { day: "numeric", month: "long", year: "numeric" }).format(
-      new Date(`${data.updated.slice(0, 10)}T00:00:00Z`),
-    )
+  ? formatIsoMs(data.updated.slice(0, 10), { day: "numeric", month: "long", year: "numeric" })
   : null;
 const oprDate = opr
-  ? new Intl.DateTimeFormat("ms-MY", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" }).format(
-      new Date(`${opr.date}T00:00:00Z`),
-    )
+  ? formatIsoMs(opr.date, { day: "numeric", month: "long", year: "numeric" })
   : "";
 const oprChange = !opr || opr.change === 0
   ? "tiada perubahan"
@@ -68,7 +66,7 @@ const session = data?.session ? `${data.session.slice(0, 2)}:${data.session.slic
               href="https://www.bnm.gov.my/monetary-stability/opr-decisions"
               target="_blank"
               rel="noopener noreferrer"
-              class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+              class="link"
             >
               Kadar Dasar Semalaman (OPR)
             </a>:{" "}
@@ -140,9 +138,9 @@ const session = data?.session ? `${data.session.slice(0, 2)}:${data.session.slic
                       <span class="ml-2 text-gray-500">{CURRENCY_NAMES[r.code] ?? ""}</span>
                     </td>
                     <td class="px-2 py-2 text-gray-500">{r.unit}</td>
-                    <td class="px-2 py-2 text-right">{rm(r.buy)}</td>
-                    <td class="px-2 py-2 text-right">{rm(r.sell)}</td>
-                    <td class="px-2 py-2 text-right font-medium">{rm(r.middle)}</td>
+                    <td class="px-2 py-2 text-right">{rate(r.buy)}</td>
+                    <td class="px-2 py-2 text-right">{rate(r.sell)}</td>
+                    <td class="px-2 py-2 text-right font-medium">{rate(r.middle)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -155,7 +153,7 @@ const session = data?.session ? `${data.session.slice(0, 2)}:${data.session.slic
                 href={SOURCE_URL[data!.source] ?? "https://www.bnm.gov.my/exchange-rates"}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+                class="link"
               >
                 {data!.source === "open.er-api.com" ? "Rates By Exchange Rate API" : data!.source}
               </a>
@@ -194,6 +192,8 @@ const session = data?.session ? `${data.session.slice(0, 2)}:${data.session.slic
 </PublicLayout>
 
 <script>
+  import { ringgit } from "../lib/money";
+
   const initFx = () => {
     const form = document.getElementById("fx");
     if (!form || form.dataset.bound === "1") return;
@@ -203,8 +203,7 @@ const session = data?.session ? `${data.session.slice(0, 2)}:${data.session.slic
     const direction = document.getElementById("fx-direction")!;
     const result = document.getElementById("fx-result")!;
     let toRm = true; // currency -> RM; swap for RM -> currency
-    const money = (n: number, code: string) =>
-      `${code} ${n.toLocaleString("ms-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const money = (n: number, code: string) => `${code} ${ringgit(Math.round(n * 100))}`;
 
     const update = () => {
       const rmPerOne = Number(currency.selectedOptions[0]?.dataset.rm);

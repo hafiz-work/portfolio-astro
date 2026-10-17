@@ -1,4 +1,5 @@
 ---
+import ResetButton from "../components/ui/ResetButton.astro";
 import Disclaimer from "../components/ui/Disclaimer.astro";
 import BackLink from "../components/ui/BackLink.astro";
 import Alert from "../components/ui/Alert.astro";
@@ -122,6 +123,7 @@ const GUIDE =
           <input id="lkm-4wd" type="checkbox" class="size-4 accent-sky-600" />
           Diesel, pacuan empat roda (4x4)
         </label>
+        <ResetButton class="sm:col-span-2" />
       </form>
     </div>
 
@@ -190,7 +192,17 @@ const GUIDE =
 </PublicLayout>
 
 <script>
-  import { lkm, rm, type Kind, type Region } from "../lib/cukai-jalan";
+  import { lkm, type Kind, type Region } from "../lib/cukai-jalan";
+  import { rm } from "../lib/money";
+  import {
+    loadState,
+    pickOption,
+    saveState,
+    type CalcState,
+  } from "../lib/calc-state";
+
+  const KEY = "cukai-jalan";
+  const NAMES = ["kenderaan", "enjin", "wilayah", "cc", "kw", "4x4"];
 
   const initLkm = () => {
     const form = document.getElementById("lkm");
@@ -210,18 +222,20 @@ const GUIDE =
       "lkm-error",
     ].map((id) => $(id));
     let wasEv = false;
+    const typical = () =>
+      fuel.value === "ev"
+        ? kind.value === "motosikal"
+          ? "5"
+          : "150"
+        : kind.value === "motosikal"
+          ? "250"
+          : "1500";
 
     const update = () => {
       const ev = fuel.value === "ev";
       if (ev !== wasEv) {
         // Switching unit: start from a typical value instead of reading cc as kW.
-        size.value = ev
-          ? kind.value === "motosikal"
-            ? "5"
-            : "150"
-          : kind.value === "motosikal"
-            ? "250"
-            : "1500";
+        size.value = typical();
         wasEv = ev;
       }
       $("lkm-size-label").textContent = ev
@@ -278,9 +292,53 @@ const GUIDE =
           : "");
     };
 
+    const read = (): CalcState => {
+      const ev = fuel.value === "ev";
+      return {
+        kenderaan: kind.value,
+        enjin: fuel.value,
+        wilayah: region.value,
+        [ev ? "kw" : "cc"]: size.value.trim(),
+        "4x4":
+          !ev && kind.value === "bukan-saloon" && fourWd.checked ? "1" : "",
+      };
+    };
+    // Same input rules as update(): cc a whole number, kW up to 3 decimals. Invalid -> typical size.
+    const apply = (s: CalcState) => {
+      pickOption(kind, s.kenderaan);
+      pickOption(fuel, s.enjin);
+      pickOption(region, s.wilayah);
+      const ev = fuel.value === "ev";
+      const v = (ev ? s.kw : s.cc)?.trim() ?? "";
+      const n = Number(v);
+      const ok =
+        v !== "" &&
+        n > 0 &&
+        (ev
+          ? Math.abs(n * 1000 - Math.round(n * 1000)) < 1e-6
+          : Number.isInteger(n));
+      size.value = ok ? String(n) : typical();
+      fourWd.checked = s["4x4"] === "1";
+      wasEv = ev;
+    };
+    const defaults = read();
+    const saved = loadState(KEY, NAMES);
+    if (saved) {
+      apply(saved);
+      saveState(KEY, NAMES, read());
+    }
+    const changed = () => {
+      update();
+      saveState(KEY, NAMES, read());
+    };
     for (const el of [kind, fuel, region, fourWd])
-      el.addEventListener("change", update);
-    size.addEventListener("input", update);
+      el.addEventListener("change", changed);
+    size.addEventListener("input", changed);
+    form.querySelector("[data-reset]")!.addEventListener("click", () => {
+      apply(defaults);
+      saveState(KEY, NAMES, null);
+      update();
+    });
     form.addEventListener("submit", (e) => e.preventDefault());
     update();
   };

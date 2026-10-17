@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 import PointsMap, { POINTS_MAP_FOCUS, type MapLine, type MapPoint } from "@/components/ui/PointsMap";
 import { Select } from "@/components/ui/Select";
 import type { BusPosition } from "@/lib/pengangkutan-awam";
-import { distanceKm, planRoute, seq, sliceShape, stationNames, type Journey, type RailStation } from "./rail-route";
+import { distanceKm, geoErrorText, locateOnce } from "@/lib/geo";
+import { setParam } from "@/lib/url";
+import { planRoute, seq, sliceShape, stationNames, type Journey, type RailStation } from "./rail-route";
 
 /**
  * /pengangkutan-awam: live vehicles of one operator on PointsMap, refreshed every 30 s from
@@ -23,7 +26,7 @@ type RailLine = { id: string; short: string; name: string; ends: string; color: 
 type Station = RailStation;
 type Rail = { lines: RailLine[]; stations: Station[] };
 
-export const RAIL = "rel";
+const RAIL = "rel";
 const POLL_MS = 30_000;
 const IDLE_MS = 10 * 60_000;
 const ACTIVITY = ["pointerdown", "keydown", "wheel", "touchstart"] as const;
@@ -32,17 +35,20 @@ const FEED_KEY = "pengangkutan-awam:feed";
 const PILL =
   "rounded-full border border-gray-950/10 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60 dark:border-white/10 dark:text-gray-200 dark:hover:bg-gray-800";
 
-/** Set or drop one query param without a navigation (event handlers only). */
-const setParam = (key: string, value: string | null) => {
-  const url = new URL(location.href);
-  if (value) url.searchParams.set(key, value);
-  else url.searchParams.delete(key);
-  history.replaceState(history.state, "", url);
-};
 const param = (key: string) => new URLSearchParams(location.search).get(key);
 
+/** Badge on a line colour: white or gray-950 text, whichever contrasts more (WCAG luminance) - Monorail green, Putrajaya yellow need dark. */
+const lineBadge = (hex = "#0284c7") => {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return { backgroundColor: hex, color: (l + 0.05) / 0.055 > 1.05 / (l + 0.05) ? "#030712" : "#fff" };
+};
+
 const Skeleton = ({ className = "" }: { className?: string }) => (
-  <div className={`rounded-md bg-gray-200 motion-safe:animate-pulse dark:bg-gray-800 ${className}`} aria-hidden="true" />
+  <span className={cn("block rounded-md bg-gray-200 motion-safe:animate-pulse dark:bg-gray-800", className)} aria-hidden="true" />
 );
 const MapSkeleton = () => (
   <div className="relative h-full">
@@ -62,7 +68,7 @@ export default function PengangkutanAwamMap({ feeds }: { feeds: Feed[] }) {
     let saved: string | null = null;
     try {
       saved = localStorage.getItem(FEED_KEY);
-    } catch {}
+    } catch { }
     const known = (id: string | null) => feeds.some((f) => f.id === id);
     const fromUrl = param("feed");
     setFeed(known(fromUrl) ? fromUrl : known(saved) ? saved : feeds[0].id);
@@ -72,12 +78,10 @@ export default function PengangkutanAwamMap({ feeds }: { feeds: Feed[] }) {
     setFeed(id);
     try {
       localStorage.setItem(FEED_KEY, id);
-    } catch {}
-    const url = new URL(location.href);
-    url.searchParams.set("feed", id);
-    url.searchParams.delete("laluan");
-    url.searchParams.delete("stesen");
-    history.replaceState(history.state, "", url);
+    } catch { }
+    setParam("feed", id);
+    setParam("laluan", null);
+    setParam("stesen", null);
   };
   if (!feed)
     return (
@@ -192,8 +196,8 @@ function BusView({ feed, feeds, feedSelect }: { feed: string; feeds: Feed[]; fee
   const nearest = () => {
     if (!("geolocation" in navigator)) return setNear({ text: "lokasi tidak disokong pada peranti ini" });
     setNear({ busy: true, text: "mencari lokasi anda…" });
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
+    locateOnce().then(
+      (coords) => {
         const best = shown
           .map((v) => ({ v, km: distanceKm(coords.latitude, coords.longitude, v.lat, v.lng) }))
           .sort((a, b) => a.km - b.km)[0];
@@ -203,14 +207,7 @@ function BusView({ feed, feeds, feedSelect }: { feed: string; feeds: Feed[]; fee
         const km = best.km < 1 ? `${Math.round(best.km * 1000)} m` : `${best.km.toFixed(1)} km`;
         setNear({ text: `bas terdekat ${km} dari anda (${best.v.route === "-" ? "laluan tidak diketahui" : `Laluan ${best.v.route}`})` });
       },
-      (err) =>
-        setNear({
-          text:
-            err.code === err.PERMISSION_DENIED
-              ? "akses lokasi disekat - benarkan dalam tetapan pelayar"
-              : "lokasi anda tidak dapat dikesan",
-        }),
-      { timeout: 15000, maximumAge: 60_000 },
+      (err) => setNear({ text: geoErrorText(err).toLowerCase() }),
     );
   };
 
@@ -322,16 +319,16 @@ function RailView({ feedSelect }: { feedSelect: React.ReactNode }) {
   // A planned journey replaces the network: only its stations and its stretch of each line, thick.
   const lines: MapLine[] = journey
     ? journey.legs.map((leg) => {
-        const l = byId.get(leg.line);
-        return {
-          coordinates: l?.shapes[0] ? sliceShape(l.shapes[0], leg.from, leg.to) : leg.path.map((s) => [s.lng, s.lat] as [number, number]),
-          color: l?.color ?? "#0284c7",
-          width: 7,
-        };
-      })
+      const l = byId.get(leg.line);
+      return {
+        coordinates: l?.shapes[0] ? sliceShape(l.shapes[0], leg.from, leg.to) : leg.path.map((s) => [s.lng, s.lat] as [number, number]),
+        color: l?.color ?? "#0284c7",
+        width: 7,
+      };
+    })
     : (rail?.lines ?? [])
-        .filter((l) => !line || l.id === line)
-        .flatMap((l) => l.shapes.map((coordinates) => ({ coordinates, color: l.color, width: 4 })));
+      .filter((l) => !line || l.id === line)
+      .flatMap((l) => l.shapes.map((coordinates) => ({ coordinates, color: l.color, width: 4 })));
   // Interchanges are one row per line at the same spot: label the name once.
   const named = new Set<string>();
   const stations = journey ? journey.legs.flatMap((leg) => leg.path) : (rail?.stations ?? []).filter((s) => !line || s.line === line);
@@ -454,7 +451,7 @@ function JourneySteps({ journey, rail, same }: { journey: Journey | null; rail: 
   const Badge = ({ id }: { id: string }) => {
     const l = lineOf(id);
     return (
-      <span className="rounded px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-white" style={{ backgroundColor: l?.color ?? "#0284c7" }}>
+      <span className="rounded px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap" style={lineBadge(l?.color)}>
         {l?.name ?? id}
       </span>
     );
@@ -539,7 +536,7 @@ function StationDetail({
           return (
             <li key={s.id} className="py-3">
               <p className="flex items-center gap-2 text-sm font-medium">
-                <span className="rounded px-1.5 py-0.5 text-xs font-semibold text-white" style={{ backgroundColor: l?.color }}>
+                <span className="rounded px-1.5 py-0.5 text-xs font-semibold" style={lineBadge(l?.color)}>
                   {s.id}
                 </span>
                 {l?.name ?? s.line}

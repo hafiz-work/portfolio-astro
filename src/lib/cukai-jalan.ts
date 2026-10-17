@@ -9,6 +9,7 @@ import {
   SM_BUKAN_SALOON, SM_MOTOSIKAL, SM_SALOON_INDIVIDU, SM_SALOON_SYARIKAT,
   type Table,
 } from "../data/cukai-jalan";
+import { rm } from "./money";
 
 export { EV_CAR };
 
@@ -27,8 +28,6 @@ export type Result =
   | { ok: true; sen: number; steps: string[]; ref: string; rounded: boolean }
   | { ok: false; reason: string };
 
-export const rm = (sen: number) =>
-  `RM${(sen / 100).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const num = (n: number) => n.toLocaleString("en-MY");
 
 const NOT_PRINTED = "JPJ hanya menyatakan kadar ini \"dikekalkan pada kadar sedia ada\" tanpa mencetak amaunnya.";

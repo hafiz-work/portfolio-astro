@@ -46,6 +46,19 @@ export default defineConfig({
   adapter: cloudflare({ imageService: 'passthrough' }),
   integrations: [
     react(),
+    // `astro check` / `astro sync` / `astro build` start a type-gen Vite server that
+    // re-bundles node_modules/.vite/deps_ssr with a different include list, deleting
+    // files the running dev server's workerd still imports -> 500 "The file does not
+    // exist at .../deps_ssr/<x>.js which is in the optimize deps directory". The dev
+    // server gets its own cache dir so those commands can run alongside it.
+    {
+      name: 'dev-vite-cache',
+      hooks: {
+        'astro:config:setup': ({ command, updateConfig }) => {
+          if (command === 'dev') updateConfig({ vite: { cacheDir: 'node_modules/.vite-dev' } });
+        },
+      },
+    },
     sitemap({
       customPages: dynamicPages,
       filter: (page) => !SITEMAP_EXCLUDE.some((re) => re.test(page)),
@@ -74,7 +87,17 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
     optimizeDeps: {
-      include: ["@tanstack/react-table", "motion/react", "lucide-react"],
+      include: [
+        "@tanstack/react-table",
+        "motion/react",
+        "lucide-react",
+        // ClientRouter's modules: otherwise found on the first page load, which
+        // re-optimizes and reloads the page.
+        "astro/virtual-modules/transitions-events.js",
+        "astro/virtual-modules/transitions-router.js",
+        "astro/virtual-modules/transitions-swap-functions.js",
+        "astro/virtual-modules/transitions-types.js",
+      ],
     },
     // Pre-bundle SSR-side React deps at startup. Discovered lazily, Vite re-optimizes
     // mid-request ("optimized dependencies changed. reloading") and the SSR runner

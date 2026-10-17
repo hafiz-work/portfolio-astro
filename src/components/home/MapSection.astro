@@ -132,13 +132,16 @@ const mapCenter: [number, number] =
     const entries = document.querySelectorAll<HTMLButtonElement>(".exp-entry");
     if (!entries.length) return;
     entries.forEach((entry) => {
+      // Runs on load and on astro:page-load (which also fires on the first load).
+      if (entry.dataset.bound === "1") return;
+      entry.dataset.bound = "1";
       entry.addEventListener("click", () => {
         entries.forEach((e) => e.setAttribute("aria-pressed", "false"));
         entry.setAttribute("aria-pressed", "true");
         const markerId = Number(entry.dataset.markerId);
         if (!Number.isNaN(markerId)) {
           window.dispatchEvent(
-            new CustomEvent("map-focus-marker", { detail: { markerId } }),
+            new CustomEvent("home-map:focus", { detail: { markerId } }),
           );
         }
       });

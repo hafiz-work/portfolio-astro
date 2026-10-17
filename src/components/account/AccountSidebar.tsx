@@ -26,6 +26,7 @@ import {
 import { authService, can, type Me } from "../../lib/auth";
 import { ACCOUNT_LINKS, activeAccountLink, initials } from "./account-nav";
 import { confirm } from "./ConfirmDialog";
+import { profileHref } from "../../lib/username";
 
 /** The account AppSidebar (shadcn sidebar-07): brand, section links, the user menu.
  *  Collapses to icons on desktop; below md the Sidebar renders itself in a Sheet. */
@@ -142,11 +143,19 @@ function NavUser({ me }: { me: Me }) {
                   </a>
                 </DropdownMenuItem>
               )}
+              {/* Public profile when it is live, else the site home (spec §3.3). */}
               <DropdownMenuItem asChild>
-                <a href="/">
-                  <Globe />
-                  Website
-                </a>
+                {me.profilePublic && profileHref(me.username) ? (
+                  <a href={profileHref(me.username)!}>
+                    <Globe />
+                    View public profile
+                  </a>
+                ) : (
+                  <a href="/">
+                    <Globe />
+                    Website
+                  </a>
+                )}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

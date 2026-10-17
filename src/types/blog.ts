@@ -37,6 +37,8 @@ export interface BlogPost {
   updatedAt: string
   /** Set for posts written by registered users (display name); null/absent for the owner's posts. */
   authorName?: string | null
+  /** Author's public profile username (/u/{username}); null unless their profile is public. */
+  authorUsername?: string | null
   /** Own/admin views: why a moderator rejected it. */
   moderationReason?: string | null
   sections?: BlogSection[]
@@ -60,6 +62,8 @@ export interface BlogPostSummary {
   updatedAt: string
   /** Set for posts written by registered users (display name); null/absent for the owner's posts. */
   authorName?: string | null
+  /** Author's public profile username (/u/{username}); null unless their profile is public. */
+  authorUsername?: string | null
   /** Own/admin views: why a moderator rejected it. */
   moderationReason?: string | null
 }

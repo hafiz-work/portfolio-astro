@@ -30,6 +30,7 @@ import AlertToast from "../../../components/ui/AlertToast.astro";
 </PrivateLayout>
 
 <script>
+  import { showToast, parseJsonArray } from "../../../lib/admin-ui";
   import { normalizeAuthor, normalizeQuote } from "../../../lib/quote-text";
   import { quotesService, categoryLabel } from "../../../lib/quotes";
   import { extractApiError } from "../../../lib/projects-cms";
@@ -45,31 +46,14 @@ import AlertToast from "../../../components/ui/AlertToast.astro";
     if (!form || !submitBtn) return;
     const formGuard = setupFormGuard(form);
 
-    const showAlert = (options: {
-      type?: "success" | "error" | "warning" | "info";
-      title?: string;
-      message?: string;
-    }) => (window as any).__uiAlerts?.["quote-alert"]?.show(options);
+    const showAlert = (options: Omit<Parameters<typeof showToast>[0], "id">) =>
+      showToast({ ...options, id: "quote-alert" });
 
     const fieldLabels: Record<string, string> = {
       text: "Quote text",
       author: "Author",
       source: "Source",
       tagIds: "Tags",
-    };
-
-    const parseJsonArray = (value: FormDataEntryValue) => {
-      const raw = String(value).trim();
-      if (!raw) return [];
-      try {
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return raw
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean);
-      }
     };
 
     // updateProjectOptions() technique from experiences: rebuild the MultiDropdown list client-side.

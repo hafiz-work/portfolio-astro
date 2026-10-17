@@ -14,6 +14,9 @@ export interface User {
 /** GET /me. `permissions` are lowercase `<module>.<action>` codes - gate UI on these, never on role names. */
 export interface Me extends User {
   permissions: string[];
+  /** Public profile at /u/{username}; null = not chosen yet. */
+  username: string | null;
+  profilePublic: boolean;
   profile: {
     displayName: string | null;
     bio: string | null;

@@ -7,21 +7,16 @@ import Combobox from "../../components/ui/Combobox.astro";
 import Disclaimer from "../../components/ui/Disclaimer.astro";
 import { SOLAT_ZONES } from "../../data/solat-zones";
 import PublicLayout from "../../layouts/PublicLayout.astro";
-import { isoToDmy } from "../../lib/date-my";
+import { isoToDmy, todayMY } from "../../lib/date-my";
 import { toHijri } from "../../lib/hari-kebesaran";
 import { getImsakiah } from "../../lib/imsakiah";
-import {
-  getPrayerTimes,
-  hhmm,
-  resolveZone,
-  todayInMalaysia,
-} from "../../lib/waktu-solat";
+import { getPrayerTimes, hhmm, resolveZone } from "../../lib/waktu-solat";
 
 // Jadual Imsakiah: the next (or current) Ramadan for a zone - src/lib/imsakiah.ts.
 // ?zone= (validated against JAKIM's list), ?h= Hijri year (current ±1 only).
 const q = Astro.url.searchParams;
 const zone = resolveZone(q.get("zone"));
-const today = todayInMalaysia();
+const today = todayMY();
 const now = await toHijri(today, today);
 const [hy, hm] = "error" in now ? [1448, 1] : now.hijri.split("-").map(Number);
 // Ramadan still to come this Hijri year, or in progress -> this year; else next year.
@@ -252,7 +247,7 @@ const daysLeft = data
               : "Jadual tidak dapat diambil sekarang. Cuba lagi sebentar."}{" "}
             <a
               href={`?zone=${zone.code}&h=${hYear - 1}`}
-              class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+              class="link"
             >
               Lihat Ramadan {hYear - 1}H
             </a>

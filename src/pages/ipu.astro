@@ -9,7 +9,7 @@ import IpuMap, { type IpuPoint } from "../components/ipu/IpuMap";
 import PublicLayout from "../layouts/PublicLayout.astro";
 import { BANDS, bandOf, getReadings, getTrend, sparkline, type Station } from "../lib/ipu";
 import { PERIOD_LABEL, cuacaAt, getNowAt, getTodayAll, metDayAt, periodAt } from "../lib/cuaca";
-import { todayMY } from "../lib/ramalan-cuaca";
+import { todayMY } from "../lib/date-my";
 
 // Weather is MET's forecast for this part of the day at the nearest MET location
 // (lib/cuaca) - a forecast, not a rain reading. The page renders without it.
@@ -170,7 +170,6 @@ const points: IpuPoint[] = stations.map((s) => ({
                   type="button"
                   role="tab"
                   id={`tab-${id}`}
-                  data-ipu-tab={id}
                   aria-controls={`panel-${id}`}
                   aria-selected={i === 0 ? "true" : "false"}
                   class="rounded-full px-4 py-1.5 text-sm/6 font-medium text-gray-600 aria-selected:bg-white aria-selected:text-gray-950 aria-selected:shadow-sm dark:text-gray-400 dark:aria-selected:bg-gray-950 dark:aria-selected:text-white"
@@ -251,7 +250,7 @@ const points: IpuPoint[] = stations.map((s) => ({
                 href="https://eqms.doe.gov.my/APIMS/main"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+                class="link"
               >
                 {data!.source}
               </a>
@@ -338,15 +337,11 @@ const points: IpuPoint[] = stations.map((s) => ({
 </PublicLayout>
 
 <script>
-  // Nearest station: the browser's location vs every station's coordinates,
-  // haversine distance, all on the device.
-  const distanceKm = (aLat: number, aLng: number, bLat: number, bLng: number) => {
-    const r = (d: number) => (d * Math.PI) / 180;
-    const h =
-      Math.sin(r(bLat - aLat) / 2) ** 2 +
-      Math.cos(r(aLat)) * Math.cos(r(bLat)) * Math.sin(r(bLng - aLng) / 2) ** 2;
-    return 2 * 6371 * Math.asin(Math.sqrt(h));
-  };
+  import { copyText } from "../lib/clipboard";
+  import { distanceKm, geoErrorText, locateOnce } from "../lib/geo";
+  import { bindViewTabs, POINTS_MAP_FOCUS } from "../lib/map-view";
+
+  // Nearest station: the browser's location vs every station's coordinates, all on the device.
 
   const initLocate = () => {
     const btn = document.getElementById("ipu-locate");
@@ -357,8 +352,8 @@ const points: IpuPoint[] = stations.map((s) => ({
     const stations = [...document.querySelectorAll<HTMLElement>("[data-lat][data-lng]")];
     btn.addEventListener("click", () => {
       status.textContent = "Mencari lokasi…";
-      navigator.geolocation.getCurrentPosition(
-        ({ coords }) => {
+      locateOnce().then(
+        (coords) => {
           let best: HTMLElement | null = null;
           let bestKm = Infinity;
           for (const s of stations) {
@@ -368,44 +363,13 @@ const points: IpuPoint[] = stations.map((s) => ({
           }
           if (!best) return void (status.textContent = "Tiada stesen dijumpai.");
           stations.forEach((s) => s.toggleAttribute("data-nearest", s === best));
-          window.dispatchEvent(new CustomEvent("points-map:focus", { detail: { id: best.id.replace("stesen-", "") } }));
+          window.dispatchEvent(new CustomEvent(POINTS_MAP_FOCUS, { detail: { id: best.id.replace("stesen-", "") } }));
           status.textContent = `Stesen terdekat: ${best.dataset.name} (${Math.round(bestKm)} km)`;
           if (!document.getElementById("panel-senarai")?.hidden) best.scrollIntoView({ behavior: "smooth", block: "center" });
         },
-        (err) =>
-          (status.textContent =
-            err.code === err.PERMISSION_DENIED ? "Akses lokasi ditolak." : "Lokasi tak dapat dikesan."),
-        { timeout: 10000, maximumAge: 10 * 60 * 1000 },
+        (err) => (status.textContent = `${geoErrorText(err)}.`),
       );
     });
-  };
-  // Peta (default) / Senarai tabs; #senarai opens the list directly.
-  const initTabs = () => {
-    const tabs = [...document.querySelectorAll<HTMLButtonElement>("#ipu-tabs [data-ipu-tab]")];
-    if (!tabs.length || tabs[0].dataset.bound === "1") return;
-    const show = (id: string) => {
-      for (const t of tabs) {
-        const on = t.dataset.ipuTab === id;
-        t.setAttribute("aria-selected", String(on));
-        t.tabIndex = on ? 0 : -1;
-        document.getElementById(`panel-${t.dataset.ipuTab}`)!.hidden = !on;
-      }
-    };
-    for (const t of tabs) {
-      t.dataset.bound = "1";
-      t.addEventListener("click", () => {
-        show(t.dataset.ipuTab!);
-        // Keep ?stesen= (the selected station) either way.
-        history.replaceState(history.state, "", t.dataset.ipuTab === "peta" ? location.pathname + location.search : "#senarai");
-      });
-      t.addEventListener("keydown", (e) => {
-        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-        const next = tabs[(tabs.indexOf(t) + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
-        next.focus();
-        next.click();
-      });
-    }
-    show(location.hash === "#senarai" ? "senarai" : "peta");
   };
 
   // Widget generator: station pick -> snippet + preview; copy button.
@@ -422,10 +386,8 @@ const points: IpuPoint[] = stations.map((s) => ({
       preview.src = `/ipu/embed?stesen=${encodeURIComponent(select.value)}`;
     });
     btn.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(code.value);
-        btn.textContent = "Disalin";
-      } catch {
+      if (await copyText(code.value)) btn.textContent = "Disalin";
+      else {
         code.select(); // clipboard blocked: let the user copy it
         btn.textContent = "Tekan Ctrl/Cmd+C";
       }
@@ -445,7 +407,7 @@ const points: IpuPoint[] = stations.map((s) => ({
       const map = document.getElementById("panel-peta")!;
       map.scrollIntoView({ behavior: "smooth", block: "center" });
       // After the panel is visible, so the map has its size before it flies.
-      requestAnimationFrame(() => window.dispatchEvent(new CustomEvent("points-map:focus", { detail: { id } })));
+      requestAnimationFrame(() => window.dispatchEvent(new CustomEvent(POINTS_MAP_FOCUS, { detail: { id } })));
     });
   };
 
@@ -480,7 +442,7 @@ const points: IpuPoint[] = stations.map((s) => ({
     initShow();
     initFilter();
     initEmbed();
-    initTabs();
+    bindViewTabs("ipu-tabs");
     initLocate();
   };
   init();

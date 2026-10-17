@@ -31,6 +31,9 @@ export type ProfileInput = Partial<{
   linkedinUrl: string | null;
   githubUrl: string | null;
   twitterUrl: string | null;
+  /** null clears it (and makes the profile private). */
+  username: string | null;
+  profilePublic: boolean;
 }>;
 
 class AccountService extends ApiClient {

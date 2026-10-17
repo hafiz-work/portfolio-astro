@@ -1,46 +1,13 @@
-// Today's MET Malaysia forecast for a JAKIM zone (Paparan Masjid header).
-// One location per zone (src/data/solat-zone-met.ts); MET publishes 7 days per
-// location, refreshed through the day, so cache a few hours keyed by location + date.
-import { ZONE_MET } from "../data/solat-zone-met";
-import { getJson, withFallback } from "./fallback";
-
-export interface Forecast {
-  /** "Ribut petir di beberapa tempat" */
-  summary: string;
-  min: number;
-  max: number;
-}
-
-type Row = { date: string; summary_forecast: string | null; min_temp: number | null; max_temp: number | null };
-
-/** Forecast for `zone` on `ymd` (Malaysian "YYYY-MM-DD"), or null (unmapped zone, MET down). */
-export async function getForecast(zone: string, ymd: string): Promise<Forecast | null> {
-  const loc = ZONE_MET[zone];
-  if (!loc) return null;
-  const got = await withFallback<Forecast>(
-    `cuaca:${loc}:${ymd}`,
-    [{
-      name: "MET Malaysia",
-      load: async () => {
-        const rows = await getJson<Row[]>(
-          `https://api.data.gov.my/weather/forecast/?filter=${loc}@location__location_id`,
-        );
-        const r = Array.isArray(rows) ? rows.find((x) => x.date === ymd) : undefined;
-        return r?.summary_forecast && r.min_temp != null && r.max_temp != null
-          ? { summary: r.summary_forecast, min: r.min_temp, max: r.max_temp }
-          : null;
-      },
-    }],
-    { freshS: 3 * 60 * 60, staleS: 12 * 60 * 60 },
-  );
-  return got?.data ?? null;
-}
-
 // /ipu: today's MET forecast for every location in one request, matched to each air
 // station by the nearest MET location with coordinates (src/data/cuaca-lokasi.ts).
 // A forecast for the current part of the day - MET publishes no live rain readings.
+// (Paparan Masjid uses today's row of getRamalan in src/lib/ramalan-cuaca.ts.)
 import { LOKASI } from "../data/cuaca-lokasi";
+import { getJson, withFallback } from "./fallback";
+import { distanceKm } from "./geo";
 import { OPEN_METEO_SOURCE, wmoText } from "./ramalan-cuaca";
+
+type Row = { date: string; summary_forecast: string | null; min_temp: number | null; max_temp: number | null };
 
 export type Period = "morning" | "afternoon" | "night";
 export type Sky = "hujan" | "ribut" | "jerebu" | "cerah";
@@ -68,16 +35,13 @@ export function skyOf(text: string): Sky {
   return "cerah";
 }
 
-const rad = (d: number) => (d * Math.PI) / 180;
-const km = (a: number, b: number, c: number, d: number) =>
-  2 * 6371 * Math.asin(Math.sqrt(Math.sin(rad(c - a) / 2) ** 2 + Math.cos(rad(a)) * Math.cos(rad(c)) * Math.sin(rad(d - b) / 2) ** 2));
 const GEO = LOKASI.filter((l) => l.lat != null && l.lng != null);
 
 /** Nearest MET location within 50 km (every JAS station today is within 47 km), else null. */
 export function nearestMet(lat: number, lng: number) {
   let best: { id: string; name: string; d: number } | null = null;
   for (const l of GEO) {
-    const d = km(lat, lng, l.lat!, l.lng!);
+    const d = distanceKm(lat, lng, l.lat!, l.lng!);
     if (d <= 50 && (!best || d < best.d)) best = { id: l.id, name: l.name, d };
   }
   return best;

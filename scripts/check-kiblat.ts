@@ -1,22 +1,20 @@
 // bun scripts/check-kiblat.ts - qibla bearing vs JAKIM's published zone bearings.
+import { expect } from "bun:test";
 import { KAABAH, formatBearing, qiblaBearing, qiblaDistanceKm, qiblaPath } from "../src/lib/kiblat";
 
-const near = (a: number, b: number, tol: number, what: string) => {
-  if (Math.abs(a - b) > tol) throw new Error(`${what}: got ${a.toFixed(3)}, want ${b} ±${tol}`);
-};
 // JAKIM e-solat zone bearings (checked 2026-10-11): WLY01 292°31′16″, SBH07 290°40′37″.
 // Zones are areas, so a city point lands within a degree of the zone figure.
-near(qiblaBearing(3.139, 101.6869), 292.52, 0.2, "Kuala Lumpur");
-near(qiblaBearing(5.9804, 116.0735), 290.68, 1, "Kota Kinabalu");
-near(qiblaDistanceKm(3.139, 101.6869), 7000, 200, "KL distance km");
-if (formatBearing(292.5211) !== "292° 31′") throw new Error(formatBearing(292.5211));
-if (formatBearing(359.999) !== "0° 00′") throw new Error(formatBearing(359.999));
+expect(qiblaBearing(3.139, 101.6869), "Kuala Lumpur").toBeWithin(292.52 - 0.2, 292.52 + 0.2);
+expect(qiblaBearing(5.9804, 116.0735), "Kota Kinabalu").toBeWithin(290.68 - 1, 290.68 + 1);
+expect(qiblaDistanceKm(3.139, 101.6869), "KL distance km").toBeWithin(7000 - 200, 7000 + 200);
+expect(formatBearing(292.5211), "formatBearing 292.5211").toBe("292° 31′");
+expect(formatBearing(359.999), "formatBearing 359.999").toBe("0° 00′");
 // Great-circle path: starts here, ends at the Kaabah, first leg heads along the bearing.
 const path = qiblaPath(3.139, 101.6869);
-near(path[0][0], 101.6869, 1e-6, "path start lng");
-near(path.at(-1)![1], KAABAH.lat, 1e-6, "path end lat");
-near(path.at(-1)![0], KAABAH.lng, 1e-6, "path end lng");
+expect(path[0][0], "path start lng").toBeWithin(101.6869 - 1e-6, 101.6869 + 1e-6);
+expect(path.at(-1)![1], "path end lat").toBeWithin(KAABAH.lat - 1e-6, KAABAH.lat + 1e-6);
+expect(path.at(-1)![0], "path end lng").toBeWithin(KAABAH.lng - 1e-6, KAABAH.lng + 1e-6);
 const [lng1, lat1] = path[1];
 const firstLeg = (Math.atan2(lng1 - 101.6869, lat1 - 3.139) * 180) / Math.PI + 360;
-near(firstLeg % 360, 292.5, 2, "first leg direction");
+expect(firstLeg % 360, "first leg direction").toBeWithin(292.5 - 2, 292.5 + 2);
 console.log("check-kiblat: ok", formatBearing(qiblaBearing(3.139, 101.6869)), Math.round(qiblaDistanceKm(3.139, 101.6869)), "km");

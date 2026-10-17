@@ -7,9 +7,10 @@ import Combobox from "../components/ui/Combobox.astro";
 import DatePicker from "../components/ui/DatePicker.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
 import { toHijri, toMasihi } from "../lib/hari-kebesaran";
-import { formatHijri, HIJRI_MONTHS, todayInMalaysia } from "../lib/waktu-solat";
+import { formatHijri, HIJRI_MONTHS } from "../lib/waktu-solat";
+import { todayMY } from "../lib/date-my";
 
-const today = todayInMalaysia();
+const today = todayMY();
 const q = Astro.url.searchParams;
 
 // The Hijri form sends hy/hm/hd (no JS needed); fold them into one shareable ?hijri=.

@@ -205,6 +205,69 @@ export async function getPublicQuotes(): Promise<Quote[]> {
     return (await fetchJson<Quote[]>("quotes")) ?? [];
 }
 
+/** /u/{username} - only these fields reach the page, whatever else the API grows. */
+export interface PublicProfile {
+    username: string;
+    displayName: string;
+    bio: string | null;
+    location: string | null;
+    links: { label: string; href: string }[];
+    memberSince: string | null;
+    posts: { slug: string; title: string; excerpt: string; publishedAt: string | null; tags: string[] }[];
+    quotes: { id: number; text: string; author: string; source: string | null }[];
+}
+
+const str = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v : null);
+const httpUrl = (v: unknown): string | null => {
+    const s = str(v);
+    return s && /^https?:\/\/\S+$/i.test(s) ? s : null;
+};
+const LINKS = [["website", "Website"], ["githubUrl", "GitHub"], ["linkedinUrl", "LinkedIn"], ["twitterUrl", "X"]] as const;
+
+/** API answer -> PublicProfile, field by field (never a spread). Pure. */
+export function toPublicProfile(raw: any, username: string): PublicProfile {
+    const links = raw?.links ?? {};
+    const list = (v: unknown): any[] => (Array.isArray(v) ? v : []);
+    return {
+        username,
+        displayName: str(raw?.displayName) ?? username,
+        bio: str(raw?.bio),
+        location: str(raw?.location),
+        links: LINKS.flatMap(([key, label]) => {
+            const href = httpUrl(links[key]);
+            return href ? [{ label, href }] : [];
+        }),
+        memberSince: typeof raw?.memberSince === "string" && /^\d{4}-\d{2}$/.test(raw.memberSince) ? raw.memberSince : null,
+        posts: list(raw?.posts)
+            .filter((p) => str(p?.slug) && str(p?.title))
+            .map((p) => ({
+                slug: String(p.slug),
+                title: String(p.title),
+                excerpt: str(p.excerpt) ?? "",
+                publishedAt: str(p.publishedAt),
+                tags: list(p.tags).filter((t): t is string => typeof t === "string"),
+            })),
+        quotes: list(raw?.quotes)
+            .filter((q) => str(q?.text))
+            .map((q) => ({ id: Number(q.id), text: String(q.text), author: str(q.author) ?? "", source: str(q.source) })),
+    };
+}
+
+/**
+ * Public profile, or null on 404 (unknown/private - the API answers both alike).
+ * Unlike the loaders above this throws when the API is down, so the page errors
+ * instead of telling search engines a real profile is gone. `username` must
+ * already be valid (isPublicUsername).
+ */
+export async function getPublicProfile(username: string): Promise<PublicProfile | null> {
+    const response = await apiGet(`public/profiles/${encodeURIComponent(username)}`);
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error(`Public profile API error: ${response.status}`);
+    const json = (await response.json()) as { success?: boolean; data?: unknown };
+    if (!json?.success || !json.data) throw new Error("Public profile API error");
+    return toPublicProfile(json.data, username);
+}
+
 export async function getPublicProjectPolicy(slug: string): Promise<ProjectPolicy | null> {
     return await fetchJson<ProjectPolicy>(`projects/${encodeURIComponent(slug)}/policy`);
 }

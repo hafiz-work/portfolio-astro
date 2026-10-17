@@ -3,6 +3,7 @@ export const prerender = false;
 import TechHeading from "../../components/layout/TechHeading.astro";
 import PublicLayout from "../../layouts/PublicLayout.astro";
 import { getPublicPosts } from "../../lib/public-content";
+import { profileHref } from "../../lib/username";
 
 // Mirrors tailwindcss.com/blog: big title + lead on hairline rows, then one
 // row per post - [date | divider | title, excerpt, read more] - with spacer
@@ -68,7 +69,14 @@ const formatDate = (value: string) =>
                       </div>
                       {post.authorName && (
                         <p class="mb-2 text-sm/6 text-gray-500 dark:text-gray-400">
-                          by {post.authorName}
+                          by{" "}
+                          {profileHref(post.authorUsername) ? (
+                            <a href={profileHref(post.authorUsername)} class="font-medium text-gray-950 hover:text-sky-600 dark:text-white dark:hover:text-sky-400">
+                              {post.authorName}
+                            </a>
+                          ) : (
+                            post.authorName
+                          )}
                         </p>
                       )}
                       <a class="font-semibold" href={`/blog/${post.slug}`}>

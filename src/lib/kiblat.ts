@@ -1,5 +1,6 @@
 // Qibla bearing and distance from any point - great-circle maths, no API.
 // Check: bun scripts/check-kiblat.ts
+import { distanceKm } from "./geo";
 
 /** Kaabah, Masjidil Haram. */
 export const KAABAH = { lat: 21.422487, lng: 39.826206 };
@@ -18,12 +19,7 @@ export function qiblaBearing(lat: number, lng: number): number {
 }
 
 /** Great-circle distance to the Kaabah in km (haversine, mean Earth radius). */
-export function qiblaDistanceKm(lat: number, lng: number): number {
-  const h =
-    Math.sin(rad(KAABAH.lat - lat) / 2) ** 2 +
-    Math.cos(rad(lat)) * Math.cos(rad(KAABAH.lat)) * Math.sin(rad(KAABAH.lng - lng) / 2) ** 2;
-  return 2 * 6371 * Math.asin(Math.sqrt(h));
-}
+export const qiblaDistanceKm = (lat: number, lng: number) => distanceKm(lat, lng, KAABAH.lat, KAABAH.lng);
 
 /** 292.52 -> "292° 31′" (how JAKIM writes the kiblat direction). */
 export const formatBearing = (b: number) => {

@@ -35,3 +35,46 @@ export function confirmDialog(opts: {
   if (modal?.show) return modal.show(opts);
   return Promise.resolve(window.confirm(opts.message ?? "Are you sure?"));
 }
+
+// Form helpers shared by the admin new/edit pages (blog, experiences, quotes).
+
+/** API error -> toast text, with the field's label appended when the API names one. */
+export function formatErrorMessage(
+  error: unknown,
+  fallback: string,
+  labels: Record<string, string>,
+): { message: string; field?: string } {
+  const e = error as { message?: string; data?: { error?: string; field?: string } };
+  const message = e?.data?.error || e?.message || fallback;
+  const field = e?.data?.field;
+  return field ? { message: `${message} (Field: ${labels[field] || field})`, field } : { message, field };
+}
+
+/** "" or not a number -> undefined. */
+export function normalizeNumber(value: FormDataEntryValue): number | undefined {
+  const raw = String(value).trim();
+  if (raw === "") return undefined;
+  const parsed = Number(raw);
+  return Number.isNaN(parsed) ? undefined : parsed;
+}
+
+/** Trimmed text, "" -> null. */
+export function normalizeOptionalText(value: FormDataEntryValue): string | null {
+  const trimmed = String(value).trim();
+  return trimmed === "" ? null : trimmed;
+}
+
+/** MultiDropdown's JSON array value; falls back to a comma list. */
+export function parseJsonArray(value: FormDataEntryValue): unknown[] {
+  const raw = String(value).trim();
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return raw
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+}

@@ -61,7 +61,7 @@ const item =
             : p === "/showcase" || document.querySelector("[data-showcase-app]")
               ? "showcase"
               : null;
-    document.querySelectorAll<HTMLAnchorElement>("[data-tab]").forEach((a) => {
+    document.querySelectorAll<HTMLAnchorElement>("#mobile-tabs [data-tab]").forEach((a) => {
       if (a.dataset.tab === key) a.setAttribute("aria-current", "page");
       else a.removeAttribute("aria-current");
     });

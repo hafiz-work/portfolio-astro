@@ -222,7 +222,7 @@ import PublicLayout from "../layouts/PublicLayout.astro";
         kalibrasi. Bearing dikira dari arah utara benar (great-circle ke
         Kaabah); arah rasmi bagi setiap zon ada di <a
           href="/waktu-solat"
-          class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+          class="link"
           >Waktu Solat</a
         >.
       </p>
@@ -240,6 +240,7 @@ import PublicLayout from "../layouts/PublicLayout.astro";
 
 <script>
   import { formatBearing, qiblaBearing, qiblaDistanceKm } from "../lib/kiblat";
+  import { geoErrorText, locateOnce } from "../lib/geo";
 
   type OrientEvent = DeviceOrientationEvent & { webkitCompassHeading?: number };
   type PermissionApi = {
@@ -341,8 +342,8 @@ import PublicLayout from "../layouts/PublicLayout.astro";
         typeof DeviceOrientationEvent !== "undefined"
           ? await startCompass()
           : false;
-      navigator.geolocation.getCurrentPosition(
-        ({ coords }) => {
+      locateOnce().then(
+        (coords) => {
           qibla = qiblaBearing(coords.latitude, coords.longitude);
           const km = Math.round(
             qiblaDistanceKm(coords.latitude, coords.longitude),
@@ -371,18 +372,8 @@ import PublicLayout from "../layouts/PublicLayout.astro";
         },
         (err) => {
           btn.disabled = false;
-          const denied = err.code === err.PERMISSION_DENIED;
-          status.textContent = denied
-            ? "Akses lokasi ditolak."
-            : err.code === err.TIMEOUT
-              ? "Lokasi mengambil masa terlalu lama."
-              : "Lokasi tak dapat dikesan.";
-          showHelp(denied ? "denied" : "off");
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 15000,
-          maximumAge: 10 * 60 * 1000,
+          status.textContent = `${geoErrorText(err)}.`;
+          showHelp(err.code === err.PERMISSION_DENIED ? "denied" : "off");
         },
       );
     });

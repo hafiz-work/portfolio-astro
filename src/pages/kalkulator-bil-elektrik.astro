@@ -1,30 +1,56 @@
 ---
+import ResetButton from "../components/ui/ResetButton.astro";
 import Disclaimer from "../components/ui/Disclaimer.astro";
 import BackLink from "../components/ui/BackLink.astro";
 import TechHeading from "../components/layout/TechHeading.astro";
 import Combobox from "../components/ui/Combobox.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
-import { AFA, AMBANG_SEMENTARA, EEI, TARIF, TARIKH_SEMAK } from "../data/tarif-elektrik";
+import {
+  AFA,
+  AMBANG_SEMENTARA,
+  EEI,
+  TARIF,
+  TARIKH_SEMAK,
+} from "../data/tarif-elektrik";
 import { MAX_KWH, paramBulan } from "../lib/bil-elektrik";
+import { formatIsoMs, isoToDmy } from "../lib/date-my";
+import { rm } from "../lib/money";
 export const prerender = true;
 
 const bulanNama = (b: string) =>
-  new Intl.DateTimeFormat("ms-MY", { timeZone: "UTC", month: "long", year: "numeric" }).format(new Date(`${b}-01T00:00:00Z`));
+  formatIsoMs(`${b}-01`, { month: "long", year: "numeric" });
 const sen = (x: number) => `${x > 0 ? "+" : ""}${(x / 100).toFixed(2)}`;
 const bulan = Object.keys(AFA).sort().reverse();
 const terkini = bulan[0];
-const semak = TARIKH_SEMAK.split("-").reverse().join("/");
-const rm = (s: number) => (s / 100).toFixed(2);
+const semak = isoToDmy(TARIKH_SEMAK);
 
 const jadual = [
-  ["Caj Tenaga (≤ 1,500 kWj sebulan)", `${(TARIF.tenaga / 100).toFixed(2)} sen/kWj`],
-  ["Caj Tenaga (> 1,500 kWj sebulan, untuk semua kWj)", `${(TARIF.tenagaTinggi / 100).toFixed(2)} sen/kWj`],
+  [
+    "Caj Tenaga (≤ 1,500 kWj sebulan)",
+    `${(TARIF.tenaga / 100).toFixed(2)} sen/kWj`,
+  ],
+  [
+    "Caj Tenaga (> 1,500 kWj sebulan, untuk semua kWj)",
+    `${(TARIF.tenagaTinggi / 100).toFixed(2)} sen/kWj`,
+  ],
   ["Caj Kapasiti", `${(TARIF.kapasiti / 100).toFixed(2)} sen/kWj`],
   ["Caj Rangkaian", `${(TARIF.rangkaian / 100).toFixed(2)} sen/kWj`],
-  ["Caj Peruncitan (dikecualikan pada ambang perlindungan dan ke bawah)", `RM${rm(TARIF.runcit)} sebulan`],
-  ["AFA (dikecualikan pada ambang perlindungan dan ke bawah)", "berubah setiap bulan"],
-  [`KWTBB (dikecualikan pada ${TARIF.hadKwtbb} kWj dan ke bawah)`, `${TARIF.kwtbbPerSeribu / 10}%`],
-  ["Cukai Perkhidmatan (atas bahagian melebihi ambang)", `${TARIF.cukaiPeratus}%`],
+  [
+    "Caj Peruncitan (dikecualikan pada ambang perlindungan dan ke bawah)",
+    `${rm(TARIF.runcit)} sebulan`,
+  ],
+  [
+    "AFA (dikecualikan pada ambang perlindungan dan ke bawah)",
+    "berubah setiap bulan",
+  ],
+  [
+    `KWTBB (dikecualikan pada ${TARIF.hadKwtbb} kWj dan ke bawah)`,
+    `${TARIF.kwtbbPerSeribu / 10}%`,
+  ],
+  [
+    "Cukai Perkhidmatan (atas bahagian melebihi ambang)",
+    `${TARIF.cukaiPeratus}%`,
+  ],
 ];
 ---
 
@@ -35,24 +61,37 @@ const jadual = [
   <div class="relative mx-auto mt-8 max-lg:max-w-2xl sm:mt-24">
     <BackLink />
     <div class="line-y">
-      <h1 class="mx-2 text-4xl tracking-tighter text-balance sm:text-7xl lg:text-8xl">
-        <TechHeading text="Bil Elektrik" fontSize={96} fontWeight={400} box="-my-12 h-48" />
+      <h1
+        class="mx-2 text-4xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Bil Elektrik"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
       </h1>
     </div>
     <div class="line-y mt-10">
       <p class="mx-2 text-lg">
-        Anggaran bil elektrik TNB untuk rumah (Tarif Domestik Am, Semenanjung Malaysia), ikut struktur tarif
-        berkuat kuasa 1 Julai 2025.
+        Anggaran bil elektrik TNB untuk rumah (Tarif Domestik Am, Semenanjung
+        Malaysia), ikut struktur tarif berkuat kuasa 1 Julai 2025.
       </p>
     </div>
     <div class="line-y mt-4">
-      <p class="mx-2 font-mono text-sm/6 tracking-widest text-gray-500 uppercase">
+      <p
+        class="mx-2 font-mono text-sm/6 tracking-widest text-gray-500 uppercase"
+      >
         AFA terkini: {bulanNama(terkini)} · disemak {semak}
       </p>
     </div>
 
     <div class="line-y mt-10">
-      <form id="bil" class="mx-2 grid gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] sm:items-end" novalidate>
+      <form
+        id="bil"
+        class="mx-2 grid gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] sm:items-end"
+        novalidate
+      >
         <label class="grid gap-1.5 text-sm/6 font-medium">
           Penggunaan sebulan (kWj)
           <input
@@ -69,7 +108,9 @@ const jadual = [
           />
         </label>
         <div class="grid gap-1.5">
-          <label for="bil-bulan" class="text-sm/6 font-medium">Bulan penggunaan</label>
+          <label for="bil-bulan" class="text-sm/6 font-medium"
+            >Bulan penggunaan</label
+          >
           <Combobox
             id="bil-bulan"
             listLabel="Bulan penggunaan"
@@ -83,21 +124,37 @@ const jadual = [
             }))}
           />
         </div>
-        <p id="bil-ralat" role="alert" class="text-sm/6 font-medium text-red-600 empty:hidden sm:col-span-2 dark:text-red-400"></p>
+        <p
+          id="bil-ralat"
+          role="alert"
+          class="text-sm/6 font-medium text-red-600 empty:hidden sm:col-span-2 dark:text-red-400"
+        >
+        </p>
+        <ResetButton class="sm:col-span-2" />
       </form>
     </div>
 
     <div class="line-y mt-10" aria-live="polite">
       <div class="mx-2">
-        <p class="text-sm/6 text-gray-600 dark:text-gray-400">Anggaran jumlah bil</p>
-        <p class="text-4xl font-medium tracking-tight tabular-nums">RM <span id="bil-jumlah">-</span></p>
-        <p id="bil-ringkas" class="mt-1 text-sm/6 text-gray-600 dark:text-gray-400"></p>
+        <p class="text-sm/6 text-gray-600 dark:text-gray-400">
+          Anggaran jumlah bil
+        </p>
+        <p class="text-4xl font-medium tracking-tight tabular-nums">
+          RM <span id="bil-jumlah">-</span>
+        </p>
+        <p
+          id="bil-ringkas"
+          class="mt-1 text-sm/6 text-gray-600 dark:text-gray-400"
+        >
+        </p>
       </div>
     </div>
 
     <div class="line-y mt-6 overflow-x-auto">
       <table class="w-full text-left text-sm/6 tabular-nums">
-        <thead class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+        <thead
+          class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase"
+        >
           <tr class="border-b border-gray-950/5 dark:border-white/10">
             <th class="px-2 py-2 font-medium">Komponen</th>
             <th class="px-2 py-2 font-medium">Kiraan</th>
@@ -109,10 +166,12 @@ const jadual = [
     </div>
     <div class="line-y mt-4">
       <p class="mx-2 text-xs/5 text-gray-500 dark:text-gray-400">
-        Jumlah sebelum pelarasan penggenapan. Kiraan untuk satu bulan kalendar penuh: TNB membahagikan tempoh
-        bil yang merentas dua bulan (AFA dan ambang ikut bulan), dan mengenakan cukai ke atas seluruh bil jika
-        tempoh bil kurang daripada 28 hari - kedua-duanya tidak dikira di sini. Tidak termasuk tarif ToU, NEM/solar,
-        rebat (cth. rebat RM40 e-Kasih), tunggakan dan caj lain.
+        Jumlah sebelum pelarasan penggenapan. Kiraan untuk satu bulan kalendar
+        penuh: TNB membahagikan tempoh bil yang merentas dua bulan (AFA dan
+        ambang ikut bulan), dan mengenakan cukai ke atas seluruh bil jika tempoh
+        bil kurang daripada 28 hari - kedua-duanya tidak dikira di sini. Tidak
+        termasuk tarif ToU, NEM/solar, rebat (cth. rebat RM40 e-Kasih),
+        tunggakan dan caj lain.
       </p>
     </div>
 
@@ -121,9 +180,13 @@ const jadual = [
     </div>
     <div class="line-y mt-4">
       <p class="mx-2 text-sm/6 text-gray-600 dark:text-gray-400">
-        Tarif Domestik Am TNB berkuat kuasa 1 Julai 2025. Ambang perlindungan {TARIF.ambang} kWj sebulan;
-        dinaikkan ke {AMBANG_SEMENTARA.kwh} kWj bagi penggunaan {bulanNama(AMBANG_SEMENTARA.dari)} hingga
-        {" "}{bulanNama(AMBANG_SEMENTARA.hingga)} (siaran akhbar TNB 18 September 2026).
+        Tarif Domestik Am TNB berkuat kuasa 1 Julai 2025. Ambang perlindungan {
+          TARIF.ambang
+        } kWj sebulan; dinaikkan ke {AMBANG_SEMENTARA.kwh} kWj bagi penggunaan {
+          bulanNama(AMBANG_SEMENTARA.dari)
+        } hingga
+        {" "}{bulanNama(AMBANG_SEMENTARA.hingga)} (siaran akhbar TNB 18 September
+        2026).
       </p>
     </div>
     <div class="line-y mt-4 overflow-x-auto">
@@ -133,7 +196,9 @@ const jadual = [
             jadual.map(([k, v]) => (
               <tr class="border-b border-gray-950/5 dark:border-white/10">
                 <td class="px-2 py-2">{k}</td>
-                <td class="px-2 py-2 text-right font-medium whitespace-nowrap tabular-nums">{v}</td>
+                <td class="px-2 py-2 text-right font-medium whitespace-nowrap tabular-nums">
+                  {v}
+                </td>
               </tr>
             ))
           }
@@ -153,7 +218,9 @@ const jadual = [
         </div>
         <div class="line-y mt-2 overflow-x-auto">
           <table class="w-full text-left text-sm/6 tabular-nums">
-            <thead class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+            <thead
+              class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase"
+            >
               <tr class="border-b border-gray-950/5 dark:border-white/10">
                 <th class="px-2 py-2 font-medium">kWj sebulan</th>
                 <th class="px-2 py-2 text-right font-medium">sen/kWj</th>
@@ -163,8 +230,13 @@ const jadual = [
               {
                 EEI.map((t, i) => (
                   <tr class="border-b border-gray-950/5 dark:border-white/10">
-                    <td class="px-2 py-1.5">{i === 0 ? 0 : EEI[i - 1].hingga + 1} - {t.hingga.toLocaleString("en-MY")}</td>
-                    <td class="px-2 py-1.5 text-right">{(t.kadar / 100).toFixed(2)}</td>
+                    <td class="px-2 py-1.5">
+                      {i === 0 ? 0 : EEI[i - 1].hingga + 1} -{" "}
+                      {t.hingga.toLocaleString("en-MY")}
+                    </td>
+                    <td class="px-2 py-1.5 text-right">
+                      {(t.kadar / 100).toFixed(2)}
+                    </td>
                   </tr>
                 ))
               }
@@ -178,13 +250,15 @@ const jadual = [
         </div>
         <div class="line-y mt-2">
           <p class="mx-2 text-sm/6 text-gray-600 dark:text-gray-400">
-            Pelarasan Kos Bahan Api Secara Automatik, diumumkan setiap bulan (negatif = rebat). Unjuran bulan
-            hadapan tidak digunakan.
+            Pelarasan Kos Bahan Api Secara Automatik, diumumkan setiap bulan
+            (negatif = rebat). Unjuran bulan hadapan tidak digunakan.
           </p>
         </div>
         <div class="line-y mt-2 overflow-x-auto">
           <table class="w-full text-left text-sm/6 tabular-nums">
-            <thead class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+            <thead
+              class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase"
+            >
               <tr class="border-b border-gray-950/5 dark:border-white/10">
                 <th class="px-2 py-2 font-medium">Bulan penggunaan</th>
                 <th class="px-2 py-2 text-right font-medium">sen/kWj</th>
@@ -207,11 +281,21 @@ const jadual = [
     <div class="line-y mt-4">
       <p class="mx-2 text-xs/5 text-gray-500 dark:text-gray-400">
         Sumber:{" "}
-        <a href="https://www.mytnb.com.my/tariff" target="_blank" rel="noopener noreferrer" class="font-medium text-sky-600 hover:underline dark:text-sky-400">
+        <a
+          href="https://www.mytnb.com.my/tariff"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="link"
+        >
           myTNB - Tarif Elektrik
         </a>{" "}
         (Panduan Tarif Elektrik, contoh bil, kalkulator bil TNB) dan{" "}
-        <a href="https://www.tnb.com.my/assets/press_releases/20260918_24_bm.pdf" target="_blank" rel="noopener noreferrer" class="font-medium text-sky-600 hover:underline dark:text-sky-400">
+        <a
+          href="https://www.tnb.com.my/assets/press_releases/20260918_24_bm.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="link"
+        >
           siaran akhbar TNB 18 September 2026
         </a>
         . Disemak {semak}.
@@ -219,8 +303,18 @@ const jadual = [
     </div>
 
     <div class="line-y mt-6">
-      <Disclaimer class="mx-2" sources={[{ name: "Tenaga Nasional Berhad (myTNB)", href: "https://www.mytnb.com.my/tariff" }]}>
-        <Fragment set:html={`Ini <strong>anggaran</strong> sahaja. Bil sebenar dikira oleh TNB ikut bacaan meter, tempoh bil dan kadar AFA bulanan yang berkuat kuasa, dan mungkin berbeza.`} />
+      <Disclaimer
+        class="mx-2"
+        sources={[
+          {
+            name: "Tenaga Nasional Berhad (myTNB)",
+            href: "https://www.mytnb.com.my/tariff",
+          },
+        ]}
+      >
+        <Fragment
+          set:html={`Ini <strong>anggaran</strong> sahaja. Bil sebenar dikira oleh TNB ikut bacaan meter, tempoh bil dan kadar AFA bulanan yang berkuat kuasa, dan mungkin berbeza.`}
+        />
       </Disclaimer>
     </div>
     <div class="mb-16 sm:mb-46"></div>
@@ -230,6 +324,16 @@ const jadual = [
 <script>
   import { TARIF } from "../data/tarif-elektrik";
   import { MAX_KWH, kiraBil, type Caj } from "../lib/bil-elektrik";
+  import { ringgit, rm } from "../lib/money";
+  import {
+    loadState,
+    pickOption,
+    saveState,
+    type CalcState,
+  } from "../lib/calc-state";
+
+  const KEY = "bil-elektrik";
+  const NAMES = ["kwh", "bulan"];
 
   const initBil = () => {
     const form = document.getElementById("bil");
@@ -241,15 +345,23 @@ const jadual = [
     const jumlahEl = document.getElementById("bil-jumlah")!;
     const ringkas = document.getElementById("bil-ringkas")!;
     const baris = document.getElementById("bil-baris")!;
-    const rm = (s: number) => (s / 100).toLocaleString("ms-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const sen = (x: number) => `${(x / 100).toFixed(2)} sen`;
     const n = (x: number) => x.toLocaleString("ms-MY");
     const sum = (c: Caj) => c.nonSt + c.st;
 
-    const row = (label: string, kiraan: string, amaun: number, strong = false) => {
+    const row = (
+      label: string,
+      kiraan: string,
+      amaun: number,
+      strong = false,
+    ) => {
       const tr = document.createElement("tr");
       tr.className = `border-b border-gray-950/5 dark:border-white/10${strong ? " font-medium" : ""}`;
-      for (const [text, cls] of [[label, ""], [kiraan, "text-gray-500 dark:text-gray-400"], [rm(amaun), "text-right"]]) {
+      for (const [text, cls] of [
+        [label, ""],
+        [kiraan, "text-gray-500 dark:text-gray-400"],
+        [ringgit(amaun), "text-right"],
+      ]) {
         const td = document.createElement("td");
         td.className = `px-2 py-2 ${cls}`;
         td.textContent = text;
@@ -261,9 +373,12 @@ const jadual = [
     const update = () => {
       const raw = kwhEl.value.trim();
       const kwh = Number(raw);
-      const bad = raw === "" || !Number.isInteger(kwh) || kwh < 0 || kwh > MAX_KWH;
+      const bad =
+        raw === "" || !Number.isInteger(kwh) || kwh < 0 || kwh > MAX_KWH;
       kwhEl.setAttribute("aria-invalid", String(bad));
-      ralat.textContent = bad ? `Masukkan penggunaan dalam kWj, nombor bulat 0 hingga ${n(MAX_KWH)}.` : "";
+      ralat.textContent = bad
+        ? `Masukkan penggunaan dalam kWj, nombor bulat 0 hingga ${n(MAX_KWH)}.`
+        : "";
       if (bad) {
         jumlahEl.textContent = "-";
         ringkas.textContent = "";
@@ -275,23 +390,83 @@ const jadual = [
       const b = kiraBil(kwh, { afa: Number(opt?.dataset.afa), ambang });
       const lebih = b.kwhSt > 0;
       const dikecualikan = `dikecualikan (≤ ${n(ambang)} kWj)`;
-      jumlahEl.textContent = rm(b.jumlah);
+      jumlahEl.textContent = ringgit(b.jumlah);
       ringkas.textContent = `${n(kwh)} kWj · ${opt?.textContent?.trim() ?? ""} · ambang perlindungan ${n(ambang)} kWj`;
       baris.replaceChildren(
         row("Caj Tenaga", `${n(kwh)} × ${sen(b.kadar.tenaga)}`, sum(b.tenaga)),
-        row("AFA", lebih ? `${n(kwh)} × ${sen(b.kadar.afa)}` : dikecualikan, sum(b.afa)),
-        row("Caj Kapasiti", `${n(kwh)} × ${sen(TARIF.kapasiti)}`, sum(b.kapasiti)),
-        row("Caj Rangkaian", `${n(kwh)} × ${sen(TARIF.rangkaian)}`, sum(b.rangkaian)),
-        row("Caj Peruncitan", lebih ? `RM${rm(TARIF.runcit)} sebulan` : dikecualikan, sum(b.runcit)),
-        row("Insentif Cekap Tenaga", b.kadar.eei ? `${n(kwh)} × ${sen(b.kadar.eei)}` : `tiada (> ${n(1000)} kWj)`, b.eei),
+        row(
+          "AFA",
+          lebih ? `${n(kwh)} × ${sen(b.kadar.afa)}` : dikecualikan,
+          sum(b.afa),
+        ),
+        row(
+          "Caj Kapasiti",
+          `${n(kwh)} × ${sen(TARIF.kapasiti)}`,
+          sum(b.kapasiti),
+        ),
+        row(
+          "Caj Rangkaian",
+          `${n(kwh)} × ${sen(TARIF.rangkaian)}`,
+          sum(b.rangkaian),
+        ),
+        row(
+          "Caj Peruncitan",
+          lebih ? `${rm(TARIF.runcit)} sebulan` : dikecualikan,
+          sum(b.runcit),
+        ),
+        row(
+          "Insentif Cekap Tenaga",
+          b.kadar.eei
+            ? `${n(kwh)} × ${sen(b.kadar.eei)}`
+            : `tiada (> ${n(1000)} kWj)`,
+          b.eei,
+        ),
         row("Caj penggunaan bulan semasa", "", b.caj, true),
-        row("Cukai Perkhidmatan 8%", lebih ? `atas ${n(b.kwhSt)} kWj melebihi ${n(ambang)} kWj` : dikecualikan, b.cukai),
-        row("KWTBB 1.6%", kwh > TARIF.hadKwtbb ? "tenaga + kapasiti + rangkaian - insentif" : `dikecualikan (≤ ${TARIF.hadKwtbb} kWj)`, b.kwtbb),
+        row(
+          "Cukai Perkhidmatan 8%",
+          lebih
+            ? `atas ${n(b.kwhSt)} kWj melebihi ${n(ambang)} kWj`
+            : dikecualikan,
+          b.cukai,
+        ),
+        row(
+          "KWTBB 1.6%",
+          kwh > TARIF.hadKwtbb
+            ? "tenaga + kapasiti + rangkaian - insentif"
+            : `dikecualikan (≤ ${TARIF.hadKwtbb} kWj)`,
+          b.kwtbb,
+        ),
         row("Anggaran jumlah bil", "", b.jumlah, true),
       );
     };
-    kwhEl.addEventListener("input", update);
-    bulanEl.addEventListener("change", update);
+    const read = (): CalcState => ({
+      kwh: kwhEl.value.trim(),
+      bulan: bulanEl.value,
+    });
+    // Same rule as update(); a month not in the picker (no AFA yet) is ignored.
+    const apply = (s: CalcState) => {
+      const k = Number(s.kwh);
+      if (s.kwh?.trim() && Number.isInteger(k) && k >= 0 && k <= MAX_KWH)
+        kwhEl.value = String(k);
+      pickOption(bulanEl, s.bulan);
+    };
+    const defaults = read();
+    const saved = loadState(KEY, NAMES);
+    if (saved) {
+      apply(saved);
+      saveState(KEY, NAMES, read());
+    }
+    const changed = () => {
+      update();
+      saveState(KEY, NAMES, read());
+    };
+    kwhEl.addEventListener("input", changed);
+    bulanEl.addEventListener("change", changed);
+    form.querySelector("[data-reset]")!.addEventListener("click", () => {
+      apply(defaults);
+      saveState(KEY, NAMES, null);
+      update();
+    });
     form.addEventListener("submit", (e) => e.preventDefault());
     update();
   };

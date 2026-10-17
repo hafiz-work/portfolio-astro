@@ -6,25 +6,38 @@ import TechHeading from "../components/layout/TechHeading.astro";
 import Combobox from "../components/ui/Combobox.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
 import { NEGERI, TAKWIM, type NegeriId } from "../data/takwim-sekolah";
-import { isoToDmy } from "../lib/date-my";
-import { appliesTo, daysBetween, isNegeri, kalendarFor, kumpulanOf, nextBreak } from "../lib/takwim-sekolah";
-import { todayInMalaysia } from "../lib/waktu-solat";
+import { formatIsoMs, isoToDmy, todayMY } from "../lib/date-my";
+import {
+  appliesTo,
+  daysBetween,
+  isNegeri,
+  kalendarFor,
+  kumpulanOf,
+  nextBreak,
+} from "../lib/takwim-sekolah";
 
-const today = todayInMalaysia();
+const today = todayMY();
 const q = Astro.url.searchParams;
-const negeri: NegeriId = isNegeri(q.get("negeri") ?? "") ? (q.get("negeri") as NegeriId) : "kuala-lumpur";
+const negeri: NegeriId = isNegeri(q.get("negeri") ?? "")
+  ? (q.get("negeri") as NegeriId)
+  : "kuala-lumpur";
 const nama = NEGERI.find((n) => n.id === negeri)!.name;
 // ?tahun= must be a published year; default the current year, else the latest one.
-const kal = kalendarFor(Number(q.get("tahun"))) ?? kalendarFor(Number(today.slice(0, 4))) ?? TAKWIM.at(-1)!;
+const kal =
+  kalendarFor(Number(q.get("tahun"))) ??
+  kalendarFor(Number(today.slice(0, 4))) ??
+  TAKWIM.at(-1)!;
 const kumpulan = kumpulanOf(negeri, kal);
-const names = (ids: NegeriId[]) => ids.map((id) => NEGERI.find((n) => n.id === id)!.name);
+const names = (ids: NegeriId[]) =>
+  ids.map((id) => NEGERI.find((n) => n.id === id)!.name);
 const next = nextBreak(negeri, today);
 
-const hari = (iso: string) =>
-  new Intl.DateTimeFormat("ms-MY", { weekday: "short", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
-const tarikh = (iso: string) => `${hari(iso)} ${isoToDmy(iso)}`;
-const range = (a: string, b: string) => (a === b ? tarikh(a) : `${tarikh(a)} – ${tarikh(b)}`);
-const left = (d: number) => (d === 0 ? "Sedang bercuti" : d === 1 ? "Esok" : `${d} hari lagi`);
+const tarikh = (iso: string) =>
+  `${formatIsoMs(iso, { weekday: "short" })} ${isoToDmy(iso)}`;
+const range = (a: string, b: string) =>
+  a === b ? tarikh(a) : `${tarikh(a)} – ${tarikh(b)}`;
+const left = (d: number) =>
+  d === 0 ? "Sedang bercuti" : d === 1 ? "Esok" : `${d} hari lagi`;
 
 const perayaan = kal.perayaan
   .map((p) => ({
@@ -42,12 +55,21 @@ const perayaan = kal.perayaan
   <div class="relative mx-auto mt-8 max-lg:max-w-2xl sm:mt-24">
     <BackLink />
     <div class="line-y">
-      <h1 class="mx-2 text-4xl tracking-tighter text-balance sm:text-7xl lg:text-8xl">
-        <TechHeading text="Takwim Sekolah" fontSize={96} fontWeight={400} box="-my-12 h-48" />
+      <h1
+        class="mx-2 text-4xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Takwim Sekolah"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
       </h1>
     </div>
     <div class="line-y mt-10">
-      <p class="mx-2 text-lg">Tarikh persekolahan dan cuti sekolah KPM {kal.year} mengikut negeri.</p>
+      <p class="mx-2 text-lg">
+        Tarikh persekolahan dan cuti sekolah KPM {kal.year} mengikut negeri.
+      </p>
     </div>
 
     <div class="line-y mt-10">
@@ -62,7 +84,11 @@ const perayaan = kal.perayaan
           emptyText="Tiada negeri sepadan."
           submitOnPick
           value={negeri}
-          options={NEGERI.map((n) => ({ value: n.id, label: n.name, hint: kumpulanOf(n.id, kal) }))}
+          options={NEGERI.map((n) => ({
+            value: n.id,
+            label: n.name,
+            hint: kumpulanOf(n.id, kal),
+          }))}
         />
         <input type="hidden" name="tahun" value={kal.year} />
         <noscript>
@@ -74,7 +100,10 @@ const perayaan = kal.perayaan
               <a
                 href={`?negeri=${negeri}&tahun=${k.year}`}
                 aria-current={k.year === kal.year ? "page" : undefined}
-                class:list={["btn-pill", k.year === kal.year ? "btn-pill-primary" : "btn-pill-ghost"]}
+                class:list={[
+                  "btn-pill",
+                  k.year === kal.year ? "btn-pill-primary" : "btn-pill-ghost",
+                ]}
               >
                 {k.year}
               </a>
@@ -86,16 +115,22 @@ const perayaan = kal.perayaan
 
     <!-- The group is what people get wrong: say it big, and show both lists. -->
     <div class="line-y mt-10">
-      <div class="mx-2 grid gap-px bg-gray-950/5 sm:grid-cols-2 dark:bg-white/10">
+      <div
+        class="mx-2 grid gap-px bg-gray-950/5 sm:grid-cols-2 dark:bg-white/10"
+      >
         {
           (["A", "B"] as const).map((g) => (
             <div
               class:list={[
                 "px-4 py-5 sm:px-6",
-                g === kumpulan ? "bg-sky-50 dark:bg-sky-950/40" : "bg-white text-gray-500 dark:bg-gray-950 dark:text-gray-400",
+                g === kumpulan
+                  ? "bg-sky-50 dark:bg-sky-950/40"
+                  : "bg-white text-gray-500 dark:bg-gray-950 dark:text-gray-400",
               ]}
             >
-              <p class="eyebrow">{g === kumpulan ? `${nama} di sini` : "Negeri lain"}</p>
+              <p class="eyebrow">
+                {g === kumpulan ? `${nama} di sini` : "Negeri lain"}
+              </p>
               <p
                 class:list={[
                   "mt-2 text-3xl font-medium tracking-tight",
@@ -117,8 +152,12 @@ const perayaan = kal.perayaan
         {
           next ? (
             <>
-              <p class="mt-2 text-3xl font-medium tracking-tight">{next.name}</p>
-              <p class="mt-1 text-sm/6 text-gray-600 dark:text-gray-400">{range(next.start, next.end)}</p>
+              <p class="mt-2 text-3xl font-medium tracking-tight">
+                {next.name}
+              </p>
+              <p class="mt-1 text-sm/6 text-gray-600 dark:text-gray-400">
+                {range(next.start, next.end)}
+              </p>
               <p class="mt-6 text-6xl font-medium tracking-tighter text-sky-600 tabular-nums dark:text-sky-400">
                 {left(next.daysLeft)}
               </p>
@@ -133,10 +172,14 @@ const perayaan = kal.perayaan
     </div>
 
     <div class="line-y mt-10">
-      <h2 class="mx-2 text-2xl font-medium tracking-tight">Sesi {kal.year} · Kumpulan {kumpulan}</h2>
+      <h2 class="mx-2 text-2xl font-medium tracking-tight">
+        Sesi {kal.year} · Kumpulan {kumpulan}
+      </h2>
       <div class="mt-4 overflow-x-auto px-2">
         <table class="w-full text-left text-sm/6 tabular-nums">
-          <thead class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase">
+          <thead
+            class="font-mono text-xs/5 tracking-widest text-gray-500 uppercase"
+          >
             <tr class="border-b border-gray-950/5 dark:border-white/10">
               <th class="px-2 py-2 font-medium">Penggal / cuti</th>
               <th class="px-2 py-2 font-medium">Mula</th>
@@ -150,9 +193,12 @@ const perayaan = kal.perayaan
                 <tr
                   class:list={[
                     "border-b border-gray-950/5 dark:border-white/10",
-                    b.kind === "cuti" && "bg-sky-500/5 font-medium dark:bg-sky-400/10",
+                    b.kind === "cuti" &&
+                      "bg-sky-500/5 font-medium dark:bg-sky-400/10",
                   ]}
-                  aria-current={b.start <= today && today <= b.end ? "date" : undefined}
+                  aria-current={
+                    b.start <= today && today <= b.end ? "date" : undefined
+                  }
                 >
                   <td class="px-2 py-1.5">
                     {b.name}
@@ -162,27 +208,39 @@ const perayaan = kal.perayaan
                       </span>
                     )}
                   </td>
-                  <td class="px-2 py-1.5 whitespace-nowrap">{tarikh(b.start)}</td>
+                  <td class="px-2 py-1.5 whitespace-nowrap">
+                    {tarikh(b.start)}
+                  </td>
                   <td class="px-2 py-1.5 whitespace-nowrap">{tarikh(b.end)}</td>
-                  <td class="px-2 py-1.5 text-right">{daysBetween(b.start, b.end) + 1}</td>
+                  <td class="px-2 py-1.5 text-right">
+                    {daysBetween(b.start, b.end) + 1}
+                  </td>
                 </tr>
               ))
             }
           </tbody>
         </table>
       </div>
-      <p class="mx-2 mt-2 text-xs/5 text-gray-500">"Hari" ialah hari kalendar, bukan hari persekolahan.</p>
+      <p class="mx-2 mt-2 text-xs/5 text-gray-500">
+        "Hari" ialah hari kalendar, bukan hari persekolahan.
+      </p>
     </div>
 
     <div class="line-y mt-10">
-      <h2 class="mx-2 text-2xl font-medium tracking-tight">Cuti perayaan {kal.year} · {nama}</h2>
-      <ul class="mt-4 grid gap-px bg-gray-950/5 sm:grid-cols-2 dark:bg-white/10">
+      <h2 class="mx-2 text-2xl font-medium tracking-tight">
+        Cuti perayaan {kal.year} · {nama}
+      </h2>
+      <ul
+        class="mt-4 grid gap-px bg-gray-950/5 sm:grid-cols-2 dark:bg-white/10"
+      >
         {
           perayaan.map((p) => (
             <li class="bg-white px-4 py-5 sm:px-6 sm:odd:last:col-span-2 dark:bg-gray-950">
               <p class="font-medium">{p.name}</p>
               {p.days.length > 0 && (
-                <p class="mt-1 text-sm/6 text-gray-600 dark:text-gray-400">{p.days.map((h) => tarikh(h.date)).join(", ")}</p>
+                <p class="mt-1 text-sm/6 text-gray-600 dark:text-gray-400">
+                  {p.days.map((h) => tarikh(h.date)).join(", ")}
+                </p>
               )}
               {p.extra.length > 0 && (
                 <p class="mt-2 text-sm/6">
@@ -200,10 +258,16 @@ const perayaan = kal.perayaan
     <div class="line-y mt-6">
       <Disclaimer
         class="mx-2"
-        sources={[{ name: "Kementerian Pendidikan Malaysia (Kalendar Akademik)", href: "https://www.moe.gov.my/kalendar-akademik-semasa" }]}
+        sources={[
+          {
+            name: "Kementerian Pendidikan Malaysia (Kalendar Akademik)",
+            href: "https://www.moe.gov.my/kalendar-akademik-semasa",
+          },
+        ]}
       >
-        Tarikh boleh berubah melalui pengumuman KPM atau kerajaan negeri (contohnya cuti peristiwa atau cuti
-        ganti). Sahkan dengan sekolah anak anda.
+        Tarikh boleh berubah melalui pengumuman KPM atau kerajaan negeri
+        (contohnya cuti peristiwa atau cuti ganti). Sahkan dengan sekolah anak
+        anda.
       </Disclaimer>
     </div>
     <div class="mb-16 sm:mb-46"></div>

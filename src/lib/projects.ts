@@ -33,16 +33,6 @@ export class ProjectsService extends ApiClient {
     async upsertProjectPolicy(id: number, data: UpdateProjectPolicyData): Promise<ProjectPolicy | null> {
         return this.put<ProjectPolicy>(`owner/projects/${id}/policy`, data);
     }
-
-    async deleteProject(id: number): Promise<boolean> {
-        try {
-            await this.delete(`owner/projects/${id}`);
-            return true;
-        } catch (error) {
-            console.error('Failed to delete project:', error);
-            return false;
-        }
-    }
 }
 
 // Export a singleton instance

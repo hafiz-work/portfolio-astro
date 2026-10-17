@@ -38,7 +38,7 @@ export function MyPosts() {
   useEffect(() => {
     void load();
     if (new URLSearchParams(location.search).has("new")) {
-      history.replaceState(null, "", location.pathname);
+      history.replaceState(history.state, "", location.pathname);
       void open();
     }
   }, []);

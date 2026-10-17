@@ -39,40 +39,6 @@ export class ContactService extends ApiClient {
         super(API_BASE_URL);
     }
 
-    async submitContactForm(data: ContactData): Promise<ContactResponse> {
-        try {
-            const url = `${this.baseUrl}/contact`;
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
-
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                return {
-                    success: true,
-                    message: result.data?.message || 'Message sent successfully!'
-                };
-            } else {
-                return {
-                    success: false,
-                    error: result.error || result.message || 'Failed to send message.'
-                };
-            }
-        } catch (error) {
-            console.error('Contact submission error:', error);
-            return {
-                success: false,
-                error: 'Network error. Please try again later.'
-            };
-        }
-    }
-
     async getOwnerContacts(): Promise<OwnerContact[]> {
         const result = await this.get<OwnerContact[]>('owner/contact');
         return result || [];
@@ -89,4 +55,39 @@ export class ContactService extends ApiClient {
 }
 
 export const contactService = new ContactService();
-export const submitContactForm = (data: ContactData) => contactService.submitContactForm(data);
+
+// Public form: plain fetch on purpose - no Bearer token / refresh retry, and the
+// API's { success, error } body is mapped to a result instead of thrown.
+export async function submitContactForm(data: ContactData): Promise<ContactResponse> {
+    try {
+        const url = `${API_BASE_URL}/contact`;
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            return {
+                success: true,
+                message: result.data?.message || 'Message sent successfully!'
+            };
+        } else {
+            return {
+                success: false,
+                error: result.error || result.message || 'Failed to send message.'
+            };
+        }
+    } catch (error) {
+        console.error('Contact submission error:', error);
+        return {
+            success: false,
+            error: 'Network error. Please try again later.'
+        };
+    }
+}

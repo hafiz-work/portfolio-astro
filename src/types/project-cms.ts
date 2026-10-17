@@ -49,6 +49,8 @@ export interface ProjectWarning {
 /** Admin/owner base project (GET /owner/projects/all rows). */
 export interface CmsProject {
   id: number;
+  /** List endpoint only: same warnings as the detail endpoint. */
+  warnings?: ProjectWarning[];
   slug: string;
   title: string;
   description: string;

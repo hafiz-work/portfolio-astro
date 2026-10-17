@@ -5,16 +5,14 @@ export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
 import { EVENTS, getUpcomingEvents } from "../lib/hari-kebesaran";
-import { formatHijri, todayInMalaysia } from "../lib/waktu-solat";
+import { formatHijri } from "../lib/waktu-solat";
+import { formatIsoMs, todayMY } from "../lib/date-my";
 
-const today = todayInMalaysia();
+const today = todayMY();
 const events = await getUpcomingEvents(today);
 const next = events[0];
 
-const masihi = (ymd: string) =>
-  new Intl.DateTimeFormat("ms-MY", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
-    new Date(`${ymd}T00:00:00Z`),
-  );
+const masihi = (ymd: string) => formatIsoMs(ymd, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 const hijriLabel = (key: string, year: number) => {
   const e = EVENTS.find((x) => x.key === key)!;
   return formatHijri(`${year}-${String(e.month).padStart(2, "0")}-${String(e.day).padStart(2, "0")}`);

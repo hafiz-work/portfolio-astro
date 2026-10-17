@@ -4,23 +4,20 @@ import BackLink from "../components/ui/BackLink.astro";
 export const prerender = false;
 import TechHeading from "../components/layout/TechHeading.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
+import LineChart from "../components/ui/LineChart.astro";
 import {
   FUELS,
   getFuelPrices,
-  linePath,
-  priceAxis,
   weeklyChange,
   type FuelKey,
 } from "../lib/harga-minyak";
+import { formatIsoMs } from "../lib/date-my";
+import { rm as rmSen } from "../lib/money";
 
 const data = await getFuelPrices();
 const weeks = data?.weeks ?? [];
 const now = weeks[0];
 
-const fmtDay = (ymd: string, opts: Intl.DateTimeFormatOptions) =>
-  new Intl.DateTimeFormat("ms-MY", { timeZone: "UTC", ...opts }).format(
-    new Date(`${ymd}T00:00:00Z`),
-  );
 // Each price is in effect for a week from its date (a Thursday).
 const until = now
   ? new Date(Date.parse(`${now.date}T00:00:00Z`) + 6 * 86_400_000)
@@ -28,11 +25,11 @@ const until = now
       .slice(0, 10)
   : "";
 const period = now
-  ? `${fmtDay(now.date, { day: "numeric", month: "long" })} - ${fmtDay(until, { day: "numeric", month: "long", year: "numeric" })}`
+  ? `${formatIsoMs(now.date, { day: "numeric", month: "long" })} - ${formatIsoMs(until, { day: "numeric", month: "long", year: "numeric" })}`
   : "";
 
 const rm = (n: number | null | undefined) =>
-  n == null ? "-" : `RM ${n.toFixed(2)}`;
+  n == null ? "-" : rmSen(Math.round(n * 100));
 const cards = (keys: FuelKey[]) =>
   FUELS.filter((f) => keys.includes(f.key) && now?.[f.key] != null).map(
     (f) => ({
@@ -58,27 +55,7 @@ const SERIES = [
   { key: "diesel", label: "Diesel (Semenanjung)", color: "#d97706", dash: "" },
 ] as const;
 const oldestFirst = [...weeks].reverse();
-const chartValues = oldestFirst.flatMap((w) =>
-  SERIES.map((s) => w[s.key]).filter((v): v is number => v != null),
-);
-const W = 400,
-  H = 220,
-  L = 56,
-  R = 8,
-  T = 8,
-  B = 24; // viewBox + plot margins
-const axis = chartValues.length ? priceAxis(chartValues) : null;
-const px = (i: number) =>
-  L +
-  (oldestFirst.length > 1
-    ? (i * (W - L - R)) / (oldestFirst.length - 1)
-    : (W - L - R) / 2);
-const py = (v: number) =>
-  axis ? T + ((axis.max - v) * (H - T - B)) / (axis.max - axis.min) : 0;
 const chart = SERIES.map((s) => {
-  const points = oldestFirst.map((w, i) =>
-    w[s.key] == null ? null : ([px(i), py(w[s.key]!)] as [number, number]),
-  );
   const known = oldestFirst.filter((w) => w[s.key] != null);
   const [first, last] = [known[0]?.[s.key], known.at(-1)?.[s.key]];
   const trend =
@@ -87,9 +64,17 @@ const chart = SERIES.map((s) => {
       : first === last
         ? `kekal ${rm(last)}`
         : `${rm(first)} ke ${rm(last)}`;
-  return { ...s, points, path: linePath(points), trend };
+  return {
+    ...s,
+    trend,
+    values: oldestFirst.map((w) => w[s.key]),
+    titles: oldestFirst.map(
+      (w) =>
+        `${s.label}, ${formatIsoMs(w.date, { day: "numeric", month: "short", year: "numeric" })}: ${rm(w[s.key])}`,
+    ),
+  };
 }).filter((s) => s.trend);
-const chartDesc = `${oldestFirst.length} minggu dari ${oldestFirst[0] ? fmtDay(oldestFirst[0].date, { day: "numeric", month: "long", year: "numeric" }) : ""}: ${chart.map((s) => `${s.label} ${s.trend}`).join("; ")}.`;
+const chartDesc = `${oldestFirst.length} minggu dari ${oldestFirst[0] ? formatIsoMs(oldestFirst[0].date, { day: "numeric", month: "long", year: "numeric" }) : ""}: ${chart.map((s) => `${s.label} ${s.trend}`).join("; ")}.`;
 const historyCols = FUELS.filter((f) =>
   ["ron95", "ron97", "diesel", "diesel_eastmsia", "ron95_budi95"].includes(
     f.key,
@@ -183,7 +168,7 @@ const historyCols = FUELS.filter((f) =>
               </>
             ))}
 
-          {axis && chart.length > 0 && (
+          {chart.length > 0 && (
             <>
               <div class="line-y mt-10">
                 <p class="eyebrow mx-2">Trend {oldestFirst.length} minggu</p>
@@ -209,83 +194,20 @@ const historyCols = FUELS.filter((f) =>
                       </li>
                     ))}
                   </ul>
-                  <svg
-                    viewBox={`0 0 ${W} ${H}`}
-                    class="mt-3 h-auto w-full max-w-2xl text-gray-500 dark:text-gray-400"
-                    role="img"
-                    aria-labelledby="fuel-chart-title fuel-chart-desc"
-                  >
-                    <title id="fuel-chart-title">
-                      Harga minyak seliter, {oldestFirst.length} minggu (RM)
-                    </title>
-                    <desc id="fuel-chart-desc">{chartDesc}</desc>
-                    {axis.ticks.map((t) => (
-                      <g>
-                        <line
-                          x1={L}
-                          x2={W - R}
-                          y1={py(t)}
-                          y2={py(t)}
-                          class="stroke-gray-950/5 dark:stroke-white/10"
-                        />
-                        <text
-                          x={L - 6}
-                          y={py(t)}
-                          dy="0.32em"
-                          text-anchor="end"
-                          font-size="12"
-                          fill="currentColor"
-                          class="tabular-nums"
-                        >
-                          RM {t.toFixed(2)}
-                        </text>
-                      </g>
-                    ))}
-                    {oldestFirst.map((w, i) =>
-                      (oldestFirst.length - 1 - i) % 3 === 0 ? (
-                        <text
-                          x={px(i)}
-                          y={H - 6}
-                          text-anchor={
-                            i === 0
-                              ? "start"
-                              : i === oldestFirst.length - 1
-                                ? "end"
-                                : "middle"
-                          }
-                          font-size="12"
-                          fill="currentColor"
-                        >
-                          {fmtDay(w.date, { day: "numeric", month: "short" })}
-                        </text>
-                      ) : null,
+                  <LineChart
+                    id="fuel-chart"
+                    class="mt-3"
+                    height={220}
+                    left={56}
+                    title={`Harga minyak seliter, ${oldestFirst.length} minggu (RM)`}
+                    desc={chartDesc}
+                    series={chart}
+                    xLabels={oldestFirst.map((w) =>
+                      formatIsoMs(w.date, { day: "numeric", month: "short" }),
                     )}
-                    {chart.map((s) => (
-                      <g>
-                        <path
-                          d={s.path}
-                          fill="none"
-                          stroke={s.color}
-                          stroke-width="2"
-                          stroke-linejoin="round"
-                          stroke-linecap="round"
-                          stroke-dasharray={s.dash || undefined}
-                        />
-                        {s.points.map((p, i) =>
-                          p ? (
-                            <circle
-                              cx={p[0]}
-                              cy={p[1]}
-                              r="6"
-                              fill="transparent"
-                            >
-                              <title>{`${s.label}, ${fmtDay(oldestFirst[i].date, { day: "numeric", month: "short", year: "numeric" })}: ${rm(oldestFirst[i][s.key])}`}</title>
-                            </circle>
-                          ) : null,
-                        )}
-                      </g>
-                    ))}
-                  </svg>
+                    xEvery={3}
+                    yLabel={(t: number) => `RM ${t.toFixed(2)}`}
+                  />
                   <p class="mt-2 text-xs/5 text-gray-500 dark:text-gray-400">
                     Harga seliter. Butiran setiap minggu dalam jadual di bawah.
                   </p>
@@ -319,7 +241,7 @@ const historyCols = FUELS.filter((f) =>
                     ]}
                   >
                     <td class="px-2 py-1.5 whitespace-nowrap">
-                      {fmtDay(w.date, {
+                      {formatIsoMs(w.date, {
                         day: "numeric",
                         month: "short",
                         year: "numeric",
@@ -342,7 +264,7 @@ const historyCols = FUELS.filter((f) =>
                 href="https://data.gov.my/data-catalogue/fuelprice"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+                class="link"
               >
                 {data!.source}
               </a>

@@ -1,11 +1,12 @@
 ---
-import TechTitle from "./TechTitle";
 /**
  * Heading text with React Bits TechText on lg+ (canvas, one line, hover/drag a
  * letter). Below lg the slot renders instead (default: the plain text). The real
  * text stays in the heading (sr-only on lg) for SEO and screen readers.
  * `box` sizes the canvas: taller than the line (room for the selection label and
  * dragged letters) with a negative margin that keeps the row height unchanged.
+ * Not a client:only island: the script below imports React + TechTitle only once
+ * the lg media query matches, so phones never download them.
  */
 interface Props {
   text: string;
@@ -17,13 +18,38 @@ const { text, fontSize, fontWeight = 500, box } = Astro.props;
 ---
 
 <span class="lg:sr-only"><slot>{text}</slot></span>
-<span class:list={["hidden lg:block", box]} aria-hidden="true">
-  <TechTitle
-    client:only="react"
-    text={text}
-    fontSize={fontSize}
-    fontWeight={fontWeight}
-  >
-    <span slot="fallback" class="flex h-full items-center">{text}</span>
-  </TechTitle>
+<span
+  class:list={["hidden lg:block", box]}
+  aria-hidden="true"
+  data-tech-title={JSON.stringify({ text, fontSize, fontWeight })}
+>
+  <span class="flex h-full items-center">{text}</span>
 </span>
+
+<script>
+  const lg = matchMedia("(min-width: 64rem)");
+  // Dev only: React Fast Refresh needs its preamble before any .tsx runs. Islands get
+  // it from @astrojs/react's before-hydration script; a page with no other island doesn't.
+  const preamble = async () => {
+    if (!import.meta.env.DEV || "$RefreshReg$" in window) return;
+    const url = "/@react-refresh";
+    const { injectIntoGlobalHook } = await import(/* @vite-ignore */ url);
+    injectIntoGlobalHook(window);
+    Object.assign(window, {
+      $RefreshReg$: () => {},
+      $RefreshSig$: () => (type: unknown) => type,
+    });
+  };
+  const run = () => {
+    if (
+      lg.matches &&
+      document.querySelector("[data-tech-title]:not([data-mounted])")
+    )
+      preamble()
+        .then(() => import("./TechTitle"))
+        .then((m) => m.mountTechTitles());
+  };
+  lg.addEventListener("change", run);
+  document.addEventListener("astro:page-load", run);
+  run();
+</script>

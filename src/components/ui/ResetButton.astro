@@ -1,0 +1,18 @@
+---
+/**
+ * "Set semula" for a form: markup only (type="button", so it never submits). The page
+ * wires what it resets: `form.querySelector("[data-reset]")`. Used by the calculators.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<button
+  type="button"
+  data-reset
+  class:list={["justify-self-start text-sm/6 link", className]}
+>
+  Set semula
+</button>

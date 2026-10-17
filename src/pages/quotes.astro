@@ -4,6 +4,7 @@ import TechHeading from "../components/layout/TechHeading.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
 import { getPublicQuotes } from "../lib/public-content";
 import { categoryLabel, sortCategories } from "../lib/quotes";
+import { profileHref } from "../lib/username";
 
 // API order (newest first) is kept as-is.
 const quotes = await getPublicQuotes();
@@ -117,7 +118,14 @@ const chipClass =
                       )}
                       {quote.submittedBy && (
                         <p class="mt-2 text-xs/5 text-gray-500 dark:text-gray-400">
-                          shared by {quote.submittedBy}
+                          shared by{" "}
+                          {profileHref(quote.authorUsername) ? (
+                            <a href={profileHref(quote.authorUsername)!} class="font-medium text-gray-700 hover:text-sky-600 dark:text-gray-300 dark:hover:text-sky-400">
+                              {quote.submittedBy}
+                            </a>
+                          ) : (
+                            quote.submittedBy
+                          )}
                         </p>
                       )}
                       {quote.tags.length > 0 && (
@@ -184,6 +192,8 @@ const chipClass =
 </PublicLayout>
 
 <script>
+  import { copyText } from "../lib/clipboard";
+
   // Client-side category filter over server-rendered quotes: no refetch.
   // Without JS every quote stays visible and "All" stays pressed.
   const initQuoteFilter = () => {
@@ -231,21 +241,6 @@ const chipClass =
     const before = btn.dataset.label ?? (btn.dataset.label = btn.textContent!.trim());
     btn.textContent = label;
     setTimeout(() => (btn.textContent = before), 1800);
-  };
-  // Clipboard API, else the old select-and-copy (blocked clipboard, non-secure context).
-  const copyText = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch {
-      const ta = Object.assign(document.createElement("textarea"), { value: text });
-      ta.style.cssText = "position:fixed;opacity:0";
-      document.body.append(ta);
-      ta.select();
-      const ok = document.execCommand("copy");
-      ta.remove();
-      return ok;
-    }
   };
   if (!(window as unknown as { __quoteActions?: boolean }).__quoteActions) {
     (window as unknown as { __quoteActions?: boolean }).__quoteActions = true;

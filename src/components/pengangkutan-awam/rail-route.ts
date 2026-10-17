@@ -103,10 +103,3 @@ export function sliceShape(shape: [number, number][], a: { lng: number; lat: num
   const j = nearest(b);
   return i <= j ? shape.slice(i, j + 1) : shape.slice(j, i + 1).reverse();
 }
-
-/** Great-circle distance in km (haversine). */
-export function distanceKm(aLat: number, aLng: number, bLat: number, bLng: number) {
-  const r = Math.PI / 180;
-  const h = Math.sin(((bLat - aLat) * r) / 2) ** 2 + Math.cos(aLat * r) * Math.cos(bLat * r) * Math.sin(((bLng - aLng) * r) / 2) ** 2;
-  return 2 * 6371 * Math.asin(Math.sqrt(h));
-}

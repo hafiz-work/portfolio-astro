@@ -1,0 +1,162 @@
+---
+/**
+ * Server-rendered SVG line chart (/harga-minyak, /inflasi, /derma-darah): clean y
+ * ticks from `priceAxis`, an x label every `xEvery` points counted back from the
+ * newest, one path per series (a null value breaks the line), and an invisible dot
+ * per point carrying its `titles` tooltip. Pages keep the table as the data view.
+ */
+import { linePath, priceAxis } from "../../lib/chart";
+
+type Point = [x: number, y: number] | null;
+
+interface Series {
+  color: string;
+  /** stroke-dasharray, e.g. "6 3" - a second (non-colour) cue. */
+  dash?: string;
+  values: (number | null)[];
+  /** Tooltip per point. */
+  titles: string[];
+}
+interface Line extends Series {
+  points: Point[];
+  path: string;
+}
+interface Props {
+  /** Prefix for the title/desc ids. */
+  id: string;
+  title: string;
+  desc: string;
+  series: Series[];
+  /** One label per x position, oldest first. */
+  xLabels: string[];
+  xEvery: number;
+  yLabel: (tick: number) => string;
+  height?: number;
+  /** Left margin for the y labels. */
+  left?: number;
+  /** Solid dot on each series' newest point. */
+  markLast?: boolean;
+  class?: string;
+}
+
+const {
+  id,
+  title,
+  desc,
+  series,
+  xLabels,
+  xEvery,
+  yLabel,
+  height = 200,
+  left = 44,
+  markLast = false,
+  class: className,
+}: Props = Astro.props;
+
+// viewBox width + plot margins (left comes from props).
+const width = 400;
+const [right, top, bottom] = [8, 8, 24];
+const n = xLabels.length;
+
+const axis = priceAxis(
+  series.flatMap((s: Series) =>
+    s.values.filter((v: number | null): v is number => v != null),
+  ),
+);
+const px = (i: number): number =>
+  left +
+  (n > 1 ? (i * (width - left - right)) / (n - 1) : (width - left - right) / 2);
+const py = (v: number): number =>
+  top + ((axis.max - v) * (height - top - bottom)) / (axis.max - axis.min);
+
+const lines: Line[] = series.map((s: Series) => {
+  const points: Point[] = s.values.map((v: number | null, i: number): Point =>
+    v == null ? null : [px(i), py(v)],
+  );
+  return { ...s, points, path: linePath(points) };
+});
+const xTicks = xLabels.flatMap((label: string, i: number) =>
+  (n - 1 - i) % xEvery === 0 ? [{ label, i }] : [],
+);
+const anchor = (i: number): string =>
+  i === 0 ? "start" : i === n - 1 ? "end" : "middle";
+---
+
+<svg
+  viewBox={`0 0 ${width} ${height}`}
+  class:list={[
+    "h-auto w-full max-w-2xl text-gray-500 dark:text-gray-400",
+    className,
+  ]}
+  role="img"
+  aria-labelledby={`${id}-title ${id}-desc`}
+>
+  <title id={`${id}-title`}>{title}</title>
+  <desc id={`${id}-desc`}>{desc}</desc>
+  {
+    axis.ticks.map((tick: number) => (
+      <g>
+        <line
+          x1={left}
+          x2={width - right}
+          y1={py(tick)}
+          y2={py(tick)}
+          class="stroke-gray-950/5 dark:stroke-white/10"
+        />
+        <text
+          x={left - 6}
+          y={py(tick)}
+          dy="0.32em"
+          text-anchor="end"
+          font-size="12"
+          fill="currentColor"
+          class="tabular-nums"
+        >
+          {yLabel(tick)}
+        </text>
+      </g>
+    ))
+  }
+  {
+    xTicks.map(({ label, i }: { label: string; i: number }) => (
+      <text
+        x={px(i)}
+        y={height - 6}
+        text-anchor={anchor(i)}
+        font-size="12"
+        fill="currentColor"
+      >
+        {label}
+      </text>
+    ))
+  }
+  {
+    lines.map((line: Line) => (
+      <g>
+        <path
+          d={line.path}
+          fill="none"
+          stroke={line.color}
+          stroke-width="2"
+          stroke-linejoin="round"
+          stroke-linecap="round"
+          stroke-dasharray={line.dash}
+        />
+        {line.points.map((p: Point, i: number) => {
+          if (!p) return null;
+          const last = markLast && i === line.points.length - 1;
+          return (
+            <circle
+              cx={p[0]}
+              cy={p[1]}
+              r={last ? 3.5 : 6}
+              fill={last ? line.color : "transparent"}
+            >
+              <title>{line.titles[i]}</title>
+            </circle>
+          );
+        })}
+      </g>
+    ))
+  }
+</svg>

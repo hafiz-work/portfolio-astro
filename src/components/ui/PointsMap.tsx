@@ -3,6 +3,8 @@ import { X } from "lucide-react";
 import { Map, MapControls, MapMarker, MapPopup, MapRoute, MarkerContent, MarkerLabel, type MapRef } from "./map";
 import { cn } from "@/lib/utils";
 import { MapThemeToggle, useMapTheme } from "./MapThemeToggle";
+import { geoErrorText, locateOnce } from "@/lib/geo";
+import { POINTS_MAP_FOCUS } from "@/lib/map-view";
 
 /**
  * Interactive map of labelled points, built on `ui/map.tsx` - for any page that
@@ -73,7 +75,7 @@ type PointsMapProps = {
 // Case- and accent-insensitive match key.
 const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 
-export const POINTS_MAP_FOCUS = "points-map:focus";
+export { POINTS_MAP_FOCUS };
 
 // Last known user location, so the dot survives the map remounting (route switch).
 let lastMe: { longitude: number; latitude: number } | null = null;
@@ -94,19 +96,20 @@ export default function PointsMap({
   const { resolvedTheme, preference, cycle } = useMapTheme();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [me, setMeState] = useState(lastMe);
-  const [locating, setLocating] = useState<"idle" | "busy" | "denied" | "failed">("idle");
+  // null = idle, "busy", else the error shown on the pill.
+  const [locating, setLocating] = useState<string | null>(null);
   const setMe = (c: { longitude: number; latitude: number }) => {
     lastMe = c;
     setMeState(c);
   };
   // "Lokasi saya" pill: one reading, then fly there (keeps the current zoom if closer).
   const locate = () => {
-    if (!("geolocation" in navigator)) return setLocating("failed");
+    if (!("geolocation" in navigator)) return setLocating(geoErrorText(null));
     setLocating("busy");
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
+    locateOnce().then(
+      (coords) => {
         setMe({ longitude: coords.longitude, latitude: coords.latitude });
-        setLocating("idle");
+        setLocating(null);
         const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         mapRef.current?.flyTo({
           center: [coords.longitude, coords.latitude],
@@ -114,8 +117,7 @@ export default function PointsMap({
           duration: reduced ? 0 : 1200,
         });
       },
-      (err) => setLocating(err.code === err.PERMISSION_DENIED ? "denied" : "failed"),
-      { timeout: 15000, maximumAge: 60_000 },
+      (err) => setLocating(geoErrorText(err)),
     );
   };
   const [showLabels, setShowLabels] = useState(false);
@@ -242,7 +244,7 @@ export default function PointsMap({
         onViewportChange={(v) => setShowLabels(v.zoom >= labelZoom)}
         onLoad={() => initialId && selectRef.current(initialId)}
       >
-        <MapControls position="top-right" showZoom showLocate showFullscreen onLocate={setMe} />
+        <MapControls position="top-right" showZoom showFullscreen lang="ms" />
         {me && (
           <MapMarker longitude={me.longitude} latitude={me.latitude}>
             <MarkerContent>
@@ -307,6 +309,7 @@ export default function PointsMap({
             latitude={selected.lat}
             offset={18}
             closeButton
+            lang="ms"
             onClose={() => setSelectedId(null)}
             className="min-w-48 pr-7"
           >
@@ -355,7 +358,7 @@ export default function PointsMap({
           {renderDetail(selected, select)}
         </section>
       )}
-      <div className="pointer-events-none absolute top-3 right-14 left-3 z-10 flex flex-col items-start gap-2 *:pointer-events-auto">
+      <div className="pointer-events-none absolute top-3 right-14 left-3 z-30 flex flex-col items-start gap-2 *:pointer-events-auto">
         <div className="flex flex-wrap items-center gap-2">
           <MapThemeToggle lang="ms" preference={preference} onCycle={cycle} />
           <button
@@ -366,13 +369,7 @@ export default function PointsMap({
           >
             <span className="size-2 rounded-full bg-sky-500" aria-hidden="true" />
             <span className="leading-none">
-              {locating === "busy"
-                ? "Mencari…"
-                : locating === "denied"
-                  ? "Lokasi disekat"
-                  : locating === "failed"
-                    ? "Lokasi tak dapat dikesan"
-                    : "Lokasi saya"}
+              {locating === "busy" ? "Mencari…" : (locating ?? "Lokasi saya")}
             </span>
           </button>
         </div>

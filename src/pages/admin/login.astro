@@ -307,7 +307,7 @@ import { TURNSTILE_SITE_KEY as turnstileSiteKey } from "../../lib/constants";
       );
     }
     if (notice.has("session") || notice.has("password")) {
-      history.replaceState(null, "", window.location.pathname);
+      history.replaceState(history.state, "", window.location.pathname);
     }
   };
   resetUI();

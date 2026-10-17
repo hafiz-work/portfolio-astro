@@ -6,8 +6,8 @@ import {
   getPrayerTimes,
   hhmm,
   resolveZone,
-  todayInMalaysia,
 } from "../../lib/waktu-solat";
+import { todayMY } from "../../lib/date-my";
 
 // Widget for other sites: <iframe src="https://hafizbahtiar.com/waktu-solat/embed?zone=WLY01">.
 // The only route the middleware lets other origins frame (EMBEDDABLE). Compact,
@@ -18,7 +18,7 @@ const tema = ["gelap", "terang"].includes(q.get("tema") ?? "")
   ? q.get("tema")!
   : "auto";
 const times = await getPrayerTimes(zone.code);
-const today = todayInMalaysia();
+const today = todayMY();
 const day = times?.today;
 
 const dateLabel = new Intl.DateTimeFormat("ms-MY", {
@@ -127,6 +127,8 @@ const rows = day
 </CoreLayout>
 
 <script>
+  import { todayMY } from "../../lib/date-my";
+
   // Highlight the next azan (Malaysian time) and reload after Malaysian midnight.
   // Server time, not the visitor's clock: a wrong device date must not reload-loop.
   const box0 = document.getElementById("embed");
@@ -138,14 +140,10 @@ const rows = day
     minute: "2-digit",
     hourCycle: "h23",
   });
-  const dayFmt = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Kuala_Lumpur",
-  });
   const update = () => {
     const box = document.getElementById("embed");
     if (!box) return;
-    if (dayFmt.format(nowServer()) !== box.dataset.today)
-      return location.reload();
+    if (todayMY(nowServer()) !== box.dataset.today) return location.reload();
     const now = fmt.format(nowServer());
     const cells = [...box.querySelectorAll<HTMLElement>("[data-azan]")];
     const next = cells.find((c) => (c.dataset.time ?? "") > now);

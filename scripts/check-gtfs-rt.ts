@@ -1,5 +1,6 @@
 // bun scripts/check-gtfs-rt.ts - the hand-written protobuf reader against a feed
 // encoded here by hand (offline), plus the Malaysia filter.
+import { expect } from "bun:test";
 import { decodeVehiclePositions } from "../src/lib/gtfs-rt";
 import { inMalaysia } from "../src/lib/pengangkutan-awam";
 
@@ -35,14 +36,15 @@ const feed = new Uint8Array([
   ...bytes(2, [...str(1, "e2"), ...bytes(4, [...bytes(2, [...f32(1, 0), ...f32(2, 0)])])]), // (0,0) dropped
 ]);
 const v = decodeVehiclePositions(feed);
-const fail = (m: string) => { throw new Error(m); };
-if (v.length !== 1) fail(`expected 1 vehicle, got ${v.length}`);
+expect(v.length, "vehicles").toBe(1);
 const [x] = v;
-if (x.id !== "WVB4208" || x.routeId !== "U3000" || x.tripId !== "trip_1" || x.plate !== "WVB4208") fail(JSON.stringify(x));
-if (Math.abs(x.lat - 3.14) > 1e-5 || Math.abs(x.lng - 101.69) > 1e-4 || x.bearing !== 220) fail("position");
-if (x.timestamp !== 1791716559) fail(`timestamp ${x.timestamp}`);
-let threw = false;
-try { decodeVehiclePositions(new Uint8Array([0x12, 0x05, 0x01])); } catch { threw = true; }
-if (!threw) fail("truncated input must throw");
-if (inMalaysia(0.0027, 0.0155) || !inMalaysia(3.14, 101.69) || !inMalaysia(1.55, 110.35)) fail("inMalaysia");
+expect(x, "ids").toMatchObject({ id: "WVB4208", routeId: "U3000", tripId: "trip_1", plate: "WVB4208" });
+expect(x.lat, "position lat").toBeWithin(3.14 - 1e-5, 3.14 + 1e-5);
+expect(x.lng, "position lng").toBeWithin(101.69 - 1e-4, 101.69 + 1e-4);
+expect(x.bearing, "position bearing").toBe(220);
+expect(x.timestamp, "timestamp").toBe(1791716559);
+expect(() => decodeVehiclePositions(new Uint8Array([0x12, 0x05, 0x01])), "truncated input must throw").toThrow();
+expect(inMalaysia(0.0027, 0.0155), "inMalaysia (0,0)").toBe(false);
+expect(inMalaysia(3.14, 101.69), "inMalaysia KL").toBe(true);
+expect(inMalaysia(1.55, 110.35), "inMalaysia Kuching").toBe(true);
 console.log("gtfs-rt: ok");

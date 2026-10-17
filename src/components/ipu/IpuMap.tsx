@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import PointsMap, { type MapPoint } from "@/components/ui/PointsMap";
 import type { MetDay, Now, Period } from "@/lib/cuaca";
+import { setParam } from "@/lib/url";
 
 /**
  * /ipu map: PointsMap + a station panel (card on the map from sm, bottom sheet on
@@ -42,7 +43,7 @@ export default function IpuMap({ points, period, initialId }: { points: IpuPoint
     let saved: string | null = null;
     try {
       saved = localStorage.getItem(KEY);
-    } catch {}
+    } catch { }
     setStart(initialId ?? (saved && byId.has(saved) ? saved : null));
     // Bands pressed before this island hydrated.
     setTones([...document.querySelectorAll<HTMLElement>("#ipu-filter [aria-pressed=true][data-tone]")].map((b) => b.dataset.tone!).filter(Boolean));
@@ -55,11 +56,8 @@ export default function IpuMap({ points, period, initialId }: { points: IpuPoint
     try {
       if (id) localStorage.setItem(KEY, id);
       else localStorage.removeItem(KEY);
-    } catch {}
-    const url = new URL(location.href);
-    if (id) url.searchParams.set("stesen", id);
-    else url.searchParams.delete("stesen");
-    history.replaceState(history.state, "", url);
+    } catch { }
+    setParam("stesen", id);
   };
 
   if (start === undefined) return null;
@@ -129,7 +127,7 @@ function StationPanel({ s, period }: { s: IpuPoint; period: Period }) {
           </dl>
           <a
             href={`/ramalan-cuaca?lokasi=${encodeURIComponent(s.met.id)}`}
-            className="mt-2 inline-block text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
+            className="mt-2 inline-block text-sm link"
           >
             Ramalan 7 hari →
           </a>

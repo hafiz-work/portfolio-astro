@@ -275,7 +275,7 @@ export function AccountDataTable<T>({
                               ? cell.column.columnDef.header
                               : cell.column.id}
                           </dt>
-                          <dd className="mt-0.5 break-words">
+                          <dd className="mt-0.5 wrap-break-word">
                             {flexRender(
                               cell.column.columnDef.cell,
                               cell.getContext(),

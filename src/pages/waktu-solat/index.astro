@@ -11,15 +11,15 @@ import {
   getPrayerTimes,
   hhmm,
   resolveZone,
-  todayInMalaysia,
 } from "../../lib/waktu-solat";
+import { todayMY } from "../../lib/date-my";
 import { getDailyReminder } from "../../lib/peringatan";
 
 const zone = resolveZone(Astro.url.searchParams.get("zone"));
 // Remember the zone (inline script below): only a zone the URL asked for is saved.
 const pickedZone = Astro.url.searchParams.has("zone") ? zone.code : null;
 const defaultZone = resolveZone(null).code;
-const today = todayInMalaysia();
+const today = todayMY();
 const [times, reminder] = await Promise.all([
   getPrayerTimes(zone.code),
   getDailyReminder(today),
@@ -213,7 +213,7 @@ const rows = day
               href={sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+              class="link"
             >
               {times?.source}
             </a>
@@ -390,6 +390,8 @@ const rows = day
 <script>
   import { navigate } from "astro:transitions/client";
   import { bindPrintTable } from "../../lib/print-table";
+  import { copyText } from "../../lib/clipboard";
+  import { geoErrorText, locateOnce } from "../../lib/geo";
 
   // Mark the next azan (Malaysian time). Re-run on every ClientRouter visit.
   const initWaktuSolat = () => {
@@ -420,8 +422,8 @@ const rows = day
     const say = (text: string) => (status.textContent = text);
     btn.addEventListener("click", () => {
       say("Mencari lokasi…");
-      navigator.geolocation.getCurrentPosition(
-        async ({ coords }) => {
+      locateOnce().then(
+        async (coords) => {
           try {
             const res = await fetch(
               `https://api.waktusolat.app/zones/${coords.latitude.toFixed(4)}/${coords.longitude.toFixed(4)}`,
@@ -435,9 +437,7 @@ const rows = day
             say("Zon tak dapat dikesan dari lokasi ini (di luar Malaysia?). Pilih zon secara manual.");
           }
         },
-        (err) =>
-          say(err.code === err.PERMISSION_DENIED ? "Akses lokasi ditolak. Pilih zon secara manual." : "Lokasi tak dapat dikesan. Pilih zon secara manual."),
-        { timeout: 10000, maximumAge: 10 * 60 * 1000 },
+        (err) => say(`${geoErrorText(err)}. Pilih zon secara manual.`),
       );
     });
   };
@@ -451,10 +451,8 @@ const rows = day
     if (!btn || !code || btn.dataset.bound === "1") return;
     btn.dataset.bound = "1";
     btn.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(code.value);
-        btn.textContent = "Disalin";
-      } catch {
+      if (await copyText(code.value)) btn.textContent = "Disalin";
+      else {
         code.select(); // clipboard blocked: let the user copy it
         btn.textContent = "Tekan Ctrl/Cmd+C";
       }

@@ -215,6 +215,8 @@ const corners = [
 </style>
 
 <script>
+    let navbarController: AbortController | null = null;
+
     const initNavbar = () => {
         const nav = document.getElementById("main-nav");
         const toggleBtn = document.getElementById("navbar-toggle");
@@ -224,12 +226,9 @@ const corners = [
 
         if (!nav || !toggleBtn || !mobileMenu) return;
 
-        const existingController = (window as any).__navbarController;
-        if (existingController) existingController.abort();
-
-        const controller = new AbortController();
-        (window as any).__navbarController = controller;
-        const { signal } = controller;
+        navbarController?.abort();
+        navbarController = new AbortController();
+        const { signal } = navbarController;
 
         // ── Mobile menu ──────────────────────────────────────────────
         const setMenu = (open: boolean) => {

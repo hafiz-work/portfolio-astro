@@ -1,8 +1,10 @@
 ---
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Share2 } from "lucide-react";
 /**
  * Back link above a page's title row - every Showcase app points at /showcase
  * (sub-pages at their parent app). Same hairline row as the rest of the column.
+ * "Kongsi" on the right shares the current URL (with its ?zone= / ?stesen= …)
+ * via the Web Share API, else copies it.
  */
 interface Props {
   href?: string;
@@ -10,14 +12,54 @@ interface Props {
 }
 
 const { href = "/showcase", label = "Showcase" } = Astro.props;
+const linkClass =
+  "inline-flex items-center gap-1.5 rounded-full py-1 text-sm font-medium text-gray-600 hover:text-sky-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:text-gray-400 dark:hover:text-sky-400";
 ---
 
-<div class="line-y mb-6 sm:mb-10" data-showcase-app>
-  <a
-    href={href}
-    class="mx-2 inline-flex items-center gap-1.5 rounded-full py-1 text-sm font-medium text-gray-600 hover:text-gray-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:text-gray-400 dark:hover:text-white"
-  >
+<div
+  class="line-y mb-6 flex items-center justify-between sm:mb-10"
+  data-showcase-app
+>
+  <a href={href} class:list={["mx-2", linkClass]}>
     <ArrowLeft className="size-4" aria-hidden="true" />
     {label}
   </a>
+  <button
+    type="button"
+    class:list={["mx-2 cursor-pointer", linkClass]}
+    data-share-page
+    aria-label="Kongsi halaman ini"
+  >
+    <Share2 className="size-4" aria-hidden="true" />
+    <span aria-live="polite">Kongsi</span>
+  </button>
 </div>
+
+<script>
+  import { copyText } from "../../lib/clipboard";
+
+  // Module scripts run once per page load; ClientRouter swaps keep this one delegated listener.
+  document.addEventListener("click", async (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(
+      "[data-share-page]",
+    );
+    if (!btn) return;
+    const url = location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: document.title.replace(/ \| Hafiz Bahtiar$/, ""),
+          url,
+        });
+        return;
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
+      }
+    }
+    const span = btn.querySelector("span")!;
+    span.textContent = (await copyText(url))
+      ? "Pautan disalin"
+      : "Gagal menyalin";
+    setTimeout(() => (span.textContent = "Kongsi"), 2000);
+  });
+</script>

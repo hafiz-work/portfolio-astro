@@ -58,7 +58,7 @@ export const FamilyExplorer = ({
     const url = new URL(window.location.href);
     if (person) url.searchParams.set("p", person.globalKey || String(person.id));
     else url.searchParams.delete("p");
-    window.history.replaceState(null, "", url);
+    window.history.replaceState(window.history.state, "", url);
   };
 
   const closeSheet = () => {

@@ -1,16 +1,14 @@
 // bun scripts/check-imsakiah.ts - JAKIM date parsing and the Ramadan filter (offline).
+import { expect } from "bun:test";
 import { parseJakimDate, ramadanOnly, type RamadanDay } from "../src/lib/imsakiah";
 
-const eq = (got: unknown, want: unknown, what: string) => {
-  if (JSON.stringify(got) !== JSON.stringify(want)) throw new Error(`${what}: got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
-};
-eq(parseJakimDate("15-Feb-2026"), "2026-02-15", "English month");
-eq(parseJakimDate("31-Dis-2026"), "2026-12-31", "Malay Dis");
-eq(parseJakimDate("1-Mac-2027"), "2027-03-01", "Malay Mac, 1 digit day");
-eq(parseJakimDate("05-Ogos-2026"), "2026-08-05", "Malay Ogos");
-eq(parseJakimDate("05-Okt-2026"), "2026-10-05", "Malay Okt");
-eq(parseJakimDate("2026-02-15"), null, "ISO is not JAKIM's format");
-eq(parseJakimDate("15-Xyz-2026"), null, "unknown month");
+expect(parseJakimDate("15-Feb-2026"), "English month").toBe("2026-02-15");
+expect(parseJakimDate("31-Dis-2026"), "Malay Dis").toBe("2026-12-31");
+expect(parseJakimDate("1-Mac-2027"), "Malay Mac, 1 digit day").toBe("2027-03-01");
+expect(parseJakimDate("05-Ogos-2026"), "Malay Ogos").toBe("2026-08-05");
+expect(parseJakimDate("05-Okt-2026"), "Malay Okt").toBe("2026-10-05");
+expect(parseJakimDate("2026-02-15"), "ISO is not JAKIM's format").toBeNull();
+expect(parseJakimDate("15-Xyz-2026"), "unknown month").toBeNull();
 
 const row = (date: string, hijri: string) => ({ date, hijri }) as RamadanDay;
 const rows = [
@@ -20,5 +18,5 @@ const rows = [
   row("2026-02-20", "1447-09-02"),
   row("2027-02-08", "1448-09-01"),
 ];
-eq(ramadanOnly(rows, 1447).map((r) => r.date), ["2026-02-19", "2026-02-20"], "month 9 of 1447 only, sorted");
+expect(ramadanOnly(rows, 1447).map((r) => r.date), "month 9 of 1447 only, sorted").toEqual(["2026-02-19", "2026-02-20"]);
 console.log("imsakiah: ok");

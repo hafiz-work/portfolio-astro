@@ -158,6 +158,8 @@ if (paths.length === 1 && paths[0] === "admin") {
 </style>
 
 <script>
+    import { setPref } from "../../lib/theme";
+
     declare global {
         interface Window {
             toggleAdminSidebar: () => void;
@@ -199,7 +201,7 @@ if (paths.length === 1 && paths[0] === "admin") {
 
         syncThemeIcon();
 
-        if (themeToggle && themeToggle.dataset.bound !== "true") {
+        if (themeToggle && themeToggle.dataset.bound !== "1") {
             themeToggle.addEventListener("click", () => {
                 const willBeDark =
                     !document.documentElement.classList.contains("dark");
@@ -212,14 +214,7 @@ if (paths.length === 1 && paths[0] === "admin") {
                 );
 
                 const applyTheme = () => {
-                    document.documentElement.classList.toggle(
-                        "dark",
-                        willBeDark,
-                    );
-                    localStorage.setItem(
-                        "theme",
-                        willBeDark ? "dark" : "light",
-                    );
+                    setPref(willBeDark ? "dark" : "light");
                     syncThemeIcon(true);
                 };
 
@@ -263,7 +258,7 @@ if (paths.length === 1 && paths[0] === "admin") {
                     );
                 });
             });
-            themeToggle.dataset.bound = "true";
+            themeToggle.dataset.bound = "1";
         }
 
         // Delegated: survives first-load module races and DOM swaps - the

@@ -17,7 +17,6 @@ const fmt = new Intl.DateTimeFormat("ms-MY", {
   year: "numeric",
 });
 const time = (s: string) => fmt.format(new Date(mytMs(s)));
-const metLink = "font-medium text-sky-600 hover:underline dark:text-sky-400";
 ---
 
 <PublicLayout
@@ -90,7 +89,7 @@ const metLink = "font-medium text-sky-600 hover:underline dark:text-sky-400";
                 href="https://www.met.gov.my"
                 target="_blank"
                 rel="noopener noreferrer"
-                class={metLink}
+                class="link"
               >
                 {data.source}
               </a>{" "}

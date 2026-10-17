@@ -7,6 +7,7 @@ import ContactSection from "../components/home/ContactSection.astro";
 import FeaturedProjects from "../components/home/FeaturedProjects.astro";
 import MapSection from "../components/home/MapSection.astro";
 import SectionHeader from "../components/layout/SectionHeader.astro";
+import { CONTACT_EMAIL } from "../lib/constants";
 import {
 	getPublicProjects,
 	getPublicExperiences,
@@ -199,7 +200,7 @@ const homeSchema = {
 				"Backend & Flutter developer in Kuala Lumpur building reliable APIs and production Flutter apps.",
 			url: `${SITE_URL}/`,
 			image: new URL(avatar.src, SITE_URL).toString(),
-			email: "mailto:hafiz@hafizbahtiar.com",
+			email: `mailto:${CONTACT_EMAIL}`,
 			address: {
 				"@type": "PostalAddress",
 				addressLocality: "Kuala Lumpur",

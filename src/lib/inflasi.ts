@@ -2,6 +2,7 @@
 // Plan A: data.gov.my API. Then the last good copy (lib/fallback) - no second provider
 // publishes DOSM's division breakdown. Monthly release, so long cache times.
 import { getJson, withFallback } from "./fallback";
+import { formatIsoMs } from "./date-my";
 
 const MONTHS = 12;
 // 14 rows a month ("overall" + 13 divisions) x 12 months: the latest release + the trend.
@@ -74,8 +75,7 @@ export function parseInflation(rows: unknown): Inflation | null {
 }
 
 /** "2026-08-01" -> "Ogos 2026". */
-export const monthLabel = (ymd: string, month: "long" | "short" = "long") =>
-  new Intl.DateTimeFormat("ms-MY", { timeZone: "UTC", month, year: "numeric" }).format(new Date(`${ymd}T00:00:00Z`));
+export const monthLabel = (ymd: string, month: "long" | "short" = "long") => formatIsoMs(ymd, { month, year: "numeric" });
 
 export async function getInflation(): Promise<(Inflation & { source: string; stale: boolean }) | null> {
   const got = await withFallback<Inflation>(

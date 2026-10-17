@@ -1,5 +1,6 @@
 // bun scripts/check-kecemasan.ts - every emergency number has an official https
 // source, a sane dial string, and was verified in the last 6 months.
+import { expect } from "bun:test";
 import { KECEMASAN, dialString, telHref, vcard } from "../src/data/kecemasan";
 
 const MAX_AGE_DAYS = 183;
@@ -25,18 +26,18 @@ for (const g of KECEMASAN) {
     }
   }
 }
-if (dialString("1-800-88-0000") !== "1800880000" || dialString("03-7627 2929") !== "0376272929") errors.push("dialString");
+// Every data problem at once, not just the first.
+expect(errors, "kecemasan data").toEqual([]);
+
+expect(dialString("1-800-88-0000"), "dialString 1-800").toBe("1800880000");
+expect(dialString("03-7627 2929"), "dialString 03").toBe("0376272929");
 for (const [n, want] of [["+603 6204 7788", "tel:+60362047788"], ["+6 03-2612 8100", "tel:+60326128100"], ["999", "tel:999"], ["15999", "tel:15999"], ["1-800-88-0000", "tel:1800880000"], ["03-7627 2929", "tel:+60376272929"], ["088-232440", "tel:+6088232440"]]) {
-  if (telHref(n) !== want) errors.push(`telHref(${n}) = ${telHref(n)}, want ${want}`);
+  expect(telHref(n), `telHref(${n})`).toBe(want);
 }
 // vCard: CRLF, escaped , ; \ and newlines, number in +60 form.
 const vc = vcard({ id: "t", title: "A, B", short: "", contacts: [] }, { name: "X; Y", number: "03-2178 8888", note: "a\nb", source: "https://x.my", verified: "2026-01-01" });
 for (const want of ["FN:X\\; Y\r\n", "ORG:A\\, B", "TEL;TYPE=WORK,VOICE:+60321788888", "NOTE:a\\nb\\nSumber", "END:VCARD\r\n"]) {
-  if (!vc.includes(want)) errors.push(`vcard missing ${JSON.stringify(want)}`);
+  expect(vc, `vcard missing ${JSON.stringify(want)}`).toContain(want);
 }
 
-if (errors.length) {
-  console.error(errors.join("\n"));
-  process.exit(1);
-}
 console.log(`kecemasan: ok (${seen.size} numbers)`);

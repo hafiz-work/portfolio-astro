@@ -1,6 +1,6 @@
 ---
 import { Search } from "lucide-react";
-import { RESUME_URL } from "../../lib/constants";
+import { CONTACT_EMAIL, RESUME_URL } from "../../lib/constants";
 /**
  * ⌘K / Ctrl+K quick search (tailwindcss.com's navbar search pill).
  * Static index of pages, homepage sections and actions - no API calls, so
@@ -77,7 +77,7 @@ const items: Item[] = [
   {
     group: "Actions",
     label: "Copy email address",
-    hint: "hafiz@hafizbahtiar.com",
+    hint: CONTACT_EMAIL,
     action: "copy-email",
     keywords: "mail",
   },
@@ -188,7 +188,10 @@ const groups = ["Pages", "Sections", "Actions"] as const;
 </dialog>
 
 <script>
+  import { CONTACT_EMAIL } from "../../lib/constants";
   import { isResumePdfHref, trackResumeDownload } from "../../lib/track";
+
+  let cmdkController: AbortController | null = null;
 
   const initCommandPalette = () => {
     const dialog = document.getElementById("cmdk") as HTMLDialogElement | null;
@@ -198,11 +201,9 @@ const groups = ["Pages", "Sections", "Actions"] as const;
     const empty = document.getElementById("cmdk-empty");
     if (!dialog || !input) return;
 
-    const existing = (window as any).__cmdkController;
-    if (existing) existing.abort();
-    const controller = new AbortController();
-    (window as any).__cmdkController = controller;
-    const { signal } = controller;
+    cmdkController?.abort();
+    cmdkController = new AbortController();
+    const { signal } = cmdkController;
 
     const isMac = /Mac|iPhone|iPad/.test(
       navigator.platform || navigator.userAgent,
@@ -257,9 +258,9 @@ const groups = ["Pages", "Sections", "Actions"] as const;
       close();
       if (action === "copy-email") {
         try {
-          await navigator.clipboard.writeText("hafiz@hafizbahtiar.com");
+          await navigator.clipboard.writeText(CONTACT_EMAIL);
         } catch {
-          window.location.href = "mailto:hafiz@hafizbahtiar.com";
+          window.location.href = `mailto:${CONTACT_EMAIL}`;
         }
         return;
       }

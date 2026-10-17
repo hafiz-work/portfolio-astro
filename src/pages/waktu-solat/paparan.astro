@@ -8,10 +8,12 @@ import {
   getPrayerTimes,
   hhmm,
   resolveZone,
-  todayInMalaysia,
 } from "../../lib/waktu-solat";
+import { todayMY } from "../../lib/date-my";
 import { getDailyReminder } from "../../lib/peringatan";
-import { getForecast } from "../../lib/cuaca";
+import { getRamalan } from "../../lib/ramalan-cuaca";
+import { LOKASI } from "../../data/cuaca-lokasi";
+import { ZONE_MET } from "../../data/solat-zone-met";
 import { PAPARAN_BACKGROUNDS } from "../../data/paparan-backgrounds";
 
 // Mosque display (Paparan Masjid): full screen, sized by --u so any screen fits.
@@ -67,11 +69,17 @@ const photosL = photos(settings.latar, "landscape");
 const photosP = photos(settings.latarm, "portrait");
 
 const zone = resolveZone(q.get("zone"));
-const today = todayInMalaysia();
+const today = todayMY();
+// Today's row of the /ramalan-cuaca forecast for the zone's MET location (Open-Meteo fallback).
+const metLoc = LOKASI.find((l) => l.id === ZONE_MET[zone.code]);
 const [times, reminder, weather] = await Promise.all([
   getPrayerTimes(zone.code),
   settings.peringatan === "ya" ? getDailyReminder(today) : null,
-  settings.cuaca === "ya" ? getForecast(zone.code, today) : null,
+  settings.cuaca === "ya" && metLoc
+    ? getRamalan(metLoc).then(
+        (r) => r?.data.find((d) => d.date === today) ?? null,
+      )
+    : null,
 ]);
 
 // Eastern Arabic digits on request (٠١٢٣٤٥٦٧٨٩); the script does the same live.
@@ -756,6 +764,7 @@ const controlClass =
 
 <script>
   import { navigate } from "astro:transitions/client";
+  import { todayMY } from "../../lib/date-my";
 
   const IDLE_MS = 3000;
   const AZAN_BANNER_S = 10 * 60; // "Telah masuk waktu …" for 10 minutes
@@ -771,9 +780,6 @@ const controlClass =
     minute: "2-digit",
     second: "2-digit",
     hourCycle: "h23",
-  });
-  const dayFmt = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Kuala_Lumpur",
   });
   const toSec = (hhmm: string) => {
     const [h, m] = hhmm.split(":").map(Number);
@@ -837,7 +843,7 @@ const controlClass =
 
     const tick = () => {
       const now = new Date(Date.now() + offset);
-      if (dayFmt.format(now) !== screen.dataset.today) return location.reload(); // new day
+      if (todayMY(now) !== screen.dataset.today) return location.reload(); // new day
       const [h, m, s] = fmt.format(now).split(":").map(Number);
       const sec = h * 3600 + m * 60 + s;
       const hour = jam === "12" ? String(h % 12 || 12) : pad(h);

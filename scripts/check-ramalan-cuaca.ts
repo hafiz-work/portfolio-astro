@@ -2,7 +2,8 @@
 // Run: bun scripts/check-ramalan-cuaca.ts
 import { expect } from "bun:test";
 import { LOKASI } from "../src/data/cuaca-lokasi.ts";
-import { fromToday, parseMet, parseOpenMeteo, todayMY, wmoText } from "../src/lib/ramalan-cuaca.ts";
+import { fromToday, parseMet, parseOpenMeteo, wmoText } from "../src/lib/ramalan-cuaca.ts";
+import { todayMY } from "../src/lib/date-my.ts";
 
 // MET: sorted oldest first, incomplete rows dropped, empty strings -> null.
 const met = parseMet([

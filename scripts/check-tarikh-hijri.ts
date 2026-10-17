@@ -36,7 +36,7 @@ expect(await toMasihi("1448-09-01", today)).toEqual({ masihi: "2027-02-08", hijr
 for (let t = Date.parse("1950-03-07T00:00:00Z"); t < Date.parse("2090-01-01T00:00:00Z"); t += 997 * 86_400_000) {
   const ymd = new Date(t).toISOString().slice(0, 10);
   const h = await toHijri(ymd, today);
-  if ("error" in h) throw new Error(`${ymd}: ${h.error}`);
+  if ("error" in h) expect.unreachable(`${ymd}: ${h.error}`);
   expect((await toMasihi(h.hijri, today)) as unknown).toEqual(h);
 }
 

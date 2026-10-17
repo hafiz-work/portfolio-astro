@@ -7,21 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/shadcn/ui/dropdown-menu";
-
-type Pref = "system" | "light" | "dark";
-
-// Same contract as the public Footer switcher and CoreLayout's init script:
-// no "theme" key = follow the system, else "light" / "dark".
-const setTheme = (pref: Pref) => {
-  try {
-    if (pref === "system") localStorage.removeItem("theme");
-    else localStorage.setItem("theme", pref);
-  } catch {
-    /* storage blocked - still apply for this page */
-  }
-  const dark = pref === "dark" || (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  document.documentElement.classList.toggle("dark", dark);
-};
+import { setPref as setTheme } from "@/lib/theme";
 
 /** shadcn mode-toggle: icon button + Light / Dark / System menu. */
 export function ModeToggle() {

@@ -4,6 +4,7 @@
 
 import { SOLAT_ZONES, type SolatZone } from "../data/solat-zones";
 import { getJson, withFallback } from "./fallback";
+import { todayMY } from "./date-my";
 
 const DEFAULT_ZONE = "WLY01"; // Kuala Lumpur, Putrajaya
 
@@ -26,10 +27,6 @@ export interface PrayerDay {
   maghrib: string;
   isha: string;
 }
-
-/** Today's date in Malaysia as "YYYY-MM-DD" (the Worker runs in UTC). */
-export const todayInMalaysia = () =>
-  new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur" }).format(new Date());
 
 interface Month {
   days: PrayerDay[];
@@ -92,7 +89,7 @@ export interface PrayerTimes {
  * Cached per zone + Malaysian month, so the month rolls over at Malaysian midnight.
  */
 export async function getPrayerTimes(zone: string): Promise<PrayerTimes | null> {
-  const today = todayInMalaysia();
+  const today = todayMY();
   const got = await withFallback<Month>(
     `solat:${zone}:${today.slice(0, 7)}`,
     [

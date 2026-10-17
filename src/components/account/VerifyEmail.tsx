@@ -9,7 +9,7 @@ export function VerifyEmail() {
 
   useEffect(() => {
     const token = new URLSearchParams(location.search).get("token");
-    history.replaceState(null, "", location.pathname);
+    history.replaceState(history.state, "", location.pathname);
     if (!token) {
       setState("failed");
       return;

@@ -105,7 +105,7 @@ export function ModerationManager() {
                       : item.title}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    <button type="button" className="font-medium text-sky-600 hover:underline dark:text-sky-400" onClick={() => loadUser(item.author.id)}>
+                    <button type="button" className="link" onClick={() => loadUser(item.author.id)}>
                       {item.author.name}
                     </button>{" "}
                     · {when(item.createdAt)} · <span className={statusTone[item.status] ?? ""}>{item.status}</span>

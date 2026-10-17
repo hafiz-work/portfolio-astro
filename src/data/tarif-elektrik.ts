@@ -16,7 +16,6 @@
  * Units: rates in 1/100 sen per kWh (27.03 sen = 2703) so every amount is integer maths; money in sen.
  */
 
-export const TARIF_BERKUAT_KUASA = "2025-07-01";
 export const TARIKH_SEMAK = "2026-10-14";
 
 export const TARIF = {

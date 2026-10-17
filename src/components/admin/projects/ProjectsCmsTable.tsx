@@ -16,7 +16,7 @@ import {
 import { Select } from "../../ui/Select";
 import { cmsService, extractApiError } from "../../../lib/projects-cms";
 import { showToast, confirmDialog } from "../../../lib/admin-ui";
-import type { CmsProject, ProjectWarning } from "../../../types/project-cms";
+import type { CmsProject } from "../../../types/project-cms";
 
 const TYPE_VARIANT: Record<string, BadgeVariant> = {
   business: "info",
@@ -46,7 +46,6 @@ const formatDate = (s?: string) => {
 
 export const ProjectsCmsTable = () => {
   const [data, setData] = useState<CmsProject[]>([]);
-  const [warnings, setWarnings] = useState<Record<number, ProjectWarning[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
@@ -54,26 +53,12 @@ export const ProjectsCmsTable = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [visibilityFilter, setVisibilityFilter] = useState<string>("all");
 
-  const loadWarnings = async (projects: CmsProject[]) => {
-    const results = await Promise.allSettled(
-      projects.map((p) => cmsService.getProjectDetail(p.id)),
-    );
-    const map: Record<number, ProjectWarning[]> = {};
-    results.forEach((res, i) => {
-      if (res.status === "fulfilled" && res.value) map[projects[i].id] = res.value.warnings ?? [];
-    });
-    setWarnings(map);
-  };
-
   const loadAll = async () => {
     setIsLoading(true);
     setError(null);
     try {
       const projects = await cmsService.listProjects();
       setData(projects);
-      // Warning badges are best-effort and load after the list (one detail
-      // fetch per project). Failures simply omit warning badges for that row.
-      void loadWarnings(projects);
     } catch (e) {
       setError(extractApiError(e).message);
     } finally {
@@ -140,7 +125,7 @@ export const ProjectsCmsTable = () => {
       header: "Project",
       cell: ({ row }) => {
         const p = row.original;
-        const w = warnings[p.id] ?? [];
+        const w = p.warnings ?? [];
         return (
           <div className="min-w-0">
             <CellPrimary>{p.title}</CellPrimary>

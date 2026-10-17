@@ -8,6 +8,7 @@ import PublicLayout from "../layouts/PublicLayout.astro";
 import GridFillers from "../components/ui/GridFillers.astro";
 import { KECEMASAN, telHref, vcardSlug } from "../data/kecemasan";
 import { isoToDmy } from "../lib/date-my";
+import { CONTACT_EMAIL } from "../lib/constants";
 
 // Every number comes from src/data/kecemasan.ts with its official source and the
 // date it was checked (bun scripts/check-kecemasan.ts).
@@ -22,7 +23,7 @@ const sources = [
 ]
   .slice(0, 6)
   .map(([name, href]) => ({ name, href }));
-const report = `mailto:hafiz@hafizbahtiar.com?subject=${encodeURIComponent("Nombor kecemasan salah")}`;
+const report = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Nombor kecemasan salah")}`;
 ---
 
 <PublicLayout
@@ -87,7 +88,7 @@ const report = `mailto:hafiz@hafizbahtiar.com?subject=${encodeURIComponent("Nomb
           laman rasmi agensi pada {isoToDmy(lastVerified)}.{" "}
           <a
             href={report}
-            class="font-medium text-sky-600 hover:underline dark:text-sky-400"
+            class="link"
             >Lapor nombor salah</a
           >
         </p>
@@ -271,6 +272,8 @@ const report = `mailto:hafiz@hafizbahtiar.com?subject=${encodeURIComponent("Nomb
 </PublicLayout>
 
 <script>
+  import { copyText } from "../lib/clipboard";
+
   // Search + category chips: a contact shows when it matches the words AND sits in the
   // picked category ("" = Semua); empty groups hide. #<group id> picks a chip on load.
   const init = () => {
@@ -338,12 +341,9 @@ const report = `mailto:hafiz@hafizbahtiar.com?subject=${encodeURIComponent("Nomb
       "[data-copy]",
     );
     if (!btn) return;
-    try {
-      await navigator.clipboard.writeText(btn.dataset.copy!);
-      btn.textContent = "Disalin";
-    } catch {
-      btn.textContent = btn.dataset.copy!; // clipboard blocked: show it to copy by hand
-    }
+    btn.textContent = (await copyText(btn.dataset.copy!))
+      ? "Disalin"
+      : btn.dataset.copy!; // clipboard blocked: show it to copy by hand
     setTimeout(() => (btn.textContent = "Salin"), 2000);
   });
 

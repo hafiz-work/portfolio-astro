@@ -7,7 +7,8 @@ import GridFillers from "../components/ui/GridFillers.astro";
 import TechHeading from "../components/layout/TechHeading.astro";
 import PublicLayout from "../layouts/PublicLayout.astro";
 import { LOKASI } from "../data/cuaca-lokasi";
-import { getRamalan, MET_SOURCE, todayMY } from "../lib/ramalan-cuaca";
+import { getRamalan, MET_SOURCE } from "../lib/ramalan-cuaca";
+import { formatIsoMs, isoToDmy, todayMY } from "../lib/date-my";
 import { activeWarnings, getWarnings } from "../lib/amaran-cuaca";
 export const prerender = false;
 
@@ -38,19 +39,13 @@ const options = [...LOKASI]
 
 const today = todayMY();
 const tomorrow = todayMY(new Date(Date.now() + 86_400_000));
-const weekday = new Intl.DateTimeFormat("ms-MY", {
-  weekday: "long",
-  timeZone: "UTC",
-});
 const dayName = (ymd: string) =>
   ymd === today
     ? "Hari ini"
     : ymd === tomorrow
       ? "Esok"
-      : weekday.format(new Date(`${ymd}T00:00:00Z`));
-const dmy = (ymd: string) => ymd.split("-").reverse().join("/");
+      : formatIsoMs(ymd, { weekday: "long" });
 const fromMet = data?.source === MET_SOURCE;
-const link = "font-medium text-sky-600 hover:underline dark:text-sky-400";
 ---
 
 <PublicLayout
@@ -130,7 +125,7 @@ const link = "font-medium text-sky-600 hover:underline dark:text-sky-400";
                       {dayName(d.date)}
                     </p>
                     <p class="font-mono text-xs tracking-widest text-gray-500 tabular-nums dark:text-gray-400">
-                      {dmy(d.date)}
+                      {isoToDmy(d.date)}
                     </p>
                   </div>
                   <div>
@@ -180,7 +175,7 @@ const link = "font-medium text-sky-600 hover:underline dark:text-sky-400";
                     href="https://www.met.gov.my"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class={link}
+                    class="link"
                   >
                     MET Malaysia
                   </a>{" "}
@@ -192,7 +187,7 @@ const link = "font-medium text-sky-600 hover:underline dark:text-sky-400";
                     href="https://open-meteo.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class={link}
+                    class="link"
                   >
                     Open-Meteo
                   </a>{" "}

@@ -8,6 +8,15 @@ export const HARI_PENDEK = ["Is", "Se", "Ra", "Kh", "Ju", "Sa", "Ah"];
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+const MY_DAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur" });
+/** The Malaysian date of `now` as "YYYY-MM-DD" (the Worker runs in UTC). */
+export const todayMY = (now = new Date()) => MY_DAY.format(now);
+
+/** An ISO "YYYY-MM-DD" in Malay words, e.g. { day: "numeric", month: "long" } -> "8 Februari".
+ *  Read as a UTC calendar date, so the server's zone never shifts the day. */
+export const formatIsoMs = (ymd: string, opts: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat("ms-MY", { timeZone: "UTC", ...opts }).format(new Date(`${ymd}T00:00:00Z`));
+
 /** "2027-02-08" -> "08/02/2027"; anything else -> "". */
 export function isoToDmy(iso: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso ?? "");

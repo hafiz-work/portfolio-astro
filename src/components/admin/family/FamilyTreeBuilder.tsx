@@ -12,7 +12,7 @@ import type {
 } from "../../../types/family";
 import { FamilyTreeChart } from "./FamilyTreeChart";
 import { Minus } from "lucide-react";
-import { confirmDialog } from "../../../lib/admin-ui";
+import { confirmDialog, showToast as adminToast } from "../../../lib/admin-ui";
 
 type BuilderMode = "new" | "edit";
 type RelationAction = "father" | "mother" | "spouse" | "son" | "daughter" | null;
@@ -263,15 +263,8 @@ export const FamilyTreeBuilder = ({ mode }: FamilyTreeBuilderProps) => {
     : null;
 
   const showToast = useCallback(
-    (options: {
-      type?: "success" | "error" | "warning" | "info";
-      title?: string;
-      message?: string;
-      duration?: number;
-    }) => {
-      const registry = (window as any).__uiAlerts;
-      registry?.["family-builder-alert"]?.show(options);
-    },
+    (options: Omit<Parameters<typeof adminToast>[0], "id">) =>
+      adminToast({ ...options, id: "family-builder-alert" }),
     [],
   );
 

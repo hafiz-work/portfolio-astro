@@ -1,99 +1,62 @@
-# TODO - senarai semak (dikemas kini 2026-10-13)
+# TODO - senarai semak (dikemas kini 2026-10-17)
 
-Priorities: P0 = bug/vuln, P1 = perf/correctness, P2 = polish/cleanup.
+Priorities: P0 = bug/vuln, P1 = perf/correctness, P2 = polish/cleanup, P3 = nice to have.
+Fail ni senarai **kerja yang belum siap** sahaja - item siap dibuang (butiran dalam git history). Isu keselamatan: `VULNERABLE.md`. Backend: `/Users/hafiz/Developments/hono-workers/TODO.md`.
 
-Fail ni senarai **kerja yang belum siap** sahaja. Item yang dah selesai dibuang - butirannya ada dalam git diff / commit sesi 2026-09-24 (CORS PATCH, validator blog/experiences/profile, rate-limit memory, audit-log route, resume tracking + retention, upload R2 peribadi + proxy media, cover image blog, viewsCount dibuang, System Logs client-side fetch) dan sesi 2026-09-26 (loader cache-friendly untuk blog/policy/projek detail, `lib/projects.ts` tinggal admin sahaja, guard tarikh `profile.astro`, stub settings dilabel, build astro 7 dibaiki: buang override `vite ^7`, `@astrojs/react ^6.0.6`, declare `htmlparser2`/`domhandler`/`entities`, `map.tsx` namespace import + **`setWorkerUrl()` untuk worker maplibre v6**, **captcha Google reCAPTCHA → Cloudflare Turnstile** pada login + contact form).
+## ⚠️ PENTING - baca dulu (untuk agent lain)
 
-## Captcha - Cloudflare Turnstile (menggantikan reCAPTCHA v3)
+- **Jangan sekali-kali jalankan migration D1 remote** (`db:migrate:remote`) atau deploy - itu kerja owner. Data ujian dalam D1 lokal mesti dibersihkan.
+- **Belum commit**: semua kerja sejak sesi 2026-09-24 masih dalam staging index. Bila commit, **`package.json` + `package-lock.json` mesti masuk sekali** (CI guna `npm ci`; lockfile lama yang hoist `htmlparser2`/`entities`/`domhandler` ke root pecahkan build remote).
+- **Captcha lokal**: `PUBLIC_TURNSTILE_SITE_KEY` kosong = key **produksi** (kod sengaja `||`, bukan `??`, supaya env build kosong tak matikan captcha produksi). Untuk dev guna test key `1x00000000000000000000BB` + backend tanpa `TURNSTILE_SECRET` (atau test secret `1x0000000000000000000000000000000AA`). Challenge Turnstile tak selesai dalam browser automasi - login sebenar kena buat manusia.
+- **`ApiClient`**: 404 -> `null` hanya untuk GET/HEAD; write throw. 401 = satu refresh + satu retry (`bun scripts/check-api-retry.ts`).
+- **Refresh token berputar**: setiap full page load akaun/admin = satu write D1 (`tryRefresh`). Jangan tukar navigasi dalaman jadi full reload; jangan panggil refresh/me selari.
+- **Cloudflare plan Free** (disahkan owner 2026-10-15): had 100k request/hari untuk seluruh site - bila habis, semua page error. Data luar dah colo-cached (`fallback.ts`, `public-content.ts`); HTML SSR tak di-cache.
+- **Jangan cache HTML widget embed** (`/waktu-solat/embed`, `/ipu/embed`): Worker tetap jalan sebelum cache (tak kurangkan invocation), dan `data-server-now`/`data-today` dalam HTML jadi basi (jam tersasar, reload berulang sekitar tengah malam).
+- **Prerender tak membantu kos**: home, `/blog`, `/quotes`, `/projects` perlukan data API semasa request; app Showcase data langsung. Jangan tukar ke prerender untuk "jimat".
+- **R2 binding `remote: true`**: upload lokal tulis ke bucket sebenar (perlu `wrangler login`). Aset peribadi jangan bawah prefix `images/` - route proxy hanya serve prefix itu.
+- **Guna helper bersama, jangan tulis semula** (refactor 2026-10-17): `lib/geo.ts` (`distanceKm`, `locateOnce`, `geoErrorText`), `lib/clipboard.ts` (`copyText`), `lib/url.ts` (`setParam`, pass `history.state`), `lib/money.ts` (`rm`, `ringgit`), `lib/date-my.ts` (`todayMY`, `formatIsoMs`, `isoToDmy`), `lib/chart.ts` + `ui/LineChart.astro`, `lib/map-view.ts` (`bindViewTabs`, `POINTS_MAP_FOCUS`), `lib/theme.ts`, `lib/admin-ui.ts` (`showToast`, form helpers), `lib/calc-state.ts`, `ui/ResetButton.astro`, atom `.link`, `CONTACT_EMAIL`. Ikon: lucide. Check scripts: `bun:test` `expect`.
+- **Keselamatan (dah disemak, kekalkan)**: "Kongsi" (`BackLink`) kongsi `location.href` sahaja; state kalkulator (`calc-state.ts`) divalidasi per medan dan masuk `.value`/`checked`, bukan HTML; `public/sw.js` cache GET same-origin Showcase + `/_astro/*` sahaja (tak pernah admin/account/auth/api/POST); import `/@react-refresh` dalam `TechHeading` hanya bawah `import.meta.env.DEV`.
 
-Sisi backend dan frontend dua-dua **dah live dan disahkan** (2026-09-26):
-- API produksi proses `captchaToken`; field lama ditolak - `{"success":false,"error":"Unrecognized key(s) in object: 'recaptchaToken'"}`.
-- Frontend produksi serve `challenges.cloudflare.com/turnstile/v0/api.js?render=explicit` + `data-turnstile-site-key="0x4AAAAAAFD-PSk_u7NHAF-5"` pada `/login` dan home.
-- Guard timeout 15s berfungsi di produksi (challenge yang tak selesai tak tinggalkan spinner).
+## Owner - deploy & dashboard (manual)
 
-Baki:
+- [ ] **[P0] Backend dulu, baru frontend**: dalam `hono-workers` `bun run db:migrate:remote` (012 cap global, 013 buang table `owner` - **`wrangler d1 export` dulu**, 014 telegram, 015 counters, 022 sessions, 023 telegram dedupe, 024 profil awam - semak username pendua dulu, query dalam `hono-workers/TODO.md`), kemudian `wrangler deploy`. Tanpa 014, `GET /owner/profile` pulang 500.
+- [ ] **[P0] Tukar password produksi `users.id = 1`** - seed lama ada hash `admin123` (seed dah dibaiki, row sedia ada tak berubah).
+- [ ] **[P0] Deploy frontend** selepas backend. Nota: selepas deploy backend, page dari `localhost:4321` tak boleh panggil API produksi (CORS produksi sahaja) - dev guna backend lokal.
+- [ ] **[P1] Selepas deploy, sahkan**:
+  - Turnstile: satu login sebenar berjaya = `TURNSTILE_SECRET` sah (`wrangler tail` tunjuk `Turnstile siteverify result:`); cuba token sama kali kedua -> ditolak; domain widget dashboard ada `localhost`/`127.0.0.1` untuk dev.
+  - Had kadar login: beberapa login gagal pantas -> 429.
+  - Family API: `curl https://api.hafizbahtiar.com/api/v1/public/family` tiada `notes`/`metadata`.
+  - Overview admin 200 + `resumeDownloads` naik bila klik link resume; cron `0 3 * * *` terdaftar.
+- [ ] **[P1] Telegram**: `bunx wrangler secret put TELEGRAM_BOT_TOKEN` + `TELEGRAM_WEBHOOK_SECRET`, migrate 014, `bun run telegram:webhook`.
+- [ ] **[P2] Dashboard Cloudflare (plan Free)**: Notifications -> usage alert Workers requests hampir had harian; Security -> Bots -> Bot Fight Mode; WAF block laluan scanner (`/wp-*`, `*.php`, `/.env`, `/.git`); rate-limit rule per IP untuk `/*/embed`. Kalau satu site hos widget betul-betul besar: naik ke Paid atau widget perlukan key.
 
-- [ ] **Sahkan `TURNSTILE_SECRET` betul** (2026-10-13: sisi frontend produksi disahkan - `/login`, `/register`, `/admin/login` serve `api.js?render=explicit` + site key, CSP benarkan `challenges.cloudflare.com`; `wrangler` tak login di mesin ni, jadi nama secret pun belum disemak - `wrangler secret list` dalam `hono-workers` tunjuk sama ada ia wujud, bukan sama ada ia betul) dengan satu login (atau hantar contact) sebenar dalam browser biasa. Dari luar, "secret tak diset" dan "token tak sah" dua-dua pulang 400 yang sama, jadi ia kena disahkan dari dalam: login berjaya (atau sekurang-kurangnya masuk peringkat semak kredential) = secret sah. Challenge Turnstile **tidak selesai dalam browser automasi** (headless mahupun headed/CDP) - aku dah cuba, jadi ini kerja manusia. `wrangler tail` sambil cuba login akan tunjuk baris `Turnstile siteverify result:` kalau nak bukti log.
-- [ ] **Sahkan domain widget** dalam dashboard ada `localhost` (+ `127.0.0.1`) untuk dev lokal; produksi guna `hafizbahtiar.com` + `www.hafizbahtiar.com` (var `TURNSTILE_HOSTNAMES`).
-- [ ] Replay: token single-use - cubaan kedua dengan token yang sama sepatutnya ditolak.
-- [x] ~~Nota dev: biar kosong untuk matikan captcha lokal~~ - **salah** (disemak 2026-10-13): `login`/`register`/`admin/login`/`ContactSection` guna `PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAAFD-…"`, jadi kosong = key produksi, captcha tetap hidup. Cara betul (dah tulis dalam `.env.example`): test key Cloudflare `1x00000000000000000000BB` (sentiasa lulus, invisible) + backend `TURNSTILE_SECRET` tak diset atau test secret `1x0000000000000000000000000000000AA`. Kod sengaja kekal `||` - `??` akan matikan captcha produksi kalau env build wujud tapi kosong. Key default kini satu konstan: `TURNSTILE_SITE_KEY` dalam `src/lib/constants.ts`.
+## Frontend
 
-## P0 - Deploy & operasi
-
-- [ ] `npm run db:migrate:remote` **dahulu**, baru `wrangler deploy` backend. D1 prod belum ada table `resume_downloads` **dan migration 014 (kolum telegram)** - tanpa 014, `GET /owner/profile` pulang 500 dan page profile admin mati sepenuhnya.
-- [ ] Deploy frontend - semua fix sesi lepas belum naik.
-- [ ] Commit semuanya. Kerja sesi ni masih dalam staging index, belum ada commit - **`package.json` dan `package-lock.json` mesti masuk sekali** (CI guna `npm ci`, lockfile lama yang hoist `htmlparser2`/`entities`/`domhandler` ke root sebabkan build remote pecah).
-- [ ] Sahkan selepas deploy: overview 200 + `resumeDownloads` naik; klik link resume di footer → row masuk; cron `0 3 * * *` terdaftar (`wrangler deployments`/dashboard).
-
-## Telegram (WIP - UI staged, backend plumbing siap)
-
-- [ ] **Remote belum konfigur** (`hono-workers`): `bunx wrangler secret put TELEGRAM_BOT_TOKEN` + `TELEGRAM_WEBHOOK_SECRET`, `bun run db:migrate:remote` (014), `bun run telegram:webhook`. Verifikasi lokal: `bun scripts/verify-telegram.ts` (24 checks, lulus); migration 014 dah apply di D1 lokal.
-- [ ] `[backend]` **[P3] `/owner/profile` kongsi `AUTH_RATE_LIMITER` (5/60s per IP)**: visit profile (GET) + link (PUT+GET) + save (PUT) = 4; 6 aksi pantas dalam 60s → 429. Pertimbang limiter berasingan untuk CRUD profile.
-- [ ] **[P3] Bot commands belum ada**: `/status`, `/stats`, `/recent`, `/mute` (chat owner cuma dapat help) + notifikasi contact message. Dijejak dalam TODO `hono-workers`.
-
-## Security & hardening
-
-- [ ] `[backend]` **[P1] Lockout brute-force login hanya client-side.** (Disemak semula 2026-10-15: `/login` -> `LoginForm.tsx`, `/admin/login` -> `login.astro`; dua-dua lockout dalam memori browser sahaja, reload = reset; backend belum disemak.) Risiko kos juga: setiap cubaan = hash password (request paling berat CPU) + bacaan D1. `login.astro:402` (5 gagal → 60s dalam browser boleh dimatikan). Sahkan backend had kadar `/auth/login` (Turnstile dah membantu) - kerja `hono-workers`.
-- [ ] **[P2] CSP `'unsafe-inline'` untuk script** (`middleware.ts:33`, diperlukan oleh inline theme-init `CoreLayout`). Risiko sync: CSP `middleware.ts` kena sepadan dengan `public/_headers` secara manual (`middleware.ts:11`).
-- [ ] **[P2] Token verify-email melalui query URL** (`verify-email.astro:14`) - standard untuk link email; ubah hanya kalau backend boleh terima POST.
-
-## Performance
-
-- [ ] **[P1] Admin projects list buat N+1 `getProjectDetail`** untuk badge warning (`ProjectsCmsTable.tsx:57-66`) - perlu batch endpoint atau warnings disertakan dalam respons senarai (`hono-workers`).
-- [ ] **[P2] `kl-boundary.json` (15.8 KB) masuk bundle JS setiap pelawat** (`MapCanvas.tsx:14`, import statik dalam island `client:only`). Kecilkan titik atau ambil sebagai aset runtime.
-
-## Correctness / robustness
-
-- Nota: `ApiClient` 404 → `null` hanya untuk GET/HEAD; write throw, jadi caller yang dulu anggap 404 sebagai `null` kena jangkakan exception. (Loop retry 401 dah dibaiki 2026-10-13 - sekali refresh + retry sahaja, `bun scripts/check-api-retry.ts`.)
-
-## Kos Cloudflare (audit 2026-10-13)
-
-Konteks: request Worker murah (paid: 10M/bulan termasuk, lepas tu ~$0.30/M; free: >100k/hari = error, bukan bil). Yang betul-betul spike ialah **loop** dan **write D1**. Data luar dah colo-cached (Cache API, percuma); HTML SSR **tak** di-cache - setiap view = satu invocation.
-
-- [ ] **[P1] Sahkan `TURNSTILE_SECRET` di produksi** (lihat seksyen Captcha) - tanpanya backend skip captcha dan brute-force login jadi kos CPU sepenuhnya. Pastikan juga backend rate-limit `/auth/login`.
-- [x] **[Owner, dashboard] Semak plan Cloudflare** - **Free** (disahkan owner 2026-10-15), jadi ikut cabang "Kalau Free" di bawah. Asal: Paid: kos request ~$0.30/M, isu kecil. Free: had 100k request/hari untuk **seluruh site** - bila habis, semua page error (bukan bil), jadi itu satu-satunya senario yang betul-betul bahaya.
-- [ ] **[Owner, dashboard] [P3] Widget embed boleh dipasang mana-mana site** (plan Free - buat langkah "Kalau Free") (`/waktu-solat/embed`, `/ipu/embed`, `frame-ancestors *`) - setiap pageview site lain = satu invocation kita; widget IPU reload setiap 30 min selagi terbuka (~48/hari setiap widget). Dianalisa 2026-10-13, **kod sengaja tak diubah**:
-      - Cache HTML (Cache API / Cache Rule) **tak kurangkan invocation** - Worker jalan sebelum cache; ia cuma jimat CPU render (beberapa ms). Data (JAKIM/APIMS) dah colo-cached dalam `fallback.ts`.
-      - Cache HTML juga **merosakkan widget**: `data-server-now` + `data-today` dalam HTML - jam tersasar sebanyak umur cache, dan sekitar tengah malam `today` basi boleh buat widget reload berulang sampai cache tamat.
-      - Rate-limit per IP tak hentikan site popular (setiap pelawat IP lain) - ia hanya untuk bot/banjir dari satu sumber.
-      - **Kalau Free**: (1) Notifications -> usage alert Workers requests hampir had harian; (2) WAF rate-limit rule untuk `/*/embed` per IP (lawan bot). Kalau satu site hos betul-betul besar: naik ke Paid, atau widget perlukan key.
-      - **Kalau Paid**: biar. 1M pageview/bulan di site hos ≈ $0.30.
-      - Kalau nanti nak kurangkan request dari pelawat sama yang buka banyak page site hos: buang kebergantungan `serverNow` dalam embed (guna jam peranti), baru `Cache-Control` pendek selamat. Risiko pada jam widget + semakan tengah malam - belum berbaloi.
-- [ ] **[Owner, dashboard] Semua page awam SSR termasuk home** - setiap view, crawler atau bot = satu invocation + CPU render; data dah colo-cached (`fallback.ts`, `public-content.ts`), jadi D1/upstream tak terkesan. Disemak 2026-10-13: **prerender tak membantu** - home, `/blog`, `/quotes`, `/projects` perlukan data API (prerender = data beku sampai build seterusnya, dan build kena capai API - sebab asal semuanya SSR); `/tarikh-hijri`, `/register`, `/verify-email` guna query; `/kiraan-detik` + app Showcase data langsung. Hanya `/404` dan `/login` tiada kebergantungan, tapi URL tak dikenali tetap panggil Worker, jadi jimat sikit CPU sahaja. Tindakan sebenar di dashboard: **Security -> Bots -> Bot Fight Mode** hidup; WAF custom rule block laluan scanner (`/wp-*`, `*.php`, `/.env`, `/.git`) - site ni tiada satu pun; rate-limit rule umum per IP. Free plan: usage alert sama seperti di atas.
-- [ ] **[P2] D1 rows-read untuk akaun (`hono-workers`)**: `/me/blog`, `/me/quotes`, `/me/moderation` pulang senarai penuh dan dashboard panggil ketiga-tiganya. Sahkan ada index `created_by_user_id` (dan untuk kiraan strike 90 hari) - tanpa index setiap panggilan baca seluruh table. Kalau senarai membesar: endpoint ringkasan untuk dashboard.
-- [ ] **[P3] Setiap full page load akaun/admin buat `tryRefresh`** = satu write D1 (refresh token berputar). ClientRouter elak ni; jangan tukar navigasi dalaman jadi full reload.
+- [ ] **[P2] Hantar beacon lawatan** - backend `POST /api/v1/public/visit` dah ada (migration 015) tapi frontend belum hantar; satu baris dalam `PublicLayout`. Kemudian panel admin untuk `GET /owner/dashboard/visits`.
+- [ ] **[P2] `kl-boundary.json` (15.8 KB) dalam bundle setiap pelawat** (`MapCanvas.tsx:15`, import statik) - kecilkan titik atau ambil sebagai aset runtime.
+- [ ] **[P2] CSP `'unsafe-inline'` untuk script** (`middleware.ts:33`, untuk inline theme-init `CoreLayout`); CSP `middleware.ts` kena sepadan dengan `public/_headers` secara manual.
+- [ ] **[P3] Cover blog** dalam kad `/blog` dan/atau hero post (sekarang social card sahaja).
+- [ ] **[P3] Nota privasi "IP download dilog"** - tiada page privasi site; pilih nota footer, page site-level, atau biar.
+- [ ] **[P3] `README.md` masih boilerplate Astro starter** - tulis README sebenar (setup, env, deploy) atau buang.
 
 ## Akaun - profil awam (`/u/{username}`)
 
-Spec: `docs/specs/public-user-profile-spec.md` - **diluluskan 2026-10-13** (D1-D6 ikut cadangan: `/u/{username}`, opt-in, peraturan username D3, tiada redirect bila tukar, apa yang dipapar D5, diindeks; link `authorUsername` masuk skop). Frontend tersekat sampai backend siap.
+Spec `docs/specs/public-user-profile-spec.md` (diluluskan 2026-10-13). Backend siap 2026-10-17 (lokal, migration 024); frontend sedang dibuat. Keputusan owner: kekal login dengan username, atau emel sahaja (username awam = nama login yang diketahui).
 
-- [ ] **[P2] Backend (`hono-workers`)**: migration `username` + `profile_public` (D1 lokal sahaja), `GET /me` + update profile terima dua field tu (409 `username_taken`), senarai username terpelihara, `GET /public/profiles/:username` (DTO whitelist, 404 seragam untuk private/banned/belum verify), `authorUsername` dalam DTO blog/quote awam (spec §2.5 - `null` bila profil penulis private), skrip verify.
-- [ ] **[P2] Frontend**: seksyen "Public profile" dalam `/account/settings` (username + `Switch` + salin URL), page `src/pages/u/[username].astro` (`PublicLayout`, map ke DTO tempatan sebelum render), menu user "Website" -> "View public profile", link nama penulis ke `/u/{authorUsername}` di `/blog`, `/blog/[slug]` dan `/quotes` (spec §3.3).
-- [ ] **Owner**: migrate remote + deploy backend, baru deploy frontend.
+- [ ] **[P2] Frontend** (selepas backend): seksyen "Public profile" dalam `/account/settings` (username + `Switch` + salin URL), `src/pages/u/[username].astro` (`PublicLayout`, map ke DTO tempatan), menu user "View public profile", link nama penulis ke `/u/{authorUsername}` di `/blog`, `/blog/[slug]`, `/quotes` (spec §3.3).
 
-## Backend (`hono-workers`)
+## Showcase
 
-- [ ] **[P2] Drop-list `db:reset` stale** - tinggal 6 table lama, tak masuk table baru.
-- [ ] **[P2] `observability.enabled: false` sementara `logs`/`traces` enabled** dalam `wrangler.jsonc` - bercanggah.
-- [ ] **[P3] Upload lokal perlukan `wrangler login`** sebab R2 binding `remote: true` (dev tulis ke bucket sebenar). Kalau nanti ada aset peribadi, jangan letak bawah prefix `images/` - route proxy sengaja hanya serve prefix itu.
-- [ ] **[P3] Cover blog**: papar dalam kad senarai `/blog` dan/atau hero image di post page (sekarang untuk social card sahaja).
+- [ ] **[P3] Format kod** (pilihan owner): prettier/biome sekali format - ~12 fail petik tunggal + inden 4. Refactor corak kod 2026-10-17 dah siap.
+- [ ] **[P3] `map.tsx` `MapControls` locate** (home `MapCanvas`, admin `ExperienceMapPicker`) masih panggil `getCurrentPosition` terus - guna `locateOnce`/`geoErrorText` dari `lib/geo.ts`.
+- [ ] **[P2] Pengangkutan Awam (phone)**: stesen dipilih boleh tertutup bottom sheet 60dvh - map tak offset ke atas.
+- [ ] **[P2] `SectionHeader` `TextReveal client:visible` muat React di phone** - guna cara `TechHeading` (import bila `lg` padan).
+- [ ] **[P3] Butang "×" kotak carian biru browser** - `::-webkit-search-cancel-button` ikut palet.
+- [ ] **[P3] Ingat pilihan**: Ramalan Cuaca (lokasi), Kadar Tukaran (mata wang + jumlah), Cuti Umum / Takwim Sekolah (negeri) - URL + localStorage macam kalkulator (`calc-state.ts`).
+- [ ] **[P3] Idea**: kegemaran di `/showcase`; amaran MET aktif di IPU/Ramalan Cuaca; "Tambah ke kalendar" (`.ics`); tooltip graf SVG; satu komponen "Lokasi saya"; kos isi tangki; Harga Emas, Zakat (`IDEA.md`).
+- [ ] **PCB dalam Kalkulator Gaji** - menunggu kes ujian rasmi LHDN (`docs/plans/kalkulator-gaji-pcb-kwsp.md`).
 
 ## Map & UI
 
+- [ ] **[P3] Simpan pilihan 3D/KL dalam localStorage** (home map; reset bila reload).
 - [ ] **[P3] Terrain/DEM** - sengaja dilangkau; perlukan host pihak ketiga + CSP `connect-src`.
-- [ ] **[P3] Simpan pilihan 3D/KL dalam localStorage** (tema sudah persist; dua toggle ni reset bila reload).
-
-## Resume tracking
-
-- [ ] **[P3] Sahkan beacon tercatat dalam prod** (selepas migrate + deploy): klik link footer, semak `SELECT COUNT(*) FROM resume_downloads;`.
-- [ ] **[P3] Tempat untuk nota privasi "IP download dilog"** - tiada page privasi peringkat site, hanya `/projects/[slug]/privacy` per projek. Pilih: nota footer, page site-level, atau biar.
-
-## Docs drift
-
-- [ ] **[P2] Path backend dalam CLAUDE.md (`/Users/hafiz/Developments/hono-workers`) tiada pada mesin 2026-10-13** - sahkan path sebenar dan kemas kini (spec profil awam pun rujuk path ni).
-- [ ] **[P2] CLAUDE.md (`portfolio-astro`) describe `_accessToken` in-memory** dalam ApiClient; kod sebenar httpOnly cookie + silent refresh. Kemas kini seksyen Data flow.
-- [ ] **[P3] `README.md` masih boilerplate Astro starter** - "Astro Starter Kit: Basics", pokok fail rekaan (`Welcome.astro`, `Layout.astro`), dan rujukan `src/assets/astro.svg` yang dah dibuang. Tulis README sebenar (setup, env, deploy) atau buang fail tu.
-
-## Restyle (latar)
-
-Kontrak: `STYLE.md` - tema tailwindcss.com untuk halaman **non-admin** sahaja (admin kekal slate). Public pages siap. Deferred: tukar aksen kalau atom dipisah public/admin (cyan dikekalkan by design).

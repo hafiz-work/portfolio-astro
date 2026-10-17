@@ -1,5 +1,5 @@
 // Public holiday logic over src/data/cuti-umum.ts - pure, ISO dates in Malaysian time
-// (the page passes todayInMalaysia()). Check: bun scripts/check-cuti-umum.ts
+// (the page passes todayMY()). Check: bun scripts/check-cuti-umum.ts
 import { CUTI_UMUM, type CutiUmum, type TahunCuti } from "../data/cuti-umum";
 import type { NegeriId } from "../data/takwim-sekolah";
 import { appliesTo, daysBetween } from "./takwim-sekolah";

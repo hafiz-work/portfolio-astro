@@ -30,9 +30,15 @@ import AlertToast from "../../../components/ui/AlertToast.astro";
 </PrivateLayout>
 
 <script>
+  import {
+    showToast,
+    formatErrorMessage,
+    normalizeNumber,
+    normalizeOptionalText,
+    parseJsonArray,
+  } from "../../../lib/admin-ui";
   import { experiencesService } from "../../../lib/experiences";
   import { projectsService } from "../../../lib/projects";
-  import { ApiError } from "../../../lib/api-client";
   import { setupFormGuard } from "../../../lib/form-guard";
 
   // <ClientRouter> runs a page's bundled script once per session, so a
@@ -51,15 +57,8 @@ import AlertToast from "../../../components/ui/AlertToast.astro";
       formGuard = setupFormGuard(form);
     }
 
-    const showAlert = (options: {
-      type?: "success" | "error" | "warning" | "info";
-      title?: string;
-      message?: string;
-      duration?: number;
-    }) => {
-      const registry = (window as any).__uiAlerts;
-      registry?.["experience-alert"]?.show(options);
-    };
+    const showAlert = (options: Omit<Parameters<typeof showToast>[0], "id">) =>
+      showToast({ ...options, id: "experience-alert" });
 
     const fieldLabels: Record<string, string> = {
       companyName: "Company",
@@ -73,46 +72,6 @@ import AlertToast from "../../../components/ui/AlertToast.astro";
       projectIds: "Projects",
       description: "Description",
       displayOrder: "Display Order",
-    };
-
-    const formatErrorMessage = (error: unknown) => {
-      const apiError = error as ApiError & { data?: any };
-      const message =
-        apiError?.data?.error ||
-        apiError?.message ||
-        "Failed to create experience.";
-      const field = apiError?.data?.field;
-      if (field) {
-        const label = fieldLabels[field] || field;
-        return { message: `${message} (Field: ${label})`, field };
-      }
-      return { message, field };
-    };
-
-    const normalizeNumber = (value: FormDataEntryValue) => {
-      const raw = String(value).trim();
-      if (raw === "") return undefined;
-      const parsed = Number(raw);
-      return Number.isNaN(parsed) ? undefined : parsed;
-    };
-
-    const normalizeOptionalText = (value: FormDataEntryValue) => {
-      const trimmed = String(value).trim();
-      return trimmed === "" ? null : trimmed;
-    };
-
-    const parseJsonArray = (value: FormDataEntryValue) => {
-      const raw = String(value).trim();
-      if (!raw) return [];
-      try {
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return raw
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean);
-      }
     };
 
     const updateProjectOptions = async () => {
@@ -241,7 +200,11 @@ import AlertToast from "../../../components/ui/AlertToast.astro";
         }
       } catch (error) {
         console.error(error);
-        const { message, field } = formatErrorMessage(error);
+        const { message, field } = formatErrorMessage(
+          error,
+          "Failed to create experience.",
+          fieldLabels,
+        );
         if (field) {
           const focusElement = form?.elements.namedItem(
             field,

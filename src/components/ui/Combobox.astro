@@ -1,4 +1,5 @@
 ---
+import { ChevronDown } from "lucide-react";
 /**
  * Searchable select in the site's select style (.field / .field-trigger / .menu /
  * .menu-item, same as Dropdown.astro) for long lists: optional groups, a search
@@ -49,18 +50,30 @@ const {
 const groups = [...new Set(options.map((o) => o.group ?? ""))];
 const selected = options.find((o) => o.value === value) ?? options[0];
 const dataAttrs = (o: ComboboxOption) =>
-  Object.fromEntries(Object.entries(o.data ?? {}).map(([k, v]) => [`data-${k}`, String(v)]));
+  Object.fromEntries(
+    Object.entries(o.data ?? {}).map(([k, v]) => [`data-${k}`, String(v)]),
+  );
 ---
 
-<div data-combobox data-submit={submitOnPick ? "" : undefined} class:list={["relative w-full", className]}>
+<div
+  data-combobox
+  data-submit={submitOnPick ? "" : undefined}
+  class:list={["relative w-full", className]}
+>
   <select id={id} name={name} class="field h-10">
     {
       groups.map((g) => {
-        const items = options.filter((o) => (o.group ?? "") === g).map((o) => (
-          <option value={o.value} selected={o.value === selected?.value} {...dataAttrs(o)}>
-            {o.hint ? `${o.hint} - ${o.label}` : o.label}
-          </option>
-        ));
+        const items = options
+          .filter((o) => (o.group ?? "") === g)
+          .map((o) => (
+            <option
+              value={o.value}
+              selected={o.value === selected?.value}
+              {...dataAttrs(o)}
+            >
+              {o.hint ? `${o.hint} - ${o.label}` : o.label}
+            </option>
+          ));
         return g ? <optgroup label={g}>{items}</optgroup> : items;
       })
     }
@@ -77,12 +90,16 @@ const dataAttrs = (o: ComboboxOption) =>
     class="field field-trigger h-10"
   >
     <span class="flex min-w-0 items-center gap-2" data-current>
-      {selected?.hint && <span class="font-mono text-xs text-gray-500 dark:text-gray-400">{selected.hint}</span>}
+      {
+        selected?.hint && (
+          <span class="font-mono text-xs text-gray-500 dark:text-gray-400">
+            {selected.hint}
+          </span>
+        )
+      }
       <span class="truncate">{selected?.label}</span>
     </span>
-    <svg class="size-4 shrink-0 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-      <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"></path>
-    </svg>
+    <ChevronDown className="size-4 shrink-0 text-gray-400" aria-hidden="true" />
   </button>
 
   <div id={`${id}-panel`} data-panel hidden class="menu w-full">
@@ -98,32 +115,50 @@ const dataAttrs = (o: ComboboxOption) =>
       placeholder={searchPlaceholder}
       class="field h-10"
     />
-    <ul id={`${id}-list`} role="listbox" aria-label={listLabel} class="mt-1 max-h-72 overflow-y-auto scrollbar-thin">
+    <ul
+      id={`${id}-list`}
+      role="listbox"
+      aria-label={listLabel}
+      class="mt-1 max-h-72 overflow-y-auto scrollbar-thin"
+    >
       {
         groups.map((g) => {
-          const items = options.filter((o) => (o.group ?? "") === g).map((o) => (
-            <li
-              role="option"
-              id={`${id}-opt-${o.value}`}
-              data-value={o.value}
-              data-text={[o.hint, o.label, o.group, o.keywords].filter(Boolean).join(" ").toLowerCase()}
-              aria-selected={o.value === selected?.value ? "true" : "false"}
-              class="menu-item cursor-pointer items-start data-active:bg-gray-950/5 data-active:text-gray-950 dark:data-active:bg-white/5 dark:data-active:text-white"
-            >
-              {o.hint && (
-                <span class="w-12 shrink-0 font-mono text-xs/6 text-gray-500 dark:text-gray-400" data-hint>
-                  {o.hint}
-                </span>
-              )}
-              <span data-label>{o.label}</span>
-            </li>
-          ));
+          const items = options
+            .filter((o) => (o.group ?? "") === g)
+            .map((o) => (
+              <li
+                role="option"
+                id={`${id}-opt-${o.value}`}
+                data-value={o.value}
+                data-text={[o.hint, o.label, o.group, o.keywords]
+                  .filter(Boolean)
+                  .join(" ")
+                  .toLowerCase()}
+                aria-selected={o.value === selected?.value ? "true" : "false"}
+                class="menu-item cursor-pointer items-start data-active:bg-gray-950/5 data-active:text-gray-950 dark:data-active:bg-white/5 dark:data-active:text-white"
+              >
+                {o.hint && (
+                  <span
+                    class="w-12 shrink-0 font-mono text-xs/6 text-gray-500 dark:text-gray-400"
+                    data-hint
+                  >
+                    {o.hint}
+                  </span>
+                )}
+                <span data-label>{o.label}</span>
+              </li>
+            ));
           return g ? (
             <li role="presentation" data-group>
-              <p class="px-2.5 pt-3 pb-1 font-mono text-[11px] tracking-widest text-gray-500 uppercase" aria-hidden="true">
+              <p
+                class="px-2.5 pt-3 pb-1 font-mono text-[11px] tracking-widest text-gray-500 uppercase"
+                aria-hidden="true"
+              >
                 {g}
               </p>
-              <ul role="group" aria-label={g}>{items}</ul>
+              <ul role="group" aria-label={g}>
+                {items}
+              </ul>
             </li>
           ) : (
             items
@@ -131,7 +166,9 @@ const dataAttrs = (o: ComboboxOption) =>
         })
       }
     </ul>
-    <p data-empty hidden class="px-2.5 py-2 text-sm/6 text-gray-500">{emptyText}</p>
+    <p data-empty hidden class="px-2.5 py-2 text-sm/6 text-gray-500">
+      {emptyText}
+    </p>
   </div>
 </div>
 
@@ -148,13 +185,17 @@ const dataAttrs = (o: ComboboxOption) =>
       const panel = root.querySelector<HTMLElement>("[data-panel]")!;
       const search = root.querySelector<HTMLInputElement>("[data-search]")!;
       const empty = root.querySelector<HTMLElement>("[data-empty]")!;
-      const options = [...root.querySelectorAll<HTMLElement>('[role="option"]')];
+      const options = [
+        ...root.querySelectorAll<HTMLElement>('[role="option"]'),
+      ];
       const groups = [...root.querySelectorAll<HTMLElement>("[data-group]")];
 
       // Enhance: the native select stays as the form value, out of sight.
       native.hidden = true;
       trigger.hidden = false;
-      const label = document.querySelector<HTMLLabelElement>(`label[for="${native.id}"]`);
+      const label = document.querySelector<HTMLLabelElement>(
+        `label[for="${native.id}"]`,
+      );
       if (label) label.htmlFor = trigger.id;
 
       const visible = () => options.filter((o) => !o.hidden);
@@ -167,8 +208,12 @@ const dataAttrs = (o: ComboboxOption) =>
       };
       const filter = () => {
         const q = search.value.trim().toLowerCase();
-        options.forEach((o) => (o.hidden = !!q && !o.dataset.text!.includes(q)));
-        groups.forEach((g) => (g.hidden = !g.querySelector('[role="option"]:not([hidden])')));
+        options.forEach(
+          (o) => (o.hidden = !!q && !o.dataset.text!.includes(q)),
+        );
+        groups.forEach(
+          (g) => (g.hidden = !g.querySelector('[role="option"]:not([hidden])')),
+        );
         empty.hidden = visible().length > 0;
         setActive(visible()[0]);
       };
@@ -177,7 +222,9 @@ const dataAttrs = (o: ComboboxOption) =>
         trigger.setAttribute("aria-expanded", "true");
         search.value = "";
         filter();
-        setActive(options.find((o) => o.getAttribute("aria-selected") === "true"));
+        setActive(
+          options.find((o) => o.getAttribute("aria-selected") === "true"),
+        );
         search.focus();
       };
       const close = (focus = true) => {
@@ -191,7 +238,9 @@ const dataAttrs = (o: ComboboxOption) =>
         close();
         if (native.value === o.dataset.value) return;
         native.value = o.dataset.value!;
-        options.forEach((x) => x.setAttribute("aria-selected", String(x === o)));
+        options.forEach((x) =>
+          x.setAttribute("aria-selected", String(x === o)),
+        );
         // Same hint + label in the trigger as in the list.
         current.replaceChildren(
           ...[o.querySelector("[data-hint]"), o.querySelector("[data-label]")]
@@ -208,7 +257,9 @@ const dataAttrs = (o: ComboboxOption) =>
       };
       root.closePicker = close;
 
-      trigger.addEventListener("click", () => (panel.hidden ? open() : close()));
+      trigger.addEventListener("click", () =>
+        panel.hidden ? open() : close(),
+      );
       trigger.addEventListener("keydown", (e) => {
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           e.preventDefault();

@@ -61,14 +61,18 @@ const menuId = `${name}-menu`;
       class="dropdown-trigger field field-trigger"
     >
       <span
-        class:list={["selected-text truncate", !options.some((opt) => opt.value === value) && "text-gray-400 dark:text-gray-500"]}
+        class:list={[
+          "selected-text truncate",
+          !options.some((opt) => opt.value === value) &&
+            "text-gray-400 dark:text-gray-500",
+        ]}
       >
         {options.find((opt) => opt.value === value)?.label || placeholder}
       </span>
-      <div
-        class="flex shrink-0 items-center text-gray-400"
-      >
-        <ChevronDown className="w-4 h-4 transform transition-transform duration-200" />
+      <div class="flex shrink-0 items-center text-gray-400">
+        <ChevronDown
+          className="w-4 h-4 transform transition-transform duration-200"
+        />
       </div>
     </button>
 
@@ -76,11 +80,7 @@ const menuId = `${name}-menu`;
       id={menuId}
       class="dropdown-menu menu max-h-60 hidden origin-top transition-all duration-200"
     >
-      <ul
-        
-        role="listbox"
-        aria-labelledby={labelId}
-      >
+      <ul role="listbox" aria-labelledby={labelId}>
         {
           options.map((option) => (
             <li>
@@ -99,7 +99,6 @@ const menuId = `${name}-menu`;
     </div>
   </div>
 </div>
-
 
 <script>
   function setupDropdowns() {
@@ -179,7 +178,7 @@ const menuId = `${name}-menu`;
         });
 
         if (!input.dataset.bound) {
-          input.dataset.bound = "true";
+          input.dataset.bound = "1";
           input.addEventListener("change", () => {
             const newValue = input.value;
             let newLabel = input.getAttribute("placeholder") || "Select option";
@@ -191,7 +190,10 @@ const menuId = `${name}-menu`;
             if (matchingItem) {
               newLabel =
                 matchingItem.querySelector("span")?.textContent || newLabel;
-              selectedText.classList.remove("text-gray-400", "dark:text-gray-500");
+              selectedText.classList.remove(
+                "text-gray-400",
+                "dark:text-gray-500",
+              );
             } else {
               selectedText.classList.add("text-gray-400", "dark:text-gray-500");
             }
@@ -204,8 +206,8 @@ const menuId = `${name}-menu`;
       const items = container.querySelectorAll(".dropdown-item");
       items.forEach((item) => {
         const element = item as HTMLButtonElement & { dataset: DOMStringMap };
-        if (element.dataset.bound === "true") return;
-        element.dataset.bound = "true";
+        if (element.dataset.bound === "1") return;
+        element.dataset.bound = "1";
         item.addEventListener("click", (e) => {
           e.stopPropagation();
           const value = element.dataset.value || "";
