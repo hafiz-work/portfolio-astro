@@ -74,7 +74,7 @@ export function AppAccessManager() {
     if (!appCode) return;
     setPicked(null);
     setQuery("");
-    setNewRole(apps.find((a) => a.code === appCode)?.roles[0]?.code ?? "");
+    setNewRole(""); // no default: picking the first role (often admin) by accident is the risky mistake
     void loadMembers(appCode);
   }, [appCode]);
 
@@ -239,7 +239,7 @@ export function AppAccessManager() {
               </ul>
             )}
           </div>
-          <Select className="w-40" value={newRole} onChange={(v) => setNewRole(String(v))} options={roleOptions} ariaLabel="Role for new member" />
+          <Select className="w-40" value={newRole} onChange={(v) => setNewRole(String(v))} options={roleOptions} placeholder="Choose role" ariaLabel="Role for new member" />
           <button type="button" className="admin-btn admin-btn-primary" onClick={() => void add()} disabled={!picked || !newRole || saving}>
             <Plus className="h-4 w-4" /> Add
           </button>
