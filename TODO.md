@@ -19,15 +19,12 @@ Fail ni senarai **kerja yang belum siap** sahaja - item siap dibuang (butiran da
 
 ## Owner - deploy & dashboard (manual)
 
-- [ ] **[P0] Backend dulu, baru frontend**: dalam `hono-workers` `bun run db:migrate:remote` (012 cap global, 013 buang table `owner` - **`wrangler d1 export` dulu**, 014 telegram, 015 counters, 022 sessions, 023 telegram dedupe, 024 profil awam - semak username pendua dulu, query dalam `hono-workers/TODO.md`), kemudian `wrangler deploy`. Tanpa 014, `GET /owner/profile` pulang 500.
 - [ ] **[P0] Tukar password produksi `users.id = 1`** - seed lama ada hash `admin123` (seed dah dibaiki, row sedia ada tak berubah).
-- [ ] **[P0] Deploy frontend** selepas backend. Nota: selepas deploy backend, page dari `localhost:4321` tak boleh panggil API produksi (CORS produksi sahaja) - dev guna backend lokal.
 - [ ] **[P1] Selepas deploy, sahkan**:
   - Turnstile: satu login sebenar berjaya = `TURNSTILE_SECRET` sah (`wrangler tail` tunjuk `Turnstile siteverify result:`); cuba token sama kali kedua -> ditolak; domain widget dashboard ada `localhost`/`127.0.0.1` untuk dev.
   - Had kadar login: beberapa login gagal pantas -> 429.
-  - Family API: `curl https://api.hafizbahtiar.com/api/v1/public/family` tiada `notes`/`metadata`.
   - Overview admin 200 + `resumeDownloads` naik bila klik link resume; cron `0 3 * * *` terdaftar.
-- [ ] **[P1] Telegram**: `bunx wrangler secret put TELEGRAM_BOT_TOKEN` + `TELEGRAM_WEBHOOK_SECRET`, migrate 014, `bun run telegram:webhook`.
+- [ ] **[P1] Telegram**: `bunx wrangler secret put TELEGRAM_BOT_TOKEN` + `TELEGRAM_WEBHOOK_SECRET`, `bun run telegram:webhook`.
 - [ ] **[P2] Dashboard Cloudflare (plan Free)**: Notifications -> usage alert Workers requests hampir had harian; Security -> Bots -> Bot Fight Mode; WAF block laluan scanner (`/wp-*`, `*.php`, `/.env`, `/.git`); rate-limit rule per IP untuk `/*/embed`. Kalau satu site hos widget betul-betul besar: naik ke Paid atau widget perlukan key.
 
 ## Frontend

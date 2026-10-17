@@ -79,8 +79,8 @@ Four UI bases coexist without touching each other. Read the folder README before
 > - `docs/brain/family-module-agent-rules.md`
 > - `docs/architecture/family-module-architecture.md`
 >
-> Note: the public **backend** API is **not** privacy-sanitized - the whitelist in `family-privacy.ts`
-> only protects the rendered page, not direct API callers. See the brain doc (§7).
+> Note: the public **backend** API is sanitized (`family-public-dto.ts`, verified in production
+> 2026-10-17); `family-privacy.ts` stays as the second layer for the rendered page. See the brain doc (§7).
 
 Uses the `family-chart` library with light/dark theme overrides in `src/styles/family-chart-theme.css`.
 

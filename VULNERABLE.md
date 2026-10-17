@@ -5,7 +5,7 @@ Open items only — fixed findings are removed (see git history). Deploy/verific
 
 ## ⚠️ Important — read first (for other agents)
 
-- **The public family backend API is now sanitized in code** (`hono-workers` `src/services/family-public-dto.ts`, allow-list chokepoint; living birth dates year-only) but **not verified in production**. Until it is, keep `src/lib/family-privacy.ts` as the second layer and never pass raw API family data to an island. After production is confirmed, update CLAUDE.md's "not privacy-sanitized" note and `docs/brain/family-module-brain.md` §7.
+- **The public family API is sanitized in the backend** (`hono-workers` `family-public-dto.ts`, verified in production 2026-10-17). Keep `src/lib/family-privacy.ts` as the second layer anyway and never pass raw API family data to an island.
 - **Login rate limiting is server-side in code** (`/auth` router: per IP, per account, global — `hono-workers` `src/routes/v1/owner/auth.ts`). The client lockout in `LoginForm.tsx` / `admin/login.astro` is UX only; don't rely on it.
 - **Any new `set:html` on API or user data must go through the sanitizer** (`bun scripts/check-sanitize.ts`). `family-chart` uses innerHTML — card text must stay escaped (`bun scripts/check-chart-data.ts`).
 - **Untrusted URL/localStorage input** (calculator state, `?zone=`, `?stesen=`, `?lokasi=`, `?negeri=`…) is validated against an allow-list before use and written to `.value` / text, never HTML. Keep that rule for new params.
@@ -19,6 +19,5 @@ Open items only — fixed findings are removed (see git history). Deploy/verific
 
 ## Unverified against production
 
-- The traversal fix and the family pages' `isPublic` filter (edge normalization / live API DTO).
+- The traversal fix (edge normalization).
 - Backend validation of project link URLs, family `photoUrl`, and the blog publish policy — if the API already validates, the frontend fixes are defence-in-depth only.
-- Whether the RBAC migrations are deployed in production.

@@ -137,13 +137,11 @@ the whitelist fields; 69 living people all year-only birth + null death; 8 decea
 no `notes`, `metadata`, `firstName`, `lastName`, `treeId`, relationship `id`/`isPrimary`/dates,
 `createdByUserId`, or timestamps present.
 
-⚠️ **RED FLAG - backend does not sanitize.** The public API
-(`GET /api/v1/family/:slug`, `/family`, `/family/person/:id`) returns **full** rows: `notes`,
-`metadata`, `firstName`, `lastName`, `treeId`, **full living birthdates**, relationship
-`id`/`isPrimary`/`startDate`/`endDate`/`notes`, and timestamps. The only gate is `is_public = 1`
-on the tree. So the whitelist protects the **rendered page**, *not* anyone who calls the API
-directly. Treat moving sanitization (or a parallel public DTO) into the backend as the highest-value
-future privacy improvement. **Do not assume the API is privacy-safe.**
+✅ **Backend sanitizes too** (`hono-workers` `src/services/family-public-dto.ts`, allow-list).
+Verified in production 2026-10-17: `GET /api/v1/family/:slug` and `/family/person/:id` return only
+the person fields above (living birth dates not full) and relationships as `personId` /
+`relatedPersonId` / `relationshipType`. Keep the frontend whitelist anyway - two layers, and a
+backend regression must not reach the page.
 
 ## 8. Year handling (`family-format.ts`)
 
@@ -196,7 +194,7 @@ was deliberately **not** migrated onto the public hook to avoid regressing the i
 - **Owner routes** `src/routes/v1/owner/family.ts`: all behind `jwtAuth + requireAdmin()`. CRUD for
   trees/people/relationships.
 - **Service** `src/services/family.ts`: `FamilyService` implements both `PublicFamilyService` and
-  `AdminFamilyService`. Public reads only gate on `is_public = 1`; **no field-level filtering** (see §7).
+  `AdminFamilyService`. Public reads gate on `is_public = 1`, then go through `family-public-dto.ts` (allow-list, see §7).
 - **Validators** `src/validators/family.ts`: Zod `.strict()`. **`globalKey` is NOT a field** → it
   cannot be set/changed through the admin API or builder UI.
 - **Schema** `src/database/migrations/006_family_chart.sql`: `family_trees`, `family_people`,

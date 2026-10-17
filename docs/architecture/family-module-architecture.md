@@ -120,7 +120,7 @@ PersonDetailPanel (desktop side panel + mobile bottom sheet)
 |---|---|---|
 | `src/routes/v1/public/family.ts` | public API ⚠ | `/`, `/:slug`, `/person/:id`, `/trees-by-global/:key`; in-isolate cache; no field filtering. |
 | `src/routes/v1/owner/family.ts` | admin API | `jwtAuth + requireAdmin`; CRUD. |
-| `src/services/family.ts` | service ⚠ | `FamilyService` (public + admin); public reads gate on `is_public=1` only. |
+| `src/services/family.ts` | service | `FamilyService` (public + admin); public reads gate on `is_public=1`, then `family-public-dto.ts` (allow-list). |
 | `src/types/family.ts` | types | `FamilyTree`/`FamilyPerson`/`FamilyRelationship`/`FamilyTreeDetail` + Create/Update. |
 | `src/validators/family.ts` | validators | Zod `.strict()`; **no `globalKey` field** (not admin-settable). |
 | `src/database/migrations/006_family_chart.sql` | schema | Tables + indexes. |
