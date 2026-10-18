@@ -9,6 +9,7 @@ import { FeaturesManager } from "./managers/FeaturesManager";
 import { LinksManager } from "./managers/LinksManager";
 import { TechManager } from "./managers/TechManager";
 import { MediaManager } from "./managers/MediaManager";
+import { useAiField, type AiFieldOptions } from "../ai/AiFieldAssist";
 
 type Tab = "basics" | "case-study" | "media" | "tech" | "links" | "publish";
 const TABS: { id: Tab; label: string }[] = [
@@ -47,15 +48,20 @@ const emptyBasics: BasicsForm = {
 };
 
 // Links the label to a native input/textarea (click-to-focus, screen readers) and
-// marks `required` so the shared `.admin-label` asterisk shows.
-function Field({ label, children, hint, required }: { label: string; children: React.ReactNode; hint?: string; required?: boolean }) {
+// marks `required` so the shared `.admin-label` asterisk shows. `ai` adds Generate / Prompt (owner only).
+function Field({ label, children, hint, required, ai }: { label: string; children: React.ReactNode; hint?: string; required?: boolean; ai?: AiFieldOptions }) {
   const id = useId();
   const native = isValidElement(children) && typeof children.type === "string";
+  const assist = useAiField(ai);
   return (
     <div className="space-y-1.5">
-      <label className="admin-label" htmlFor={native ? id : undefined} data-required={required || undefined}>{label}</label>
+      <div className="flex items-center gap-2">
+        <label className="admin-label" htmlFor={native ? id : undefined} data-required={required || undefined}>{label}</label>
+        {assist.buttons}
+      </div>
       {native ? cloneElement(children as React.ReactElement<Record<string, unknown>>, { id, required }) : children}
       {hint && <p className="admin-help">{hint}</p>}
+      {assist.panel}
     </div>
   );
 }
@@ -163,17 +169,17 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
     } finally { setSaving(false); }
   };
 
-  // Autosaves on blur; no-op when nothing changed since the last save.
-  const saveCaseStudy = async () => {
+  // Autosaves on blur (or with the AI text just used); no-op when nothing changed since the last save.
+  const saveCaseStudy = async (cs: CaseStudyForm = caseStudy) => {
     if (projectId == null) return;
-    const snapshot = JSON.stringify(caseStudy);
+    const snapshot = JSON.stringify(cs);
     if (snapshot === savedCase.current) return;
     setSaving(true);
     try {
       await cmsService.updateProject(projectId, {
-        problem: caseStudy.problem || null, solution: caseStudy.solution || null, contribution: caseStudy.contribution || null,
-        architectureNotes: caseStudy.architectureNotes || null, resultSummary: caseStudy.resultSummary || null,
-        fullDescription: caseStudy.fullDescription || null,
+        problem: cs.problem || null, solution: cs.solution || null, contribution: cs.contribution || null,
+        architectureNotes: cs.architectureNotes || null, resultSummary: cs.resultSummary || null,
+        fullDescription: cs.fullDescription || null,
       });
       savedCase.current = snapshot;
       setDirty(false);
@@ -199,6 +205,32 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
     } catch (e) { showToast({ type: "error", title: `${label} blocked`, message: extractApiError(e).message }); }
     finally { setSaving(false); }
   };
+
+  // AI writing help: every field gets the whole project as it stands in the form (main context);
+  // the backend adds that field's own brief (hono-workers services/ai/fields.ts).
+  const aiFacts = () => ({
+    title: basics.title, projectType: basics.projectType, year: basics.year, role: basics.role,
+    clientName: basics.clientName, projectScope: basics.projectScope, subtitle: basics.subtitle,
+    description: basics.description, summary: basics.summary,
+    problem: caseStudy.problem, solution: caseStudy.solution, contribution: caseStudy.contribution,
+    architectureNotes: caseStudy.architectureNotes, resultSummary: caseStudy.resultSummary,
+    tech: (detail?.techStacks ?? []).map((t) => t.tech?.name ?? "").filter(Boolean).slice(0, 60),
+    features: (detail?.featureList ?? []).filter((f) => f.isVisible)
+      .map((f) => (f.description ? `${f.title} - ${f.description}` : f.title).slice(0, 200)).slice(0, 60),
+  });
+  const aiBasic = (field: "subtitle" | "description" | "summary" | "projectScope" | "role"): AiFieldOptions => ({
+    entity: "project", field, current: basics[field], facts: aiFacts, confidential: basics.isConfidential,
+    onUse: (text) => setB({ [field]: text }),
+  });
+  const aiCase = (field: keyof CaseStudyForm): AiFieldOptions => ({
+    entity: "project", field, current: caseStudy[field], facts: aiFacts, confidential: basics.isConfidential,
+    onUse: (text) => {
+      const next = { ...caseStudy, [field]: text };
+      setCaseStudy(next);
+      setDirty(true);
+      void saveCaseStudy(next);
+    },
+  });
 
   if (loading) return <p className="admin-help">Loading project…</p>;
   if (notFound) return (
@@ -248,7 +280,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Title" required><input className="admin-input" value={basics.title} onChange={(e) => onTitle(e.target.value)} /></Field>
             <Field label="Slug" required hint={isCreate ? "lowercase, numbers, hyphens" : "Changing it changes the public URL."}><input className="admin-input" value={basics.slug} onChange={(e) => { setSlugTouched(true); setB({ slug: e.target.value }); }} /></Field>
-            <Field label="Subtitle"><input className="admin-input" value={basics.subtitle} onChange={(e) => setB({ subtitle: e.target.value })} /></Field>
+            <Field label="Subtitle" ai={aiBasic("subtitle")}><input className="admin-input" value={basics.subtitle} onChange={(e) => setB({ subtitle: e.target.value })} /></Field>
             <Field label="Project type">
               <Select
                 value={basics.projectType}
@@ -257,11 +289,11 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
                 placeholder="Select type"
               />
             </Field>
-            <Field label="Short description" required hint="Shown on the project card."><textarea className="admin-input min-h-16" value={basics.description} onChange={(e) => setB({ description: e.target.value })} /></Field>
-            <Field label="Summary"><textarea className="admin-input min-h-16" value={basics.summary} onChange={(e) => setB({ summary: e.target.value })} /></Field>
-            <Field label="Project scope"><input className="admin-input" value={basics.projectScope} onChange={(e) => setB({ projectScope: e.target.value })} /></Field>
+            <Field label="Short description" required hint="Shown on the project card." ai={aiBasic("description")}><textarea className="admin-input min-h-16" value={basics.description} onChange={(e) => setB({ description: e.target.value })} /></Field>
+            <Field label="Summary" ai={aiBasic("summary")}><textarea className="admin-input min-h-16" value={basics.summary} onChange={(e) => setB({ summary: e.target.value })} /></Field>
+            <Field label="Project scope" ai={aiBasic("projectScope")}><input className="admin-input" value={basics.projectScope} onChange={(e) => setB({ projectScope: e.target.value })} /></Field>
             <Field label="Year"><input type="number" min={2000} max={2100} className="admin-input" value={basics.year} onChange={(e) => setB({ year: e.target.value })} /></Field>
-            <Field label="Role"><input className="admin-input" value={basics.role} onChange={(e) => setB({ role: e.target.value })} /></Field>
+            <Field label="Role" ai={aiBasic("role")}><input className="admin-input" value={basics.role} onChange={(e) => setB({ role: e.target.value })} /></Field>
             <Field label="Card image style" hint={isCreate ? "The card uses the Cover image you add in Media after creating." : detail?.cover ? "Uses the Cover image from the Media tab." : detail?.media.length ? "No Cover set - the card uses the first image in Media." : "No image yet - add a Cover image in the Media tab."}>
               <Select value={basics.imageVariant} onChange={(v) => setB({ imageVariant: v as ImageVariant })} options={CARD_STYLES} ariaLabel="Card image style" />
             </Field>
@@ -295,12 +327,12 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
         <div className="space-y-5">
           <div className="admin-card space-y-5">
             <h3 className="admin-card-title">Narrative</h3>
-            <Field label="Problem"><textarea className="admin-input min-h-20" value={caseStudy.problem} onChange={(e) => setC({ problem: e.target.value })} onBlur={() => void saveCaseStudy()} /></Field>
-            <Field label="Solution"><textarea className="admin-input min-h-20" value={caseStudy.solution} onChange={(e) => setC({ solution: e.target.value })} onBlur={() => void saveCaseStudy()} /></Field>
-            <Field label="My contribution"><textarea className="admin-input min-h-20" value={caseStudy.contribution} onChange={(e) => setC({ contribution: e.target.value })} onBlur={() => void saveCaseStudy()} /></Field>
-            <Field label="Architecture / tech decisions"><textarea className="admin-input min-h-20" value={caseStudy.architectureNotes} onChange={(e) => setC({ architectureNotes: e.target.value })} onBlur={() => void saveCaseStudy()} /></Field>
-            <Field label="Results / impact"><textarea className="admin-input min-h-20" value={caseStudy.resultSummary} onChange={(e) => setC({ resultSummary: e.target.value })} onBlur={() => void saveCaseStudy()} /></Field>
-            <Field label="Full description (HTML)" hint="Rendered as sanitized HTML on the public page"><textarea className="admin-input min-h-24" value={caseStudy.fullDescription} onChange={(e) => setC({ fullDescription: e.target.value })} onBlur={() => void saveCaseStudy()} /></Field>
+            <Field label="Problem" ai={aiCase("problem")}><textarea className="admin-input min-h-20" value={caseStudy.problem} onChange={(e) => setC({ problem: e.target.value })} onBlur={() => void saveCaseStudy()} /></Field>
+            <Field label="Solution" ai={aiCase("solution")}><textarea className="admin-input min-h-20" value={caseStudy.solution} onChange={(e) => setC({ solution: e.target.value })} onBlur={() => void saveCaseStudy()} /></Field>
+            <Field label="My contribution" ai={aiCase("contribution")}><textarea className="admin-input min-h-20" value={caseStudy.contribution} onChange={(e) => setC({ contribution: e.target.value })} onBlur={() => void saveCaseStudy()} /></Field>
+            <Field label="Architecture / tech decisions" ai={aiCase("architectureNotes")}><textarea className="admin-input min-h-20" value={caseStudy.architectureNotes} onChange={(e) => setC({ architectureNotes: e.target.value })} onBlur={() => void saveCaseStudy()} /></Field>
+            <Field label="Results / impact" ai={aiCase("resultSummary")}><textarea className="admin-input min-h-20" value={caseStudy.resultSummary} onChange={(e) => setC({ resultSummary: e.target.value })} onBlur={() => void saveCaseStudy()} /></Field>
+            <Field label="Full description (HTML)" hint="Rendered as sanitized HTML on the public page" ai={aiCase("fullDescription")}><textarea className="admin-input min-h-24" value={caseStudy.fullDescription} onChange={(e) => setC({ fullDescription: e.target.value })} onBlur={() => void saveCaseStudy()} /></Field>
             <p className="admin-help">{saving ? "Saving…" : "Changes save automatically when you leave a field."}</p>
           </div>
           <div className="admin-card space-y-3"><h3 className="admin-card-title">Custom sections</h3><SectionsManager projectId={pid} onChanged={() => void loadDetail(false)} /></div>

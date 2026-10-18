@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { FlaskConical, RefreshCw, RotateCcw, Save, Search } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { FlaskConical, RefreshCw, RotateCcw, Save } from "lucide-react";
 import { Select } from "../../ui/Select";
 import {
   REASONING,
@@ -98,7 +98,6 @@ export function AiSettingsManager() {
 function RouteCard({ route, list, onSaved }: { route: AiRoute; list: AiModelList | null; onSaved: (r: AiRoute) => void }) {
   const [model, setModel] = useState(route.model);
   const [reasoning, setReasoning] = useState<Reasoning | null>(route.reasoning);
-  const [query, setQuery] = useState("");
   const [busy, setBusy] = useState<"" | "save" | "reset" | "test">("");
   const [test, setTest] = useState<AiTestResult | null>(null);
 
@@ -110,12 +109,15 @@ function RouteCard({ route, list, onSaved }: { route: AiRoute; list: AiModelList
 
   const dirty = model !== route.model || reasoning !== route.reasoning;
   const known = list?.models.find((m) => m.id === model);
-  const shown = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const all = list?.models ?? [];
-    const hits = q ? all.filter((m) => m.id.toLowerCase().includes(q) || m.name.toLowerCase().includes(q)) : all;
-    return [...hits.filter((m) => m.usable), ...hits.filter((m) => !m.usable)];
-  }, [list, query]);
+  // Usable first; /messages-only (Claude) listed greyed out so it's clear why they're missing.
+  const modelOptions = [...(list?.models ?? [])]
+    .sort((a, b) => Number(b.usable) - Number(a.usable))
+    .map((m) => ({
+      value: m.id,
+      label: m.id === route.defaultModel ? `${m.name} (default)` : m.name,
+      hint: m.usable ? [m.id, ctx(m.contextLength)].filter(Boolean).join(" · ") : "/messages only",
+      disabled: !m.usable,
+    }));
 
   const run = async (kind: "save" | "reset" | "test", fn: () => Promise<void>) => {
     setBusy(kind);
@@ -184,42 +186,21 @@ function RouteCard({ route, list, onSaved }: { route: AiRoute; list: AiModelList
       )}
 
       <div className="space-y-2">
-        <label className="admin-label" htmlFor={`ai-q-${route.useCase}`}>Model</label>
-        <label className="relative block max-w-md">
-          <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
-          <input id={`ai-q-${route.useCase}`} type="search" className="admin-input pl-9" placeholder="Search by name or id…" value={query} onChange={(e) => setQuery(e.target.value)} />
-        </label>
+        <Select
+          className="max-w-xl"
+          label="Model"
+          searchable
+          searchPlaceholder="Search by name or id…"
+          value={model}
+          onChange={(v) => setModel(String(v))}
+          options={known ? modelOptions : [{ value: model, label: model, hint: "not in the list" }, ...modelOptions]}
+          placeholder={list ? "Pick a model" : "Loading models…"}
+        />
         {list && !known && (
           <p className="admin-error">
             <span className="font-mono">{model}</span> isn't in Command Code's list any more - pick another model.
           </p>
         )}
-        <ul className="max-h-72 overflow-y-auto rounded-lg ring-1 ring-gray-950/10 dark:ring-white/10" role="listbox" aria-label="Models">
-          {!list && <li className="admin-help px-3 py-2">Loading…</li>}
-          {list && !shown.length && <li className="admin-help px-3 py-2">No model matches "{query}".</li>}
-          {shown.map((m) => {
-            const picked = m.id === model;
-            return (
-              <li key={m.id}>
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={picked}
-                  disabled={!m.usable}
-                  onClick={() => setModel(m.id)}
-                  className={`flex w-full flex-wrap items-baseline gap-x-3 px-3 py-2 text-left text-sm disabled:cursor-not-allowed disabled:opacity-50 ${picked ? "bg-sky-50 dark:bg-sky-400/10" : "hover:bg-gray-950/2.5 dark:hover:bg-white/5"}`}
-                >
-                  <span className={picked ? "font-medium text-sky-700 dark:text-sky-300" : "text-gray-950 dark:text-white"}>{m.name}</span>
-                  <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{m.id}</span>
-                  <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
-                    {m.id === route.defaultModel && "default · "}
-                    {m.usable ? ctx(m.contextLength) : "/messages only"}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
       </div>
 
       <Select

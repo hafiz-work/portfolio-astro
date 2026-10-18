@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **Ponytail ultra is mandatory** for every agent working in this repo (Claude, Codex, subagents).
+> Claude Code gets it from `.claude/settings.json` (`PONYTAIL_DEFAULT_MODE=ultra` - the plugin's own
+> setting, also injected into subagents). Other agents: load the ponytail skill at **ultra** before any
+> change. Don't switch it to lite/full/off unless the owner asks in that session.
+
 ## Commands
 
 ```bash
@@ -50,7 +55,8 @@ Custom Astro components with their own inline `<script>` blocks that set up even
 - `DateInput.astro` - admin label + `DatePicker`.
 - Admin **Roles** follow the standard admin pattern: `/admin/roles` (`RolesTable`), `/admin/roles/new` + `/admin/roles/edit?code=` (`RoleForm`), `/admin/roles/view?code=` (`RoleDetail`); backend `GET /owner/roles/:code`.
 - Admin **App Access** (`/admin/app-access`, `AppAccessManager` + `src/lib/app-access.ts`): owner decides who holds which role in the other apps (`nubi` = Nubi Sport, more later) via backend `/owner/apps/*`; user picker = existing `/owner/users/search/:q`. Owner only: sidebar + page gate on `roles.assign` (never grantable, so owner-only). The portfolio's own roles stay on Roles/Users.
-- Admin **AI Models** (`/admin/ai`, `AiSettingsManager` + `src/lib/ai-settings.ts`): owner picks the model (Command Code's live list, searchable; `/messages`-only Claude models greyed out) and reasoning effort (`reasoning_effort`, model default / none / minimal / low / medium / high / xhigh / max - Command Code doesn't publish per-model levels, Test shows whether a model takes one) per backend AI use case, with a Test button (one real short call, shows the provider's error as-is) before Save; Reset goes back to the backend's `AI_ROUTES` default. Backend `/owner/ai/*`; same owner-only gate as App Access.
+- Admin **AI Models** (`/admin/ai`, `AiSettingsManager` + `src/lib/ai-settings.ts`): owner picks the model (Command Code's live list, searchable; `/messages`-only Claude models greyed out) and reasoning effort (`reasoning_effort`, model default / none / minimal / low / medium / high / xhigh / max - Command Code doesn't publish per-model levels, Test shows whether a model takes one) per backend AI use case, with a Test button (one real short call, shows the provider's error as-is) before Save; Reset goes back to the backend's `AI_ROUTES` default. Backend `/owner/ai/*`; same owner-only gate as App Access. The model picker is `Select` with `searchable` (option `hint` / `disabled`).
+- **AI writing help** (`useAiField` in `src/components/admin/ai/AiFieldAssist.tsx`): Generate (fresh draft from the record's facts) / Prompt (owner's instruction applied to the current text) on a form field, suggestion shown with Use / Try again / Discard - never written without Use. Owner only for now (no per-account limits yet); backend `POST /owner/ai/generate` on the `content` use case (pick its model in `/admin/ai`). Context layers: system prompt -> `facts()` = whole record as it stands in the form (main context) -> the field's brief + length in hono-workers `services/ai/fields.ts` (`AI_FIELDS`; its `uses` facts are listed first). Wired into `ProjectEditor` (`Field ai={aiBasic(...)}` / `aiCase(...)`; Case Study fields autosave on Use). Confidential projects never send/mention the client. New field = an `AI_FIELDS` entry + `ai=` on the Field.
 - Public `/quotes`: each quote has copy (text + author + link) / share (Web Share API, else copies the link) / link.
 - Quotes are tidied before saving (account + admin forms) by `src/lib/quote-text.ts`: spaces collapsed, first letter upper, ALL-CAPS text to sentence case, all-upper/all-lower authors to Title Case, tag names lowercase + first letter upper - never a blanket lowercase of quote text (proper nouns). The backend applies the same rules in `validators/quotes.ts` (`utils/text-case.ts`). Check: `bun scripts/check-quote-text.ts`.
 - `GridFillers.astro` - hatched (`.pattern`) cells closing the last row of a `gap-px` 1/2/3-column card grid (`<GridFillers count={n} />` as the grid's last child). Used by `/ipu`, `/gempa`, `/kecemasan`.

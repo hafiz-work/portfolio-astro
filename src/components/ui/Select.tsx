@@ -1,11 +1,15 @@
-import React, { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { ChevronDown } from "lucide-react";
+import React, { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { ChevronDown, Search } from "lucide-react";
 
 interface Option {
     value: string | number;
     label: string | number;
     /** Optional leading icon, shown in the trigger and the list. */
     icon?: ReactNode;
+    /** Small grey text on the right of the row (e.g. "1M ctx"). Also matched by search. */
+    hint?: string;
+    /** Shown but not pickable (with `hint` saying why). */
+    disabled?: boolean;
 }
 
 interface SelectProps {
@@ -16,6 +20,9 @@ interface SelectProps {
     className?: string;
     label?: string;
     ariaLabel?: string;
+    /** Search box at the top of the menu (long lists). ↑ ↓ move, Enter picks. */
+    searchable?: boolean;
+    searchPlaceholder?: string;
 }
 
 export const Select: React.FC<SelectProps> = ({
@@ -25,14 +32,25 @@ export const Select: React.FC<SelectProps> = ({
     placeholder = "Select option",
     className = "",
     label,
-    ariaLabel
+    ariaLabel,
+    searchable = false,
+    searchPlaceholder = "Search…",
 }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [query, setQuery] = useState("");
+    const [active, setActive] = useState(0);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const listRef = useRef<HTMLUListElement>(null);
     const labelId = useId();
     const controlId = useId();
 
     const selectedOption = options.find(opt => opt.value === value);
+    const shown = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        if (!q) return options;
+        return options.filter((o) => `${o.label} ${o.value} ${o.hint ?? ""}`.toLowerCase().includes(q));
+    }, [options, query]);
+    const pickable = shown.filter((o) => !o.disabled);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -47,9 +65,31 @@ export const Select: React.FC<SelectProps> = ({
         };
     }, []);
 
+    // Fresh search each time it opens; the selected row starts active.
+    useEffect(() => {
+        if (!isOpen) return;
+        setQuery("");
+        setActive(Math.max(0, options.filter((o) => !o.disabled).findIndex((o) => o.value === value)));
+    }, [isOpen]);
+    useEffect(() => {
+        listRef.current?.querySelector('[data-active="true"]')?.scrollIntoView({ block: "nearest" });
+    }, [active, isOpen]);
+
     const handleSelect = (optionValue: string | number) => {
         onChange(optionValue);
         setIsOpen(false);
+    };
+
+    const onSearchKey = (e: React.KeyboardEvent) => {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            const step = e.key === "ArrowDown" ? 1 : -1;
+            setActive((i) => (pickable.length ? (i + step + pickable.length) % pickable.length : 0));
+        } else if (e.key === "Enter") {
+            e.preventDefault();
+            const o = pickable[active];
+            if (o) handleSelect(o.value);
+        }
     };
 
     return (
@@ -82,22 +122,53 @@ export const Select: React.FC<SelectProps> = ({
                 </button>
 
                 {isOpen && (
-                    <ul role="listbox" aria-labelledby={label ? labelId : undefined} aria-label={!label ? ariaLabel : undefined} className="menu max-h-60">
-                        {options.map((option) => (
-                            <li key={option.value}>
-                                <button
-                                    type="button"
-                                    role="option"
-                                    aria-selected={option.value === value}
-                                    onClick={() => handleSelect(option.value)}
-                                    className="menu-item"
-                                >
-                                    {option.icon}
-                                    <span className="truncate">{option.label}</span>
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
+                    <div className={searchable ? "menu flex max-h-80 flex-col overflow-hidden p-0" : undefined}>
+                        {searchable && (
+                            <label className="relative block border-b border-gray-950/5 p-1 dark:border-white/10">
+                                <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+                                <input
+                                    type="search"
+                                    autoFocus
+                                    value={query}
+                                    onChange={(e) => { setQuery(e.target.value); setActive(0); }}
+                                    onKeyDown={onSearchKey}
+                                    placeholder={searchPlaceholder}
+                                    aria-label={searchPlaceholder}
+                                    className="w-full rounded-lg bg-transparent py-1.5 pr-2 pl-8 text-sm/6 text-gray-950 outline-none placeholder:text-gray-400 dark:text-white"
+                                />
+                            </label>
+                        )}
+                        <ul
+                            ref={listRef}
+                            role="listbox"
+                            aria-labelledby={label ? labelId : undefined}
+                            aria-label={!label ? ariaLabel : undefined}
+                            className={searchable ? "min-h-0 flex-1 overflow-y-auto p-1 scrollbar-thin" : "menu max-h-60"}
+                        >
+                            {searchable && !shown.length && <li className="admin-help px-2.5 py-1.5">No match for "{query}".</li>}
+                            {shown.map((option) => {
+                                const isActive = searchable && !option.disabled && pickable[active]?.value === option.value;
+                                return (
+                                    <li key={option.value}>
+                                        <button
+                                            type="button"
+                                            role="option"
+                                            aria-selected={option.value === value}
+                                            aria-disabled={option.disabled || undefined}
+                                            disabled={option.disabled}
+                                            data-active={isActive || undefined}
+                                            onClick={() => handleSelect(option.value)}
+                                            className={`menu-item disabled:cursor-not-allowed disabled:opacity-50 ${isActive ? "bg-gray-950/5 dark:bg-white/5" : ""}`}
+                                        >
+                                            {option.icon}
+                                            <span className="truncate">{option.label}</span>
+                                            {option.hint && <span className="ml-auto shrink-0 pl-3 text-xs text-gray-500 dark:text-gray-400">{option.hint}</span>}
+                                        </button>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
                 )}
             </div>
         </div>

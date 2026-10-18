@@ -43,6 +43,21 @@ export interface AiChoice {
   reasoning: Reasoning | null;
 }
 
+/**
+ * One admin form field to write (backend services/ai/fields.ts holds each field's brief and limit).
+ * `facts` = the record as it stands in the form, unsaved edits included - the main context.
+ */
+export interface AiGenerateRequest {
+  entity: 'project';
+  field: string;
+  facts: Record<string, string | string[]>;
+  confidential?: boolean;
+  /** The owner's own instruction ("shorter", "mention offline mode"). */
+  prompt?: string;
+  /** The field's current text - the model improves on it. */
+  current?: string;
+}
+
 class AiSettingsService extends ApiClient {
   constructor() {
     super(API_BASE_URL);
@@ -67,6 +82,10 @@ class AiSettingsService extends ApiClient {
   test(useCase: string, choice: AiChoice) {
     return this.post<AiTestResult>(`/owner/ai/routes/${encodeURIComponent(useCase)}/test`, choice);
   }
+
+  generate(req: AiGenerateRequest) {
+    return this.post<{ text: string; model: string }>('/owner/ai/generate', req);
+  }
 }
 
 export const aiSettingsService = new AiSettingsService();
@@ -79,6 +98,7 @@ export function aiSettingsError(e: unknown): string {
   if (code === 'unknown_model') return 'That model is no longer in the Command Code list.';
   if (code === 'model_not_supported') return 'That model only answers on /messages (Claude) - not supported yet.';
   if (code === 'ai_not_configured') return 'COMMANDCODE_API_KEY is not set on the backend.';
+  if (code === 'ai_empty') return 'The model returned no text. Try again or change the instruction.';
   if (e.status === 403) return 'Only the owner can change AI settings.';
   return e.message;
 }

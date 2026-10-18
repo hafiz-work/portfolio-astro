@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Plus, Search, X } from "lucide-react";
 import { DataTable } from "../../ui/DataTable";
@@ -32,6 +32,11 @@ export function AppAccessManager() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AdminUser[]>([]);
   const [picked, setPicked] = useState<AdminUser | null>(null);
+  // Autocomplete: "idle" until 2+ chars, then searching -> done (done + no results = "No match").
+  const [searchState, setSearchState] = useState<"idle" | "searching" | "done">("idle");
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const boxRef = useRef<HTMLDivElement>(null);
   const [newRole, setNewRole] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -81,14 +86,24 @@ export function AppAccessManager() {
   // Debounced user search (backend needs 2+ chars).
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 2 || picked) return setResults([]);
+    if (q.length < 2 || picked) {
+      setResults([]);
+      setSearchState("idle");
+      return;
+    }
     let stale = false;
+    setSearchState("searching");
     const t = setTimeout(async () => {
       try {
         const found = await appAccessService.searchUsers(q);
-        if (!stale) setResults(found.slice(0, 10));
+        if (!stale) {
+          setResults(found.slice(0, 10));
+          setActive(0);
+        }
       } catch (e) {
         if (!stale) fail("Search failed", e);
+      } finally {
+        if (!stale) setSearchState("done");
       }
     }, 250);
     return () => {
@@ -96,6 +111,15 @@ export function AppAccessManager() {
       clearTimeout(t);
     };
   }, [query, picked]);
+
+  // Close the list on a click outside it.
+  useEffect(() => {
+    const close = (e: MouseEvent) => {
+      if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
 
   const setRole = async (m: AppMember, role: string) => {
     if (role === m.role) return;
@@ -196,6 +220,8 @@ export function AppAccessManager() {
   if (!loading && !apps.length) return <p className="admin-help">No apps are registered yet.</p>;
 
   const memberIds = new Set(members.map((m) => m.userId));
+  // Rows the keyboard can land on: not already a member, active and verified.
+  const pickable = results.filter((u) => !memberIds.has(u.id) && u.isActive && u.emailVerified);
 
   return (
     <div className="space-y-6">
@@ -205,7 +231,7 @@ export function AppAccessManager() {
 
         <h3 className="admin-card-title">Add member</h3>
         <div className="flex flex-wrap items-start gap-2">
-          <div className="relative w-full max-w-sm">
+          <div className="relative w-full max-w-sm" ref={boxRef}>
             {picked ? (
               <div className="admin-input flex items-center justify-between gap-2">
                 <span className="truncate">{userLabel(picked)} <span className="text-gray-500 dark:text-gray-400">{picked.email}</span></span>
@@ -217,19 +243,40 @@ export function AppAccessManager() {
               <label className="relative block">
                 <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
                 <input type="search" className="admin-input pl-9" placeholder="Search name, email or username…" value={query}
-                  onChange={(e) => setQuery(e.target.value)} aria-label="Search users to add" />
+                  role="combobox" aria-expanded={open && searchState !== "idle"} aria-controls="app-access-users" aria-autocomplete="list"
+                  aria-activedescendant={open && pickable[active] ? `app-access-user-${pickable[active].id}` : undefined}
+                  onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+                  onFocus={() => setOpen(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") return setOpen(false);
+                    if (!pickable.length) return;
+                    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                      e.preventDefault();
+                      setOpen(true);
+                      const step = e.key === "ArrowDown" ? 1 : -1;
+                      setActive((a) => (a + step + pickable.length) % pickable.length);
+                    } else if (e.key === "Enter" && open) {
+                      e.preventDefault();
+                      setPicked(pickable[active] ?? pickable[0]);
+                    }
+                  }}
+                  aria-label="Search users to add" />
               </label>
             )}
-            {!picked && results.length > 0 && (
-              <ul className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-gray-950/10 dark:bg-gray-900 dark:ring-white/10">
+            {!picked && open && searchState !== "idle" && (
+              <ul id="app-access-users" role="listbox" className="absolute z-20 mt-1 max-h-80 w-full overflow-y-auto rounded-lg bg-white shadow-lg ring-1 ring-gray-950/10 dark:bg-gray-900 dark:ring-white/10">
+                {searchState === "searching" && !results.length && <li className="admin-help px-3 py-2">Searching…</li>}
+                {searchState === "done" && !results.length && <li className="admin-help px-3 py-2">No account matches "{query.trim()}".</li>}
                 {results.map((u) => {
                   const member = memberIds.has(u.id);
                   // Backend answers 400 user_not_eligible for these anyway.
                   const eligible = u.isActive && u.emailVerified;
+                  const isActive = pickable[active]?.id === u.id;
                   return (
-                    <li key={u.id}>
-                      <button type="button" disabled={member || !eligible} onClick={() => setPicked(u)}
-                        className="flex w-full flex-col px-3 py-2 text-left text-sm hover:bg-gray-950/2.5 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-white/5">
+                    <li key={u.id} id={`app-access-user-${u.id}`} role="option" aria-selected={isActive} aria-disabled={member || !eligible || undefined}>
+                      <button type="button" tabIndex={-1} disabled={member || !eligible} onClick={() => setPicked(u)}
+                        onMouseEnter={() => { const i = pickable.indexOf(u); if (i >= 0) setActive(i); }}
+                        className={`flex w-full flex-col px-3 py-2 text-left text-sm hover:bg-gray-950/2.5 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-white/5 ${isActive ? "bg-gray-950/5 dark:bg-white/5" : ""}`}>
                         <span className="text-gray-950 dark:text-white">{userLabel(u)}{member ? " (already a member)" : !eligible && " (inactive or unverified)"}</span>
                         <span className="text-xs text-gray-500 dark:text-gray-400">{u.email}{u.username && ` · @${u.username}`}</span>
                       </button>
@@ -244,7 +291,7 @@ export function AppAccessManager() {
             <Plus className="h-4 w-4" /> Add
           </button>
         </div>
-        <p className="admin-help">Type at least 2 characters to find an account on this site.</p>
+        <p className="admin-help">Type at least 2 characters (name, email or username). ↑ ↓ to move, Enter to pick, Esc to close.</p>
       </div>
 
       <DataTable
