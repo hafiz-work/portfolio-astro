@@ -1,6 +1,7 @@
 ---
 import {
   AppWindow,
+  Bot,
   Briefcase,
   CircleUser,
   Folder,
@@ -107,6 +108,12 @@ const links = [
     icon: AppWindow,
   },
   {
+    text: "AI Models",
+    href: "/admin/ai",
+    perm: "roles.assign", // owner only, like App Access
+    icon: Bot,
+  },
+  {
     text: "System Logs",
     href: "/admin/system",
     perm: "audit.read",
@@ -130,7 +137,7 @@ const groups = [
   { label: "Overview", items: links.slice(0, 1) },
   { label: "Content", items: links.slice(1, 9) },
   { label: "Inbox", items: links.slice(9, 11) }, // Contacts, Moderation
-  { label: "System", items: links.slice(11) }, // Users, Roles, App Access, System Logs, Settings, Profile
+  { label: "System", items: links.slice(11) }, // Users, Roles, App Access, AI Models, System Logs, Settings, Profile
 ];
 
 const currentPath = Astro.url.pathname;
