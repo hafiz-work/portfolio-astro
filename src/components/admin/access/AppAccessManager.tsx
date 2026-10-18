@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
-import { Plus, Search, X } from "lucide-react";
+import { Check, Plus, Search, Undo2, X } from "lucide-react";
 import { DataTable } from "../../ui/DataTable";
 import { Select } from "../../ui/Select";
-import { CellPrimary, CellSecondary, CellText, DeleteAction, RowActions } from "../../ui/admin/primitives";
+import { AdminAction, CellPrimary, CellSecondary, CellText, DeleteAction, RowActions } from "../../ui/admin/primitives";
 import { appAccessError, appAccessService, type AppInfo, type AppMember } from "../../../lib/app-access";
 import { userLabel, type AdminUser } from "../../../lib/access";
 import { authService, can } from "../../../lib/auth";
@@ -38,6 +38,8 @@ export function AppAccessManager() {
   const [active, setActive] = useState(0);
   const boxRef = useRef<HTMLDivElement>(null);
   const [newRole, setNewRole] = useState("");
+  // Role picked in a row but not saved yet (userId -> role). Saved only via Update + confirm.
+  const [draft, setDraft] = useState<Record<number, string>>({});
   const [saving, setSaving] = useState(false);
 
   const app = apps.find((a) => a.code === appCode);
@@ -67,6 +69,7 @@ export function AppAccessManager() {
     setLoading(true);
     try {
       setMembers(await appAccessService.members(code));
+      setDraft({});
     } catch (e) {
       setMembers([]);
       fail("Load failed", e);
@@ -121,11 +124,28 @@ export function AppAccessManager() {
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
-  const setRole = async (m: AppMember, role: string) => {
-    if (role === m.role) return;
+  const pick = (m: AppMember, role: string) =>
+    setDraft((d) => {
+      const { [m.userId]: _, ...rest } = d;
+      return role === m.role ? rest : { ...d, [m.userId]: role };
+    });
+
+  const setRole = async (m: AppMember) => {
+    const role = draft[m.userId];
+    if (!role || role === m.role) return;
+    const ok = await confirmDialog({
+      title: "Change role",
+      message: `Change ${m.displayName || m.email} in ${app?.name} from ${roleName(m.role)} to ${roleName(role)}?`,
+      confirmText: "Update",
+    });
+    if (!ok) return;
     try {
       const row = await appAccessService.setRole(appCode, m.userId, role);
       setMembers((prev) => prev.map((x) => (x.userId === m.userId ? (row ?? { ...x, role }) : x)));
+      setDraft((d) => {
+        const { [m.userId]: _, ...rest } = d;
+        return rest;
+      });
       showToast({ type: "success", title: `${m.displayName || m.email} is now ${roleName(role)}` });
     } catch (e) {
       fail("Change failed", e);
@@ -185,7 +205,7 @@ export function AppAccessManager() {
       header: "Role",
       size: 180,
       cell: ({ row: { original: m } }) => (
-        <Select className="w-40" value={m.role} onChange={(v) => void setRole(m, String(v))} options={roleOptions}
+        <Select className="w-40" value={draft[m.userId] ?? m.role} onChange={(v) => pick(m, String(v))} options={roleOptions}
           ariaLabel={`Role for ${m.displayName || m.email}`} />
       ),
     },
@@ -209,7 +229,15 @@ export function AppAccessManager() {
       enableSorting: false,
       cell: ({ row: { original: m } }) => (
         <RowActions>
-          <DeleteAction onClick={() => void remove(m)} label={`Remove ${m.displayName || m.email}`} />
+          {draft[m.userId] ? (
+            <>
+              <AdminAction variant="primary" icon={Check} onClick={() => void setRole(m)}
+                label={`Update ${m.displayName || m.email} to ${roleName(draft[m.userId])}`} />
+              <AdminAction icon={Undo2} onClick={() => pick(m, m.role)} label="Undo role change" />
+            </>
+          ) : (
+            <DeleteAction onClick={() => void remove(m)} label={`Remove ${m.displayName || m.email}`} />
+          )}
         </RowActions>
       ),
     },

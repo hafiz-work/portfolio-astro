@@ -89,6 +89,8 @@ const ACTION_STYLES = {
         "text-gray-500 ring-gray-950/10 hover:bg-gray-950/3 hover:text-gray-950 dark:text-gray-400 dark:ring-white/15 dark:hover:bg-white/5 dark:hover:text-white",
     danger:
         "text-red-600 ring-red-500/30 hover:bg-red-500/10 dark:text-red-400",
+    primary:
+        "bg-sky-600 text-white ring-sky-600 hover:bg-sky-500 dark:bg-sky-500 dark:ring-sky-500 dark:hover:bg-sky-400",
 };
 
 type ActionProps = {

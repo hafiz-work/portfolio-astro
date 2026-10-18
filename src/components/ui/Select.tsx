@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, Search } from "lucide-react";
 
 interface Option {
@@ -40,6 +40,11 @@ export const Select: React.FC<SelectProps> = ({
     const [query, setQuery] = useState("");
     const [active, setActive] = useState(0);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
+    // Menu is position: fixed next to the trigger, so a table/card with overflow (DataTable's
+    // overflow-x-auto) can't clip it. Opens upward when there's no room below.
+    // ponytail: an ancestor with transform/filter would re-anchor it - none in admin today.
+    const [pos, setPos] = useState<React.CSSProperties>({});
     const listRef = useRef<HTMLUListElement>(null);
     const labelId = useId();
     const controlId = useId();
@@ -71,6 +76,30 @@ export const Select: React.FC<SelectProps> = ({
         setQuery("");
         setActive(Math.max(0, options.filter((o) => !o.disabled).findIndex((o) => o.value === value)));
     }, [isOpen]);
+    useLayoutEffect(() => {
+        if (!isOpen) return;
+        const place = () => {
+            const r = triggerRef.current?.getBoundingClientRect();
+            if (!r) return;
+            const below = window.innerHeight - r.bottom;
+            const up = below < (searchable ? 320 : 240) && r.top > below;
+            setPos({
+                position: "fixed",
+                left: r.left,
+                minWidth: r.width,
+                marginTop: 0,
+                ...(up ? { bottom: window.innerHeight - r.top + 4 } : { top: r.bottom + 4 }),
+            });
+        };
+        place();
+        // Follow the trigger when the page or a scroll container moves.
+        window.addEventListener("scroll", place, true);
+        window.addEventListener("resize", place);
+        return () => {
+            window.removeEventListener("scroll", place, true);
+            window.removeEventListener("resize", place);
+        };
+    }, [isOpen, searchable]);
     useEffect(() => {
         listRef.current?.querySelector('[data-active="true"]')?.scrollIntoView({ block: "nearest" });
     }, [active, isOpen]);
@@ -107,6 +136,7 @@ export const Select: React.FC<SelectProps> = ({
                 <button
                     type="button"
                     id={controlId}
+                    ref={triggerRef}
                     onClick={() => setIsOpen(!isOpen)}
                     aria-label={!label ? ariaLabel : undefined}
                     aria-labelledby={label ? labelId : undefined}
@@ -122,7 +152,7 @@ export const Select: React.FC<SelectProps> = ({
                 </button>
 
                 {isOpen && (
-                    <div className={searchable ? "menu flex max-h-80 flex-col overflow-hidden p-0" : undefined}>
+                    <div className={searchable ? "menu flex max-h-80 flex-col overflow-hidden p-0" : undefined} style={searchable ? pos : undefined}>
                         {searchable && (
                             <label className="relative block border-b border-gray-950/5 p-1 dark:border-white/10">
                                 <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
@@ -144,6 +174,7 @@ export const Select: React.FC<SelectProps> = ({
                             aria-labelledby={label ? labelId : undefined}
                             aria-label={!label ? ariaLabel : undefined}
                             className={searchable ? "min-h-0 flex-1 overflow-y-auto p-1 scrollbar-thin" : "menu max-h-60"}
+                            style={searchable ? undefined : pos}
                         >
                             {searchable && !shown.length && <li className="admin-help px-2.5 py-1.5">No match for "{query}".</li>}
                             {shown.map((option) => {
