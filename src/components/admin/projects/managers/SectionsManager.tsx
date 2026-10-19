@@ -2,13 +2,43 @@ import React, { useEffect, useRef, useState } from "react";
 import { ChevronUp, ChevronDown, Trash2, Plus } from "lucide-react";
 import { cmsService, extractApiError } from "../../../../lib/projects-cms";
 import { showToast, confirmDialog } from "../../../../lib/admin-ui";
+import { useAiField } from "../../ai/AiFieldAssist";
 import type { ProjectSection } from "../../../../types/project-cms";
 
 const SECTION_TYPES = ["problem", "solution", "contribution", "architecture", "challenges", "results", "custom"];
 
 const snapshot = (it: ProjectSection) => JSON.stringify([it.sectionType, it.title ?? "", it.body ?? "", it.isVisible]);
 
-export function SectionsManager({ projectId, onChanged }: { projectId: number; onChanged: () => void }) {
+// Per-row hook host: useAiField needs a stable component, not a call inside the list map.
+function SectionBody({ section, facts, confidential, onChange, onBlur, onUse }: {
+  section: ProjectSection;
+  facts?: () => Record<string, string | string[]>;
+  confidential?: boolean;
+  onChange: (body: string) => void;
+  onBlur: () => void;
+  onUse: (body: string) => void;
+}) {
+  const ai = useAiField(facts && {
+    entity: "project", field: "sectionBody", current: section.body ?? "",
+    facts: () => ({ ...facts(), sectionType: section.sectionType, sectionTitle: section.title ?? "" }),
+    confidential, onUse,
+  });
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-end">{ai.buttons}</div>
+      <textarea className="admin-input min-h-20" placeholder="Body (plain text)" value={section.body ?? ""}
+        onChange={(e) => onChange(e.target.value)} onBlur={onBlur} aria-label="Section body" />
+      {ai.panel}
+    </div>
+  );
+}
+
+export function SectionsManager({ projectId, onChanged, aiFacts, confidential }: {
+  projectId: number;
+  onChanged: () => void;
+  aiFacts?: () => Record<string, string | string[]>;
+  confidential?: boolean;
+}) {
   const [items, setItems] = useState<ProjectSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState({ sectionType: "problem", title: "", body: "" });
@@ -83,8 +113,10 @@ export function SectionsManager({ projectId, onChanged }: { projectId: number; o
               <button type="button" className="admin-btn admin-btn-danger px-2!" onClick={() => remove(it)} aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
             </div>
           </div>
-          <textarea className="admin-input min-h-20" placeholder="Body (plain text / HTML)" value={it.body ?? ""}
-            onChange={(e) => setField(it.id, { body: e.target.value })} onBlur={() => void commit(it)} aria-label="Section body" />
+          <SectionBody section={it} facts={aiFacts} confidential={confidential}
+            onChange={(body) => setField(it.id, { body })}
+            onBlur={() => void commit(it)}
+            onUse={(body) => { setField(it.id, { body }); void commit({ ...it, body }); }} />
         </div>
       ))}
 

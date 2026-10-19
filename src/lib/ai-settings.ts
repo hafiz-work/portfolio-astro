@@ -48,7 +48,7 @@ export interface AiChoice {
  * `facts` = the record as it stands in the form, unsaved edits included - the main context.
  */
 export interface AiGenerateRequest {
-  entity: 'project';
+  entity: 'project' | 'blog';
   field: string;
   facts: Record<string, string | string[]>;
   confidential?: boolean;

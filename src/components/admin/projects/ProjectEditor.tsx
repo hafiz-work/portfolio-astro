@@ -335,7 +335,7 @@ export function ProjectEditor({ projectId }: { projectId?: number }) {
             <Field label="Full description (HTML)" hint="Rendered as sanitized HTML on the public page" ai={aiCase("fullDescription")}><textarea className="admin-input min-h-24" value={caseStudy.fullDescription} onChange={(e) => setC({ fullDescription: e.target.value })} onBlur={() => void saveCaseStudy()} /></Field>
             <p className="admin-help">{saving ? "Saving…" : "Changes save automatically when you leave a field."}</p>
           </div>
-          <div className="admin-card space-y-3"><h3 className="admin-card-title">Custom sections</h3><SectionsManager projectId={pid} onChanged={() => void loadDetail(false)} /></div>
+          <div className="admin-card space-y-3"><h3 className="admin-card-title">Custom sections</h3><SectionsManager projectId={pid} aiFacts={aiFacts} confidential={basics.isConfidential} onChanged={() => void loadDetail(false)} /></div>
           <div className="admin-card space-y-3"><h3 className="admin-card-title">Features</h3><FeaturesManager projectId={pid} onChanged={() => void loadDetail(false)} /></div>
         </div>
       )}

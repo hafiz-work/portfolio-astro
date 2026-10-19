@@ -69,7 +69,7 @@ export function useAiField(opts: AiFieldOptions | undefined) {
   const buttons = (
     <span className="ml-auto inline-flex items-center gap-1">
       <button type="button" className={`${small} text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-400/10`}
-        onClick={() => void run({ withCurrent: false })} disabled={busy} title="Write a fresh draft from the project's facts">
+        onClick={() => void run({ withCurrent: false })} disabled={busy} title="Write a fresh draft from the record's facts">
         <Sparkles className={`h-3.5 w-3.5 ${busy ? "animate-pulse" : ""}`} aria-hidden="true" /> {busy ? "Writing…" : "Generate"}
       </button>
       <button type="button" className={`${small} text-gray-600 hover:bg-gray-950/5 dark:text-gray-300 dark:hover:bg-white/5`}
@@ -82,7 +82,8 @@ export function useAiField(opts: AiFieldOptions | undefined) {
   const panel = (asking || result) && (
     <div className="space-y-2 rounded-lg bg-sky-50/60 p-3 dark:bg-sky-400/5">
       {asking && (
-        <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); if (prompt.trim()) void run({ prompt: prompt.trim(), withCurrent: true }); }}>
+        // stopPropagation: on Astro forms (AiField) this form sits inside the page form - its submit must not bubble up and save the page.
+        <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); if (prompt.trim()) void run({ prompt: prompt.trim(), withCurrent: true }); }}>
           <textarea
             className="admin-input min-h-16"
             autoFocus
@@ -98,7 +99,7 @@ export function useAiField(opts: AiFieldOptions | undefined) {
               <WandSparkles className="h-4 w-4" /> {busy ? "Writing…" : "Write"}
             </button>
             <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setAsking(false)}>Cancel</button>
-            <span className="admin-help">{opts.current.trim() ? "Applied to the current text." : "Uses the project's facts."} ⌘/Ctrl+Enter</span>
+            <span className="admin-help">{opts.current.trim() ? "Applied to the current text." : "Uses the record's facts."} ⌘/Ctrl+Enter</span>
           </div>
         </form>
       )}

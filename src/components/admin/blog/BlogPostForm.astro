@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import DatePicker from "../../ui/DatePicker.astro";
 import Dropdown from "../../ui/Dropdown.astro";
 import { TextEditor } from "../../ui/TextEditor";
+import { AiField } from "../ai/AiField";
 
 type Props = {
   submitLabel: string;
@@ -51,6 +52,8 @@ const inputClass = "admin-input";
             rows="3"
             required
             class={`${inputClass} resize-none`}></textarea>
+          <AiField client:load entity="blog" field="excerpt" target="excerpt"
+            factsFrom={["title", "heroText", "bodyContent", "category", "tags"]} />
         </div>
         <div class="space-y-2 md:col-span-2">
           <label class={labelClass} for="blog-hero">Hero Statement</label>
@@ -59,6 +62,8 @@ const inputClass = "admin-input";
             name="heroText"
             rows="2"
             class={`${inputClass} resize-none`}></textarea>
+          <AiField client:load entity="blog" field="heroText" target="heroText"
+            factsFrom={["title", "excerpt", "bodyContent"]} />
         </div>
         <div class="space-y-2 md:col-span-2">
           <label class={labelClass} for="blog-body">Body Content</label>
@@ -69,6 +74,8 @@ const inputClass = "admin-input";
             images
             client:load
           />
+          <AiField client:load entity="blog" field="bodyContent" target="bodyContent"
+            factsFrom={["title", "excerpt", "heroText", "category", "tags"]} />
         </div>
       </div>
     </div>
