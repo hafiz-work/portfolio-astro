@@ -8,6 +8,7 @@ import {
   type AiModelList,
   type AiRoute,
   type AiTestResult,
+  type Feature,
   type Reasoning,
 } from "../../../lib/ai-settings";
 import { authService, can } from "../../../lib/auth";
@@ -39,6 +40,7 @@ export function AiSettingsManager() {
   const [allowed, setAllowed] = useState(false);
   const [list, setList] = useState<AiModelList | null>(null);
   const [routes, setRoutes] = useState<AiRoute[]>([]);
+  const [features, setFeatures] = useState<Feature[]>([]);
   const [loadError, setLoadError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
 
@@ -62,6 +64,7 @@ export function AiSettingsManager() {
       setAllowed(true);
       try {
         setRoutes(await aiSettingsService.routes());
+        setFeatures(await aiSettingsService.features());
       } catch (e) {
         setLoadError(aiSettingsError(e));
       }
@@ -75,6 +78,9 @@ export function AiSettingsManager() {
   const usable = list?.models.filter((m) => m.usable).length ?? 0;
   return (
     <div className="space-y-6">
+      {features.length > 0 && (
+        <FeaturesCard features={features} onSaved={(n) => setFeatures((prev) => prev.map((f) => (f.code === n.code ? n : f)))} />
+      )}
       <div className="admin-card flex flex-wrap items-center justify-between gap-3">
         <p className="admin-help">
           {list
@@ -91,6 +97,43 @@ export function AiSettingsManager() {
       {routes.map((r) => (
         <RouteCard key={r.useCase} route={r} list={list} onSaved={(n) => setRoutes((prev) => prev.map((x) => (x.useCase === n.useCase ? n : x)))} />
       ))}
+    </div>
+  );
+}
+
+// Owner on/off switches for optional AI features. Saves on toggle.
+function FeaturesCard({ features, onSaved }: { features: Feature[]; onSaved: (f: Feature) => void }) {
+  const [busy, setBusy] = useState("");
+  const toggle = async (f: Feature, enabled: boolean) => {
+    setBusy(f.code);
+    try {
+      const next = await aiSettingsService.setFeature(f.code, enabled);
+      if (next) onSaved(next);
+      showToast({ type: "success", title: `${f.label} ${enabled ? "on" : "off"}` });
+    } catch (e) {
+      fail("Couldn't change the feature", e);
+    } finally {
+      setBusy("");
+    }
+  };
+  return (
+    <div className="admin-card space-y-3">
+      <h3 className="admin-card-title">Features</h3>
+      <ul className="space-y-3">
+        {features.map((f) => (
+          <li key={f.code} className="flex items-start gap-3">
+            <input id={`feature-${f.code}`} type="checkbox" className="mt-1" checked={f.enabled} disabled={busy === f.code}
+              onChange={(e) => void toggle(f, e.target.checked)} />
+            <label htmlFor={`feature-${f.code}`} className="space-y-0.5">
+              <span className="block text-sm font-medium text-gray-950 dark:text-white">{f.label}</span>
+              <span className="admin-help block">{f.description}</span>
+              <span className="admin-help block">
+                {f.overridden && f.updatedAt ? `Set ${when(f.updatedAt)}${f.updatedBy?.displayName ? ` by ${f.updatedBy.displayName}` : ""}` : `Default (${f.enabled ? "on" : "off"})`}
+              </span>
+            </label>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

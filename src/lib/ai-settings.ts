@@ -58,6 +58,17 @@ export interface AiGenerateRequest {
   current?: string;
 }
 
+/** Owner on/off switch (backend services/features.ts, migration 030). */
+export interface Feature {
+  code: string;
+  label: string;
+  description: string;
+  enabled: boolean;
+  overridden: boolean;
+  updatedAt: string | null;
+  updatedBy: { id: number; displayName: string | null } | null;
+}
+
 class AiSettingsService extends ApiClient {
   constructor() {
     super(API_BASE_URL);
@@ -81,6 +92,14 @@ class AiSettingsService extends ApiClient {
 
   test(useCase: string, choice: AiChoice) {
     return this.post<AiTestResult>(`/owner/ai/routes/${encodeURIComponent(useCase)}/test`, choice);
+  }
+
+  async features(): Promise<Feature[]> {
+    return (await this.get<Feature[]>('/owner/features')) ?? [];
+  }
+
+  setFeature(code: string, enabled: boolean) {
+    return this.put<Feature>(`/owner/features/${encodeURIComponent(code)}`, { enabled });
   }
 
   generate(req: AiGenerateRequest) {

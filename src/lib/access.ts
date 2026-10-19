@@ -53,6 +53,15 @@ export interface ModerationUser {
   bans: { id: number; reason: string; expiresAt: string | null; createdAt: string; liftedAt: string | null }[];
 }
 
+/** Advisory AI check (Clef-flash): P(yes) 0-1 per signal, uncalibrated. Nothing is stored. */
+export interface ModerationAssessment {
+  spam: number;
+  abuse: number;
+  lowQuality: number;
+  model: string;
+  latencyMs: number;
+}
+
 const urlType = (t: ModerationItem['type']) => (t === 'blog_post' ? 'blog' : 'quote');
 
 class AccessService extends ApiClient {
@@ -112,6 +121,15 @@ class AccessService extends ApiClient {
     return action === 'delete'
       ? this.request(path, { method: 'DELETE', body: JSON.stringify({ reason }) })
       : this.post(`${path}/${action}`, { reason });
+  }
+
+  /** Owner's on/off switch for the AI check (feature `moderation_ai_check`). */
+  async aiCheckEnabled(): Promise<boolean> {
+    return (await this.get<{ enabled: boolean }>('/owner/moderation/assess'))?.enabled ?? false;
+  }
+
+  assessModeration(item: Pick<ModerationItem, 'type' | 'id'>) {
+    return this.post<ModerationAssessment>(`/owner/moderation/${urlType(item.type)}/${item.id}/assess`, {});
   }
 
   moderationUser(id: number) {

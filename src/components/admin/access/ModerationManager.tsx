@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Select } from "../../ui/Select";
-import { accessService, type ModerationItem, type ModerationUser } from "../../../lib/access";
+import { accessService, type ModerationAssessment, type ModerationItem, type ModerationUser } from "../../../lib/access";
 import { authService, can, type Me } from "../../../lib/auth";
 import { extractApiError } from "../../../lib/projects-cms";
 import { showToast } from "../../../lib/admin-ui";
@@ -19,6 +19,11 @@ const statusTone: Record<string, string> = {
   rejected: "text-red-700 dark:text-red-400",
   draft: "text-gray-500",
 };
+// AI check tone - raw model probabilities, uncalibrated: a hint for the moderator, never a verdict.
+const tone = (p: number) =>
+  p >= 0.8 ? "text-red-700 dark:text-red-400" : p >= 0.5 ? "text-amber-700 dark:text-amber-400" : "text-gray-600 dark:text-gray-400";
+const pct = (p: number) => `${Math.round(p * 100)}%`;
+const keyOf = (item: ModerationItem) => `${item.type}-${item.id}`;
 const when = (iso: string) => new Date(iso + (/[Zz]|[+-]\d\d:\d\d$/.test(iso) ? "" : "Z")).toLocaleString();
 
 export function ModerationManager() {
@@ -29,6 +34,8 @@ export function ModerationManager() {
   const [userId, setUserId] = useState<number | null>(null);
   const [detail, setDetail] = useState<ModerationUser | null>(null);
   const [ban, setBan] = useState({ reason: "", length: "7" });
+  const [checks, setChecks] = useState<Record<string, ModerationAssessment | "busy">>({});
+  const [aiOn, setAiOn] = useState(false);
 
   const load = async () => {
     try {
@@ -37,7 +44,10 @@ export function ModerationManager() {
       showToast({ type: "error", title: "Load failed", message: extractApiError(e).message });
     }
   };
-  useEffect(() => { void authService.me().then(setMe); }, []);
+  useEffect(() => {
+    void authService.me().then(setMe);
+    void accessService.aiCheckEnabled().then(setAiOn, () => setAiOn(false));
+  }, []);
   useEffect(() => { void load(); }, [filter]);
 
   const loadUser = async (id: number) => {
@@ -77,6 +87,19 @@ export function ModerationManager() {
     catch (e) { showToast({ type: "error", title: "Unban failed", message: extractApiError(e).message }); }
   };
 
+  const aiCheck = async (item: ModerationItem) => {
+    const key = keyOf(item);
+    setChecks((c) => ({ ...c, [key]: "busy" }));
+    try {
+      const result = await accessService.assessModeration(item);
+      if (!result) throw new Error("No result");
+      setChecks((c) => ({ ...c, [key]: result }));
+    } catch (e) {
+      setChecks(({ [key]: _, ...rest }) => rest);
+      showToast({ type: "error", title: "AI check failed", message: extractApiError(e).message });
+    }
+  };
+
   const canAct = can(me, "moderation.act");
 
   return (
@@ -95,7 +118,7 @@ export function ModerationManager() {
         {items.length === 0 && <p className="admin-help">Nothing here.</p>}
         <ul className="divide-y divide-gray-950/5 rounded-lg ring-1 ring-gray-950/5 dark:divide-white/10 dark:ring-white/10">
           {items.map((item) => (
-            <li key={`${item.type}-${item.id}`} className="space-y-2 px-3 py-3">
+            <li key={keyOf(item)} className="space-y-2 px-3 py-3">
               <div className="flex flex-wrap items-start gap-3">
                 <div className="min-w-48 flex-1">
                   <p className="text-sm font-medium text-gray-950 dark:text-white">
@@ -112,15 +135,31 @@ export function ModerationManager() {
                     {item.moderationReason && <> · “{item.moderationReason}”</>}
                   </p>
                 </div>
-                {canAct && (
-                  <div className="flex gap-1">
+                <div className="flex gap-1">
+                  {aiOn && (
+                    <button type="button" className="admin-btn admin-btn-secondary" disabled={checks[keyOf(item)] === "busy"}
+                      onClick={() => aiCheck(item)} title="Spam / abuse / low-quality signal from Clef-flash - advisory only">
+                      {checks[keyOf(item)] === "busy" ? "Checking…" : "AI check"}
+                    </button>
+                  )}
+                  {canAct && (<>
                     {item.status === "rejected"
                       ? <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setPending({ item, action: "restore", reason: "" })}>Restore</button>
                       : <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setPending({ item, action: "reject", reason: "" })}>Reject</button>}
                     <button type="button" className="admin-btn admin-btn-danger" onClick={() => setPending({ item, action: "delete", reason: "" })}>Delete</button>
-                  </div>
-                )}
+                  </>)}
+                </div>
               </div>
+              {(() => {
+                const r = checks[keyOf(item)];
+                return r && r !== "busy" && (
+                  <p className="text-xs" role="status">
+                    <span className={tone(r.spam)}>Spam {pct(r.spam)}</span> · <span className={tone(r.abuse)}>Abuse {pct(r.abuse)}</span> ·{" "}
+                    <span className={tone(r.lowQuality)}>Low quality {pct(r.lowQuality)}</span>
+                    <span className="text-gray-400"> · {r.model} · {r.latencyMs} ms · uncalibrated, advisory</span>
+                  </p>
+                );
+              })()}
               {pending?.item === item && (
                 <div className="flex flex-wrap items-center gap-2">
                   <input className="admin-input min-w-60 flex-1" autoFocus placeholder={`Reason to ${pending.action} - the author sees this`}
