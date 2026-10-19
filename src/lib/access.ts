@@ -43,7 +43,40 @@ export interface ModerationItem {
   moderationReason: string | null;
   createdAt: string;
   author: { id: number; email: string; name: string };
+  /** Latest AI check (Clef-flash), or null when never checked / edited since. */
+  check: ModerationCheck | null;
 }
+
+/** One stored AI check. P(yes) 0-1, uncalibrated. `auto` = scored on submit, not by a moderator. */
+export interface ModerationCheck {
+  spam: number;
+  abuse: number;
+  lowQuality: number;
+  model: string;
+  checkedAt: string;
+  auto?: boolean;
+}
+
+export interface AiCheckStatus {
+  enabled: boolean;
+  autoCheck: boolean;
+  /** Spam or abuse at or above this = flagged. */
+  flagAt: number;
+  /** Items per bulk request. */
+  bulkMax: number;
+}
+
+/** "AI vs your decisions" over every checked item. */
+export interface AiCheckStats {
+  flagAt: number;
+  checked: number;
+  flagged: number;
+  flaggedActioned: number;
+  flaggedKept: number;
+  missed: number;
+}
+
+export type BulkCheckResult = { type: ModerationItem['type']; id: number } & ({ check: ModerationCheck } | { error: string; code?: string });
 
 export interface ModerationUser {
   user: { id: number; email: string; name: string; role: string; isActive: boolean };
@@ -51,15 +84,6 @@ export interface ModerationUser {
   activeBan: { reason: string; expiresAt: string | null } | null;
   history: { id: number; contentType: string; contentTitle: string; action: string; reason: string; createdAt: string }[];
   bans: { id: number; reason: string; expiresAt: string | null; createdAt: string; liftedAt: string | null }[];
-}
-
-/** Advisory AI check (Clef-flash): P(yes) 0-1 per signal, uncalibrated. Nothing is stored. */
-export interface ModerationAssessment {
-  spam: number;
-  abuse: number;
-  lowQuality: number;
-  model: string;
-  latencyMs: number;
 }
 
 const urlType = (t: ModerationItem['type']) => (t === 'blog_post' ? 'blog' : 'quote');
@@ -123,13 +147,22 @@ class AccessService extends ApiClient {
       : this.post(`${path}/${action}`, { reason });
   }
 
-  /** Owner's on/off switch for the AI check (feature `moderation_ai_check`). */
-  async aiCheckEnabled(): Promise<boolean> {
-    return (await this.get<{ enabled: boolean }>('/owner/moderation/assess'))?.enabled ?? false;
+  /** The owner's switches (features `moderation_ai_check`, `moderation_ai_autocheck`) + thresholds. */
+  aiCheckStatus() {
+    return this.get<AiCheckStatus>('/owner/moderation/assess');
+  }
+
+  aiCheckStats() {
+    return this.get<AiCheckStats>('/owner/moderation/assess/stats');
   }
 
   assessModeration(item: Pick<ModerationItem, 'type' | 'id'>) {
-    return this.post<ModerationAssessment>(`/owner/moderation/${urlType(item.type)}/${item.id}/assess`, {});
+    return this.post<ModerationCheck>(`/owner/moderation/${urlType(item.type)}/${item.id}/assess`, {});
+  }
+
+  /** Up to `bulkMax` items per call; per-item result or error. */
+  async assessMany(items: Pick<ModerationItem, 'type' | 'id'>[]): Promise<BulkCheckResult[]> {
+    return (await this.post<BulkCheckResult[]>('/owner/moderation/assess', { items: items.map((i) => ({ type: urlType(i.type), id: i.id })) })) ?? [];
   }
 
   moderationUser(id: number) {
