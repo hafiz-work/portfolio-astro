@@ -1,6 +1,6 @@
 # Open API Kerajaan Malaysia — rujukan
 
-Semakan terakhir: **20 Oktober 2026**. Semua endpoint di bawah diuji pada tarikh itu
+Semakan terakhir: **20 Oktober 2026** (§1A, §4 BNM, §7: **21 Oktober 2026**). Semua endpoint di bawah diuji pada tarikh itu
 (kecuali yang ditanda "tidak diuji"). Harga, kiraan dan had kadar boleh berubah.
 
 **Disahkan semula 21 Oktober 2026** (bahagian masjid/surau): kiraan SISMIM (25,792 /
@@ -91,9 +91,48 @@ curl -s  'https://api.data.gov.my/weather/warning/earthquake/?limit=3'
 | `weather/warning` | `src/lib/amaran-cuaca.ts` | Amaran MET |
 | `weather/warning/earthquake` | `src/lib/gempa.ts` | 50 rekod terbaru |
 | `gtfs-realtime/vehicle-position/*` | `src/lib/pengangkutan-awam.ts` | 14 feed |
+| `api.bnm.gov.my/public/exchange-rate`, `/opr` | `src/lib/kadar-tukaran.ts` | BNM, bukan data.gov.my (§4) |
 
 Cara cari `id` lain: buka <https://data.gov.my/data-catalogue>, cari dataset, dan lihat
-bahagian "Sample OpenAPI query" di bawah halaman dataset.
+bahagian "Sample OpenAPI query" di bawah halaman dataset. Senarai penuh boleh dibaca tanpa
+scrape HTML: halaman katalog ialah Next.js, jadi `<script id="__NEXT_DATA__">` mengandungi
+`props.pageProps.collection` (kategori → subkategori → `{ id, title, data_as_of, description,
+data_source, link_csv, link_parquet, link_editions }`).
+
+### 1A. OpenDOSM dan data.moh.gov.my (disemak 21 Okt 2026)
+
+Kedua-duanya **portal katalog** di atas API dan storan yang sama dengan data.gov.my - bukan
+API berasingan. Lesen sama: **CC BY 4.0**.
+
+| Portal | Dataset | Sumber data | API |
+|---|---:|---|---|
+| <https://open.dosm.gov.my/data-catalogue> | 225 | 26 agensi (DOSM, BNM, JAS, KPDN, MOH, PDRM, TNB…) | `GET /opendosm/?id=<id>` atau `/data-catalogue/?id=<id>` - **kedua-duanya** berfungsi untuk dataset DOSM (`cpi_headline_inflation` diuji) |
+| <https://data.moh.gov.my/data-catalogue> | 25 | MOH, NPRA, NTRC, PDN, PHCorp | `GET /data-catalogue/?id=<id>` |
+
+**Penting: bukan semua dataset ada dalam API.** Dataset besar atau "transactional" hanya ada
+sebagai fail di `storage.data.gov.my` / `storage.dosm.gov.my` - API membalas
+`404 "The data catalogue (<id>) requested does not exist."`. Diuji:
+
+| `id` | Portal | API? | Fail | Saiz | Data sehingga | Kegunaan |
+|---|---|---|---|---:|---|---|
+| `cosmetic_notifications_cancelled` | MOH (NPRA) | Tidak | `healthcare/cosmetic_notifications_cancelled.csv` | 14 KB (125 baris) | 1 Okt 2026 | Kosmetik dibatalkan kerana **bahan terlarang** (`notif_no, product, holder, manufacturer, substance_detected` - merkuri, tretinoin…) |
+| `pharmaceutical_products_cancelled` | MOH (NPRA) | Tidak | `healthcare/pharmaceutical_products_cancelled.csv` | 223 KB | 1 Okt 2026 | Ubat yang pendaftarannya dibatalkan (`reg_no` MAL…, tarikh) |
+| `pharmaceutical_products` | MOH (NPRA) | Tidak | `healthcare/pharmaceutical_products.csv` | 10.7 MB | 1 Okt 2026 | Semua ubat berdaftar (semak no. MAL) |
+| `cosmetic_notifications` | MOH (NPRA) | Tidak | `healthcare/cosmetic_notifications.csv` | 23.9 MB | 1 Okt 2026 | Semua kosmetik bernotifikasi (semak no. NOT) |
+| `organ_pledges` | MOH (NTRC) | **Ya** | - | - | harian | Ikrar derma organ harian |
+| `pekab40_screenings` | MOH (PHCorp) | **Ya** | - | - | harian (lag ~2 minggu) | Saringan PeKa B40 |
+| `blood_donations_state` | MOH (PDN) | Ya, tapi **0 baris** | `healthcare/blood_donations_state.parquet` | - | 17 Okt 2026 | Sama seperti sebelum ini - parquet sahaja |
+| `pricecatcher` | DOSM (KPDN) | Tidak | `pricecatcher/pricecatcher_YYYY-MM.csv` / `.parquet` | 19.4 MB / 0.96 MB **sebulan** | 20 Okt 2026 | Harga barang setiap premis (>1 juta rekod/bulan); fail **bulanan** - corak `YYYY-MM-DD` dalam metadata katalog 404 |
+| `lookup_item` / `lookup_premise` | DOSM (KPDN) | Tidak | `pricecatcher/lookup_item.csv`, `lookup_premise.csv` | 56 KB / 486 KB | Sep / Okt 2026 | Kod barang dan premis (untuk join) |
+| `fish_prices` | DOSM (Perikanan) | Ya | `agriculture/fish_prices.csv` | 3.6 MB | Dis 2025 | Harga ikan bulanan mengikut spesies |
+| `crime_district` | DOSM (PDRM) | Ya | `publicsafety/crime_district.csv` | 1 MB | 2023 | Jenayah mengikut daerah (data lama) |
+| `arc_dosm` | DOSM | - | `storage.dosm.gov.my/meta/arc.csv` | 57 KB | harian | Kalendar keluaran penerbitan DOSM 2026 |
+
+Selainnya (GDP, LFS, gaji, isi rumah, CPI terperinci, PPI, IPI, perdagangan, tenaga, air,
+SDG) kebanyakannya data tahunan/suku tahunan untuk penganalisis - kurang sesuai untuk app
+harian orang awam. Kategori OpenDOSM: Demography, Households, National Accounts, Education,
+Public Safety, Labour Markets, Prices, Economic Sectors, Environment, Statistical Indicators,
+Data Dictionaries, Metadata.
 
 ### Dataset masjid/surau: tiada di katalog semasa, ada di arkib
 
@@ -360,10 +399,11 @@ Skema betaqwa:
 
 **A. Minta data semasa (paling sah)**
 
-1. Buka <https://data.gov.my/data-request> (versi BM: `/ms-MY/data-request`).
-2. Isi tajuk + penerangan: "Senarai masjid dan surau kebangsaan (SISMIM) — nama, alamat,
-   daerah, negeri, telefon/faks, koordinat jika ada"; pilih JAKIM sebagai pemilik data.
-3. Pilih format (CSV/JSON) dan hantar. Tiket boleh dijejak di halaman yang sama.
+1. Buka <https://data.gov.my/data-request> (versi BM: `/ms-MY/data-request`) → "Request data".
+2. Isi borang mengikut §7 (draf siap ada di sana). JAKIM **tiada** dalam senarai agensi -
+   pilih **JPM** (Jabatan Perdana Menteri; JAKIM di bawahnya). Borang tiada medan format;
+   sebut CSV/JSON dalam penerangan.
+3. Hantar. Tiket awam boleh dijejak (dan diikuti) di halaman yang sama.
 4. Panduan rasmi: [Garis Panduan Permohonan Set Data](https://www.malaysia.gov.my/en/my-initiative/government-open-data/policy-strategy-and-governance/garis-panduan-permohonan-set-data)
    (dikemas kini 17/7/2026; buka dalam pelayar — permintaan skrip boleh dapat 403).
 5. Hubungi JAKIM jika perlu: `webmaster@islam.gov.my`, 03-8886 4000, No. 23 Jalan Tunku
@@ -422,10 +462,10 @@ pengesahan/freshness. Jangan bina produk komersial di atas scrape SISMIM tanpa k
 
 | Sumber | Endpoint / status | Nota |
 |---|---|---|
-| BNM Open API | `https://api.bnm.gov.my/public/*`; katalog di <https://apikijangportal.bnm.gov.my> | `Accept: application/vnd.BNM.API.v1+json`. `/public/opr` dan `/public/exchange-rate` diuji 200 tanpa kunci (20 Okt 2026); sesetengah endpoint mungkin perlukan pendaftaran |
+| BNM Open API | `https://api.bnm.gov.my/public/*`; katalog di <https://apikijangportal.bnm.gov.my> | `Accept: application/vnd.BNM.API.v1+json`. Diuji 200 tanpa kunci: `/public/opr`, `/public/exchange-rate` (20 Okt 2026), dan **(21 Okt)** `/public/kijang-emas` (harga syiling 1/½/¼ oz), `/public/consumer-alert` (Senarai Amaran Pengguna Kewangan, 53 KB: `name, regisration_number` [sic], `added_date`, `websites`), `/public/base-rate` (Base Rate/BLR setiap bank), `/public/interest-rate`, `/public/islamic-interbank-rate`, `/public/usd-interbank-intraday-rate`. Had kadar dan terma penggunaan semula belum disemak di portal APIKijang |
 | MyGeoportal / MyGDI | <https://www.mygeoportal.gov.my> | Katalog metadata geospatial (MyGDI Explorer); tiada REST API awam; data melalui permohonan perkongsian |
 | Arkib data.gov.my (MAMPU) | CKAN API: `https://archive.data.gov.my/data/api/3/action/*` | `package_search`, `package_show`; dataset 2020–2021, kebanyakannya CC BY |
-| Permohonan data | <https://data.gov.my/data-request> | Borang rasmi; tiket awam; pilih agensi/JAKIM dan format |
+| Permohonan data | <https://data.gov.my/data-request> | Borang rasmi; tiket awam; agensi = kementerian sahaja (JAKIM → JPM). Lihat §7 |
 | JAKIM | `webmaster@islam.gov.my`, 03-8886 4000 | Pertanyaan data/masjid/surau |
 | Storage data.gov.my | `https://storage.data.gov.my/<kategori>/<fail>.csv` | CSV statik; contoh `commodities/fuelprice.csv` |
 | JPJ, LHDN, KKM, KPM | — | Tiada API awam umum; data yang diterbitkan biasanya melalui data.gov.my |
@@ -485,6 +525,8 @@ Semua diakses 20 Oktober 2026.
 - [Arkib data.gov.my (MAMPU)](https://archive.data.gov.my/data/ms_MY/dataset/senarai-masjid-di-seluruh-malaysia)
 - [API CKAN arkib data.gov.my](https://archive.data.gov.my/data/api/3/action/package_search?q=masjid&rows=5)
 - [Permohonan Data — data.gov.my](https://data.gov.my/data-request)
+- [Katalog OpenDOSM](https://open.dosm.gov.my/data-catalogue) (diakses 21 Okt 2026)
+- [Katalog data.moh.gov.my](https://data.moh.gov.my/data-catalogue) (diakses 21 Okt 2026)
 - [Garis Panduan Permohonan Set Data — MyGOV](https://www.malaysia.gov.my/en/my-initiative/government-open-data/policy-strategy-and-governance/garis-panduan-permohonan-set-data)
 - [Pekeliling Am Bil. 1/2015 — Terma Penggunaan Data Terbuka Kerajaan 1.0](https://dasar.jdn.gov.my/search-g/download-file/25/7f821c650c868d025fb5351d7d45d001)
 - [LOKASI MASJID MENGIKUT DAERAH DI NEGERI SELANGOR (XLSX, koordinat)](https://archive.data.gov.my/data/dataset/1dac0c48-821f-4879-85f4-6f672b093eb6/resource/7a01ddae-bd77-48c9-a4ac-dc83e5cb86ee/download/21-lokasi-masjid-mengikut-daerah-di-negeri-selangor.xlsx)
@@ -507,8 +549,65 @@ GitHub April 2026). Cara paling kecil dan paling selamat dari segi lesen:
   beberapa minggu. Sama seperti app lain: sumber JAKIM, pautan ke halaman butiran SISMIM.
 - **Pemilih:** negeri → daerah daripada `/daerah?ids=NN` (JSON). Daerah SISMIM **bukan** zon
   JAKIM e-solat, jadi perlu peta zon → daerah sendiri jika mahu ikut zon solat.
-- **Tiada peta.** Tiada koordinat yang boleh dipercayai; pautan "Buka di Google Maps" dengan
-  `nama + alamat` sudah cukup.
+- **Senarai SISMIM tanpa peta** (tiada koordinat); pautan "Buka di Google Maps" dengan
+  `nama + alamat`. **Dibina:** "Terdekat dengan saya" guna ekstrak OSM statik
+  (`public/data/masjid/osm.json`, `bun scripts/masjid/osm.ts`; 6,665 tempat, ODbL) dengan
+  jarak dikira dalam pelayar - Overpass terus terlalu perlahan (16-30 s setiap query).
 - **Tunjuk nama + alamat sahaja.** Telefon/faks ialah PDPA (§3.9); pautkan ke SISMIM.
 - Atribusi: "Sumber: JAKIM (SISMIM)". Ia © JAKIM tanpa lesen terbuka, jadi ini paparan
   rujukan bukan komersial; untuk edaran pukal tetap perlu kebenaran (§3.10 A).
+
+---
+
+## 7. Borang permohonan data data.gov.my (21 Okt 2026)
+
+Butang **"Request data"** di <https://data.gov.my/data-request> membuka modal "Fill in the
+form below". Medan (dari halaman itu sendiri):
+
+| Medan | Isi |
+|---|---|
+| Name | Nama penuh anda |
+| Email | E-mel untuk notifikasi tiket |
+| Applicant's Institution | Contoh: "Individu / pembangun bebas (hafizbahtiar.com)" |
+| Dataset title | Tajuk pendek dan khusus |
+| Dataset description | Apa sebenarnya: medan, liputan, kekerapan, format |
+| Data provider agency | Dropdown **kementerian sahaja** (29 pilihan: JPM, KKM, KPKT, MOT…). Agensi di bawah kementerian dipilih melalui kementeriannya |
+| Purpose of request | Radio: Research / Learning / Product Development / General Knowledge / Others (nyatakan) + penerangan ringkas cara guna |
+
+**Tiket kita: #212** "Senarai Masjid dan Surau Berdaftar di Malaysia (SISMIM JAKIM)", agensi JPM -
+dihantar 21 Okt 2026 10:44, **Under Review** sejak 10:47 (semak di halaman yang sama, cari `id: 212`).
+
+Status tiket: Under Review → In Progress → Data Provided (dihantar kepada pemohon sahaja) →
+Data Published (masuk katalog), atau Rejected dengan sebab. Pada 21 Okt 2026: 177 tiket, 90
+under review, 46 dipenuhi, 41 ditolak. **Tiada tiket masjid/surau lagi** (dicari).
+
+**Sebab biasa ditolak** (dari tiket awam): permohonan tidak jelas ("Application is unclear",
+tahun/bulan tidak dinyatakan), permohonan berulang, agensi salah (dirujuk ke agensi lain),
+data sulit/terperingkat, data mikro terlalu terperinci, atau sebenarnya laporan isu teknikal.
+Jadi: satu dataset, medan yang jelas, agensi yang betul, tiada data peribadi.
+
+### Draf: senarai masjid dan surau (JAKIM)
+
+- **Dataset title:** Senarai Masjid dan Surau Berdaftar di Malaysia (SISMIM JAKIM)
+- **Data provider agency:** JPM (Jabatan Kemajuan Islam Malaysia, JAKIM)
+- **Dataset description:**
+
+  > Senarai semasa semua masjid dan surau berdaftar dalam Sistem Maklumat Masjid (SISMIM)
+  > JAKIM, satu baris setiap tempat, dengan medan: kod SISMIM, nama, jenis (Masjid Kerajaan /
+  > Negeri / Daerah / Mukim / Institusi / Surau / Surau Solat Jumaat, dll.), alamat, poskod,
+  > daerah, negeri, latitud dan longitud (jika ada), status solat Jumaat, dan tarikh kemas
+  > kini rekod. Tanpa data peribadi (tiada nama pegawai atau nombor telefon peribadi).
+  > Format CSV atau JSON, dikemas kini sekurang-kurangnya setiap suku tahun. Senarai di
+  > arkib data.gov.my (2021) sudah lama, dan portal SISMIM hanya ada paparan HTML tanpa
+  > koordinat dan tanpa lesen data terbuka.
+
+- **Purpose of request:** Product Development
+
+  > Aplikasi web percuma bukan komersial (hafizbahtiar.com/waktu-solat/masjid) untuk orang
+  > awam mencari masjid dan surau mengikut daerah dan yang terdekat, bersama waktu solat
+  > JAKIM. Data akan dipaparkan dengan atribusi kepada JAKIM di bawah Terma Penggunaan Data
+  > Terbuka Kerajaan.
+
+Nota: koordinat ialah bahagian paling berharga - jika JAKIM tidak menyimpannya, senarai rasmi
+berlesen tanpa koordinat pun sudah menggantikan scrape SISMIM. Ikuti tiket selepas hantar;
+jika ditolak kerana agensi, hubungi JAKIM terus (§3.10 A langkah 5).
