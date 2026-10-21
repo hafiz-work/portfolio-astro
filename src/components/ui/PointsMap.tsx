@@ -70,6 +70,8 @@ type PointsMapProps = {
   onSelect?: (id: string | null) => void;
   /** Shows a search box over the map with this placeholder. */
   searchPlaceholder?: string;
+  /** A location the page already read (initial value only) - shown as the "Anda di sini" dot. */
+  me?: { longitude: number; latitude: number };
 };
 
 // Case- and accent-insensitive match key.
@@ -91,11 +93,12 @@ export default function PointsMap({
   initialId,
   onSelect,
   searchPlaceholder,
+  me: knownMe,
 }: PointsMapProps) {
   const mapRef = useRef<MapRef | null>(null);
   const { resolvedTheme, preference, cycle } = useMapTheme();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [me, setMeState] = useState(lastMe);
+  const [me, setMeState] = useState(knownMe ?? lastMe);
   // null = idle, "busy", else the error shown on the pill.
   const [locating, setLocating] = useState<string | null>(null);
   const setMe = (c: { longitude: number; latitude: number }) => {

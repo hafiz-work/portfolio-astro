@@ -1,0 +1,275 @@
+---
+import Disclaimer from "../../components/ui/Disclaimer.astro";
+import BackLink from "../../components/ui/BackLink.astro";
+import Combobox from "../../components/ui/Combobox.astro";
+import GridFillers from "../../components/ui/GridFillers.astro";
+import TechHeading from "../../components/layout/TechHeading.astro";
+import PublicLayout from "../../layouts/PublicLayout.astro";
+import MasjidTerdekat from "../../components/masjid/MasjidTerdekat";
+import { NEGERI } from "../../data/masjid-daerah";
+import { getSenarai, JENIS, PER_PAGE, SISMIM, SISMIM_SOURCE } from "../../lib/masjid";
+export const prerender = false;
+
+// Masjid & surau per district - src/lib/masjid.ts. ?daerah= / ?jenis= / ?page= are
+// checked against SISMIM's own codes before they reach the upstream URL.
+const params = Astro.url.searchParams;
+const DEFAULT = "1403"; // W.P. Kuala Lumpur, Zon 3 (Masjid Negara)
+const all = NEGERI.flatMap((n) => n.daerah.map((d) => ({ ...d, negeri: n })));
+const daerah =
+  all.find((d) => d.code === params.get("daerah")) ?? all.find((d) => d.code === DEFAULT)!;
+const jenis = JENIS.find((j) => j.code === params.get("jenis"))?.code ?? "";
+const page = Math.min(999, Math.max(1, Number.parseInt(params.get("page") ?? "1", 10) || 1));
+
+const got = await getSenarai({ negeri: daerah.negeri.code, daerah, jenis, page });
+const list = got?.data;
+const pages = list ? Math.max(1, Math.ceil(list.total / PER_PAGE)) : 1;
+const fromSismim = got?.source === SISMIM_SOURCE;
+
+const href = (p: number) => {
+  const q = new URLSearchParams({ daerah: daerah.code });
+  if (jenis) q.set("jenis", jenis);
+  if (p > 1) q.set("page", String(p));
+  return `/waktu-solat/masjid?${q}`;
+};
+const mapsHref = (name: string, address: string) =>
+  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${name}, ${address}`)}`;
+const place = `${daerah.name}, ${daerah.negeri.name}`;
+---
+
+<PublicLayout
+  title={`Masjid & Surau ${place} | Hafiz Bahtiar`}
+  description={`Senarai masjid dan surau di ${place} dari daftar kebangsaan JAKIM (SISMIM): nama, alamat dan pautan peta.`}
+>
+  <div class="relative mx-auto mt-8 max-lg:max-w-2xl sm:mt-24">
+    <BackLink href="/waktu-solat" label="Waktu Solat" />
+    <div class="line-y">
+      <h1
+        class="mx-2 text-4xl tracking-tighter text-balance sm:text-7xl lg:text-8xl"
+      >
+        <TechHeading
+          text="Masjid & Surau"
+          fontSize={96}
+          fontWeight={400}
+          box="-my-12 h-48"
+        />
+      </h1>
+    </div>
+    <div class="line-y mt-10">
+      <p class="mx-2 text-lg">
+        Masjid dan surau berdaftar di {place}, dari daftar kebangsaan JAKIM.
+      </p>
+    </div>
+
+    <section class="line-y mt-10" aria-labelledby="terdekat">
+      <h2 id="terdekat" class="mx-2 mb-4 text-xl font-medium tracking-tight text-gray-950 dark:text-white">
+        Terdekat dengan saya
+      </h2>
+      <MasjidTerdekat client:only="react" />
+    </section>
+
+    <div class="line-y mt-10">
+      <h2 class="mx-2 mb-4 text-xl font-medium tracking-tight text-gray-950 dark:text-white">
+        Senarai JAKIM mengikut daerah
+      </h2>
+      <form method="get" data-daerah={daerah.code} class="mx-2 grid max-w-2xl gap-4 sm:grid-cols-2">
+        <div class="grid gap-2">
+          <label
+            for="daerah"
+            class="text-sm font-medium text-gray-950 dark:text-white">Daerah</label
+          >
+          <Combobox
+            id="daerah"
+            name="daerah"
+            listLabel="Daerah"
+            searchPlaceholder="Cari daerah atau negeri…"
+            emptyText="Tiada daerah sepadan."
+            submitOnPick
+            value={daerah.code}
+            options={all.map((d) => ({
+              value: d.code,
+              label: d.name,
+              group: d.negeri.name,
+              keywords: d.negeri.name,
+            }))}
+          />
+        </div>
+        <div class="grid gap-2">
+          <label
+            for="jenis"
+            class="text-sm font-medium text-gray-950 dark:text-white">Jenis</label
+          >
+          <Combobox
+            id="jenis"
+            name="jenis"
+            listLabel="Jenis"
+            searchPlaceholder="Cari jenis…"
+            emptyText="Tiada jenis sepadan."
+            submitOnPick
+            value={jenis}
+            options={[
+              { value: "", label: "Semua masjid dan surau" },
+              ...JENIS.map((j) => ({ value: j.code, label: j.name })),
+            ]}
+          />
+        </div>
+        <noscript>
+          <button type="submit" class="btn-pill btn-pill-primary">Tukar</button>
+        </noscript>
+      </form>
+    </div>
+
+    {
+      list ? (
+        <>
+          <div class="line-y mt-10">
+            <p class="mx-2 font-mono text-xs tracking-widest text-gray-500 uppercase tabular-nums dark:text-gray-400">
+              {list.total.toLocaleString("ms-MY")} tempat
+              {list.total > PER_PAGE && ` · halaman ${page} / ${pages}`}
+            </p>
+          </div>
+          {list.items.length ? (
+            <div class="line-y mt-4">
+              <ul class="grid grid-cols-1 gap-px bg-gray-950/5 sm:grid-cols-2 lg:grid-cols-3 dark:bg-white/10">
+                {list.items.map((t) => (
+                  <li class="flex flex-col gap-3 bg-white px-4 py-5 sm:px-6 dark:bg-gray-950">
+                    <p class="font-medium text-gray-950 dark:text-white">{t.name}</p>
+                    {t.address && (
+                      <p class="text-sm/6 text-gray-600 dark:text-gray-400">{t.address}</p>
+                    )}
+                    <p class="mt-auto flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                      <a
+                        href={mapsHref(t.name, t.address || place)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="link"
+                      >
+                        Buka di Google Maps
+                      </a>
+                      {t.kod && (
+                        <a
+                          href={`${SISMIM}/maklumatDetailMS/1/${t.kod}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="link"
+                        >
+                          Butiran JAKIM
+                        </a>
+                      )}
+                    </p>
+                  </li>
+                ))}
+                <GridFillers count={list.items.length} />
+              </ul>
+            </div>
+          ) : (
+            <div class="line-y mt-4">
+              <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+                {list.total ? (
+                  <>
+                    Tiada rekod di halaman ini.{" "}
+                    <a href={href(1)} class="link">Ke halaman pertama</a>.
+                  </>
+                ) : (
+                  "Tiada masjid atau surau berdaftar untuk pilihan ini."
+                )}
+              </p>
+            </div>
+          )}
+          {pages > 1 && (
+            <nav aria-label="Halaman" class="line-y mt-6">
+              <div class="mx-2 flex items-center gap-2">
+                {page > 1 && (
+                  <a href={href(page - 1)} rel="prev" class="btn-pill btn-pill-ghost">
+                    Sebelum
+                  </a>
+                )}
+                {page < pages && (
+                  <a href={href(page + 1)} rel="next" class="btn-pill btn-pill-ghost">
+                    Seterusnya
+                  </a>
+                )}
+              </div>
+            </nav>
+          )}
+          <div class="line-y mt-6">
+            <p class="mx-2 max-w-3xl text-xs/5 text-gray-500 dark:text-gray-400">
+              Sumber:{" "}
+              <a href={`${SISMIM}/maklumatMasjidSurau`} target="_blank" rel="noopener noreferrer" class="link">
+                JAKIM (SISMIM)
+              </a>
+              {!fromSismim && (
+                <>
+                  {" "}- portal SISMIM tak dapat dicapai, jadi ini{" "}
+                  <a
+                    href="https://github.com/Rewsyaydee/malaysia-masjid-dataset"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="link"
+                  >
+                    salinan 3 April 2026
+                  </a>{" "}
+                  (CC BY 4.0); susunan dan halaman mungkin berbeza
+                </>
+              )}
+              {got.stale && " · data simpanan - semua sumber tak dapat dicapai sekarang"}
+              . Telefon dan faks tidak dipaparkan - semak di halaman butiran JAKIM.
+            </p>
+          </div>
+        </>
+      ) : (
+        <div class="line-y mt-10">
+          <p class="mx-2 text-sm/7 text-gray-600 dark:text-gray-400">
+            Senarai tak dapat diambil sekarang
+            {jenis && " (sandaran hanya ada untuk \"Semua masjid dan surau\")"}. Cuba lagi
+            sebentar, atau semak terus di{" "}
+            <a
+              href={`${SISMIM}/maklumatMasjidSurau`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="link"
+            >
+              portal SISMIM JAKIM
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
+
+    <div class="line-y mt-6">
+      <Disclaimer
+        class="mx-2"
+        sources={[
+          { name: "JAKIM - SISMIM", href: `${SISMIM}/maklumatMasjidSurau` },
+          {
+            name: "malaysia-masjid-dataset (sandaran)",
+            href: "https://github.com/Rewsyaydee/malaysia-masjid-dataset",
+          },
+          { name: "OpenStreetMap (terdekat)", href: "https://www.openstreetmap.org/copyright" },
+        ]}
+      >
+        Senarai ialah apa yang didaftarkan dalam SISMIM - mungkin ada tempat yang belum
+        dikemas kini. Untuk maklumat muktamad, rujuk jabatan agama Islam negeri.
+      </Disclaimer>
+    </div>
+    <div class="mb-16 sm:mb-46"></div>
+  </div>
+</PublicLayout>
+
+<script>
+  // Remember the last district (localStorage "masjid-daerah"); a bare /waktu-solat/masjid opens it.
+  const KEY = "masjid-daerah";
+  const remember = () => {
+    const form = document.querySelector<HTMLFormElement>("form[data-daerah]");
+    if (!form) return;
+    try {
+      const saved = localStorage.getItem(KEY);
+      if (!new URLSearchParams(location.search).has("daerah") && saved && saved !== form.dataset.daerah) {
+        location.replace(`${location.pathname}?daerah=${encodeURIComponent(saved)}`);
+        return;
+      }
+      localStorage.setItem(KEY, form.dataset.daerah!);
+    } catch {}
+  };
+  document.addEventListener("astro:page-load", remember);
+</script>
