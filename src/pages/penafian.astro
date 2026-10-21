@@ -7,7 +7,7 @@ import { CONTACT_EMAIL } from "../lib/constants";
 
 // Full disclaimer for the Showcase apps. Each app page shows the short version
 // (src/components/ui/Disclaimer.astro) and links here - keep the two in step.
-const UPDATED = "17 Oktober 2026";
+const UPDATED = "21 Oktober 2026";
 
 const SOURCES: {
   app: string;
@@ -26,6 +26,26 @@ const SOURCES: {
         name: "Kalendar Umm al-Qura (dalam pelayar / Intl)",
         href: "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat",
         note: "anggaran sahaja",
+      },
+    ],
+  },
+  {
+    app: "Masjid & Surau",
+    items: [
+      {
+        name: "JAKIM - SISMIM",
+        href: "https://masjid.islam.gov.my/maklumatMasjidSurau",
+        note: "daftar kebangsaan masjid dan surau; telefon dan faks tidak dipaparkan",
+      },
+      {
+        name: "malaysia-masjid-dataset (CC BY 4.0)",
+        href: "https://github.com/Rewsyaydee/malaysia-masjid-dataset",
+        note: "salinan SISMIM 3 April 2026; digunakan bila SISMIM tidak dapat dicapai",
+      },
+      {
+        name: "© penyumbang OpenStreetMap (ODbL)",
+        href: "https://www.openstreetmap.org/copyright",
+        note: "lokasi untuk \"Terdekat dengan saya\"; jarak dikira dalam peranti, lokasi anda tidak dihantar; bukan senarai rasmi JAKIM",
       },
     ],
   },
@@ -224,8 +244,7 @@ const SOURCES: {
       <p class="mx-2 max-w-3xl text-lg">
         Penafian ini terpakai kepada semua aplikasi di <a
           href="/showcase"
-          class="link"
-          >Showcase</a
+          class="link">Showcase</a
         >, termasuk widget yang dipasang di laman lain.
       </p>
     </div>
